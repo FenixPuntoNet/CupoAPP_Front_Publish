@@ -1,0 +1,602 @@
+.redeem-store-container {
+  background: #18181b;
+  border-radius: 1.3rem;
+  padding: 2.2rem 1.5rem 1.7rem 1.5rem;
+  max-width: 540px;
+  margin: 0 auto 2rem auto;
+  box-shadow: 0 10px 36px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.7s;
+  min-height: 100vh;
+}
+
+@media (max-width: 600px) {
+  .redeem-store-container {
+    padding: 0.7rem 0.1rem 1.2rem 0.1rem;
+    max-width: 100vw;
+    border-radius: 0.7rem;
+    min-height: 100vh;
+  }
+}
+
+/* --- HEADER --- */
+.redeem-header {
+  text-align: center;
+  margin-bottom: 1.2rem;
+  position: relative;
+  width: 100%;
+}
+
+.redeem-header-icon-cart {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+  animation: bounceIn 1s;
+  position: relative;
+}
+
+.cart-badge {
+  background: #ffd700;
+  color: #18181b;
+  font-weight: 900;
+  font-size: 0.9rem;
+  border-radius: 1rem;
+  padding: 2px 8px;
+  position: absolute;
+  top: -10px;
+  right: -18px;
+  box-shadow: 0 2px 8px #ffd70033;
+  z-index: 2;
+}
+
+.redeem-title {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #ffd700;
+  margin-bottom: 0.2rem;
+  letter-spacing: 1px;
+}
+
+.unicoin-highlight {
+  color: #3bd289;
+  text-shadow: 0 2px 8px #3bd28933;
+}
+
+.redeem-subtitle {
+  font-size: 1.02rem;
+  color: #e5e5e5;
+  margin-bottom: 0.2rem;
+}
+
+/* --- SALDO DE COINS --- */
+.coins-balance-card {
+  width: 100%;
+  max-width: 370px;
+  margin: 1.2rem auto 1.5rem auto;
+  background: linear-gradient(90deg, #23232b 60%, #ffd70022 100%);
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 24px #ffd70022;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.3rem 1rem 1.1rem 1rem;
+  position: relative;
+  animation: fadeIn 0.7s;
+}
+
+.coins-balance-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  color: #ffd700;
+  filter: drop-shadow(0 2px 8px #ffd70066);
+  animation: bounceIn 1.2s;
+}
+
+.coins-balance-label {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.01rem;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.5px;
+}
+
+.coins-balance-value {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #ffd700;
+  margin: 0.2rem 0 0 0;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.coins-balance-text {
+  color: #3bd289;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-left: 0.3rem;
+  letter-spacing: 0.5px;
+}
+
+/* --- LISTA DE PRODUCTOS --- */
+.redeem-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+  min-height: 120px;
+}
+
+.redeem-item-card {
+  background: linear-gradient(120deg, #23232b 60%, #222 100%);
+  border-radius: 1rem;
+  box-shadow: 0 4px 18px #3bd28911;
+  padding: 0.9rem 0.7rem 0.9rem 0.7rem;
+  min-width: 140px;
+  max-width: 160px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: box-shadow 0.18s, transform 0.18s, border 0.18s;
+  border: 1.5px solid #3bd28922;
+  animation: fadeIn 0.7s;
+  cursor: pointer;
+}
+
+.redeem-item-card.in-cart {
+  border: 2.5px solid #ffd700;
+  box-shadow: 0 8px 28px #ffd70033;
+}
+
+.redeem-item-img-wrap {
+  width: 56px;
+  height: 56px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px #3bd28922;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.redeem-item-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  transition: transform 0.18s;
+}
+
+.redeem-item-card:hover .redeem-item-img {
+  transform: scale(1.08) rotate(-6deg);
+}
+
+.redeem-item-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #ffd700;
+  color: #0a7557;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border-radius: 1rem;
+  padding: 2px 12px;
+  box-shadow: 0 2px 8px #ffd70033;
+  letter-spacing: 0.5px;
+  z-index: 2;
+  animation: fadeIn 1.1s;
+}
+
+.in-cart-badge {
+  background: #3bd289;
+  color: #18181b;
+  top: -12px;
+  right: -12px;
+}
+
+.redeem-item-info {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.redeem-item-name {
+  font-weight: 700;
+  font-size: 1.01rem;
+  color: #ffd700;
+  margin-bottom: 0.1rem;
+}
+
+.redeem-item-desc {
+  font-size: 0.91rem;
+  color: #e5e5e5;
+  margin-bottom: 0.1rem;
+  min-height: 28px;
+}
+
+.redeem-item-value {
+  font-size: 0.98rem;
+  color: #3bd289;
+  font-weight: 800;
+  margin-bottom: 0.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.unicoin-icon {
+  font-size: 1.1rem;
+  filter: drop-shadow(0 2px 8px #ffd70033);
+}
+
+.unicoin-amount {
+  font-weight: 900;
+  color: #ffd700;
+  margin-right: 2px;
+  font-size: 1rem;
+}
+
+/* --- MODAL DE PRODUCTO --- */
+.cart-modal-bg {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s;
+}
+
+.cart-modal {
+  background: #23232b;
+  border-radius: 1.2rem;
+  padding: 1.5rem 1rem 1.1rem 1rem;
+  min-width: 90vw;
+  max-width: 95vw;
+  box-shadow: 0 10px 36px #000a;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.3s;
+}
+
+.cart-modal h3 {
+  color: #ffd700;
+  font-size: 1.15rem;
+  margin-bottom: 0.7rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.cart-modal-img {
+  width: 110px;
+  height: 110px;
+  border-radius: 1.2rem;
+  object-fit: contain;
+  background: #fff;
+  display: block;
+  margin: 0 auto 1rem auto;
+  box-shadow: 0 2px 12px #ffd70033;
+  transition: transform 0.18s;
+}
+
+@media (max-width: 600px) {
+  .cart-modal {
+    min-width: 98vw;
+    padding: 1.1rem 0.3rem 1.1rem 0.3rem;
+    border-radius: 0.7rem;
+  }
+  .cart-modal-img {
+    width: 80vw;
+    max-width: 180px;
+    height: 80vw;
+    max-height: 180px;
+    border-radius: 0.7rem;
+  }
+}
+
+/* --- BOTONES --- */
+.redeem-btn {
+  background: linear-gradient(90deg, #ffd700 60%, #ffe066 100%);
+  color: #0a7557;
+  border: none;
+  border-radius: 1.5rem;
+  padding: 0.5rem 1.2rem;
+  font-weight: 800;
+  font-size: 1.01rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  margin-top: 0.2rem;
+  box-shadow: 0 2px 8px #ffd70033;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.redeem-btn.remove {
+  background: linear-gradient(90deg, #23232b 60%, #222 100%);
+  color: #ffd700;
+  border: 1.5px solid #ffd700;
+}
+
+.redeem-btn:active {
+  transform: scale(0.97);
+}
+
+.redeem-btn:disabled {
+  background: #e5e5e5;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+/* --- CANTIDAD --- */
+.cart-qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.qty-btn, .remove-btn {
+  background: #23232b;
+  color: #ffd700;
+  border: 1.5px solid #ffd700;
+  border-radius: 1rem;
+  font-size: 1.1rem;
+  font-weight: 900;
+  width: 2.1rem;
+  height: 2.1rem;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qty-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qty-value {
+  color: #ffd700;
+  font-weight: 900;
+  font-size: 1.1rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+/* --- CARRITO --- */
+.redeem-cart-bar {
+  width: 100%;
+  background: #23232b;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px #3bd28911;
+  padding: 0.7rem 0.7rem;
+  margin-bottom: 1.2rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+@media (max-width: 600px) {
+  .redeem-cart-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.5rem 0.2rem;
+  }
+}
+
+/* --- HISTORIAL --- */
+.redeem-history-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffd700;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  text-align: left;
+  margin-top: 1.2rem;
+}
+
+.redeem-history-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 60px;
+}
+
+.redeem-history-item {
+  display: flex;
+  align-items: center;
+  background: #23232b;
+  border-radius: 0.8rem;
+  padding: 0.5rem 0.7rem;
+  box-shadow: 0 2px 8px #3bd28911;
+  gap: 0.7rem;
+  animation: fadeIn 0.7s;
+}
+
+.redeem-history-img-wrap {
+  width: 32px;
+  height: 32px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px #3bd28922;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.redeem-history-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.redeem-history-info {
+  flex: 1;
+}
+
+.redeem-history-name {
+  font-weight: 700;
+  color: #ffd700;
+  font-size: 0.97rem;
+}
+
+.redeem-history-date {
+  font-size: 0.91rem;
+  color: #e5e5e5;
+  margin-top: 0.1rem;
+}
+
+.redeem-status {
+  font-weight: 700;
+  margin-left: 0.5rem;
+  padding: 2px 10px;
+  border-radius: 1rem;
+  font-size: 0.91rem;
+}
+
+.redeem-status.requested {
+  background: #fffbe6;
+  color: #bfa100;
+  border: 1.5px solid #ffd70088;
+}
+
+.redeem-status.delivered {
+  background: #e9fdf6;
+  color: #3bd289;
+  border: 1.5px solid #3bd28988;
+}
+
+.redeem-status.cancelled {
+  background: #ffeaea;
+  color: #c0392b;
+  border: 1.5px solid #c0392b33;
+}
+
+.checkmark {
+  margin-left: 0.3rem;
+  font-size: 1.1rem;
+}
+
+.redeem-loader {
+  width: 38px;
+  height: 38px;
+  border: 5px solid #ffd700;
+  border-top: 5px solid #3bd289;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto;
+}
+
+/* --- CARRITO DESGLOSADO --- */
+.cart-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0.5rem 0;
+}
+.cart-breakdown-item {
+  display: flex;
+  align-items: center;
+  background: #23232b;
+  border-radius: 0.7rem;
+  padding: 0.4rem 0.7rem;
+  box-shadow: 0 1px 4px #3bd28911;
+  gap: 0.7rem;
+  min-width: 0;
+}
+.cart-breakdown-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 0.6rem;
+  object-fit: contain;
+  background: #fff;
+  box-shadow: 0 1px 4px #ffd70033;
+  margin-right: 0.5rem;
+}
+.cart-breakdown-info {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.cart-breakdown-name {
+  font-weight: 700;
+  color: #ffd700;
+  font-size: 0.97rem;
+  margin-right: 0.3rem;
+}
+.cart-breakdown-qty {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.97rem;
+  margin-right: 0.3rem;
+}
+.cart-breakdown-value {
+  color: #3bd289;
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+/* --- MODAL RESULTADO DE CANJE --- */
+.result-modal {
+  min-width: 320px;
+  max-width: 95vw;
+  text-align: center;
+  padding-top: 2.2rem;
+  padding-bottom: 2rem;
+}
+.redeem-result-icon {
+  font-size: 3.2rem;
+  margin-bottom: 0.7rem;
+  margin-top: -1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.redeem-result-icon.success {
+  color: #3bd289;
+  text-shadow: 0 2px 8px #3bd28933;
+}
+.redeem-result-icon.error {
+  color: #c0392b;
+  text-shadow: 0 2px 8px #c0392b33;
+}
+
+@media (max-width: 600px) {
+  .cart-breakdown-img {
+    width: 28px;
+    height: 28px;
+    border-radius: 0.4rem;
+  }
+  .result-modal {
+    min-width: 90vw;
+    padding-top: 1.2rem;
+    padding-bottom: 1.2rem;
+  }
+}

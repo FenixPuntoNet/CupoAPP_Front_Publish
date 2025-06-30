@@ -1,0 +1,270 @@
+.appShell {
+  background-color: #0a0a0a;
+  min-height: 50vh;
+  position: relative;
+  overflow: hidden;
+}
+
+
+/* Header Styles */
+.header {
+  background: rgba(10, 10, 10, 0.95);
+  border-bottom: 1px solid rgba(0, 255, 157, 0.1);
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  padding-top: calc(env(safe-area-inset-top) + 40px);
+  height: calc(60px + env(safe-area-inset-top) + 40px);
+  display: flex;
+  align-items: center;
+}
+
+.headerContent {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 60px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.logo {
+  font-size: 30px;
+  font-weight: bold;
+  color: #00ff9d;
+  letter-spacing: -0.5px;
+  text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+}
+
+.registerButton {
+  background: linear-gradient(
+    45deg,
+    #00ff9d,
+    #00cc7a
+  ) !important;
+  border: none !important;
+  color: #000 !important;
+  height: 38px;
+  padding: 0 28px;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 14px !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.registerButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transform: translateX(-100%) skewX(-15deg);
+  transition: transform 0.5s ease;
+}
+
+.registerButton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 2px;
+  background: linear-gradient(45deg, #00ff9d, #00cc7a);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  -webkit-mask-composite: xor;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.registerButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 5px 15px rgba(0, 255, 157, 0.3),
+    0 0 30px rgba(0, 255, 157, 0.1);
+}
+
+.registerButton:hover::before {
+  transform: translateX(100%) skewX(-15deg);
+}
+
+.registerButton:hover::after {
+  opacity: 1;
+}
+
+/* Main Content */
+.main {
+  min-height: calc(100vh - 60px);
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+/* Footer Navigation */
+.footer {
+  background: rgba(10, 10, 10, 0.95);
+  border-top: 1px solid rgba(0, 255, 157, 0.1);
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 90px);
+}
+
+.navGroup {
+  height: 75px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.navButton {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+  gap: 4px;
+}
+
+.navButton:hover {
+  color: #00ff9d;
+}
+
+.navIcon {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.navLabel {
+  font-size: 12px;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+/* Centro Button Styles */
+.centerButton {
+  margin-top: -30px;
+  padding: 0;
+  position: relative;
+}
+
+.logoWrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 255, 157, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  background: #121212;
+  border: 2px solid rgba(0, 255, 157, 0.3);
+}
+
+.logoWrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0, 255, 157, 0.2), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.logoWrapper:hover::before {
+  opacity: 1;
+}
+
+.logoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.logoWrapper:hover .logoImage {
+  transform: scale(1.1);
+}
+
+/* Active States */
+.navButton.active {
+  color: #00ff9d;
+}
+
+.navButton.active .navIcon {
+  transform: scale(1.1);
+}
+
+.navButton.active .navLabel {
+  color: #00ff9d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .headerContent {
+    padding: 0 16px;
+  }
+
+  .registerButton {
+    padding: 0 20px;
+    font-size: 13px !important;
+  }
+
+  .navGroup {
+    padding: 0 10px;
+  }
+
+  .logoWrapper {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* Animations */
+@keyframes textShine {
+  from {
+    background-position: 0% center;
+  }
+  to {
+    background-position: 200% center;
+  }
+}
+
+@keyframes buttonPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 157, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 255, 157, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 157, 0);
+  }
+}

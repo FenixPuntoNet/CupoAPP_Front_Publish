@@ -1,0 +1,107 @@
+.modal {
+    background-color: #121212;
+    border-radius: 12px;
+    padding: 24px;
+    color: white;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    max-width: 400px;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    display: flex; /* Enable flex layout */
+    flex-direction: column; /* Stack elements vertically */
+}
+
+.modal > div {
+    margin-bottom: 20px; /* Added some space at the bottom to elements inside the modal */
+}
+
+.modal > div:last-child {
+    margin-bottom: 0px; /* Removes margin for the last child */
+}
+
+.title {
+  color: #ff4d4f;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: left; /* Aligned the title to the left */
+  margin-bottom: 15px;
+  letter-spacing: 0.3px;
+    padding-right: 30px; /* Provide space for the close icon */
+}
+
+.description {
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 16px;
+    line-height: 1.6;
+    text-align: left; /* Aligned the text to the left */
+    margin-bottom: 24px;
+    letter-spacing: 0.3px;
+}
+
+
+.deleteButton {
+  background-color: #ff4d4f;
+  color: white;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.6px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  cursor: pointer;
+ display: inline-block;
+ white-space: nowrap;
+ overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deleteButton:hover {
+  background-color: #e04445;
+  transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.cancelButton {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  padding: 8px 22px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.6px;
+  transition: border-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+   box-sizing: border-box;
+  cursor: pointer;
+}
+
+.cancelButton:hover {
+  color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.945);
+    transform: translateY(-2px);
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content:space-between; /* Aligned the button group to the right */
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.closeButton {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  cursor: pointer;
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.3s ease;
+}
+
+.closeButton:hover {
+    color: rgba(255, 255, 255, 0.9);
+}

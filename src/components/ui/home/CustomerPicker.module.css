@@ -1,0 +1,41 @@
+.dateInput {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+    color: white;
+  }
+  
+  .icon {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .popoverContent {
+    background-color: #0a0a0a;
+    border-radius: 12px;
+    padding: 1rem;
+  }
+  
+  .calendarHeader {
+    color: #00ff9d;
+    font-weight: bold;
+  }
+  
+  .day {
+    color: white;
+  }
+  
+  .day:hover {
+    background-color: rgba(0, 255, 157, 0.2);
+  }
+  
+  .month {
+    font-size: 1.5rem;
+    color: white;
+  }
+  
+  .weekday {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: bold;
+  }
+  

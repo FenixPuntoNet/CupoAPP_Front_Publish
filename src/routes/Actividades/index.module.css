@@ -1,0 +1,492 @@
+      /* MyTrips.module.css */
+
+      .container {
+        padding-top: calc(24px + env(safe-area-inset-top));
+        padding-bottom: calc(24px + env(safe-area-inset-bottom));
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      
+      @media (max-width: 600px) {
+        .container {
+          padding-top: calc(12px + env(safe-area-inset-top));
+          padding-bottom: calc(12px + env(safe-area-inset-bottom));
+          padding-left: 8px;
+          padding-right: 8px;
+        }
+      }
+            
+      .title {
+          font-size: 24px;
+          font-weight: bold;
+          color: #00ff9d;
+          margin-bottom: 16px;
+      }
+      
+      .noTripsText {
+          font-size: 16px;
+          color: #ccc;
+          margin-top: 16px;
+          text-align: center;
+      }
+      
+      .publishButton {
+          background-color: #00ff9d;
+          color: #171717;
+          font-weight: bold;
+          margin-top: 16px;
+      }
+      
+      .tripCard {
+          padding: 16px;
+          background-color: #171717;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+      }
+      
+      .tripTitle {
+          font-size: 14px;
+          color: #00ff9d;
+      }
+      
+      .tripText {
+          font-size: 16px;
+          color: #fff;
+          margin-bottom: 8px;
+      }
+      
+      .tripBadge {
+          font-size: 14px;
+      }
+      
+      .tripInfoGroup {
+          margin-top: 16px;
+          flex-wrap: wrap;
+          gap: 8px;
+      }
+      
+      .tripSummary {
+          margin-top: 16px;
+          font-size: 14px;
+          color: #999;
+      }
+      
+      .tripPreferences {
+          margin-top: 16px;
+          font-size: 12px;
+          color: #ccc;
+      }
+      
+
+      /* Botones de acción para Editar y Eliminar */
+  .tripActions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    /* Botón Editar */
+    .tripActions .mantine-Button-root:nth-child(1) {
+      border-color: #00aaff;
+      color: #00aaff;
+    }
+    
+    .tripActions .mantine-Button-root:nth-child(1):hover {
+      background-color: rgba(0, 170, 255, 0.1);
+    }
+    
+    /* Botón Eliminar */
+    .tripActions .mantine-Button-root:nth-child(2) {
+      border-color: #ff4d4f;
+      color: #ff4d4f;
+    }
+    
+    .tripActions .mantine-Button-root:nth-child(2):hover {
+      background-color: rgba(255, 77, 79, 0.1);
+    }
+    
+    /* Modal de Edición */
+    .mantine-Modal-modal {
+      background-color: #202020;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+    }
+    
+    .mantine-Modal-title {
+      font-size: 20px;
+      color: #00ff9d;
+      font-weight: bold;
+    }
+    
+    .mantine-Textarea-root label,
+    .mantine-NumberInput-root label,
+    .mantine-Switch-label {
+      color: #ccc;
+      font-size: 14px;
+    }
+    
+    .mantine-Textarea-input,
+    .mantine-NumberInput-input {
+      background-color: #171717;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+    }
+    
+    .mantine-Textarea-input:focus,
+    .mantine-NumberInput-input:focus {
+      border-color: #00ff9d;
+      outline: none;
+    }
+    
+    /* Botón de guardar cambios en el modal */
+    .mantine-Modal-modal .mantine-Button-root {
+      background-color: #00ff9d;
+      color: #171717;
+      font-weight: bold;
+    }
+    
+    .mantine-Modal-modal .mantine-Button-root:hover {
+      background-color: #00e68a;
+    }
+    
+    /* Hover para las tarjetas */
+    .tripCard:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    /* Mejor espaciado en el stack del modal */
+    .mantine-Stack-root {
+      gap: 24px;
+    }
+    
+
+
+    /* General Container */
+  .container {
+      padding: 16px;
+      color: #fff;
+    }
+    
+    /* Title Styling */
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00ff9d;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    
+    /* Filter Container */
+    .filterContainer {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .filterLabel {
+      font-size: 16px;
+      font-weight: bold;
+      color: #00ff9d;
+    }
+    
+    .filterSelect {
+      flex: 1;
+      border-radius: 8px;
+      background-color: #171717;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    
+    .filterSelect input {
+      color: #fff;
+    }
+    
+    .filterSelect .mantine-Select-dropdown {
+      background-color: #242424;
+      color: #fff;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .filterSelect .mantine-Select-item {
+      padding: 10px;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+    
+    .filterSelect .mantine-Select-item:hover {
+      background-color: #00ff9d;
+      color: #171717;
+    }
+    
+    /* No Trips Text */
+    .noTripsText {
+      font-size: 16px;
+      color: #ccc;
+      margin-top: 16px;
+      text-align: center;
+    }
+    
+    /* Publish Button */
+    .publishButton {
+      background-color: #00ff9d;
+      color: #171717;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+    
+    /* Trip Cards */
+    .tripCard {
+      padding: 16px;
+      background-color: #171717;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+    }
+    
+    .tripTitle {
+      font-size: 14px;
+      color: #00ff9d;
+    }
+    
+    .tripText {
+      font-size: 16px;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    
+    .tripBadge {
+      font-size: 14px;
+    }
+    
+    .tripInfoGroup {
+      margin-top: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .tripSummary {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #999;
+    }
+    
+    .tripActions {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-start;
+    }
+    
+    /* Modal Styling */
+    .modalHeader {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      color: #00ff9d;
+    }
+    
+    .modalContent {
+      color: #fff;
+      font-size: 16px;
+      line-height: 1.5;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .modalButtons {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 16px;
+    }
+    
+    .modalButtons .mantine-Button {
+      flex: 1;
+      margin: 0 8px;
+      padding: 12px;
+    }
+    
+    .modalButtons .mantine-Button:first-child {
+      background-color: #ff4d4d;
+      color: #fff;
+    }
+    
+    .modalButtons .mantine-Button:first-child:hover {
+      background-color: #e60000;
+    }
+    
+    .modalButtons .mantine-Button:last-child {
+      border: 1px solid #00ff9d;
+      background-color: transparent;
+      color: #00ff9d;
+    }
+    
+    .modalButtons .mantine-Button:last-child:hover {
+      background-color: rgba(0, 255, 157, 0.1);
+    }
+    
+    /* Notifications */
+    .mantine-Notifications-container {
+      top: 16px;
+      right: 16px;
+    }
+    
+    .mantine-Notifications-notification {
+      border-radius: 8px;
+      background-color: #171717;
+      color: #fff;
+    }
+    
+    .mantine-Notifications-notification .mantine-Text {
+      color: #00ff9d;
+    }
+    
+    .mantine-Notifications-notification.red {
+      background-color: #ff4d4d;
+      color: #fff;
+    }
+    
+    .mantine-Notifications-notification.green {
+      background-color: #00ff9d;
+      color: #171717;
+    }
+    
+    .mantine-Notifications-title {
+      font-weight: bold;
+    }
+    
+    /* Estilos adicionales para los filtros */
+  .filterContainer {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* Permite que los filtros se envuelvan en pantallas más pequeñas */
+    gap: 10px;
+  }
+
+  .filterLabel {
+    font-size: 16px;
+    font-weight: bold;
+    color: #00ff9d;
+    margin-right: 5px; /* Para separar el label del filtro */
+  }
+
+  .filterSelect {
+    flex: 1;
+    border-radius: 8px;
+    background-color: #171717;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 8px; /* Ajuste para el padding */
+    min-width: 150px; /* Ajuste para el ancho mínimo */
+    transition: border-color 0.3s; /* Transición suave al hacer foco */
+  }
+
+  .filterSelect input {
+    color: #fff;
+  }
+
+  .filterSelect .mantine-Select-dropdown,
+  .filterSelect .mantine-DatePicker-dropdown {
+    background-color: #242424;
+  color: #fff;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .filterSelect .mantine-Select-item,
+    .filterSelect .mantine-DatePicker-monthLabel
+    {
+  padding: 10px;
+    border-radius: 4px;
+  transition: all 0.3s;
+  }
+
+  .filterSelect .mantine-Select-item:hover,
+    .filterSelect .mantine-DatePicker-monthLabel:hover {
+    background-color: #00ff9d;
+      color: #171717;
+  }
+
+
+    .filterSelect .mantine-DatePicker-calendarHeader,
+    .filterSelect .mantine-DatePicker-calendarBase {
+        background-color: #242424;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+    
+  .mantine-DatePicker-day {
+      color: #fff;
+      border-radius: 4px;
+        transition: all 0.3s;
+  }
+    .mantine-DatePicker-day:hover{
+        background-color: #00ff9d;
+      color: #171717;
+  }
+
+  .mantine-DatePicker-day.mantine-DatePicker-selected {
+      background-color: #00ff9d;
+      color: #171717;
+  }
+
+
+    .filterSelect:focus,
+    .filterSelect:focus-within { /* Para que funcione bien en datepicker */
+      outline: none;
+      border-color: #00ff9d; /* Border color on focus */
+    }
+
+/* Botones principales de acciones de viaje */
+.tripActions .mantine-Button-root {
+  font-weight: bold;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+/* Botón Iniciar */
+.tripActions .mantine-Button-root:has(svg.lucide-flag) {
+  background-color: #00ff9d;
+  color: #171717;
+}
+.tripActions .mantine-Button-root:has(svg.lucide-flag):hover {
+  background-color: #00e68a;
+}
+
+/* Botón Cancelar */
+.tripActions .mantine-Button-root:has(svg.lucide-trash) {
+  background-color: #ff4d4d;
+  color: white;
+}
+.tripActions .mantine-Button-root:has(svg.lucide-trash):hover {
+  background-color: #e60000;
+}
+
+/* Botón Finalizar */
+.tripActions .mantine-Button-root:has(svg.lucide-flag):disabled {
+  background-color: #444;
+  color: #999;
+  cursor: not-allowed;
+  border: none;
+}
+
+/* Botón de chat */
+.tripActions .mantine-Button-root:has(svg.lucide-message-square) {
+  background-color: transparent;
+  border: 1px solid #555;
+  color: #ccc;
+}
+.tripActions .mantine-Button-root:has(svg.lucide-message-square):hover {
+  border-color: #00ff9d;
+  color: #00ff9d;
+}
+
+/* Estados deshabilitados */
+.tripActions .mantine-Button-root:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}

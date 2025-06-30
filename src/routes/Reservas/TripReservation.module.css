@@ -1,0 +1,334 @@
+/* Layout General del Modal */
+.modalContent {
+    padding: 16px; /* Reducido para móvil */
+}
+
+@media (min-width: 768px) {
+  .modalContent {
+    padding: 24px; /* Vuelve al valor original en pantallas mayores */
+  }
+}
+
+/* Header del Modal */
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.modalTitle {
+    font-size: 18px; /* Reducido para móvil */
+    font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .modalTitle {
+      font-size: 20px; /* Vuelve al valor original en pantallas mayores */
+  }
+}
+
+.modalCloseButton {
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* Resumen del Viaje */
+.tripSummaryCard {
+    background-color: #2c2d2e;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 16px; /* Reducido para móvil */
+    margin-bottom: 16px; /* Reducido para móvil */
+}
+
+@media (min-width: 768px) {
+  .tripSummaryCard {
+    padding: 20px; /* Vuelve al valor original en pantallas mayores */
+    margin-bottom: 20px; /* Vuelve al valor original en pantallas mayores */
+  }
+}
+
+.dateTime {
+    font-size: 14px; /* Reducido para móvil */
+    margin-bottom: 8px;
+}
+
+@media (min-width: 768px) {
+  .dateTime {
+    font-size: 16px; /* Vuelve al valor original en pantallas mayores */
+  }
+}
+
+.pricePerSeat {
+    background-color: #37b24d;
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px; /* Reducido para móvil */
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+@media (min-width: 768px) {
+  .pricePerSeat {
+    font-size: 14px; /* Vuelve al valor original en pantallas mayores */
+  }
+}
+
+.routeInfo {
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.locationTitle {
+    font-size: 12px; /* Reducido para móvil */
+    color: #a9a9a9;
+    margin-bottom: 4px;
+}
+
+@media (min-width: 768px) {
+  .locationTitle {
+      font-size: 13px; /* Vuelve al valor original en pantallas mayores */
+  }
+}
+
+.locationText {
+    font-size: 14px; /* Reducido para móvil */
+    font-weight: 500;
+}
+
+@media (min-width: 768px) {
+    .locationText {
+        font-size: 15px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+.routeDivider {
+    border-bottom: 1px solid #4a4a4a;
+    margin: 8px 0;
+}
+
+.tripBadges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.tripBadge {
+    background-color: #4a4a4a;
+    color: #ffffff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px; /* Reducido para móvil */
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+@media (min-width: 768px) {
+    .tripBadge {
+        font-size: 13px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+.tripBadge.negative {
+    background-color: #992828;
+}
+
+/* Input de Número de Asientos */
+.numberInputContainer {
+    margin-bottom: 16px; /* Reducido para móvil */
+}
+
+@media (min-width: 768px) {
+    .numberInputContainer {
+        margin-bottom: 20px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+.numberInputLabel {
+    font-size: 14px; /* Reducido para móvil */
+    display: block;
+    margin-bottom: 6px;
+}
+
+@media (min-width: 768px) {
+    .numberInputLabel {
+        font-size: 16px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+.numberInputDescription {
+    font-size: 12px; /* Reducido para móvil */
+    color: #a9a9a9;
+    display: block;
+    margin-bottom: 8px;
+}
+
+@media (min-width: 768px) {
+    .numberInputDescription {
+        font-size: 14px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+/* Resumen de Precios */
+.priceCard {
+    background-color: #2c2d2e;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 16px; /* Reducido para móvil */
+    margin-bottom: 16px; /* Reducido para móvil */
+}
+
+@media (min-width: 768px) {
+    .priceCard {
+        padding: 20px; /* Vuelve al valor original en pantallas mayores */
+        margin-bottom: 20px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+.priceItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.priceItem:last-child {
+    margin-bottom: 0;
+}
+
+.priceTitle {
+    font-size: 12px; /* Reducido para móvil */
+    color: #a9a9a9;
+}
+
+@media (min-width: 768px) {
+    .priceTitle {
+        font-size: 14px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+.priceValue {
+    font-size: 14px; /* Reducido para móvil */
+    font-weight: 500;
+}
+
+@media (min-width: 768px) {
+    .priceValue {
+        font-size: 16px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+.priceTotal {
+    font-size: 1.1em; /* Reducido para móvil */
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px solid #4a4a4a;
+}
+
+@media (min-width: 768px) {
+    .priceTotal {
+        font-size: 1.2em; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+
+.priceTotalValue {
+    font-weight: 700;
+    color: #37b24d;
+}
+
+/* Textarea */
+
+.textareaContainer {
+    margin-bottom: 16px; /* Reducido para móvil */
+}
+
+@media (min-width: 768px) {
+    .textareaContainer {
+        margin-bottom: 20px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+
+.textareaLabel {
+    font-size: 14px; /* Reducido para móvil */
+    display: block;
+    margin-bottom: 6px;
+}
+
+@media (min-width: 768px) {
+    .textareaLabel {
+        font-size: 16px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+.textareaDescription {
+    font-size: 12px; /* Reducido para móvil */
+    color: #a9a9a9;
+    display: block;
+    margin-bottom: 8px;
+}
+
+@media (min-width: 768px) {
+    .textareaDescription {
+        font-size: 14px; /* Vuelve al valor original en pantallas mayores */
+    }
+}
+
+
+/* Botón de Confirmar */
+.confirmButton {
+    background-color: #228be6;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 16px; /* Reducido para móvil */
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 16px;
+}
+
+@media (min-width: 768px) {
+    .confirmButton {
+        padding: 14px 20px;
+        font-size: 18px;
+    }
+}
+
+.confirmButton:hover {
+    background-color: #1c7ed6;
+}
+
+.successIcon {
+    background-color: #37b24d;
+    border-radius: 50%;
+    padding: 10px;
+    color: #ffffff;
+}
+
+/* Otros estilos */
+
+.errorText {
+    color: #f03e3e;
+    font-size: 12px; /* Reducido para móvil */
+    margin-top: 4px;
+}
+
+@media (min-width: 768px) {
+    .errorText {
+        font-size: 14px; /* Vuelve al valor original en pantallas mayores */
+    }
+}

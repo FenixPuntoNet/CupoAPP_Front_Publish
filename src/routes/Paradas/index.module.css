@@ -1,0 +1,228 @@
+.container {
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: white;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* Agregamos un espaciado adicional en la parte inferior para evitar que los elementos se peguen al borde inferior en dispositivos con notch */
+  padding-bottom: 40px;
+}
+
+/* Efectos de fondo dinámicos */
+.container::before,
+.container::after {
+  content: '';
+  position: absolute;
+  width: 120vw;
+  height: 120vh;
+  top: -10vh;
+  left: -10vw;
+  z-index: 0;
+  animation: bgShift 20s linear infinite;
+  background: radial-gradient(
+    circle at center,
+    transparent 0%,
+    rgba(0, 255, 157, 0.03) 40%,
+    transparent 70%
+  );
+  /* Suavizamos el borde de la sombra */
+  filter: blur(2px);
+}
+
+.container::after {
+  animation-delay: -10s;
+  animation-duration: 15s;
+}
+
+.header {
+  background: rgba(10, 10, 10, 0.95);
+  border-bottom: 1px solid rgba(0, 255, 157, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  padding-top: calc(env(safe-area-inset-top) + 40px);
+  height: calc(60px + env(safe-area-inset-top) + 40px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding-top: calc(env(safe-area-inset-top) + 32px);
+    height: calc(56px + env(safe-area-inset-top) + 32px);
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+.backButton {
+  width: 45px;
+  height: 45px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00ff9d;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 255, 157, 0.1);
+  position: relative;
+  overflow: hidden;
+  margin-right: 10px;
+}
+
+.backButton:hover {
+  transform: translateX(-5px);
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+  /* Cambiamos la transición para que sea más suave */
+  transition: all 0.3s ease-in-out;
+}
+
+.headerTitle {
+  font-size: 28px;
+  font-weight: 600;
+  color: #00ff9d;
+  /* Añadimos un margen para separar el título del botón */
+  margin-left: 5px;
+  flex: 1;
+}
+
+.stopsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: calc(60px + env(safe-area-inset-top) + 40px);
+  z-index: 1;
+}
+
+@media (max-width: 600px) {
+  .stopsContainer {
+    margin-top: calc(56px + env(safe-area-inset-top) + 32px);
+  }
+}
+
+.stopItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 157, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* Añadimos una transición suave para la elevación */
+}
+
+.stopItem:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 255, 157, 0.2);
+  /* Añadimos una transición suave para la elevación */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.stopInfo {
+  display: flex;
+  align-items: center;
+}
+
+.stopIcon {
+    color: #00ff9d;
+    margin-right: 10px;
+}
+
+.stopText {
+  flex: 1;
+  /* Eliminamos el margen izquierdo ya que ahora el icono tiene un margen derecho*/
+}
+
+.stopTextTitle {
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+  /* Reducimos ligeramente el tamaño de la fuente para mejor legibilidad */
+  font-size: 16px;
+}
+
+.stopTextSubtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+.checkbox {
+    transform: scale(1.2);
+    color: #00ff9d;
+    transition: all 0.3s ease;
+}
+
+.checkbox:checked {
+    background-color: #00ff9d;
+}
+
+.confirmButton {
+  margin-top: 20px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(45deg, #00ff9d, #00cc7a);
+  color: black;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.4s ease;
+  border: none;
+  /* Suavizamos la transición del botón */
+  transition: all 0.3s ease-in-out;
+}
+
+.confirmButton:hover {
+  box-shadow: 0 10px 20px rgba(0, 255, 157, 0.2);
+  transform: translateY(-2px);
+    /* Suavizamos la transición del botón al pasar el mouse */
+  transition: all 0.3s ease-in-out;
+}
+
+.mapContainer {
+  margin-top: 20px;
+  border-radius: 16px;
+  overflow: hidden;
+  height: 300px;
+  position: relative;
+  z-index: 1;
+    /* Añadimos una sombra sutil al mapa */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.errorAlert {
+  margin-top: 20px;
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #ff4c4c;
+  border: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+/* Animaciones */
+@keyframes bgShift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-5%, -5%) rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .headerTitle {
+    font-size: 24px;
+  }
+
+  .confirmButton {
+    font-size: 14px;
+  }
+}

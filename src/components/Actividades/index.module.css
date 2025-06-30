@@ -1,0 +1,325 @@
+/* General Styles */
+container {
+  padding-top: calc(24px + env(safe-area-inset-top));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.topSpacer {
+  height: env(safe-area-inset-top);
+  background: transparent;
+}
+
+.title {
+  color: white;
+  text-align: center;
+  margin-bottom: 20px; /* Space below title */
+}
+
+.noTripsText {
+  color: rgba(255, 255, 255, 0.7); /* Slightly transparent text */
+  text-align: center;
+  margin-top: 30px; /* Space above text */
+}
+
+/* Publish Button */
+.publishButton {
+  display: block;
+  margin: 20px auto; /* Center and space above/below button */
+  background: linear-gradient(45deg, #00ff9d, #00cc7a); /* Gradient background */
+  border: none; /* Remove default border */
+  color: black;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease; /* Smooth transitions */
+  cursor: pointer; /* Change cursor on hover */
+}
+
+.publishButton:hover {
+  transform: translateY(-2px); /* Move slightly up on hover */
+  box-shadow: 0 5px 10px rgba(0, 255, 157, 0.2); /* Add hover shadow */
+}
+
+/* Filter Container */
+.filterContainer {
+  display: flex;
+  flex-wrap: wrap; /* Allow filters to wrap */
+  gap: 15px;
+  margin-bottom: 20px; /* Space below filters */
+  align-items: center;
+  justify-content: center; /* Center filters horizontally */
+}
+
+.filterLabel {
+  color: white;
+  margin-right: 5px;
+}
+
+.filterSelect {
+  min-width: 150px;
+  /* Added some default styles for consistency*/
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 157, 0.1);
+  background-color: rgba(255, 255, 255, 0.03);
+  color: white;
+}
+
+/* Trip Card */
+.tripCard {
+  background: rgba(255, 255, 255, 0.03); /* Frosted glass effect */
+  backdrop-filter: blur(10px); /* Blur the background */
+  border: 1px solid rgba(0, 255, 157, 0.1); /* Subtle border */
+  border-radius: 16px;
+  padding: 20px;
+  position: relative; /* For any absolute child elements */
+  transition: all 0.3s ease;
+  overflow: hidden;
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.tripCard:hover {
+  transform: translateY(-3px); /* Move slightly up on hover */
+  box-shadow: 0 8px 20px rgba(0, 255, 157, 0.15); /* Add hover shadow */
+  border-color: rgba(0, 255, 157, 0.2); /* Slightly more visible border */
+}
+
+.tripTitle {
+  color: white;
+  font-size: 0.9em;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.tripText{
+color: rgba(255,255,255,0.9);
+font-size: 1.1em;
+}
+
+.tripBadge {
+margin-top: 10px;
+font-weight: 500;
+margin-bottom: 10px;
+}
+
+.tripInfoGroup {
+margin: 10px 0;
+}
+
+.tripInfoGroup > :global(.mantine-Badge-root) {
+  background-color: rgba(0, 255, 157, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.tripSummary {
+color: rgba(255, 255, 255, 0.7);
+  white-space: pre-line; /* Maintain line breaks */
+}
+
+.tripActions {
+margin-top: 10px;
+}
+
+.tripActions > :global(.mantine-Button-root) {
+  margin-right: 5px; /* Adjust as needed */
+}
+
+/* Generic Button */
+.button {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px); /* Blur the background */
+  border: 1px solid rgba(0, 255, 157, 0.1);
+  border-radius: 16px;
+  padding: 10px 15px;
+  transition: all 0.3s ease;
+  color: white;
+  cursor: pointer; /* Change cursor on hover */
+  text-align: center; /* Ensure that text is centered within the button*/
+  text-decoration: none; /*Removes underlines from text links*/
+  display: inline-block; /*Buttons work better this way*/
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 255, 157, 0.1);
+  border-color: rgba(0, 255, 157, 0.2);
+}
+
+.button:disabled{
+opacity: 0.6;
+pointer-events: none; /* prevent clicks on disabled buttons */
+}
+
+/* Selected Button */
+.selected {
+  background: linear-gradient(45deg, #00ff9d, #00cc7a);
+  color: black;
+  border: none;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the modal in the viewport */
+  z-index: 1000; /* Ensure modal is above all other content */
+}
+
+.modal-content {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 157, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  width: 400px;
+  max-width: 90%;
+  color: white;
+  text-align: center; /* Ensure content is centered */
+}
+
+.modal-content button {
+  margin-top: 20px; /* Space above button */
+  background: linear-gradient(45deg, #00ff9d, #00cc7a);
+  border: none;
+  color: black;
+  font-weight: 600;
+  padding: 10px 15px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer; /* Change cursor on hover */
+}
+
+.modal-content button:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 255, 157, 0.2);
+}
+
+/* Loading styles */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading {
+animation: shimmer 2s infinite linear;
+background: linear-gradient(
+  to right,
+  rgba(255, 255, 255, 0.03) 8%,
+  rgba(255, 255, 255, 0.05) 18%,
+  rgba(255, 255, 255, 0.03) 33%
+);
+background-size: 1000px 100%;
+}
+
+/* Mobile Styles */
+@media (max-width: 600px) {
+  .container {
+    padding-top: calc(16px + env(safe-area-inset-top));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+
+.container {
+  padding-top: calc(24px + env(safe-area-inset-top));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  padding-left: 16px;
+  padding-right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+
+.userName {
+  color: #00ff94;
+  font-weight: 500;
+}
+
+.modalTitle {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #e0ffe8;
+  text-align: center;
+}
+
+.modalBody {
+  background-color: #111;
+  padding: 1.75rem;
+  border-radius: 14px;
+  color: #ddd;
+}
+
+.label {
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: #a2f5c8;
+  margin-bottom: 0.4rem;
+}
+
+.rating {
+  margin-bottom: 1rem;
+}
+
+.textarea {
+  background-color: #1b1b1b;
+  border-color: #2d2d2d;
+  color: #e5e5e5;
+  font-size: 0.95rem;
+}
+
+.divider {
+  border-top: 1px solid #333;
+  opacity: 0.5;
+}
+
+.closeButton {
+  background-color: transparent;
+  color: #aaa;
+  border: 1px solid #444;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  color: #f1f1f1;
+  border-color: #777;
+}
+
+.submitButton {
+  background-color: #34d399;
+  color: #0a0a0a;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover {
+  background-color: #2bb386;
+}
+
+.footer-icons {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 20px;
+}
+
+.footer-icons img {
+  width: 32px;
+  height: 32px;
+}

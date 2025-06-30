@@ -1,0 +1,257 @@
+.container {
+    min-height: 100vh;
+    background-color: #0d0d0d;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gradientBackground {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 15% 10%, rgba(0, 255, 157, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(0, 255, 157, 0.1) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.content {
+    max-width: 1200px;
+    width: 100%;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 48px;
+    text-align: center;
+}
+
+.navigationHeader {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.backButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: #00ff9d;
+    font-size: 16px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.backButton:hover {
+    background: rgba(0, 255, 157, 0.1);
+    transform: translateX(-4px);
+}
+
+.title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #00ff9d;
+    margin: 0;
+}
+
+.subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 18px;
+    margin-top: 8px;
+}
+
+.progressBar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    margin: 32px 0;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background: #00ff9d;
+    transition: width 0.3s ease;
+}
+
+.uploadGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    padding: 16px;
+}
+
+.uploadCard {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 32px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.uploadCard:hover {
+    transform: translateY(-4px);
+    background: rgba(0, 255, 157, 0.05);
+    border-color: rgba(0, 255, 157, 0.2);
+}
+
+.uploadCardContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.iconContainer {
+    width: 64px;
+    height: 64px;
+    background: rgba(0, 255, 157, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.uploadCard:hover .iconContainer {
+    background: rgba(0, 255, 157, 0.2);
+}
+
+.uploadIcon {
+    color: #00ff9d;
+}
+
+.uploadCardTitle {
+    color: white;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.uploadCardDescription {
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.uploadButton {
+    width: 100%;
+    padding: 12px 24px;
+    background: rgba(0, 255, 157, 0.1);
+    border: 1px solid rgba(0, 255, 157, 0.2);
+    border-radius: 8px;
+    color: #00ff9d;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.uploadButton:hover {
+    background: rgba(0, 255, 157, 0.2);
+}
+
+.documentStatus {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.statusPending {
+    background: rgba(255, 159, 67, 0.1);
+    color: #ffa53d;
+}
+
+.statusComplete {
+    background: rgba(0, 255, 157, 0.1);
+    color: #00ff9d;
+}
+
+.summarySection {
+    margin-top: 48px;
+    text-align: center;
+}
+
+.summaryActions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.buttonSecondary {
+    padding: 12px 32px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.buttonSecondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.buttonPrimary {
+    padding: 12px 32px;
+    background: rgba(0, 255, 157, 0.1);
+    border: 1px solid rgba(0, 255, 157, 0.2);
+    border-radius: 8px;
+    color: #00ff9d;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.buttonPrimary:hover {
+    background: rgba(0, 255, 157, 0.2);
+}
+
+.documentBadge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badgeRequired {
+    background: rgba(255, 86, 86, 0.2);
+    color: #ff5656;
+    border: 2px solid #ff5656;
+}
+
+.badgeComplete {
+    background: rgba(0, 255, 157, 0.2);
+    color: #00ff9d;
+    border: 2px solid #00ff9d;
+}

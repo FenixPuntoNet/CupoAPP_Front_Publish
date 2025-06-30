@@ -1,0 +1,87 @@
+.modal {
+    background-color: rgba(13, 13, 15, 0.95);
+    border: none;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+  }
+  
+  .container {
+    padding: 24px;
+    color: white;
+  }
+  
+  .header {
+    display: flex;
+    align-items: center; /* Centra verticalmente ícono y título */
+    gap: 16px; /* Espaciado entre ícono y título */
+    justify-content: center; /* Centrar ambos horizontalmente */
+    margin-bottom: 20px;
+  }
+  
+  .title {
+    color: #00ff9d;
+    font-size: 26px; /* Tamaño mayor para resaltar */
+    font-weight: 700;
+  }
+  
+  .content {
+    margin-bottom: 32px;
+  }
+  
+  .groupIcon {
+    display: flex;
+    align-items: flex-start; /* Alinear ícono con la parte superior del texto */
+    gap: 12px; /* Espaciado entre ícono y texto */
+    margin-bottom: 16px;
+  }
+  
+  .description {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 18px; /* Texto ligeramente más grande */
+    line-height: 1.6;
+  }
+  
+  .list {
+    list-style-type: disc;
+    padding-left: 24px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+    margin-top: 10px;
+  }
+  
+  .buttonContainer {
+    display: flex;
+    justify-content: center; /* Centrar botón */
+    margin-top: 24px;
+  }
+  
+  .button {
+    background-color: #00ff9d;
+    color: #121212;
+    border: none;
+    padding: 16px 32px; /* Botón más ancho */
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 18px; /* Texto del botón más grande */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Espaciado entre texto e ícono */
+    transition: background-color 0.3s;
+    width: 100%; /* Se adapta al ancho del contenedor */
+    max-width: 280px; /* Limitar ancho máximo */
+  }
+  
+  .button:hover {
+    background-color: #00dd8d;
+  }
+  
+  .iconLarge {
+    font-size: 36px; /* Ícono superior más grande */
+  }
+  
+  .iconSmall {
+    font-size: 24px; /* Ícono secundario proporcional */
+  }
+  

@@ -1,0 +1,101 @@
+.container {
+  padding-top: calc(24px + env(safe-area-inset-top));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding-top: calc(12px + env(safe-area-inset-top));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+.container::before,
+.container::after {
+    content: '';
+    position: absolute;
+    width: 120vw;
+    height: 120vh;
+    top: -10vh;
+    left: -10vw;
+    z-index: 0;
+    animation: bgShift 20s linear infinite;
+    background: radial-gradient(
+      circle at center,
+      transparent 0%,
+      rgba(0, 255, 157, 0.03) 40%,
+      transparent 70%
+    );
+}
+
+.container::after {
+    animation-delay: -10s;
+    animation-duration: 15s;
+}
+
+.title {
+  color: white;
+  text-align: left;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.noTripsText {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+  margin-top: 30px;
+}
+
+.cupoCard {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 255, 157, 0.1) !important;
+  border-radius: 16px !important;
+  padding: 24px;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cupoCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(0, 255, 157, 0.2),
+    0 8px 12px rgba(0, 255, 157, 0.1);
+}
+
+
+.passengerTitle {
+    color: white;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.listContainer {
+    padding-left: 20px;
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+.listItem {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 255, 157, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.listItem:last-child {
+    border-bottom: none;
+}
+
+  @keyframes bgShift {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(-5%, -5%) rotate(360deg); }
+  }

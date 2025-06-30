@@ -1,0 +1,314 @@
+.container {
+  padding-top: calc(56px + env(safe-area-inset-top));
+  padding-bottom: calc(36px + env(safe-area-inset-bottom));
+  padding-left: 28px;
+  padding-right: 28px;
+  background: linear-gradient(120deg, #10131a 60%, #18181b 100%);
+  min-height: 100vh;
+  min-width: 100vw;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding-top: calc(36px + env(safe-area-inset-top));
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 2.8rem;
+  margin-top: 1.7rem;
+  background: none;
+  position: relative;
+  z-index: 2;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
+
+.header button {
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(56, 189, 248, 0.10);
+  transition: background 0.18s;
+  border: none;
+  margin-right: 0.3rem;
+  margin-left: -0.5rem;
+  box-shadow: 0 2px 8px #38bdf822;
+}
+
+.header button:hover {
+  background: rgba(0, 255, 157, 0.18);
+}
+
+.header h3 {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #00ff9d;
+  letter-spacing: 0.7px;
+  margin: 0;
+  padding-left: 0.3rem;
+  text-shadow: 0 2px 12px #00ff9d33;
+}
+
+.input {
+  margin-top: 0.5rem;
+  min-width: 180px;
+  font-size: 1.13rem;
+  border-radius: 1.1rem;
+  border: none;
+  background: #18181b;
+  color: #fff;
+  box-shadow: 0 2px 8px #38bdf822;
+  transition: box-shadow 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 0 4px 16px #38bdf855;
+}
+
+.referralSection {
+  background: linear-gradient(120deg, #1e293b 60%, #38bdf8 100%);
+  padding: 2.5rem 2rem;
+  margin-bottom: 3rem;
+  border-radius: 2.5rem;
+  box-shadow: 0 10px 40px #38bdf855;
+  color: #fff;
+  transition: box-shadow 0.2s;
+  border: 2px solid #38bdf8;
+  position: relative;
+  overflow: hidden;
+}
+
+.referralSection:focus-within {
+  box-shadow: 0 16px 48px #38bdf888;
+}
+
+.referralTitle {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #38bdf8;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 12px #38bdf855;
+}
+
+.referralButton {
+  background: linear-gradient(90deg, #00ff9d, #38bdf8 80%);
+  color: #18181b;
+  font-weight: 700;
+  border-radius: 1.3rem;
+  border: none;
+  box-shadow: 0 2px 12px #00ff9d44;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.referralButton:hover {
+  background: linear-gradient(90deg, #38bdf8, #00ff9d 80%);
+  color: #18181b;
+  box-shadow: 0 6px 24px #00ff9d77;
+}
+
+.referralInfo {
+  gap: 2rem;
+  padding: 1.1rem 0;
+  align-items: center;
+}
+
+.referralCongrats {
+  color: #fff;
+  font-size: 1.45rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 12px #38bdf855;
+  margin-bottom: 0.2rem;
+}
+
+.couponSection {
+  background: linear-gradient(120deg, #18181b 60%, #00ff9d 100%);
+  padding: 2.5rem 2rem;
+  margin-bottom: 3rem;
+  border-radius: 2.5rem;
+  box-shadow: 0 10px 40px #00ff9d55;
+  color: #fff;
+  transition: box-shadow 0.2s;
+  border: 2px solid #00ff9d;
+  position: relative;
+  overflow: hidden;
+}
+
+.couponSection:focus-within {
+  box-shadow: 0 16px 48px #00ff9d88;
+}
+
+.couponTitle {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #00ff9d;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 12px #00ff9d55;
+}
+
+.redeemButton {
+  background: linear-gradient(90deg, #00ff9d, #38bdf8 80%);
+  color: #18181b;
+  font-weight: 700;
+  border-radius: 1.3rem;
+  border: none;
+  box-shadow: 0 2px 12px #00ff9d44;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.redeemButton:hover {
+  background: linear-gradient(90deg, #38bdf8, #00ff9d 80%);
+  color: #18181b;
+  box-shadow: 0 6px 24px #00ff9d77;
+}
+
+.card {
+  background: linear-gradient(120deg, #23263a 60%, #18181b 100%);
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 12px #38bdf822;
+  margin-bottom: 1.2rem;
+  border-radius: 1.4rem;
+  padding: 1.3rem 1.4rem;
+  transition: box-shadow 0.18s;
+}
+
+.card:hover {
+  box-shadow: 0 8px 28px #38bdf855;
+  border: 2px solid #38bdf8;
+}
+
+.card .mantine-Text-root {
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #23263a;
+}
+::-webkit-scrollbar-thumb {
+  background: #38bdf8;
+  border-radius: 4px;
+}
+
+/* Badge, Avatar, and Modal customizations */
+.mantine-Badge-root {
+  font-size: 1rem;
+  border-radius: 1rem;
+  padding: 0.3rem 1.1rem;
+  background: linear-gradient(90deg, #00ff9d 60%, #38bdf8 100%);
+  color: #18181b;
+  font-weight: 700;
+  box-shadow: 0 2px 8px #00ff9d33;
+}
+
+.mantine-Avatar-root {
+  border: 2.5px solid #38bdf8;
+  box-shadow: 0 2px 12px #38bdf855;
+  background: #10131a;
+}
+
+.mantine-Modal-root {
+  border-radius: 2rem;
+  overflow: hidden;
+  background: linear-gradient(120deg, #10131a 60%, #18181b 100%);
+  padding-top: 2.8rem !important;
+}
+
+.mantine-Modal-content {
+  border-radius: 2rem;
+  background: linear-gradient(120deg, #10131a 60%, #18181b 100%);
+  color: #fff;
+  box-shadow: 0 12px 48px #38bdf855;
+  padding: 2.5rem 1.7rem 1.7rem 1.7rem !important;
+}
+
+.mantine-Modal-header {
+  border-bottom: none;
+  background: none;
+  margin-bottom: 0.7rem;
+}
+
+.mantine-Modal-title {
+  color: #00ff9d;
+  font-weight: 900;
+  font-size: 1.5rem;
+  letter-spacing: 0.6px;
+  text-shadow: 0 2px 12px #00ff9d33;
+}
+
+.mantine-Button-root {
+  font-weight: 700;
+  border-radius: 1.3rem;
+  font-size: 1.13rem;
+  margin-top: 1.3rem;
+  background: linear-gradient(90deg, #00ff9d, #38bdf8 80%);
+  color: #18181b;
+  box-shadow: 0 2px 12px #00ff9d44;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.mantine-Button-root:hover {
+  background: linear-gradient(90deg, #38bdf8, #00ff9d 80%);
+  color: #18181b;
+  box-shadow: 0 6px 24px #00ff9d77;
+}
+
+.mantine-ScrollArea-root {
+  margin-top: 1.7rem;
+  margin-bottom: 1.7rem;
+  border-radius: 1.4rem;
+  background: rgba(56, 189, 248, 0.04);
+  box-shadow: 0 2px 12px #38bdf822;
+}
+
+@media (max-width: 600px) {
+  .referralSection,
+  .couponSection {
+    padding: 1.3rem 0.6rem;
+    border-radius: 1.2rem;
+    margin-bottom: 1.3rem;
+  }
+  .header {
+    margin-bottom: 1.3rem;
+    margin-top: 0.9rem;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+  }
+  .header h3 {
+    font-size: 1.4rem;
+    padding-left: 0.1rem;
+  }
+  .card {
+    padding: 0.8rem 0.8rem;
+    border-radius: 0.8rem;
+  }
+  .mantine-ScrollArea-root {
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+    border-radius: 0.8rem;
+  }
+  .mantine-Modal-content {
+    padding: 1.3rem 0.8rem 1.1rem 0.8rem !important;
+    border-radius: 1.1rem;
+  }
+  .mantine-Modal-root {
+    border-radius: 1.1rem;
+    padding-top: 1.3rem !important;
+  }
+}

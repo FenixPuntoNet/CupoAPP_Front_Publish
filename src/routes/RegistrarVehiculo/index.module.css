@@ -1,0 +1,409 @@
+:root {
+    --primary-color: #00ff9d;
+    --primary-hover: #00cc7d;
+    --bg-dark: #0d0d0d;
+    --bg-card: rgba(255, 255, 255, 0.02);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.8);
+     --text-tertiary: rgba(255, 255, 255, 0.6);
+    --error-color: #ff4d4d;
+    --success-color: #00ff9d;
+    --warning-color: #ffaa00;
+  }
+  
+  /* Container Principal */
+  .container {
+    min-height: 100vh;
+    background-color: var(--bg-dark);
+    padding: clamp(16px, 4vw, 24px);
+    position: relative;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* Fondo con Gradiente */
+  .gradientBackground {
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(circle at 15% 10%, rgba(0, 255, 157, 0.08) 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(0, 255, 157, 0.08) 0%, transparent 45%);
+    pointer-events: none;
+    z-index: 0;
+    animation: gradientShift 15s ease infinite alternate;
+  }
+  
+  @keyframes gradientShift {
+    0% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0.8;
+      transform: scale(1.1);
+    }
+  }
+  
+  /* Contenido Principal */
+  .content {
+    max-width: 800px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+  
+    /* Header y Navegación */
+  .header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 40px;
+    position: relative;
+  }
+  
+  .navigationHeader {
+    width: 100%;
+    margin-bottom: 24px;
+  }
+  
+  .backButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 255, 157, 0.05);
+    border: 1px solid rgba(0, 255, 157, 0.1);
+    color: var(--primary-color);
+    font-size: 15px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .backButton:hover {
+    background: rgba(0, 255, 157, 0.1);
+    transform: translateX(-4px);
+  }
+  
+  .title {
+     font-size: clamp(24px, 5vw, 32px);
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+    text-align: center;
+    text-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+  }
+  
+  .subtitle {
+    color: var(--text-secondary);
+    margin-top: 8px;
+    text-align: center;
+    font-size: 16px;
+  }
+  
+  /* Formulario Principal */
+  .formWrapper {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: clamp(20px, 4vw, 32px);
+    box-shadow: 
+      0 4px 24px rgba(0, 0, 0, 0.2),
+      0 0 0 1px rgba(0, 255, 157, 0.05);
+    backdrop-filter: blur(10px);
+    animation: formAppear 0.5s ease forwards;
+       max-width: 800px;
+       width: 100%;
+  }
+    @keyframes formAppear {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .form {
+     display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+   /* Grupos de Formulario */
+  .formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+  
+  .formGroup:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  
+  /* Labels e Inputs */
+  .label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .labelIcon {
+    color: var(--primary-color);
+    width: 16px;
+    height: 16px;
+  }
+  
+  .input,
+  .select {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    padding: 14px 16px;
+    font-size: 15px;
+    width: 100%;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+  }
+  
+  .input:hover,
+  .select:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(0, 255, 157, 0.2);
+  }
+  
+  .input:focus,
+  .select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(0, 255, 157, 0.05);
+    box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.1);
+  }
+    /* Upload de Fotos */
+    .photoSection {
+    text-align: center;
+   }
+  
+  .photoUpload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  
+   .photoPreview {
+    width: 200px;
+    height: 200px;
+   background: rgba(255, 255, 255, 0.03);
+    border: 2px dashed rgba(0, 255, 157, 0.3);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+     margin: 0 auto 12px auto;
+  }
+  
+  .photoPreview:hover {
+    border-color: var(--primary-color);
+    background: rgba(0, 255, 157, 0.05);
+     transform: translateY(-2px);
+  }
+  .previewImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 14px;
+  }
+  
+  .photoPlaceholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .placeholderIcon {
+    color: rgba(0, 255, 157, 0.5);
+    transition: all 0.3s ease;
+  }
+  
+  .placeholderText {
+    color: var(--text-tertiary);
+    font-size: 14px;
+  }
+  
+   .hiddenInput {
+    display: none;
+  }
+  
+    .photoOverlay {
+      position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.4);
+    color: var(--text-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .photoPreview:hover .photoOverlay {
+    opacity: 1;
+  }
+     .photoOverlay span {
+    font-size: 14px;
+     margin-top: 8px;
+  }
+    .photoUpload {
+       position: relative;
+      display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    }
+  .errorMessage {
+    color: var(--error-color);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+     margin-top: 16px;
+    gap: 8px;
+  }
+     /* Estados de Error */
+  .errorText {
+    color: var(--error-color);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    animation: errorShake 0.4s ease;
+  }
+  
+  @keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+   .errorMessage {
+    color: var(--error-color);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+     margin-top: 16px;
+    gap: 8px;
+  }
+  
+  /* Botones de Acción */
+  .buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 24px;
+  }
+  
+  .secondaryButton {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .secondaryButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  .primaryButton {
+    background: rgba(0, 255, 157, 0.1);
+    border: 1px solid rgba(0, 255, 157, 0.2);
+    color: var(--primary-color);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .primaryButton:hover {
+    background: rgba(0, 255, 157, 0.15);
+    transform: translateY(-1px);
+  }
+  
+  .primaryButton.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .loadingSpinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(0, 255, 157, 0.3);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  /* Media Queries */
+  @media (max-width: 640px) {
+    .container {
+      padding: 16px;
+    }
+  
+    .formWrapper {
+      padding: 20px;
+      border-radius: 16px;
+    }
+  
+    .formGrid {
+      grid-template-columns: 1fr;
+    }
+  
+    .buttonGroup {
+      flex-direction: column-reverse;
+      gap: 12px;
+    }
+  
+    .primaryButton,
+    .secondaryButton {
+      width: 100%;
+      justify-content: center;
+    }
+  }

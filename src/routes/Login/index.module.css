@@ -1,0 +1,359 @@
+
+.container {
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: white;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Efectos de fondo dinámicos */
+.container::before,
+.container::after {
+  content: '';
+  position: absolute;
+  width: 120vw;
+  height: 120vh;
+  top: -10vh;
+  left: -10vw;
+  z-index: 0;
+  animation: bgShift 20s linear infinite;
+  background: radial-gradient(
+    circle at center,
+    transparent 0%,
+    rgba(0, 255, 157, 0.03) 40%,
+    transparent 70%
+  );
+}
+
+.container::after {
+  animation-delay: -10s;
+  animation-duration: 15s;
+}
+
+/* Header con efecto de cristal */
+.backButton {
+  width: 45px;
+  height: 45px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00ff9d;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 255, 157, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.backButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0, 255, 157, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.backButton:hover {
+  transform: translateX(-5px);
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+}
+
+.backButton:hover::before {
+  opacity: 1;
+}
+
+/* Sección del logo con efectos avanzados */
+.logoSection {
+  text-align: center;
+  margin: 30px 0 50px;
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 25px;
+  position: relative;
+}
+
+.logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(0, 255, 157, 0.5));
+  animation: logoFloat 4s ease-in-out infinite;
+}
+
+.logo::before,
+.logo::after {
+  content: '';
+  position: absolute;
+  inset: -15px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 255, 157, 0.15), transparent 70%);
+  animation: logoPulse 3s ease-in-out infinite alternate;
+}
+
+.logo::after {
+  animation-delay: -1.5s;
+}
+
+.title {
+  font-size: 35px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  position: relative;
+  display: inline-block;
+}
+
+.userName {
+  background: linear-gradient(45deg, #00ff9d, #00cc7a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+}
+
+.userName::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ff9d, transparent);
+  animation: underlineShine 3s linear infinite;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  max-width: 300px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* Formulario con efectos modernos */
+.form {
+  max-width: 400px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.inputWrapper {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.inputLabel {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  margin-left: 4px;
+  transition: all 0.3s ease;
+}
+
+.input {
+  width: 100%;
+}
+
+.input input {
+  height: 56px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(0, 255, 157, 0.1) !important;
+  border-radius: 16px !important;
+  color: white !important;
+  font-size: 16px !important;
+  padding: 0 20px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  backdrop-filter: blur(10px);
+}
+
+.input input:focus {
+  border-color: #00ff9d !important;
+  box-shadow: 
+    0 0 0 1px rgba(0, 255, 157, 0.2),
+    0 0 20px rgba(0, 255, 157, 0.15);
+  transform: translateY(-2px);
+}
+
+.input input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.input input:focus::placeholder {
+  opacity: 0.7;
+  transform: translateX(5px);
+}
+
+.eyeButton {
+  width: 40px;
+  height: 40px;
+  color: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin-right: 8px;
+}
+
+.eyeButton:hover {
+  color: #00ff9d;
+  background: rgba(0, 255, 157, 0.1);
+}
+
+/* Botón de login con efectos avanzados */
+.loginButton {
+  height: 56px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(45deg, #00ff9d, #00cc7a) !important;
+  border: none !important;
+  color: black !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.5px !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  margin-top: 20px;
+}
+
+.loginButton::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transform: translateX(-100%) rotate(45deg);
+  transition: transform 0.6s ease;
+}
+
+.loginButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 30px rgba(0, 255, 157, 0.2),
+    0 8px 12px rgba(0, 255, 157, 0.1);
+}
+
+.loginButton:hover::before {
+  transform: translateX(100%) rotate(45deg);
+}
+
+.forgotPassword {
+  color: #00ff9d;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 20px;
+  padding: 10px;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.forgotPassword:hover {
+  opacity: 1;
+  text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+}
+
+.forgotPassword::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00ff9d, transparent);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.forgotPassword:hover::before {
+  transform: translateX(100%);
+}
+
+.version {
+  position: fixed;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+  z-index: 1;
+}
+
+/* Animaciones */
+@keyframes bgShift {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-5%, -5%) rotate(360deg); }
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes logoPulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.2); opacity: 0.2; }
+}
+
+@keyframes underlineShine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Animaciones de entrada */
+.form > * {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.inputWrapper:nth-child(1) { animation-delay: 0.2s; }
+.inputWrapper:nth-child(2) { animation-delay: 0.3s; }
+.loginButton { animation-delay: 0.4s; }
+.forgotPassword { animation-delay: 0.5s; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+  .title {
+    font-size: 28px;
+  }
+  
+  .input input {
+    height: 52px !important;
+  }
+  
+  .loginButton {
+    height: 52px !important;
+  }
+}

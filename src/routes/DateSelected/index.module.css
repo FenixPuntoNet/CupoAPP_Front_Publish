@@ -1,0 +1,54 @@
+.datePickerContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #0a0a0a;
+    color: white;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 1rem;
+  }
+  
+  .title {
+    font-size: 2rem;
+    color: #00ff9d;
+  }
+  
+  .close {
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .day {
+    background-color: transparent;
+    color: white;
+    border-radius: 50%;
+    padding: 0.5rem;
+  }
+  
+  .day.selected {
+    background-color: #00ff9d;
+    color: black;
+  }
+  
+  .weekday {
+    color: #00ff9d;
+  }
+  
+  .month {
+    color: white;
+    font-size: 1.2rem;
+  }
+  
+  .calendarHeader {
+    color: white;
+  }
+  
