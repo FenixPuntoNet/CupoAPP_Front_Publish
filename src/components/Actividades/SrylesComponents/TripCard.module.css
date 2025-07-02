@@ -242,3 +242,31 @@ box-shadow: 0 4px 12px rgba(245, 101, 101, 0.1) !important;
 .tripCard {
   animation: cardEntrance 0.5s ease-out;
 }
+
+/* Result Modal Styles */
+.resultModalBox {
+  background: rgba(0, 255, 157, 0.08);
+  border-radius: 18px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 255, 157, 0.15);
+  border: 1.5px solid rgba(0, 255, 157, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 320px;
+}
+
+.resultModalBox b {
+  color: #00cc7a;
+}
+
+.resultModalBox .mantine-Button-root {
+  margin-top: 2rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border-radius: 12px;
+}
+
+.resultModalBox .mantine-Text-root {
+  margin-bottom: 0.5rem;
+}

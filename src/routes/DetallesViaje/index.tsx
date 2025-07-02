@@ -28,6 +28,9 @@ import {
     Calendar,
     Check,
     MapPin,
+    AlertTriangle,
+    AlertCircle,
+    Info,
 } from 'lucide-react';
 import type { MantineTheme, } from '@mantine/core';
 import { DateTimePicker, } from '@mantine/dates';
@@ -37,6 +40,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import styles from './index.module.css';
 import { supabase } from '@/lib/supabaseClient';
+import { useAssumptions } from '../../hooks/useAssumptions';
 
 interface FormattedNumberInputProps extends Omit<NumberInputProps, 'onChange'> {
     onChange: (value: number) => void;
@@ -129,7 +133,7 @@ const PreviewInfo: React.FC<PreviewModalProps> = ({ isOpen, onClose, onConfirm, 
                                 <Group gap="sm">
                                     <Users className={styles.infoIcon} />
                                     <div>
-                                        <Text size="sm" fw={500}>Asientos</Text>
+                                        <Text size="sm" fw={500}>Cupos disponibles</Text>
                                         <Text size="xl" fw={600}>{data.seats}</Text>
                                     </div>
                                 </Group>
@@ -139,9 +143,12 @@ const PreviewInfo: React.FC<PreviewModalProps> = ({ isOpen, onClose, onConfirm, 
                                 <Group gap="sm">
                                     <DollarSign className={styles.infoIcon} />
                                     <div>
-                                        <Text size="sm" fw={500}>Precio por asiento</Text>
+                                        <Text size="sm" fw={500}>Precio por cupo</Text>
                                         <Text size="xl" fw={600}>
                                             ${data.pricePerSeat.toLocaleString()}
+                                        </Text>
+                                        <Text size="xs" c="dimmed">
+                                            Total: ${(data.pricePerSeat * data.seats).toLocaleString()}
                                         </Text>
                                     </div>
                                 </Group>
@@ -233,6 +240,10 @@ const DetallesViajeView = () => {
     const [tripData, setTripData] = useState<TripData>(tripStore.getStoredData());
     const [seats, setSeats] = useState<number>(1);
     const [pricePerSeat, setPricePerSeat] = useState<number>(0);
+    const [suggestedPrice, setSuggestedPrice] = useState<number>(0);
+    const [priceStatus, setPriceStatus] = useState<'normal' | 'high' | 'low'>('normal');
+    const [priceLimitPercentage, setPriceLimitPercentage] = useState<number>(50);
+    const [alertThresholdPercentage, setAlertThresholdPercentage] = useState<number>(20);
     const [description, setDescription] = useState<string>('');
     const [allowPets, setAllowPets] = useState<boolean>(false);
     const [allowSmoking, setAllowSmoking] = useState<boolean>(false);
@@ -246,10 +257,16 @@ const DetallesViajeView = () => {
     const [vehicles, setVehicles] = useState<any[]>([]);
     const [vehicleId, setVehicleId] = useState<string | null>(null);
 
+    // Hook para assumptions
+    const { assumptions, loading: assumptionsLoading, calculateTripPrice } = useAssumptions();
 
+
+    // Cálculo de garantía dinámica según assumptions
     const calculateRequiredBalance = (seats: number, pricePerSeat: number): number => {
+        if (!assumptions) return 0;
         const totalTripValue = seats * pricePerSeat;
-        return Math.ceil(totalTripValue * 0.15); // 15% del valor total del viaje
+        const fee = (assumptions.fee_percentage || 0) / 100;
+        return Math.ceil(totalTripValue * fee);
     };
 
     const checkAndFreezeWalletBalance = async (userId: string, requiredAmount: number) => {
@@ -306,45 +323,46 @@ const DetallesViajeView = () => {
       };
       
 
+    // useEffect de carga inicial (solo una vez)
     useEffect(() => {
         const storedData = tripStore.getStoredData();
         setStopovers(storedData?.stopovers || []);
-        console.log("Datos del viaje en Detalles (al cargar el componente):", storedData);
         setTripData(storedData);
-      
+
         const fetchVehicles = async () => {
-          const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
-      
-          if (sessionError || !sessionData?.user) {
-            console.error('Usuario no autenticado o error al obtener sesión:', sessionError?.message);
-            return;
-          }
-      
-          const { user } = sessionData;
-      
-          const { data, error } = await supabase
-            .from('vehicles')
-            .select('id, brand, model, plate')
-            .eq('user_id', user.id);
-      
-          if (error) {
-            console.error('Error obteniendo vehículos:', error.message);
-            return;
-          }
-      
-          setVehicles(data);
-          if (data.length === 1) {
-            setVehicleId(data[0].id.toString());
-          }
+            const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
+            if (sessionError || !sessionData?.user) return;
+            const { user } = sessionData;
+            const { data, error } = await supabase
+                .from('vehicles')
+                .select('id, brand, model, plate')
+                .eq('user_id', user.id);
+            if (!error && data) {
+                setVehicles(data);
+                if (data.length === 1) setVehicleId(data[0].id.toString());
+            }
         };
-      
         fetchVehicles();
-      
         if (!storedData.selectedRoute || !storedData.origin || !storedData.destination) {
-          navigate({ to: '/publicarviaje' });
+            navigate({ to: '/publicarviaje' });
         }
     }, [navigate]);
+
+    // useEffect para recalcular precio cuando cambian los datos del viaje o assumptions
+    useEffect(() => {
+        if (tripData.selectedRoute?.distance && !assumptionsLoading && assumptions) {
+            calculateSuggestedPrice();
+        }
+    }, [tripData.selectedRoute, assumptionsLoading, assumptions]);
       
+
+    // useEffect para cargar los porcentajes de configuración desde assumptions
+    useEffect(() => {
+        if (assumptions && !assumptionsLoading) {
+            setPriceLimitPercentage(assumptions.price_limit_percentage);
+            setAlertThresholdPercentage(assumptions.alert_threshold_percentage);
+        }
+    }, [assumptions, assumptionsLoading]);
 
 
     const validateForm = () => {
@@ -524,7 +542,7 @@ const DetallesViajeView = () => {
 
             const { data: route, error: routeError } = await supabase
                 .from('routes')
-                .insert([routeData])
+                .insert(routeData)
                 .select()
                 .single();
 
@@ -634,6 +652,64 @@ const DetallesViajeView = () => {
         }
     };
 
+    // Calcular precio sugerido por cupo (siempre dividido entre 4 cupos estándar)
+    const calculateSuggestedPrice = async () => {
+        if (!tripData.selectedRoute?.distance || !assumptions) return;
+        try {
+            setLoading(true);
+            const distanceMatch = tripData.selectedRoute.distance.match(/(\d+\.?\d*)/);
+            const distanceKm = distanceMatch ? parseFloat(distanceMatch[1]) : 0;
+            if (distanceKm > 0) {
+                const isUrban = distanceKm <= 30;
+                // Calcular precio total del viaje
+                const totalTripPrice = await calculateTripPrice(distanceKm, isUrban);
+                // Dividir siempre entre 4 cupos para obtener precio estándar por cupo
+                const suggestedPricePerSeat = Math.round(totalTripPrice / 4);
+                setSuggestedPrice(suggestedPricePerSeat);
+                if (pricePerSeat === 0) {
+                    setPricePerSeat(suggestedPricePerSeat);
+                }
+                validatePriceRange(pricePerSeat || suggestedPricePerSeat, suggestedPricePerSeat);
+            }
+        } catch (error) {
+            console.error('Error calculating suggested price:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Función para validar el rango de precios
+    const validatePriceRange = (currentPrice: number, suggested: number) => {
+        if (suggested === 0) return;
+        
+        const percentage = ((currentPrice - suggested) / suggested) * 100;
+        
+        if (percentage > alertThresholdPercentage) {
+            setPriceStatus('high');
+        } else if (percentage < -alertThresholdPercentage) {
+            setPriceStatus('low');
+        } else {
+            setPriceStatus('normal');
+        }
+    };
+
+    // Función para manejar cambios en el precio
+    const handlePriceChange = (value: number) => {
+        if (suggestedPrice === 0) {
+            setPricePerSeat(value);
+            return;
+        }
+        
+        // Limitar el precio usando el porcentaje dinámico
+        const limitFactor = priceLimitPercentage / 100;
+        const maxPrice = suggestedPrice * (1 + limitFactor);
+        const minPrice = suggestedPrice * (1 - limitFactor);
+        
+        const limitedPrice = Math.max(minPrice, Math.min(maxPrice, value));
+        setPricePerSeat(limitedPrice);
+        validatePriceRange(limitedPrice, suggestedPrice);
+    };
+
     if (!tripData.selectedRoute) return null;
 
     return (
@@ -738,32 +814,158 @@ const DetallesViajeView = () => {
                           />
                         )}
 
-                        <Group grow>
-                            <FormattedNumberInput
-                                label="Asientos disponibles"
-                                description="Máximo 6 asientos"
-                                value={seats}
-                                onChange={setSeats}
-                                min={1}
-                                max={6}
-                                required
-                                leftSection={<Users size={18} />}
-                                error={formError && formError.includes('asientos') ? formError : null}
-                            />
+                        {/* Sección de asientos */}
+                        <Card className={styles.seatsCard}>
+                            <Stack gap="md">
+                                <Group gap="apart" align="center">
+                                    <div>
+                                        <Text fw={600} size="lg">Asientos disponibles</Text>
+                                        <Text size="sm" c="dimmed">Selecciona cuántos cupos ofrecerás</Text>
+                                    </div>
+                                    <Users size={24} className={styles.seatsIcon} />
+                                </Group>
+                                
+                                <FormattedNumberInput
+                                    value={seats}
+                                    onChange={setSeats}
+                                    min={1}
+                                    max={6}
+                                    required
+                                    size="lg"
+                                    leftSection={<Users size={20} />}
+                                    error={formError && formError.includes('asientos') ? formError : null}
+                                    className={styles.seatsInput}
+                                />
+                                
+                                <Text size="xs" c="dimmed" className={styles.seatsHint}>
+                                    El precio se calcula de forma estándar para 4 cupos, sin importar cuántos publiques
+                                </Text>
+                            </Stack>
+                        </Card>
 
-                            <FormattedNumberInput
-                                label="Precio por asiento"
-                                description="En COP"
-                                value={pricePerSeat}
-                                onChange={setPricePerSeat}
-                                min={1000}
-                                required
-                                leftSection={<DollarSign size={18} />}
-                                error={formError && formError.includes('precio') ? formError : null}
-                                formatter={(value) => !value ? '$ 0' : `$ ${Number.parseInt(value).toLocaleString()}`}
-                                parser={(value) => value.replace(/[^\d]/g, '')}
-                            />
-                        </Group>
+                        {/* Sección de precio rediseñada */}
+                        <Card className={styles.priceCard}>
+                            <Stack gap="lg">
+                                <Group gap="apart" align="center">
+                                    <div>
+                                        <Text fw={600} size="lg">Configuración de precios</Text>
+                                        <Text size="sm" c="dimmed">Establece el precio por cupo de tu viaje</Text>
+                                    </div>
+                                    <DollarSign size={24} className={styles.priceIcon} />
+                                </Group>
+
+                                {/* Información del costo estimado del viaje */}
+                                {suggestedPrice > 0 && (
+                                    <div className={styles.tripCostInfo}>
+                                        <Text fw={500} size="md" mb="sm">💡 Análisis de costos del viaje</Text>
+                                        <div className={styles.costBreakdown}>
+                                            <div className={styles.costItem}>
+                                                <Text size="sm" c="dimmed">Costo estimado total del viaje:</Text>
+                                                <Text size="lg" fw={600} className={styles.totalCost}>
+                                                    ${(suggestedPrice * 4).toLocaleString()}
+                                                </Text>
+                                            </div>
+                                            <div className={styles.costDivider} />
+                                            <div className={styles.costItem}>
+                                                <Text size="sm" c="dimmed">Precio sugerido por cupo (÷4):</Text>
+                                                <Text size="lg" fw={600} className={styles.suggestedCost}>
+                                                    ${suggestedPrice.toLocaleString()}
+                                                </Text>
+                                            </div>
+                                            <Text size="xs" c="dimmed" className={styles.costExplanation}>
+                                                Este cálculo incluye combustible, peajes, desgaste del vehículo y otros gastos del viaje.
+                                            </Text>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Input de precio con validación visual */}
+                                <div className={styles.priceInputSection}>
+                                    <Text fw={500} mb="xs">Tu precio por cupo</Text>
+                                    <FormattedNumberInput
+                                        value={pricePerSeat}
+                                        onChange={handlePriceChange}
+                                        min={suggestedPrice > 0 ? suggestedPrice * (1 - priceLimitPercentage / 100) : 1000}
+                                        max={suggestedPrice > 0 ? suggestedPrice * (1 + priceLimitPercentage / 100) : 999999}
+                                        required
+                                        size="lg"
+                                        leftSection={<DollarSign size={20} />}
+                                        error={formError && formError.includes('precio') ? formError : null}
+                                        formatter={(value) => !value ? '$ 0' : `$ ${Number.parseInt(value).toLocaleString()}`}
+                                        parser={(value) => value.replace(/[^\d]/g, '')}
+                                        className={`${styles.priceInput} ${
+                                            priceStatus === 'high' ? styles.priceHigh : 
+                                            priceStatus === 'low' ? styles.priceLow : 
+                                            priceStatus === 'normal' ? styles.priceNormal : ''
+                                        }`}
+                                        placeholder="Ingresa tu precio"
+                                    />
+                                    
+                                    {/* Indicador visual del precio */}
+                                    {suggestedPrice > 0 && (
+                                        <div className={`${styles.priceIndicator} ${styles[`priceIndicator${priceStatus.charAt(0).toUpperCase() + priceStatus.slice(1)}`]}`}>
+                                            {priceStatus === 'high' && (
+                                                <>
+                                                    <AlertTriangle size={16} />
+                                                    <Text size="sm" fw={500}>
+                                                        Precio alto - ${((pricePerSeat - suggestedPrice) / suggestedPrice * 100).toFixed(0)}% por encima del sugerido
+                                                    </Text>
+                                                </>
+                                            )}
+                                            
+                                            {priceStatus === 'low' && (
+                                                <>
+                                                    <AlertCircle size={16} />
+                                                    <Text size="sm" fw={500}>
+                                                        Precio bajo - ${Math.abs((pricePerSeat - suggestedPrice) / suggestedPrice * 100).toFixed(0)}% por debajo del sugerido
+                                                    </Text>
+                                                </>
+                                            )}
+                                            
+                                            {priceStatus === 'normal' && (
+                                                <>
+                                                    <Info size={16} />
+                                                    <Text size="sm" fw={500}>
+                                                        Precio recomendado - Dentro del rango ideal
+                                                    </Text>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Resumen de ingresos */}
+                                {pricePerSeat > 0 && seats > 0 && (
+                                    <div className={styles.earningsPreview}>
+                                        <Text fw={500} size="md" mb="sm">📊 Resumen de ingresos</Text>
+                                        <div className={styles.earningsBreakdown}>
+                                            <div className={styles.earningsItem}>
+                                                <Text size="sm" c="dimmed">Ingresos brutos ({seats} cupos):</Text>
+                                                <Text size="md" fw={600}>
+                                                    ${(pricePerSeat * seats).toLocaleString()}
+                                                </Text>
+                                            </div>
+                                            <div className={styles.earningsItem}>
+                                                <Text size="sm" c="dimmed">Comisión de la plataforma ({assumptions?.fee_percentage || 15}%):</Text>
+                                                <Text size="md" fw={500} c="orange">
+                                                    -${Math.round(pricePerSeat * seats * (assumptions?.fee_percentage || 15) / 100).toLocaleString()}
+                                                </Text>
+                                            </div>
+                                            <div className={styles.earningsDivider} />
+                                            <div className={styles.earningsItem}>
+                                                <Text size="sm" fw={500}>Ingresos netos estimados:</Text>
+                                                <Text size="lg" fw={700} className={styles.netEarnings}>
+                                                    ${Math.round(pricePerSeat * seats * (1 - (assumptions?.fee_percentage || 15) / 100)).toLocaleString()}
+                                                </Text>
+                                            </div>
+                                        </div>
+                                        <Text size="xs" c="dimmed" className={styles.earningsNote}>
+                                            * Los ingresos finales pueden variar según las reservas confirmadas
+                                        </Text>
+                                    </div>
+                                )}
+                            </Stack>
+                        </Card>
 
                         <Textarea
                             label="Descripción del viaje"
@@ -850,6 +1052,13 @@ const DetallesViajeView = () => {
                             <Stack align="center" gap={4}>
                                 <Text size="lg" fw={600} ta="center" className={styles.modalTitle}>
                                     ¡Viaje publicado exitosamente!
+                                </Text>
+                                <Text size="sm" c="dimmed" ta="center">
+                                    <b>{seats} cupo{seats > 1 ? 's' : ''}</b> disponible{seats > 1 ? 's' : ''} a <b>${pricePerSeat.toLocaleString()}</b> cada uno
+                                </Text>
+                                <Text size="sm" c="dimmed" ta="center">
+                                    Se ha congelado una garantía de <b>${calculateRequiredBalance(seats, pricePerSeat).toLocaleString()}</b> COP 
+                                    ({assumptions?.fee_percentage || 0}% del valor total) como fee de publicación.
                                 </Text>
                                 <Text size="sm" c="dimmed" ta="center">
                                     Serás redirigido a tus viajes publicados

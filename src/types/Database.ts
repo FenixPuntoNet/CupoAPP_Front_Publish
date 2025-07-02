@@ -1093,7 +1093,7 @@ export type Database = {
           created_at?: string | null
           first_name: string
           id?: number
-          identification_number: string | null
+          identification_number?: string | null
           identification_type: string
           last_name: string
           phone_number?: string | null
@@ -1246,6 +1246,39 @@ export type Database = {
         }
         Relationships: []
       }
+      assumptions: {
+        Row: {
+          id: number
+          urban_price_per_km: number
+          interurban_price_per_km: number
+          fee_percentage: number
+          price_limit_percentage: number
+          alert_threshold_percentage: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          urban_price_per_km: number
+          interurban_price_per_km: number
+          fee_percentage: number
+          price_limit_percentage?: number
+          alert_threshold_percentage?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          urban_price_per_km?: number
+          interurban_price_per_km?: number
+          fee_percentage?: number
+          price_limit_percentage?: number
+          alert_threshold_percentage?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1271,7 +1304,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {

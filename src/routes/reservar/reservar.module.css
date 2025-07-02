@@ -369,98 +369,163 @@
     box-shadow: 0 8px 32px rgba(0, 255, 157, 0.3);
 }
 
-/* Sección de fecha y precio */
+/* --- NUEVO: Mejoras visuales para el badge de precio y la tarjeta en móvil --- */
+
+.resultCard {
+  background: rgba(20, 20, 20, 0.98);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,255,157,0.10), 0 1.5px 8px rgba(0,0,0,0.10);
+  border: 1.5px solid rgba(0,255,157,0.13);
+  margin-bottom: 1.5rem;
+  padding: 1.2rem 1.1rem 1.5rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: box-shadow 0.2s, border 0.2s;
+  position: relative;
+}
+
+@media (max-width: 600px) {
+  .resultCard {
+    padding: 0.9rem 0.5rem 1.2rem 0.5rem;
+    border-radius: 14px;
+    margin-bottom: 1.1rem;
+  }
+}
+
+/* Badge de precio en header - alineado a la derecha */
+.priceBadge, .resultCard .mantine-Badge-root {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px;
+  min-width: 110px;
+  box-shadow: 0 3px 12px rgba(0,255,157,0.12);
+  border-radius: 10px !important;
+  padding: 0.7rem 1rem !important;
+  gap: 0.4rem;
+  margin: 0 !important;
+}
+
+/* Badge colores personalizados para estados */
+.mantine-Badge-root[data-color='green'] {
+  background: linear-gradient(90deg, #00ff9d 0%, #00e6b2 100%) !important;
+  color: #0a0a0a !important;
+}
+.mantine-Badge-root[data-color='yellow'] {
+  background: linear-gradient(90deg, #ffe066 0%, #ffd700 100%) !important;
+  color: #222 !important;
+}
+.mantine-Badge-root[data-color='red'] {
+  background: linear-gradient(90deg, #ff5e62 0%, #ff9966 100%) !important;
+  color: #fff !important;
+}
+.mantine-Badge-root[data-color='gray'] {
+  background: #222 !important;
+  color: #bbb !important;
+}
+
+/* Mejorar separación visual en móvil */
+@media (max-width: 600px) {
+  .headerSection {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.6rem;
+  }
+  .dateText {
+    font-size: 0.95rem;
+  }
+  .driverSection {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 0.5rem;
+  }
+  .tripRoute {
+    padding: 0.7rem;
+    gap: 0.7rem;
+  }
+  .additionalInfo {
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.4rem 0;
+  }
+  .routeViewButtonWrapper {
+    margin-top: 0.2rem;
+  }
+}
+
+/* Botón reservar más grande y atractivo en móvil */
+.reserveButton {
+  width: 100%;
+  margin-top: 0.7rem;
+  font-size: 1.08rem;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 12px 0;
+  background: linear-gradient(90deg, #00ff9d 0%, #00e6b2 100%) !important;
+  color: #0a0a0a !important;
+  border: none !important;
+  box-shadow: 0 2px 12px rgba(0,255,157,0.10);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+.reserveButton:hover {
+  background: linear-gradient(90deg, #00e6b2 0%, #00ff9d 100%) !important;
+  color: #0a0a0a !important;
+  box-shadow: 0 4px 16px rgba(0,255,157,0.18);
+}
+
+/* Sección de fecha y precio - mejorada */
 .headerSection {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dateText {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1.2rem; /* Aumenta el tamaño de la fuente */
-  font-weight: 600; /* Opcional: hace que el texto sea más grueso */
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.priceBadge {
-    background: rgba(0, 255, 157, 0.1);
-    color: #00ff9d;
-    font-weight: 600;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-size: 1.1rem;
+.dateText::before {
+  content: "📅";
+  font-size: 1rem;
 }
 
-/* Sección del conductor */
-.driverSection {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.driverPhoto {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(0, 255, 157, 0.3);
-}
-
-.driverLabel {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.8rem;
-    margin-bottom: 0.25rem;
-}
-
-.driverName {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-/* Información adicional */
-.additionalInfo {
-    display: flex;
-    justify-content: space-between; /* Distribuye los elementos horizontalmente */
-    align-items: center;
-    gap: 1rem;
-    padding: 0.5rem 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    flex-wrap: nowrap; /* Evita que los elementos se apilen */
-}
-
-.infoItem {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1; /* Asegura que los elementos ocupen el mismo espacio */
-    text-align: center;
-    white-space: nowrap; /* Evita que el texto se corte en varias líneas */
-}
-
-.infoIcon {
-    color: rgba(0, 255, 157, 0.8);
-}
-
-.infoText {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-/* Responsividad */
-@media (max-width: 768px) {
+/* Estilos responsivos */
+@media (max-width: 600px) {
     .additionalInfo {
-        flex-wrap: wrap; /* Permite que los elementos se apilen en pantallas pequeñas */
-        justify-content: flex-start; /* Alinea los elementos al inicio */
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 0.6rem;
+        margin: 0.6rem 0;
     }
-
     .infoItem {
-        flex: none; /* Evita que los elementos se estiren en pantallas pequeñas */
-        width: 100%; /* Cada elemento ocupa toda la fila */
-        justify-content: flex-start;
+        flex-direction: row;
         text-align: left;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        padding: 0.4rem 0.6rem;
+    }
+    .infoIcon {
+        padding: 0.3rem;
+    }
+    .infoText {
+        text-align: left;
+        font-size: 0.78rem;
     }
 }
 
@@ -726,4 +791,150 @@
 .input input,
 .input .mantine-Input-input {
   font-size: 16px !important;
+}
+
+/* Sección del conductor - mejorada */
+.driverSection {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 157, 0.08);
+  transition: all 0.2s ease;
+}
+
+.driverSection:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(0, 255, 157, 0.15);
+}
+
+.driverPhoto {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(255,255,255,0.10);
+  border: 2px solid #00ff9d;
+  box-shadow: 0 2px 8px rgba(0,255,157,0.15);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.driverInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.driverLabel {
+  color: #00ff9d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 0.1rem;
+}
+
+.driverName {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.1px;
+}
+
+@media (max-width: 600px) {
+  .driverSection {
+    gap: 0.6rem;
+    padding: 0.6rem;
+    margin-bottom: 0.8rem;
+  }
+  .driverPhoto {
+    width: 36px;
+    height: 36px;
+  }
+  .driverName {
+    font-size: 0.9rem;
+  }
+}
+
+/* Mensaje de estado del precio - más sutil */
+.priceStatusMsg {
+  text-align: left;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 0.8rem;
+  margin-top: 0.3rem;
+  letter-spacing: 0.1px;
+  color: #fff;
+  opacity: 0.7;
+  transition: color 0.2s;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  border-left: 3px solid;
+}
+.priceStatusMsg--green { 
+  color: #00ff9d; 
+  border-left-color: #00ff9d;
+  background: rgba(0,255,157,0.05);
+}
+.priceStatusMsg--yellow { 
+  color: #ffd700; 
+  border-left-color: #ffd700;
+  background: rgba(255,215,0,0.05);
+}
+.priceStatusMsg--red { 
+  color: #ff5e62; 
+  border-left-color: #ff5e62;
+  background: rgba(255,94,98,0.05);
+}
+
+/* Información adicional - mejorada */
+.additionalInfo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.8rem;
+    padding: 0.8rem;
+    margin: 0.8rem 0;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 255, 157, 0.08);
+}
+
+.infoItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.3rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.infoItem:hover {
+    background: rgba(0, 255, 157, 0.05);
+    transform: translateY(-1px);
+}
+
+.infoIcon {
+    color: #00ff9d;
+    background: rgba(0, 255, 157, 0.1);
+    padding: 0.4rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 255, 157, 0.1);
+}
+
+.infoText {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.3;
+    text-align: center;
 }

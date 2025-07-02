@@ -22,6 +22,7 @@ import type { Trip } from './Actividades'
 import CuposReservados from '../../routes/CuposReservados'
 import { supabase } from '@/lib/supabaseClient'
 import { useNavigate } from '@tanstack/react-router'
+import { useAssumptions } from '../../hooks/useAssumptions'
 
 interface TripCardProps {
   trip: Trip
@@ -34,9 +35,13 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
   const [tripStatus, setTripStatus] = useState(trip.status)
   const [loading, setLoading] = useState(false)
   const [modalAction, setModalAction] = useState<'start' | 'cancel' | 'finish' | null>(null)
+  const [resultModal, setResultModal] = useState<null | { title: string, cobro?: number, devolucion?: number, color: string, message: string }>(null);
   const navigate = useNavigate()
 
-  const PERCENTAGE_TO_CHARGE = 0.15
+  const { assumptions } = useAssumptions();
+
+  // Usar el fee dinámico de assumptions
+  const feePercentage = (assumptions?.fee_percentage ?? 15) / 100;
 
   useEffect(() => {
     const fetchPassengerCount = async () => {
@@ -65,36 +70,39 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
   const handleCloseActionModal = () => setModalAction(null)
 
   const executeAction = async () => {
-    if (!modalAction) return
-
-    setLoading(true)
+    if (!modalAction) return;
+    setLoading(true);
     try {
       const { data: wallet } = await supabase
         .from('wallets')
         .select('id, balance, frozen_balance')
         .eq('user_id', userId)
-        .single()
+        .single();
 
       if (!wallet || typeof wallet.id !== 'number') {
         throw new Error('No se encontró la wallet o el ID es inválido.')
       }
 
-      const seats = Number(trip.seats || 0)
-      const seatsReserved = parseFloat(trip.seats_reserved as unknown as string || '0')
-      const totalCupos = seats + seatsReserved
+      const seatsAvailable = Number(trip.seats || 0) // Cupos disponibles
+      const seatsReserved = Number(trip.seats_reserved || 0) // Cupos vendidos/reservados
+      const totalSeatsPublished = seatsAvailable + seatsReserved // Total publicado originalmente
       const seatPrice = trip.pricePerSeat || 0
-      const commissionPerSeat = seatPrice * PERCENTAGE_TO_CHARGE
+      const commissionPerSeat = seatPrice * feePercentage;
 
       if (modalAction === 'start') {
-        const totalCobro = totalCupos * commissionPerSeat
-        const cuposNoVendidos = seats
-        const devolucion = cuposNoVendidos * commissionPerSeat
+        // Al iniciar el viaje, se cobra fee SOLO sobre los cupos vendidos
+        const feeOnSoldSeats = seatsReserved * commissionPerSeat
+        // Se devuelve el fee de los cupos no vendidos (que estaba congelado)
+        const feeRefundUnsoldSeats = seatsAvailable * commissionPerSeat
+        
+        // El monto total congelado originalmente era por todos los cupos publicados
+        const totalFrozenAmount = totalSeatsPublished * commissionPerSeat
 
         await supabase
           .from('wallets')
           .update({
-            balance: (wallet.balance || 0) + devolucion,
-            frozen_balance: (wallet.frozen_balance || 0) - totalCobro
+            balance: (wallet.balance || 0) + feeRefundUnsoldSeats,
+            frozen_balance: (wallet.frozen_balance || 0) - totalFrozenAmount
           })
           .eq('id', wallet.id)
 
@@ -102,15 +110,15 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
           {
             wallet_id: wallet.id,
             transaction_type: 'cobro',
-            amount: totalCobro,
-            detail: `Cobro por ${totalCupos} cupos publicados`,
+            amount: feeOnSoldSeats,
+            detail: `Cobro de fee por ${seatsReserved} cupos vendidos`,
             status: 'completed'
           },
           {
             wallet_id: wallet.id,
             transaction_type: 'devolución',
-            amount: devolucion,
-            detail: `Devolución por ${cuposNoVendidos} cupos no vendidos`,
+            amount: feeRefundUnsoldSeats,
+            detail: `Devolución de fee por ${seatsAvailable} cupos no vendidos`,
             status: 'completed'
           }
         ]
@@ -122,11 +130,13 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
 
         await supabase.from('trips').update({ status: 'progress' }).eq('id', trip.id)
         setTripStatus('progress')
-        showNotification({
+        setResultModal({
           title: 'Viaje Iniciado',
-          message: `Se cobró por ${totalCupos} cupos y se devolvió ${devolucion.toFixed(2)} COP.`,
-          color: 'green'
-        })
+          cobro: feeOnSoldSeats,
+          devolucion: feeRefundUnsoldSeats,
+          color: 'green',
+          message: `Se cobró fee por ${seatsReserved} cupos vendidos y se devolvió ${feeRefundUnsoldSeats.toLocaleString()} COP por cupos no vendidos.`
+        });
       }
 
       if (modalAction === 'cancel') {
@@ -139,7 +149,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
           return
         }
 
-        const totalCongelado = (seats + seatsReserved) * commissionPerSeat
+        const totalCongelado = totalSeatsPublished * commissionPerSeat
 
         await supabase
           .from('wallets')
@@ -160,21 +170,22 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
 
         await supabase.from('trips').update({ status: 'canceled' }).eq('id', trip.id)
         setTripStatus('canceled')
-        showNotification({
+        setResultModal({
           title: 'Viaje Cancelado',
-          message: 'Saldo devuelto correctamente.',
-          color: 'orange'
-        })
+          devolucion: totalCongelado,
+          color: 'orange',
+          message: 'Saldo devuelto correctamente.'
+        });
       }
 
       if (modalAction === 'finish') {
         await supabase.from('trips').update({ status: 'finished' }).eq('id', trip.id)
         setTripStatus('finished')
-        showNotification({
+        setResultModal({
           title: 'Viaje Finalizado',
-          message: 'El viaje se marcó como finalizado.',
           color: 'green',
-        })
+          message: 'El viaje se marcó como finalizado.'
+        });
       }
     } catch (err) {
       showNotification({
@@ -218,8 +229,8 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
       <Group gap="sm" className={styles.tripInfoGroup}>
         <Badge leftSection={<Clock size={14} />}>{trip.duration}</Badge>
         <Badge leftSection={<Navigation size={14} />}>{trip.distance}</Badge>
-        <Badge leftSection={<Users size={14} />}>{totalSeats} Asientos</Badge>
-        <Badge leftSection={<DollarSign size={14} />}>{trip.pricePerSeat} COP/Asiento</Badge>
+        <Badge leftSection={<Users size={14} />}>{totalSeats} Cupos</Badge>
+        <Badge leftSection={<DollarSign size={14} />}>{trip.pricePerSeat} COP/Cupo</Badge>
       </Group>
 
       <Text size="sm" color="dimmed" className={styles.tripSummary}>
@@ -279,6 +290,24 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
           <Button variant="default" onClick={handleCloseActionModal}>Cancelar</Button>
           <Button color="green" onClick={executeAction} loading={loading}>Confirmar</Button>
         </Group>
+      </Modal>
+
+      <Modal opened={!!resultModal} onClose={() => setResultModal(null)} size="lg" centered>
+        <div className={styles.resultModalBox}>
+          <Text size="xl" fw={700} mb="md" color={resultModal?.color}>{resultModal?.title}</Text>
+          {typeof resultModal?.cobro === 'number' && (
+            <Text size="md" color="red" mb={4}>
+              <b>Total cobrado:</b> {resultModal.cobro.toLocaleString()} COP
+            </Text>
+          )}
+          {typeof resultModal?.devolucion === 'number' && (
+            <Text size="md" color="green" mb={4}>
+              <b>Total devuelto:</b> {resultModal.devolucion.toLocaleString()} COP
+            </Text>
+          )}
+          <Text size="md" color="dimmed" mt="md">{resultModal?.message}</Text>
+          <Button mt="xl" color={resultModal?.color} onClick={() => setResultModal(null)} fullWidth>Aceptar</Button>
+        </div>
       </Modal>
     </div>
   )

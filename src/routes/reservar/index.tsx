@@ -15,6 +15,8 @@ import type { Trip } from '@/types/Trip';
 import { Modal } from '@mantine/core';
 import { GoogleMap } from '@react-google-maps/api';
 import { Rating } from '@mantine/core';
+import { useAssumptions } from '@/hooks/useAssumptions';
+import { IconArrowUpRight, IconArrowDownLeft, IconCheck } from '@tabler/icons-react';
 
 
 
@@ -72,6 +74,7 @@ const ReservarView = () => {
     const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
     const placesService = useRef<google.maps.places.PlacesService | null>(null);
     const searchTimeout = useRef<NodeJS.Timeout>();
+    const { assumptions } = useAssumptions();
 
     useEffect(() => {
         if (
@@ -357,6 +360,32 @@ const ReservarView = () => {
         setReservationModalOpen(false);
     };
 
+    // Utilidad para parsear distancia ("123 km" o "12.3 km") a número
+    const parseDistanceKm = (distanceStr: string): number => {
+        if (!distanceStr) return 0;
+        const match = distanceStr.match(/([\d,.]+)/);
+        if (!match) return 0;
+        return parseFloat(match[1].replace(',', '.'));
+    };
+
+    // Determina el estado del precio ("high", "low", "normal")
+    const getPriceStatus = (
+        actual: number,
+        suggested: number,
+        priceLimit: number,
+        alertThreshold: number
+    ) => {
+        const min = suggested * (1 - priceLimit / 100);
+        const max = suggested * (1 + priceLimit / 100);
+        const alertMin = suggested * (1 - alertThreshold / 100);
+        const alertMax = suggested * (1 + alertThreshold / 100);
+        if (actual < alertMin) return { status: 'low', color: 'red', icon: <IconArrowDownLeft size={16} /> };
+        if (actual > alertMax) return { status: 'high', color: 'red', icon: <IconArrowUpRight size={16} /> };
+        if (actual < min) return { status: 'low', color: 'yellow', icon: <IconArrowDownLeft size={16} /> };
+        if (actual > max) return { status: 'high', color: 'yellow', icon: <IconArrowUpRight size={16} /> };
+        return { status: 'normal', color: 'green', icon: <IconCheck size={16} /> };
+    };
+
     if (loadError) {
         return <div>Error al cargar Google Maps</div>;
       }
@@ -562,52 +591,143 @@ const ReservarView = () => {
 
                 {/* Results Section */}
                 <Box className={styles.resultsSection}>
-                    <Title className={styles.resultsTitle}>Viajes disponibles</Title>
-
                     {searchResults.length > 0 ? (
-                        <div className={styles.tripsGrid}>
-                            {searchResults.map((trip) => (
-                                <Card key={trip.id} className={styles.tripCard}>
-                                    {/* Fecha y precio */}
-                                    <div className={styles.headerSection}>
-                                       <Text fw={600} size="md" className={styles.dateText}>
-                                         {new Date(trip.dateTime).toLocaleString('es-ES', {
-                                           day: '2-digit',
-                                           month: '2-digit',
-                                           year: 'numeric',
-                                           hour: '2-digit',
-                                           minute: '2-digit',
-                                           hour12: true, // si prefieres formato 12h con AM/PM, cámbialo a false si prefieres 24h
-                                         })}
-                                       </Text>
+                        <div className={styles.resultsList}>
+                            {searchResults.map((trip) => {
+                              // Calcular sugerido y estado del precio
+                              let priceBadge = null;
+                              let priceStatusMsg = null;
+                              let badge = null;
+                              if (assumptions && trip.selectedRoute?.distance) {
+                                const distanceKm = parseDistanceKm(trip.selectedRoute.distance);
+                                const isUrban = distanceKm <= 30; // Lógica para determinar si es urbano
+                                const pricePerKm = isUrban
+                                    ? assumptions.urban_price_per_km
+                                    : assumptions.interurban_price_per_km;
+                                
+                                // Calcular precio total del viaje
+                                const totalTripPrice = distanceKm * pricePerKm;
+                                
+                                // Dividir siempre entre 4 cupos estándar para obtener precio por cupo
+                                const suggestedPricePerSeat = totalTripPrice / 4;
+                                
+                                const { price_limit_percentage, alert_threshold_percentage } = assumptions;
+                                badge = getPriceStatus(
+                                    trip.pricePerSeat,
+                                    suggestedPricePerSeat,
+                                    price_limit_percentage,
+                                    alert_threshold_percentage
+                                );
+                                priceBadge = (
+                                  <Badge color={badge.color} leftSection={badge.icon} size="lg" radius="md" variant="filled" style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: 4 }}>
+                                    ${trip.pricePerSeat.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
+                                  </Badge>
+                                );
+                                // Mensaje breve según estado
+                                let msg = '';
+                                if (badge.status === 'high') msg = 'El precio está alto para esta ruta';
+                                else if (badge.status === 'low') msg = 'El precio está bajo para esta ruta';
+                                else msg = 'Precio recomendado para la ruta';
+                                priceStatusMsg = (
+                                  <div className={`${styles.priceStatusMsg} ${styles['priceStatusMsg--' + badge.color]}`}>{msg}</div>
+                                );
+                              } else {
+                                priceBadge = (
+                                  <Badge color="gray" size="lg" radius="md" variant="light" style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: 4 }}>
+                                    ${trip.pricePerSeat.toLocaleString('es-CO', { minimumFractionDigits: 0 })}
+                                  </Badge>
+                                );
+                              }
+                                return (
+                                <Card key={trip.id} className={styles.resultCard} shadow="md" radius="lg" p="lg">
+                                  {/* Header con fecha y precio */}
+                                  <div className={styles.headerSection}>
+                                    <Text fw={600} size="md" className={styles.dateText}>
+                                      {new Date(trip.dateTime).toLocaleString('es-ES', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: true,
+                                      })}
+                                    </Text>
+                                    {priceBadge}
+                                  </div>
+                                  
+                                  {/* Mensaje de estado de precio */}
+                                  {priceStatusMsg}
+                                  
+                                  {/* Información del conductor */}
+                                  <div className={styles.driverSection}>
+                                    <img
+                                      src={trip.photo}
+                                      alt="Foto del conductor"
+                                      className={styles.driverPhoto}
+                                    />
+                                    <div className={styles.driverInfo}>
+                                      <div className={styles.driverLabel}>Conductor</div>
+                                      <div className={styles.driverName}>{trip.driverName || 'No disponible'}</div>
+                                      <div className={styles.driverRating}>
+                                        {trip.rating !== undefined ? (
+                                          <Rating value={trip.rating} readOnly size="xs" />
+                                        ) : (
+                                          <Text c="gray" size="xs">Nuevo</Text>
+                                        )}
+                                      </div>
                                     </div>
-                            
-                                    {/* Información del conductor */}
-                                    <div className={styles.driverSection}>
-                                        <img
-                                            src={trip.photo}
-                                            alt="Foto del conductor"
-                                            className={styles.driverPhoto}
-                                        />
-                                        <div>
-                                            <Text fw={500} size="xs" className={styles.driverLabel}>
-                                                Conductor:
-                                            </Text>
-                                            <Text fw={500} size="sm" className={styles.driverName}>
-                                                {trip.driverName || 'No disponible'}
-                                            </Text>
-                                            <div className={styles.driverRating}>
-                                             {trip.rating !== undefined ? (
-                                               <Rating value={trip.rating} readOnly size="xs" />
-                                             ) : (
-                                               <Text c="gray" size="xs">Nuevo</Text>
-                                             )}
-                                            </div>
-                                        </div>
+                                  </div>
+                                  
+                                  {/* Ruta de origen a destino */}
+                                  <div className={styles.tripRoute}
+                                    onClick={() => {
+                                      setSelectedRouteInfo({
+                                        origin: trip.origin.address,
+                                        destination: trip.destination.address,
+                                      });
+                                      setShowRouteModal(true);
+                                    }}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        setSelectedRouteInfo({
+                                          origin: trip.origin.address,
+                                          destination: trip.destination.address,
+                                        });
+                                        setShowRouteModal(true);
+                                      }
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <div className={styles.routePoint}>
+                                      <div className={styles.iconWrapper}>
+                                        <MapPin size={20} className={`${styles.routeIcon} ${styles.originIcon}`} />
+                                      </div>
+                                      <div className={styles.routeDetails}>
+                                        <Text fw={600} className={styles.routeLabel}>Origen</Text>
+                                        <Text fw={500} className={styles.routeAddress}>{trip.origin.address}</Text>
+                                      </div>
                                     </div>
-                            
-                                    {/* Ruta de origen a destino */}
-                                    <div className={styles.tripRoute}
+                                    <div className={styles.routeLineWrapper}>
+                                      <div className={styles.routeLine}></div>
+                                    </div>
+                                    <div className={styles.routePoint}>
+                                      <div className={styles.iconWrapper}>
+                                        <MapPin size={20} className={`${styles.routeIcon} ${styles.destinationIcon}`} />
+                                      </div>
+                                      <div className={styles.routeDetails}>
+                                        <Text fw={600} className={styles.routeLabel}>Destino</Text>
+                                        <Text fw={500} className={styles.routeAddress}>{trip.destination.address}</Text>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className={styles.routeViewButtonWrapper}>
+                                    <Button
+                                      variant="outline"
+                                      size="xs"
+                                      className={styles.routeViewButton}
                                       onClick={() => {
                                         setSelectedRouteInfo({
                                           origin: trip.origin.address,
@@ -615,99 +735,49 @@ const ReservarView = () => {
                                         });
                                         setShowRouteModal(true);
                                       }}
-                                      role="button"
-                                      tabIndex={0}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                          setSelectedRouteInfo({
-                                            origin: trip.origin.address,
-                                            destination: trip.destination.address,
-                                          });
-                                          setShowRouteModal(true);
-                                        }
-                                      }}
-                                      style={{ cursor: 'pointer' }}
                                     >
-                                      <div className={styles.routePoint}>
-                                        <div className={styles.iconWrapper}>
-                                          <MapPin size={20} className={`${styles.routeIcon} ${styles.originIcon}`} />
-                                        </div>
-                                        <div className={styles.routeDetails}>
-                                          <Text fw={600} className={styles.routeLabel}>Origen</Text>
-                                          <Text fw={500} className={styles.routeAddress}>{trip.origin.address}</Text>
-                                        </div>
-                                      </div>
-                                      <div className={styles.routeLineWrapper}>
-                                        <div className={styles.routeLine}></div>
-                                      </div>
-                                      <div className={styles.routePoint}>
-                                        <div className={styles.iconWrapper}>
-                                          <MapPin size={20} className={`${styles.routeIcon} ${styles.destinationIcon}`} />
-                                        </div>
-                                        <div className={styles.routeDetails}>
-                                          <Text fw={600} className={styles.routeLabel}>Destino</Text>
-                                          <Text fw={500} className={styles.routeAddress}>{trip.destination.address}</Text>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <div className={styles.routeViewButtonWrapper}>
-                                      <Button
-                                        variant="outline"
-                                        size="xs"
-                                        className={styles.routeViewButton}
-                                        onClick={() => {
-                                          setSelectedRouteInfo({
-                                            origin: trip.origin.address,
-                                            destination: trip.destination.address,
-                                          });
-                                          setShowRouteModal(true);
-                                        }}
-                                      >
-                                        Ver ruta
-                                      </Button>
-                                    </div>
-                                    
-                                    
-                                    
-
-                                     {/* Información adicional */}
-                                    <div className={styles.additionalInfo}>
-                                        <div className={styles.infoItem}>
-                                            <Clock size={16} className={styles.infoIcon} />
-                                            <Text fw={500} size="sm" className={styles.infoText}>
-                                                {trip.selectedRoute.duration} - Tiempo de Viaje
-                                            </Text>
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <Navigation size={16} className={styles.infoIcon} />
-                                            <Text fw={500} size="sm" className={styles.infoText}>
-                                                {trip.selectedRoute.distance} - Distancia de Viaje
-                                            </Text>
-                                        </div>
-                                        <div className={styles.infoItem}>
-                                            <User size={16} className={styles.infoIcon} />
-                                            <Text fw={500} size="sm" className={styles.infoText}>
-                                              {(trip.seats ?? 0).toString()} - Cupos disponibles
-                                            </Text>
-                                        </div>
-                                    </div>
-                                    <Badge className={styles.priceBadge}>
-                                            ${trip.pricePerSeat.toLocaleString()} cupo
-                                    </Badge>
-                            
-                                    {/* Botón de reservar */}
-                                    <Button
-                                        className={styles.reserveButton}
-                                        onClick={() => {
-                                            handleReservation(trip);
-                                            setReservationModalOpen(true);
-                                        }}
-                                    >
-                                        Reservar
+                                      Ver ruta
                                     </Button>
+                                  </div>
+                                  
+                                  
+
+                                   {/* Información adicional */}
+                                  <div className={styles.additionalInfo}>
+                                      <div className={styles.infoItem}>
+                                          <Clock size={16} className={styles.infoIcon} />
+                                          <Text fw={500} size="sm" className={styles.infoText}>
+                                              {trip.selectedRoute.duration} - Tiempo de Viaje
+                                          </Text>
+                                      </div>
+                                      <div className={styles.infoItem}>
+                                          <Navigation size={16} className={styles.infoIcon} />
+                                          <Text fw={500} size="sm" className={styles.infoText}>
+                                              {trip.selectedRoute.distance} - Distancia de Viaje
+                                          </Text>
+                                      </div>
+                                      <div className={styles.infoItem}>
+                                          <User size={16} className={styles.infoIcon} />
+                                          <Text fw={500} size="sm" className={styles.infoText}>
+                                        {(trip.seats ?? 0).toString()} - Cupos disponibles
+                                          </Text>
+                                      </div>
+                                  </div>
+                                  
+                                  {/* Botón de reservar */}
+                                  <Button
+                                      fullWidth
+                                      className={styles.reserveButton}
+                                      onClick={() => {
+                                          handleReservation(trip);
+                                          setReservationModalOpen(true);
+                                      }}
+                                  >
+                                      Reservar
+                                  </Button>
                                 </Card>
-                            ))}
+                            );
+                            })}
                         </div>
                     ) : (
                         <Text className={styles.resultsSubtitle}>

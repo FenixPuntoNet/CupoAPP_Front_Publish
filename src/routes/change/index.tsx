@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import React, { useEffect, useState } from "react";
-import { Tables } from "../../types/Database";
+import { Database } from "../../types/Database";
 import { supabase } from "../../lib/supabaseClient";
 import "./index.css";
 
-type RedeemItem = Tables<"redeem_items">;
-type RedeemRequest = Tables<"redeem_requests"> & { redeem_items?: RedeemItem };
+type RedeemItem = Database['public']['Tables']['redeem_items']['Row'];
+type RedeemRequest = Database['public']['Tables']['redeem_requests']['Row'] & { redeem_items?: RedeemItem };
 
 interface RedeemStoreProps {
   userId: string;
