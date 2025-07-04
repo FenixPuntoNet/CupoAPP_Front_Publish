@@ -2,10 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Necesitamos acceso a tu galería para que puedas subir una foto de perfil en tu cuenta de Cupo.</string>
 	<key>NSCameraUsageDescription</key>
-    <string>Necesitamos acceso a la cámara para escanear códigos QR.</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Usamos el micrófono para ciertas funciones (si aplica).</string>
+	<string>Necesitamos acceso a la cámara para escanear códigos QR.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Usamos el micrófono para ciertas funciones (si aplica).</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
