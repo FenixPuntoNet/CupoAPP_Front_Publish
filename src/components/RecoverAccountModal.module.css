@@ -1,0 +1,288 @@
+/* RecoverAccountModal styles - Dark theme optimized */
+
+.modal {
+  border-radius: 16px;
+}
+
+.modal :global(.mantine-Modal-content) {
+  border-radius: 16px;
+  background: #0a0a0a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal :global(.mantine-Modal-body) {
+  padding: 1.5rem;
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .modal :global(.mantine-Modal-content) {
+    margin: 1rem;
+    max-height: 90vh;
+  }
+  
+  .modal :global(.mantine-Modal-body) {
+    padding: 1rem;
+  }
+}
+
+/* Header section */
+.header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.icon {
+  color: #00ff9d;
+  margin-bottom: 0.75rem;
+}
+
+.iconSuccess {
+  color: #00ff9d;
+  margin-bottom: 0.75rem;
+}
+
+.iconTemp {
+  color: #ffa502;
+}
+
+.iconWarning {
+  color: #ff4757;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 1.125rem;
+  }
+  
+  .subtitle {
+    font-size: 0.85rem;
+  }
+}
+
+/* Input section */
+.inputWrapper {
+  margin-bottom: 1rem;
+}
+
+.inputLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.input {
+  width: 100%;
+}
+
+.input :global(.mantine-TextInput-input) {
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 0.875rem;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+  background: transparent;
+  color: #ffffff;
+}
+
+.input :global(.mantine-TextInput-input:focus) {
+  border-color: #00ff9d;
+  box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.1);
+}
+
+.input :global(.mantine-TextInput-input::placeholder) {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+  .input :global(.mantine-TextInput-input) {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Buttons */
+.checkButton,
+.recoverButton,
+.loginButton {
+  width: 100%;
+  height: 44px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #00ff9d 0%, #00e88d 100%);
+  color: #0a0a0a;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .checkButton,
+  .recoverButton,
+  .loginButton {
+    height: 40px;
+    font-size: 0.85rem;
+  }
+}
+
+.checkButton:hover,
+.recoverButton:hover,
+.loginButton:hover {
+  background: linear-gradient(135deg, #00e88d 0%, #00d17a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3);
+}
+
+.backButton {
+  width: 100%;
+  height: 44px;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .backButton {
+    height: 40px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Cards */
+.statusCard,
+.successCard {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+  .statusCard,
+  .successCard {
+    padding: 0.875rem;
+  }
+}
+
+.statusTitle {
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .statusTitle {
+    font-size: 0.9rem;
+  }
+}
+
+.successTitle {
+  color: #00ff9d;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .successTitle {
+    font-size: 0.9rem;
+  }
+}
+
+/* Alerts */
+.alert {
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 71, 87, 0.1);
+  color: #ff4757;
+  border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+.alert :global(.mantine-Alert-message) {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.urgentAlert {
+  border-radius: 8px;
+  border: 2px solid #ff4757;
+  background: rgba(255, 71, 87, 0.1);
+}
+
+.urgentAlert :global(.mantine-Alert-message) {
+  color: #ff4757;
+}
+
+/* Text colors */
+.statusText,
+.successText {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .statusText,
+  .successText {
+    font-size: 0.8rem;
+  }
+}
+
+/* Error text */
+.errorText {
+  color: #ff4757;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .errorText {
+    font-size: 0.8rem;
+  }
+}
+
+/* Responsive for modal */
+@media (max-width: 768px) {
+  .modal :global(.mantine-Modal-body) {
+    padding: 1.5rem;
+  }
+  
+  .title {
+    font-size: 1.25rem;
+  }
+  
+  .subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .statusCard,
+  .successCard {
+    padding: 1rem;
+  }
+}

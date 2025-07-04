@@ -14,6 +14,7 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "@mantine/form";
 import { supabase } from "@/lib/supabaseClient";
+import { RecoverAccountModal } from "@/components/RecoverAccountModal";
 import styles from "./index.module.css";
 
 interface LoginFormValues {
@@ -25,6 +26,7 @@ const LoginView: React.FC = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [recoverModalOpened, setRecoverModalOpened] = useState(false);
   const navigate = useNavigate();
 
   const form = useForm<LoginFormValues>({
@@ -38,19 +40,19 @@ const LoginView: React.FC = () => {
     }
   });
 
-  const checkUserProfile = async (userId: string): Promise<boolean> => {
+  const checkUserProfile = async (userId: string): Promise<{ hasProfile: boolean; status: string | null }> => {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select('*, status')
         .eq('user_id', userId)
         .single();
 
       if (error) throw error;
-      return !!data;
+      return { hasProfile: !!data, status: data?.status || null };
     } catch (error) {
       console.error('Error checking user profile:', error);
-      return false;
+      return { hasProfile: false, status: null };
     }
   };
 
@@ -80,8 +82,21 @@ const LoginView: React.FC = () => {
         localStorage.setItem('userId', authData.user.id);
       }
 
-      // Check user profile
-      const hasProfile = await checkUserProfile(authData.user.id);
+      // Check user profile and status
+      const { hasProfile, status } = await checkUserProfile(authData.user.id);
+      
+      // Check if account is deactivated
+      if (status === 'temporarily_deactivated' || status === 'pending_deletion') {
+        await supabase.auth.signOut();
+        localStorage.clear();
+        
+        const statusText = status === 'temporarily_deactivated' 
+          ? 'temporalmente desactivada' 
+          : 'marcada para eliminación';
+        
+        setError(`Tu cuenta está ${statusText}. Puedes recuperarla usando la opción "Recuperar cuenta".`);
+        return;
+      }
       
       // Navigate based on profile status
       if (hasProfile) {
@@ -135,6 +150,10 @@ const LoginView: React.FC = () => {
             className={styles.input}
             size="lg"
             required
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="email"
+            inputMode="email"
             {...form.getInputProps("email")}
           />
         </Box>
@@ -147,6 +166,9 @@ const LoginView: React.FC = () => {
             className={styles.input}
             size="lg"
             required
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="current-password"
             {...form.getInputProps("password")}
             rightSection={
               <UnstyledButton
@@ -181,7 +203,19 @@ const LoginView: React.FC = () => {
         >
           Olvidé mi contraseña
         </UnstyledButton>
+
+        <UnstyledButton
+          className={styles.recoverAccount}
+          onClick={() => setRecoverModalOpened(true)}
+        >
+          Recuperar cuenta desactivada
+        </UnstyledButton>
       </form>
+
+      <RecoverAccountModal
+        opened={recoverModalOpened}
+        onClose={() => setRecoverModalOpened(false)}
+      />
 
       <Text className={styles.version}>v 0.0.1 (0)</Text>
     </Container>

@@ -1,0 +1,319 @@
+/* Variables */
+:root {
+  --primary: #00ff9d;
+  --primary-dark: #00e88d;
+  --primary-light: rgba(0, 255, 157, 0.1);
+  --background: #0a0a0a;
+  --card-bg: #141414;
+  --card-hover: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --error: #ff4d4d;
+  --error-light: rgba(255, 77, 77, 0.1);
+  --success: #00ff9d;
+  --success-light: rgba(0, 255, 157, 0.1);
+  --warning: #ffbe0b;
+  --warning-light: rgba(255, 190, 11, 0.1);
+  --blue: #339af0;
+  --blue-light: rgba(51, 154, 240, 0.1);
+  --gradient-primary: linear-gradient(135deg, #00ff9d 0%, #00e88d 100%);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
+  --animation-duration: 0.3s;
+}
+
+/* Modal base */
+.modal {
+  --mantine-modal-content-bg: var(--card-bg);
+  --mantine-modal-overlay-bg: rgba(0, 0, 0, 0.85);
+}
+
+:global(.mantine-Modal-content) {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 16px !important;
+  color: var(--text-primary) !important;
+}
+
+/* Headers */
+.headerWarning,
+.headerConfirmation,
+.headerSuccess {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.warningIcon {
+  color: var(--warning);
+  animation: pulse 2s infinite;
+}
+
+.deleteIcon {
+  color: var(--error);
+}
+
+.successIcon {
+  color: var(--success);
+  animation: scaleIn 0.5s ease-out;
+}
+
+.title {
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Alerts */
+.alert {
+  border-radius: 12px !important;
+  border: 1px solid !important;
+}
+
+.alert[data-color="red"] {
+  background: var(--error-light) !important;
+  border-color: rgba(255, 77, 77, 0.3) !important;
+}
+
+.alert[data-color="blue"] {
+  background: var(--blue-light) !important;
+  border-color: rgba(51, 154, 240, 0.3) !important;
+}
+
+.alert[data-color="green"] {
+  background: var(--success-light) !important;
+  border-color: rgba(0, 255, 157, 0.3) !important;
+}
+
+/* Checkboxes */
+.checkbox {
+  --mantine-checkbox-color: var(--primary);
+  --mantine-color-body: var(--text-primary);
+}
+
+:global(.mantine-Checkbox-label) {
+  color: var(--text-primary) !important;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+:global(.mantine-Checkbox-input:checked) {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* Confirmation input */
+.confirmationInput {
+  --mantine-color-body: var(--text-primary);
+}
+
+:global(.mantine-TextInput-input) {
+  background: var(--card-hover) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+:global(.mantine-TextInput-input:focus) {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2) !important;
+}
+
+:global(.mantine-TextInput-input[data-invalid]) {
+  border-color: var(--error) !important;
+}
+
+.confirmationCode {
+  background: var(--card-hover);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-weight: 600;
+  color: var(--primary);
+  border: 1px solid var(--border-color);
+}
+
+/* Buttons */
+.cancelButton,
+.backButton {
+  --mantine-color-gray-6: var(--border-color);
+  --mantine-color-gray-7: var(--text-secondary);
+  background: transparent !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  transition: all var(--animation-duration) ease;
+}
+
+.cancelButton:hover,
+.backButton:hover {
+  background: var(--card-hover) !important;
+  border-color: var(--primary) !important;
+  transform: translateY(-1px);
+}
+
+.proceedButton {
+  background: linear-gradient(135deg, var(--error) 0%, #ff6b6b 100%) !important;
+  border: none !important;
+  color: white !important;
+  transition: all var(--animation-duration) ease;
+}
+
+.proceedButton:hover {
+  background: linear-gradient(135deg, #ff6b6b 0%, var(--error) 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
+}
+
+.deleteButton {
+  background: linear-gradient(135deg, var(--error) 0%, #ff3030 100%) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600 !important;
+  transition: all var(--animation-duration) ease;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff3030 0%, var(--error) 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255, 77, 77, 0.4);
+}
+
+.deleteButton:disabled {
+  background: var(--card-hover) !important;
+  color: var(--text-secondary) !important;
+  cursor: not-allowed;
+}
+
+.finalButton {
+  background: var(--gradient-primary) !important;
+  border: none !important;
+  color: var(--background) !important;
+  font-weight: 600 !important;
+  transition: all var(--animation-duration) ease;
+}
+
+.finalButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3);
+}
+
+/* Final message */
+.finalMessage {
+  background: var(--card-hover);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-style: italic;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .headerWarning,
+  .headerConfirmation,
+  .headerSuccess {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .warningIcon,
+  .deleteIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .successIcon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .title {
+    font-size: 1.25rem !important;
+  }
+
+  .checkbox {
+    margin-bottom: 0.75rem;
+  }
+
+  :global(.mantine-Checkbox-label) {
+    font-size: 0.85rem;
+  }
+
+  .alert {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :global(.mantine-Modal-content) {
+    margin: 1rem !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  .title {
+    font-size: 1.1rem !important;
+  }
+
+  .confirmationCode {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  :global(.mantine-TextInput-input) {
+    font-size: 0.8rem;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --card-bg: #141414;
+    --card-hover: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Loading overlay customization */
+:global(.mantine-LoadingOverlay-root) {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(4px);
+}
+
+:global(.mantine-Loader-root) {
+  color: var(--primary) !important;
+}

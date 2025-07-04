@@ -1,4 +1,3 @@
-
 .container {
   min-height: 100vh;
   background-color: #0a0a0a;
@@ -112,6 +111,9 @@
   margin-bottom: 12px;
   position: relative;
   display: inline-block;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -1px;
+  line-height: 1.2;
 }
 
 .userName {
@@ -120,6 +122,8 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 700;
 }
 
 .userName::after {
@@ -139,6 +143,9 @@
   max-width: 300px;
   margin: 0 auto;
   line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.2px;
 }
 
 /* Formulario con efectos modernos */
@@ -156,10 +163,13 @@
 }
 
 .inputLabel {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 8px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 10px;
   margin-left: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.1px;
   transition: all 0.3s ease;
 }
 
@@ -174,9 +184,17 @@
   border-radius: 16px !important;
   color: white !important;
   font-size: 16px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.2px !important;
   padding: 0 20px !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   backdrop-filter: blur(10px);
+  text-transform: none !important;
+  -webkit-text-security: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  line-height: 1.4 !important;
 }
 
 .input input:focus {
@@ -188,7 +206,10 @@
 }
 
 .input input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.1px;
   transition: all 0.3s ease;
 }
 
@@ -261,7 +282,10 @@
 
 .forgotPassword {
   color: #00ff9d;
-  font-size: 14px;
+  font-size: 15px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.1px;
   text-align: center;
   margin-top: 20px;
   padding: 10px;
@@ -292,15 +316,39 @@
   transform: translateX(100%);
 }
 
-.version {
-  position: fixed;
-  bottom: 20px;
-  left: 0;
+.recoverAccount {
+  display: block !important;
   width: 100%;
+  color: rgba(0, 255, 157, 0.8) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
   text-align: center;
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 12px;
-  z-index: 1;
+  text-decoration: none !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.2px;
+  margin-top: 16px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(0, 255, 157, 0.08);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.recoverAccount:hover {
+  color: #000 !important;
+  background: rgba(0, 255, 157, 0.9);
+  border-color: #00ff9d;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 157, 0.4);
+}
+
+.recoverAccount:before {
+  content: '🔄';
+  margin-right: 8px;
+  font-size: 14px;
 }
 
 /* Animaciones */
@@ -335,6 +383,7 @@
 .inputWrapper:nth-child(2) { animation-delay: 0.3s; }
 .loginButton { animation-delay: 0.4s; }
 .forgotPassword { animation-delay: 0.5s; }
+.recoverAccount { animation-delay: 0.6s; }
 
 @keyframes fadeInUp {
   to {

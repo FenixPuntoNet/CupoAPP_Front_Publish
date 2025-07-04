@@ -109,4 +109,24 @@ button,
 .mantine-Textarea-input,
 .mantine-PasswordInput-input {
   font-size: 16px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.2px !important;
+  line-height: 1.4 !important;
+  text-transform: none !important;
+  -webkit-text-security: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Placeholders globales */
+input::placeholder,
+textarea::placeholder,
+.mantine-Input-input::placeholder,
+.mantine-TextInput-input::placeholder,
+.mantine-Textarea-input::placeholder,
+.mantine-PasswordInput-input::placeholder {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.1px !important;
 }

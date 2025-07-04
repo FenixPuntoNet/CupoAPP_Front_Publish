@@ -371,8 +371,8 @@ const DetallesViajeView = () => {
             return false;
         }
 
-        if (dayjs(dateTime).isBefore(dayjs())) {
-            setFormError('La fecha y hora deben ser posteriores al momento actual');
+        if (dayjs(dateTime).isBefore(dayjs(), 'minute')) {
+            setFormError('La fecha y hora deben ser desde hoy en adelante');
             return false;
         }
 
@@ -784,14 +784,14 @@ const DetallesViajeView = () => {
 
                                 <DateTimePicker
                                     label="Fecha y hora del viaje"
-                                    description="Selecciona cuándo saldrás"
+                                    description="Selecciona cuándo saldrás (solo fechas desde hoy en adelante)"
                                     placeholder="Selecciona fecha y hora"
                                     value={dateTime}
                                     onChange={setDateTime}
                                     valueFormat="DD MMM YYYY hh:mm A"
                                     locale="es"
                                     clearable={false}
-                                    minDate={dayjs().add(1, 'day').toDate()}
+                                    minDate={new Date()}
                                     required
                                     error={formError && formError.includes('fecha') ? formError : null}
                                     leftSection={<Calendar size={18} />}
@@ -985,13 +985,13 @@ const DetallesViajeView = () => {
                                 <Switch
                                     label="Mascotas permitidas"
                                     checked={allowPets}
-                                    onChange={(e) => setAllowPets(e.currentTarget.checked)}
+                                    onChange={(e) => setAllowPets(e?.currentTarget?.checked ?? !allowPets)}
                                     size="lg"
                                 />
                                 <Switch
                                     label="Se permite fumar"
                                     checked={allowSmoking}
-                                    onChange={(e) => setAllowSmoking(e.currentTarget.checked)}
+                                    onChange={(e) => setAllowSmoking(e?.currentTarget?.checked ?? !allowSmoking)}
                                     size="lg"
                                 />
                             </Group>

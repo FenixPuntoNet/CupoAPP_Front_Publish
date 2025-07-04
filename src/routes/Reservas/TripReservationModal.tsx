@@ -401,10 +401,14 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                 size="lg"
                 centered
                 closeOnClickOutside={false}
+                classNames={{
+                    content: styles.passengersModal,
+                    title: styles.passengersModalTitle
+                }}
             >
                 <Stack gap="xl">
                     {passengers.map((passenger, index) => (
-                        <Card key={index} shadow="sm" withBorder>
+                        <Card key={index} className={styles.passengerCard} shadow="sm" withBorder>
                             <Text fw={500}>Pasajero {index + 1}</Text>
                             <TextInput
                                 label="Nombre completo"
@@ -416,12 +420,18 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                                 required
                             />
                             <TextInput
-                                label="Número de identificación"
+                                label="Número de identificación (solo números)"
                                 placeholder="Ej: 123456789"
                                 value={passenger.identificationNumber}
-                                onChange={(e) =>
-                                    handlePassengerChange(index, 'identificationNumber', e.currentTarget.value)
-                                }
+                                onChange={(e) => {
+                                    const value = e.currentTarget.value;
+                                    // Solo permitir números
+                                    const numericValue = value.replace(/\D/g, '');
+                                    handlePassengerChange(index, 'identificationNumber', numericValue);
+                                }}
+                                pattern="[0-9]*"
+                                inputMode="numeric"
+                                maxLength={15}
                                 required
                             />
                         </Card>

@@ -128,6 +128,10 @@ video#camera-preview {
 .manualInput {
   padding: 12px;
   font-size: 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.2px;
+  line-height: 1.4;
   border-radius: 8px;
   border: 1px solid #94a3b8;
   background-color: #1e293b;
@@ -136,7 +140,10 @@ video#camera-preview {
   box-sizing: border-box;
   margin-bottom: 16px;
   transition: border-color 0.2s, box-shadow 0.2s;
-  font-family: inherit;
+  text-transform: none;
+  -webkit-text-security: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .manualInput:focus {

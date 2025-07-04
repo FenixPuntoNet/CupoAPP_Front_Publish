@@ -153,6 +153,9 @@ const RegisterView: React.FC = () => {
             className={styles.input}
             size="lg"
             required
+            autoCapitalize="words"
+            autoCorrect="off"
+            autoComplete="name"
             {...form.getInputProps("nombre")}
           />
         </Box>
@@ -164,6 +167,10 @@ const RegisterView: React.FC = () => {
             className={styles.input}
             size="lg"
             required
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="email"
+            inputMode="email"
             {...form.getInputProps("email")}
           />
         </Box>
@@ -176,6 +183,9 @@ const RegisterView: React.FC = () => {
             className={styles.input}
             size="lg"
             required
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="new-password"
             {...form.getInputProps("password")}
             rightSection={
               <UnstyledButton onClick={() => setShowPassword(!showPassword)} className={styles.eyeButton}>
@@ -193,6 +203,9 @@ const RegisterView: React.FC = () => {
             className={styles.input}
             size="lg"
             required
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="new-password"
             {...form.getInputProps("confirmPassword")}
             rightSection={
               <UnstyledButton onClick={() => setShowPassword(!showPassword)} className={styles.eyeButton}>
@@ -203,14 +216,14 @@ const RegisterView: React.FC = () => {
         </Box>
         <Checkbox
           checked={acceptTerms}
-          onChange={(e) => setAcceptTerms(e.currentTarget.checked)}
+          onChange={(e) => setAcceptTerms(e?.currentTarget?.checked ?? !acceptTerms)}
           label="Acepto los Términos y Condiciones"
           required
           mt="md"
         />
         <Checkbox
           checked={subscribeEmails}
-          onChange={(e) => setSubscribeEmails(e.currentTarget.checked)}
+          onChange={(e) => setSubscribeEmails(e?.currentTarget?.checked ?? !subscribeEmails)}
           label="Deseo recibir correos con información y promociones"
           mt="sm"
         />
@@ -243,6 +256,13 @@ const RegisterView: React.FC = () => {
         >
           Registrarse
         </Button>
+
+        <UnstyledButton
+          className={styles.recoverAccount}
+          onClick={() => window.location.href = '/RecuperarCuenta'}
+        >
+          ¿Tienes una cuenta desactivada? Recupérala aquí
+        </UnstyledButton>
       </form>
 
       {/* Modal profesional y reutilizable */}

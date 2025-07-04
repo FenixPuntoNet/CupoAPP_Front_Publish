@@ -1391,3 +1391,18 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+// Tipos para el manejo de estado de cuenta
+export type AccountStatus = 'active' | 'temporarily_deactivated' | 'pending_deletion' | 'permanently_deactivated';
+
+export type AccountDeactivationReason = 'user_request_temporary' | 'user_request_permanent' | 'admin_action' | 'policy_violation';
+
+export interface AccountDeactivation {
+  user_id: string;
+  status: AccountStatus;
+  reason: AccountDeactivationReason;
+  deactivation_date: string;
+  scheduled_deletion_date?: string; // 30 días después para "eliminación permanente"
+  can_recover: boolean;
+  recovery_token?: string;
+}

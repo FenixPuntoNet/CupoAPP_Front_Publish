@@ -22,22 +22,24 @@ import {
   Wallet,
   MessageCircle,
   Gift,
+  Trash2,
 } from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
 import styles from './index.module.css'
 import { supabase } from '@/lib/supabaseClient'
 import { Rating } from '@mantine/core';
+import { DeactivateAccountModal } from '@/components/DeactivateAccountModal';
 
 // Interfaces
 interface UserProfile {
   id: number
   user_id: string;
-  email: string
   phone_number: string
   first_name: string
   last_name: string
   identification_type: string
   identification_number: string | null
+  status: string
   user_type: string
   Verification: string | null
   photo_user: string
@@ -93,6 +95,8 @@ const ProfileView: React.FC = () => {
   const [showVehicleMessage, setShowVehicleMessage] = useState(false)
   const [showWalletOptions, setShowWalletOptions] = useState(false)
   const [averageRating, setAverageRating] = useState<number | null>(null);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   // Nuevo: Botón de actualizar perfil
   const handleUpdateProfile = () => {
@@ -261,16 +265,17 @@ const ProfileView: React.FC = () => {
           setUserProfile({
             id: profile.id,
             user_id: session.user.id,
-            email: session.user.email ?? '',
             phone_number: profile.phone_number ?? '',
             first_name: profile.first_name,
             last_name: profile.last_name,
             identification_type: profile.identification_type,
             identification_number: profile.identification_number,
+            status: profile.status,
             user_type: profile.status,
             Verification: profile.Verification,
             photo_user: profile.photo_user || '', 
           });
+          setUserEmail(session.user.email ?? '');
         }
         setVehicleStatus({
           hasVehicle: Boolean(vehicle),
@@ -307,7 +312,7 @@ const ProfileView: React.FC = () => {
         <Text className={styles.userName}>
           {userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : 'Usuario'}
         </Text>
-        <Text className={styles.userEmail}>{userProfile?.email}</Text>
+        <Text className={styles.userEmail}>{userEmail}</Text>
         <div
           className={`${styles.userType} ${
             userProfile?.user_type === 'DRIVER' ? styles.driver : ''
@@ -642,6 +647,21 @@ const ProfileView: React.FC = () => {
           </div>
         ))}
 
+        {/* Botón de eliminar cuenta */}
+        <button
+          className={`${styles.menuItem} ${styles.deleteAccountButton}`}
+          onClick={() => setShowDeleteAccountModal(true)}
+        >
+          <div className={styles.menuItemIcon}>
+            <Trash2 size={24} />
+          </div>
+          <div className={styles.menuItemContent}>
+            <Text className={styles.menuItemTitle}>Eliminar cuenta</Text>
+            <Text className={styles.menuItemSubtitle}>Eliminar permanentemente mi cuenta</Text>
+          </div>
+          <ChevronRight className={styles.menuItemArrow} size={20} />
+        </button>
+
         <button
           className={`${styles.menuItem} ${styles.logoutButton}`}
           onClick={handleLogout}
@@ -665,6 +685,12 @@ const ProfileView: React.FC = () => {
       )}
 
       <Text className={styles.version}>v3.00.0 (968)</Text>
+
+      {/* Modal de eliminación de cuenta */}
+      <DeactivateAccountModal
+        opened={showDeleteAccountModal}
+        onClose={() => setShowDeleteAccountModal(false)}
+      />
     </Container>
   )
 }

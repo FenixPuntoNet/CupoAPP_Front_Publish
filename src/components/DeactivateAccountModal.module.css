@@ -1,0 +1,504 @@
+/* DeactivateAccountModal styles - Mobile optimized */
+
+/* Modal base styles */
+.modalContent {
+  background: #0a0a0a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+.modalBody {
+  padding: 1rem !important;
+  color: #ffffff !important;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .modalContent {
+    margin: 1rem !important;
+    max-height: 85vh !important;
+  }
+  
+  .modalBody {
+    padding: 0.75rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modalContent {
+    margin: 0.5rem !important;
+    max-height: 90vh !important;
+  }
+  
+  .modalBody {
+    padding: 0.5rem !important;
+  }
+  
+  .title {
+    font-size: 1rem;
+  }
+  
+  .headerChoose,
+  .headerConfirmation,
+  .headerFinal {
+    margin-bottom: 1rem;
+  }
+  
+  .chooseIcon,
+  .confirmationIcon,
+  .temporaryIcon,
+  .deleteIcon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .successIcon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.headerChoose {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.chooseIcon {
+  color: #ff4757;
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 1.125rem;
+  }
+}
+
+.optionCard {
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.optionSelected {
+  border-color: #00ff9d;
+  background: rgba(0, 255, 157, 0.1);
+}
+
+.optionCard:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.optionSelected:hover {
+  border-color: #00ff9d;
+}
+
+.radioButton {
+  margin-top: 0.25rem;
+}
+
+.optionContent {
+  flex: 1;
+}
+
+.optionIcon {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.optionSelected .optionIcon {
+  color: #00ff9d;
+}
+
+.optionTitle {
+  color: #ffffff;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.optionDescription {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .optionCard {
+    padding: 0.875rem;
+    gap: 0.5rem;
+  }
+  
+  .optionTitle {
+    font-size: 0.95rem;
+  }
+  
+  .optionDescription {
+    font-size: 0.75rem;
+  }
+}
+
+.warningAlert {
+  background: rgba(255, 190, 11, 0.1);
+  border: 1px solid rgba(255, 190, 11, 0.3);
+  color: #ffbe0b;
+  border-radius: 8px;
+}
+
+.cancelButton {
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+}
+
+.cancelButton:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.proceedButton {
+  background: linear-gradient(135deg, #ff4757 0%, #e84118 100%);
+  border: none;
+  color: white;
+}
+
+.proceedButton:hover {
+  background: linear-gradient(135deg, #e84118 0%, #c23616 100%);
+}
+
+.temporaryIcon {
+  color: #ffa502;
+}
+
+.deleteIcon {
+  color: #ff4757;
+}
+
+.headerConfirmation {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.confirmationIcon {
+  color: #ff4757;
+  margin-bottom: 0.75rem;
+}
+
+.confirmationCard {
+  background: rgba(255, 71, 87, 0.1);
+  border: 1px solid rgba(255, 71, 87, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.confirmationTitle {
+  color: #ff4757;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.confirmationList {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.confirmationCheckbox {
+  margin-bottom: 0.5rem;
+}
+
+.confirmationCheckbox :global(.mantine-Checkbox-root) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.confirmationCheckbox :global(.mantine-Checkbox-input) {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.confirmationCheckbox :global(.mantine-Checkbox-input:checked) {
+  background: #00ff9d;
+  border-color: #00ff9d;
+}
+
+.confirmationCheckbox :global(.mantine-Checkbox-input:hover) {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.confirmationCheckbox :global(.mantine-Checkbox-input:checked:hover) {
+  border-color: #00e88d;
+  background: #00e88d;
+}
+
+.confirmationCheckbox :global(.mantine-Checkbox-label) {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  cursor: pointer;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .confirmationCard {
+    padding: 0.875rem;
+  }
+  
+  .confirmationTitle {
+    font-size: 0.95rem;
+  }
+  
+  .confirmationList {
+    font-size: 0.75rem;
+  }
+  
+  .confirmationCheckbox :global(.mantine-Checkbox-label) {
+    font-size: 0.75rem;
+  }
+}
+
+.confirmationCode {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.8rem;
+  color: #00ff9d;
+  font-weight: 600;
+}
+
+.confirmationInput {
+  margin-top: 0.75rem;
+}
+
+.confirmationInput input {
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: transparent;
+  color: #ffffff;
+  font-size: 0.85rem;
+}
+
+.confirmationInput input:focus {
+  border-color: #00ff9d;
+  box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.1);
+}
+
+.confirmationInput input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+  .confirmationCode {
+    font-size: 0.75rem;
+  }
+  
+  .confirmationInput input {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+.finalButton {
+  background: linear-gradient(135deg, #ff4757 0%, #c23616 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 0.875rem 1.5rem;
+  border-radius: 8px;
+}
+
+.finalButton:hover {
+  background: linear-gradient(135deg, #c23616 0%, #a5280e 100%);
+}
+
+.finalButton:disabled {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+}
+
+.finalButton:disabled:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: none;
+}
+
+.headerFinal {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.finalIcon,
+.successIcon {
+  color: #00ff9d;
+  margin-bottom: 0.75rem;
+}
+
+.finalCard {
+  background: rgba(0, 255, 157, 0.1);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.finalTitle {
+  color: #00ff9d;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.finalMessage {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.closeButton {
+  background: linear-gradient(135deg, #00ff9d 0%, #00e88d 100%);
+  border: none;
+  color: #0a0a0a;
+  font-weight: 600;
+  padding: 0.875rem 1.5rem;
+  border-radius: 8px;
+}
+
+.closeButton:hover {
+  background: linear-gradient(135deg, #00e88d 0%, #00d17a 100%);
+}
+
+.recoveryAlert {
+  background: rgba(51, 154, 240, 0.1);
+  border: 1px solid rgba(51, 154, 240, 0.3);
+  color: #339af0;
+}
+
+.recoveryAlert :global(.mantine-Alert-message) {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.warningAlert {
+  background: rgba(255, 190, 11, 0.1);
+  border: 1px solid rgba(255, 190, 11, 0.3);
+  color: #ffbe0b;
+  border-radius: 8px;
+}
+
+.warningAlert :global(.mantine-Alert-message) {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Additional mobile-specific improvements */
+@media (max-width: 480px) {
+  .modalContent {
+    margin: 0.5rem !important;
+    max-height: 90vh !important;
+  }
+  
+  .modalBody {
+    padding: 0.5rem !important;
+  }
+  
+  .title {
+    font-size: 1rem;
+  }
+  
+  .headerChoose,
+  .headerConfirmation,
+  .headerFinal {
+    margin-bottom: 1rem;
+  }
+  
+  .chooseIcon,
+  .confirmationIcon,
+  .temporaryIcon,
+  .deleteIcon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .successIcon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Improved button styles */
+.finalButton,
+.closeButton {
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.finalButton:hover,
+.closeButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Better text contrast */
+:global(.mantine-Text-root) {
+  color: inherit !important;
+}
+
+:global(.mantine-Alert-message) {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Improved divider for dark theme */
+:global(.mantine-Divider-root) {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Better loading overlay */
+:global(.mantine-LoadingOverlay-root) {
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Responsive gap adjustments */
+@media (max-width: 768px) {
+  :global(.mantine-Stack-root) {
+    gap: 0.75rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :global(.mantine-Stack-root) {
+    gap: 0.5rem !important;
+  }
+}

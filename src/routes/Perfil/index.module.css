@@ -88,26 +88,36 @@
 }
 
 .userName {
-  font-size: 18px !important;
-  font-weight: 600 !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
   color: white;
-  margin-bottom: 3px !important;
+  margin-bottom: 4px !important;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
 }
 
 .userEmail {
-  font-size: 14px !important;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 15px !important;
+  color: rgba(255, 255, 255, 0.7);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.2px;
 }
 
 .userType {
-  font-size: 12px !important;
+  font-size: 13px !important;
   color: rgba(255, 255, 255, 0.6);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 .userType.driver {
@@ -117,14 +127,16 @@
 .updateProfileBtn {
   margin-left: 8px;
   margin-top: 0;
-  font-size: 12px !important;
-  padding: 4px 14px !important;
-  border-radius: 12px !important;
+  font-size: 13px !important;
+  padding: 6px 16px !important;
+  border-radius: 14px !important;
   border: 1.5px solid #00ff9d !important;
   color: #00ff9d !important;
-  background: rgba(0,255,157,0.07) !important;
+  background: rgba(0,255,157,0.08) !important;
   font-weight: 600 !important;
-  transition: background 0.18s, color 0.18s, border 0.18s;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.2px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .updateProfileBtn:hover {
@@ -172,21 +184,28 @@
 }
 
 .menuItemTitle {
-  font-size: 16px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
   color: white;
   margin-bottom: 4px !important;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
 }
 
 .menuItemSubtitle {
-  font-size: 13px !important;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px !important;
+  color: rgba(255, 255, 255, 0.6);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.1px;
+  line-height: 1.4;
 }
 
 .menuItemArrow {
@@ -243,14 +262,19 @@
 
 .subMenuItemText {
   color: #00ff9d !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.2px;
 }
 
 .subMenuItemDescription {
-  color: rgba(255, 255, 255, 0.5) !important;
-  font-size: 12px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 13px !important;
   margin-top: 2px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.1px;
 }
 
 .subMenuItemStatus {
@@ -268,15 +292,42 @@
 }
 
 .statusText {
-  font-size: 12px !important;
-  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 13px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* Delete account button */
+.deleteAccountButton {
+  border: none;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.deleteAccountButton .menuItemIcon {
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+}
+
+.deleteAccountButton:hover .menuItemIcon {
+  background: rgba(255, 77, 77, 0.2);
+}
+
+.deleteAccountButton .menuItemTitle {
+  color: #ff4d4d !important;
+}
+
+.deleteAccountButton .menuItemSubtitle {
+  color: rgba(255, 77, 77, 0.7) !important;
 }
 
 /* Logout button */
 .logoutButton {
   border: none;
   width: 100%;
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 .logoutButton .menuItemIcon {
@@ -291,10 +342,13 @@
   left: 0;
   right: 0;
   text-align: center;
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
   padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
   box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .bottomMenuPadding {
@@ -426,17 +480,23 @@
   transition: all 0.3s ease;
 }
 .vehicleRegistrationText{
-  font-size: 16px !important;
+  font-size: 17px !important;
   color: #00ff9d !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   text-align: center;
   margin-bottom: 8px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
 }
 
 .vehicleRegistrationSubtitle{
-  color: rgba(255, 255, 255, 0.5) !important;
-  font-size: 14px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 15px !important;
   font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.1px;
+  text-align: center;
 }
 
 .vehicleIncompleteMessage{
@@ -452,9 +512,11 @@
 
 .vehicleIncompleteText{
   color: #ff4d4d !important;
-  font-size: 14px !important;
-  font-weight: 500;
+  font-size: 15px !important;
+  font-weight: 600;
   text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: -0.2px;
 }
 
 .verificationPendingBox {

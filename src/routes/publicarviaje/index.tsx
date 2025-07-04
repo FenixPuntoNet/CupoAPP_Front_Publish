@@ -488,7 +488,7 @@ const destinationLng = destinationLocation.coords.lng;
                           checked={routePreferences.avoidTolls}
                           onChange={(e) => setRoutePreferences(prev => ({
                             ...prev,
-                            avoidTolls: e.currentTarget.checked
+                            avoidTolls: e?.currentTarget?.checked ?? !prev.avoidTolls
                           }))}
                         />
                         <DollarSign size={16} className={styles.preferenceIcon} />
@@ -499,7 +499,7 @@ const destinationLng = destinationLocation.coords.lng;
                           checked={routePreferences.avoidHighways}
                           onChange={(e) => setRoutePreferences(prev => ({
                             ...prev,
-                            avoidHighways: e.currentTarget.checked
+                            avoidHighways: e?.currentTarget?.checked ?? !prev.avoidHighways
                           }))}
                         />
                         <Car size={16} className={styles.preferenceIcon} />
@@ -510,7 +510,7 @@ const destinationLng = destinationLocation.coords.lng;
                           checked={routePreferences.optimizeFuel}
                           onChange={(e) => setRoutePreferences(prev => ({
                             ...prev,
-                            optimizeFuel: e.currentTarget.checked
+                            optimizeFuel: e?.currentTarget?.checked ?? !prev.optimizeFuel
                           }))}
                         />
                         <Trees size={16} className={styles.preferenceIcon} />
