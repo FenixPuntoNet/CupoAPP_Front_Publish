@@ -1,0 +1,243 @@
+/* Modal de reporte mejorado con tema oscuro */
+.modalContent {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  border: 1px solid rgba(0, 255, 157, 0.3) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 157, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.modalHeader {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  border-bottom: 1px solid rgba(0, 255, 157, 0.2) !important;
+  padding: 24px !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.modalHeader .mantine-Modal-title {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 1.25rem !important;
+}
+
+.modalBody {
+  padding: 24px !important;
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+/* Estilos del select */
+.select .mantine-Select-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  font-size: 14px !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease !important;
+}
+
+.select .mantine-Select-input:focus {
+  border-color: #00ff9d !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2) !important;
+  background: rgba(0, 255, 157, 0.05) !important;
+}
+
+.select .mantine-Select-input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Dropdown del select */
+.select .mantine-Select-dropdown {
+  background: #2d2d2d !important;
+  border: 1px solid rgba(0, 255, 157, 0.3) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.select .mantine-Select-option {
+  color: #ffffff !important;
+  padding: 12px !important;
+  border-radius: 4px !important;
+  margin: 2px !important;
+  transition: all 0.2s ease !important;
+}
+
+.select .mantine-Select-option:hover {
+  background: rgba(0, 255, 157, 0.1) !important;
+  color: #00ff9d !important;
+}
+
+.select .mantine-Select-option[data-selected] {
+  background: rgba(0, 255, 157, 0.2) !important;
+  color: #00ff9d !important;
+}
+
+/* Estilos del textarea */
+.textarea .mantine-Textarea-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  font-size: 14px !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease !important;
+  resize: vertical !important;
+  min-height: 80px !important;
+}
+
+.textarea .mantine-Textarea-input:focus {
+  border-color: #00ff9d !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2) !important;
+  background: rgba(0, 255, 157, 0.05) !important;
+}
+
+.textarea .mantine-Textarea-input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Labels mejorados */
+.modalBody .mantine-Text-root {
+  color: #ffffff !important;
+}
+
+.modalBody .mantine-Text-root[data-size="sm"] {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500 !important;
+}
+
+/* Botón de envío */
+.submitButton {
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7d 100%) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  color: #0a0a0a !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3) !important;
+}
+
+.submitButton:hover {
+  background: linear-gradient(135deg, #00cc7d 0%, #00b369 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(0, 255, 157, 0.4) !important;
+}
+
+.submitButton:disabled {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+/* Botón de cancelar */
+.cancelButton {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.cancelButton:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Alerta de éxito */
+.successAlert {
+  background: rgba(0, 255, 157, 0.1) !important;
+  border: 1px solid rgba(0, 255, 157, 0.3) !important;
+  border-radius: 8px !important;
+  color: #00ff9d !important;
+}
+
+.successAlert .mantine-Alert-icon {
+  color: #00ff9d !important;
+}
+
+.successAlert .mantine-Alert-title {
+  color: #00ff9d !important;
+}
+
+.successAlert .mantine-Alert-message {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Alerta de advertencia */
+.warningAlert {
+  background: rgba(139, 69, 19, 0.9) !important;
+  border: 1px solid rgba(255, 193, 7, 0.6) !important;
+  border-radius: 8px !important;
+  color: #ffc107 !important;
+}
+
+.warningAlert .mantine-Alert-icon {
+  color: #ffc107 !important;
+}
+
+.warningAlert .mantine-Alert-title {
+  color: #ffc107 !important;
+  font-weight: 700 !important;
+}
+
+.warningAlert .mantine-Alert-message {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Nota importante con mejor contraste */
+.importantNote {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(220, 38, 38, 0.1) !important;
+  border: 1px solid rgba(220, 38, 38, 0.3) !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(10px);
+}
+
+.importantText {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
+.importantText strong {
+  color: #fca5a5 !important;
+  font-weight: 700 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modalContent {
+    margin: 16px !important;
+    max-height: 85vh !important;
+  }
+  
+  .modalHeader {
+    padding: 20px !important;
+  }
+  
+  .modalBody {
+    padding: 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modalContent {
+    margin: 8px !important;
+    max-height: 90vh !important;
+  }
+  
+  .modalHeader {
+    padding: 16px !important;
+  }
+  
+  .modalBody {
+    padding: 16px !important;
+  }
+}

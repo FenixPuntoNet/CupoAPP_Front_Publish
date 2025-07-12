@@ -873,7 +873,7 @@ export type Database = {
           id?: number
           index?: number | null
           polyline?: string | null
-          start_address?: string | null
+          start_address?: number | null
           summary?: string | null
           user_id: string
           warnings?: string | null
@@ -889,7 +889,7 @@ export type Database = {
           id?: number
           index?: number | null
           polyline?: string | null
-          start_address?: string | null
+          start_address?: number | null
           summary?: string | null
           user_id?: string
           warnings?: string | null
@@ -1276,6 +1276,210 @@ export type Database = {
           alert_threshold_percentage?: number
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      content_reports: {
+        Row: {
+          id: number
+          reporter_id: string
+          content_type: 'message' | 'profile' | 'trip'
+          content_id: number
+          reason: string
+          description: string | null
+          status: 'pending' | 'resolved' | 'dismissed'
+          resolved_by: string | null
+          resolution_action: 'dismissed' | 'content_removed' | 'user_warned' | 'user_suspended' | null
+          resolution_notes: string | null
+          created_at: string | null
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: number
+          reporter_id: string
+          content_type: 'message' | 'profile' | 'trip'
+          content_id: number
+          reason: string
+          description?: string | null
+          status?: 'pending' | 'resolved' | 'dismissed'
+          resolved_by?: string | null
+          resolution_action?: 'dismissed' | 'content_removed' | 'user_warned' | 'user_suspended' | null
+          resolution_notes?: string | null
+          created_at?: string | null
+          resolved_at?: string | null
+        }
+        Update: {
+          id?: number
+          reporter_id?: string
+          content_type?: 'message' | 'profile' | 'trip'
+          content_id?: number
+          reason?: string
+          description?: string | null
+          status?: 'pending' | 'resolved' | 'dismissed'
+          resolved_by?: string | null
+          resolution_action?: 'dismissed' | 'content_removed' | 'user_warned' | 'user_suspended' | null
+          resolution_notes?: string | null
+          created_at?: string | null
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
+      user_blocks: {
+        Row: {
+          id: number
+          blocker_id: string
+          blocked_id: string
+          reason: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          blocker_id: string
+          blocked_id: string
+          reason?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          blocker_id?: string
+          blocked_id?: string
+          reason?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      user_warnings: {
+        Row: {
+          id: number
+          user_id: string
+          moderator_id: string
+          reason: string
+          message: string
+          severity: 'low' | 'medium' | 'high'
+          created_at: string | null
+          acknowledged_at: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          moderator_id: string
+          reason: string
+          message: string
+          severity?: 'low' | 'medium' | 'high'
+          created_at?: string | null
+          acknowledged_at?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          moderator_id?: string
+          reason?: string
+          message?: string
+          severity?: 'low' | 'medium' | 'high'
+          created_at?: string | null
+          acknowledged_at?: string | null
+        }
+        Relationships: []
+      }
+      user_suspensions: {
+        Row: {
+          id: number
+          user_id: string
+          moderator_id: string
+          reason: string
+          message: string
+          suspended_until: string | null
+          is_permanent: boolean
+          created_at: string | null
+          lifted_at: string | null
+          lifted_by: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          moderator_id: string
+          reason: string
+          message: string
+          suspended_until?: string | null
+          is_permanent?: boolean
+          created_at?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          moderator_id?: string
+          reason?: string
+          message?: string
+          suspended_until?: string | null
+          is_permanent?: boolean
+          created_at?: string | null
+          lifted_at?: string | null
+          lifted_by?: string | null
+        }
+        Relationships: []
+      }
+      moderation_logs: {
+        Row: {
+          id: number
+          moderator_id: string
+          action: string
+          target_user_id: string | null
+          content_type: string | null
+          content_id: number | null
+          details: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          moderator_id: string
+          action: string
+          target_user_id?: string | null
+          content_type?: string | null
+          content_id?: number | null
+          details?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          moderator_id?: string
+          action?: string
+          target_user_id?: string | null
+          content_type?: string | null
+          content_id?: number | null
+          details?: Json | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      filtered_messages: {
+        Row: {
+          id: number
+          original_message_id: number
+          original_content: string
+          filtered_content: string
+          reason: string
+          severity: 'low' | 'medium' | 'high'
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          original_message_id: number
+          original_content: string
+          filtered_content: string
+          reason: string
+          severity: 'low' | 'medium' | 'high'
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          original_message_id?: number
+          original_content?: string
+          filtered_content?: string
+          reason?: string
+          severity?: 'low' | 'medium' | 'high'
+          created_at?: string | null
         }
         Relationships: []
       }

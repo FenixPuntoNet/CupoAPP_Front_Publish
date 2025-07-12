@@ -15,7 +15,9 @@ import '@mantine/dates/styles.css';
 import { Search, PlusCircle, Car, User } from "lucide-react";
 import { config } from "telefunc/client";
 import styles from "./root.module.css";
-import { AuthProvider } from '@/context/AuthContext';
+import { SupabaseAuthProvider } from '@/context/SupabaseAuthContext';
+import { AuthGuard } from '@/components/AuthGuard';
+import { GoogleMapsProvider } from '@/components/GoogleMapsProvider';
 
 // Configure telefunc
 config.telefuncUrl = "http://localhost:3000/_telefunc";
@@ -74,8 +76,10 @@ const RootComponent = () => {
   const showNavigation = !noNavBarRoutes.includes(location.pathname);
 
   return (
-    <AuthProvider>
+    <SupabaseAuthProvider>
       <MantineProvider theme={theme} defaultColorScheme="dark">
+        <GoogleMapsProvider>
+          <AuthGuard>
           <AppShell
             header={{ height: showNavigation ? 60 : 0 }}
             footer={{ height: 72 }}
@@ -144,8 +148,10 @@ const RootComponent = () => {
             )}
           </AppShell>
           <Notifications />
+        </AuthGuard>
+        </GoogleMapsProvider>
       </MantineProvider>
-    </AuthProvider>
+    </SupabaseAuthProvider>
   );
 };
 

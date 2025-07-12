@@ -1,0 +1,378 @@
+/* Global Modal Styles - Tema oscuro mejorado */
+
+/* Override global de todos los modales de Mantine */
+.mantine-Modal-content {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  border: 1px solid rgba(0, 255, 157, 0.3) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 157, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.mantine-Modal-header {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  border-bottom: 1px solid rgba(0, 255, 157, 0.2) !important;
+  padding: 24px !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.mantine-Modal-title {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 1.25rem !important;
+}
+
+.mantine-Modal-body {
+  padding: 24px !important;
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+.mantine-Modal-close {
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.2s ease !important;
+}
+
+.mantine-Modal-close:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Text components in modals */
+.mantine-Modal-content .mantine-Text-root {
+  color: #ffffff !important;
+  line-height: 1.6 !important;
+}
+
+.mantine-Modal-content .mantine-Text-root strong {
+  color: inherit !important;
+  font-weight: 700 !important;
+}
+
+/* Override for specific note containers */
+.mantine-Modal-content .mantine-Text-root[class*="importantText"],
+.mantine-Modal-content .mantine-Text-root[class*="alternativeText"] {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.mantine-Modal-content .mantine-Text-root[data-size="sm"] {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.mantine-Modal-content .mantine-Text-root[data-size="lg"] {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Input components in modals */
+.mantine-Modal-content .mantine-TextInput-input,
+.mantine-Modal-content .mantine-Textarea-input,
+.mantine-Modal-content .mantine-Select-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease !important;
+}
+
+.mantine-Modal-content .mantine-TextInput-input:focus,
+.mantine-Modal-content .mantine-Textarea-input:focus,
+.mantine-Modal-content .mantine-Select-input:focus {
+  border-color: #00ff9d !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2) !important;
+  background: rgba(0, 255, 157, 0.05) !important;
+}
+
+.mantine-Modal-content .mantine-TextInput-input::placeholder,
+.mantine-Modal-content .mantine-Textarea-input::placeholder,
+.mantine-Modal-content .mantine-Select-input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.mantine-Modal-content .mantine-TextInput-label,
+.mantine-Modal-content .mantine-Textarea-label,
+.mantine-Modal-content .mantine-Select-label {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500 !important;
+}
+
+.mantine-Modal-content .mantine-TextInput-error,
+.mantine-Modal-content .mantine-Textarea-error,
+.mantine-Modal-content .mantine-Select-error {
+  color: #ff4757 !important;
+}
+
+/* Select dropdown */
+.mantine-Select-dropdown {
+  background: #2d2d2d !important;
+  border: 1px solid rgba(0, 255, 157, 0.3) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.mantine-Select-option {
+  color: #ffffff !important;
+  padding: 12px !important;
+  border-radius: 4px !important;
+  margin: 2px !important;
+  transition: all 0.2s ease !important;
+}
+
+.mantine-Select-option:hover {
+  background: rgba(0, 255, 157, 0.1) !important;
+  color: #00ff9d !important;
+}
+
+.mantine-Select-option[data-selected] {
+  background: rgba(0, 255, 157, 0.2) !important;
+  color: #00ff9d !important;
+}
+
+/* Button components in modals */
+.mantine-Modal-content .mantine-Button-root {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Primary buttons */
+.mantine-Modal-content .mantine-Button-root[data-variant="filled"] {
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7d 100%) !important;
+  color: #0a0a0a !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3) !important;
+}
+
+.mantine-Modal-content .mantine-Button-root[data-variant="filled"]:hover {
+  background: linear-gradient(135deg, #00cc7d 0%, #00b369 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(0, 255, 157, 0.4) !important;
+}
+
+.mantine-Modal-content .mantine-Button-root[data-variant="filled"]:disabled {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Secondary buttons */
+.mantine-Modal-content .mantine-Button-root[data-variant="outline"],
+.mantine-Modal-content .mantine-Button-root[data-variant="default"] {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.mantine-Modal-content .mantine-Button-root[data-variant="outline"]:hover,
+.mantine-Modal-content .mantine-Button-root[data-variant="default"]:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Danger/Error buttons */
+.mantine-Modal-content .mantine-Button-root[data-color="red"] {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
+}
+
+.mantine-Modal-content .mantine-Button-root[data-color="red"]:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4) !important;
+}
+
+/* Alert components in modals - Contraste mejorado */
+.mantine-Modal-content .mantine-Alert-root {
+  border-radius: 8px !important;
+  margin-bottom: 16px !important;
+  padding: 16px !important;
+}
+
+/* Red alerts - Error/Danger */
+.mantine-Modal-content .mantine-Alert-root[data-color="red"] {
+  background: rgba(153, 27, 27, 0.9) !important;
+  border: 1px solid rgba(220, 38, 38, 0.6) !important;
+  color: #ffffff !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="red"] .mantine-Alert-message {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="red"] .mantine-Alert-title {
+  color: #fecaca !important;
+  font-weight: 700 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="red"] .mantine-Alert-icon {
+  color: #fecaca !important;
+}
+
+/* Yellow alerts - Warning */
+.mantine-Modal-content .mantine-Alert-root[data-color="yellow"] {
+  background: rgba(139, 69, 19, 0.9) !important;
+  border: 1px solid rgba(255, 193, 7, 0.6) !important;
+  color: #ffffff !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="yellow"] .mantine-Alert-message {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="yellow"] .mantine-Alert-title {
+  color: #fcd34d !important;
+  font-weight: 700 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="yellow"] .mantine-Alert-icon {
+  color: #fcd34d !important;
+}
+
+/* Green alerts - Success */
+.mantine-Modal-content .mantine-Alert-root[data-color="green"] {
+  background: rgba(5, 46, 22, 0.9) !important;
+  border: 1px solid rgba(0, 255, 157, 0.6) !important;
+  color: #ffffff !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="green"] .mantine-Alert-message {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="green"] .mantine-Alert-title {
+  color: #6ee7b7 !important;
+  font-weight: 700 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="green"] .mantine-Alert-icon {
+  color: #6ee7b7 !important;
+}
+
+/* Blue alerts - Info */
+.mantine-Modal-content .mantine-Alert-root[data-color="blue"] {
+  background: rgba(30, 58, 138, 0.9) !important;
+  border: 1px solid rgba(59, 130, 246, 0.6) !important;
+  color: #ffffff !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="blue"] .mantine-Alert-message {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="blue"] .mantine-Alert-title {
+  color: #93c5fd !important;
+  font-weight: 700 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-root[data-color="blue"] .mantine-Alert-icon {
+  color: #93c5fd !important;
+}
+
+/* Fallback for general alert messages */
+.mantine-Modal-content .mantine-Alert-message {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-title {
+  color: inherit !important;
+  font-weight: 700 !important;
+}
+
+.mantine-Modal-content .mantine-Alert-icon {
+  color: inherit !important;
+}
+
+/* Cards in modals */
+.mantine-Modal-content .mantine-Card-root {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  color: #ffffff !important;
+}
+
+/* Group and Stack spacing */
+.mantine-Modal-content .mantine-Group-root {
+  gap: 12px !important;
+}
+
+.mantine-Modal-content .mantine-Stack-root {
+  gap: 16px !important;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+  .mantine-Modal-content {
+    margin: 16px !important;
+    max-height: 85vh !important;
+  }
+  
+  .mantine-Modal-header {
+    padding: 20px !important;
+  }
+  
+  .mantine-Modal-body {
+    padding: 20px !important;
+  }
+  
+  .mantine-Modal-title {
+    font-size: 1.125rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .mantine-Modal-content {
+    margin: 8px !important;
+    max-height: 90vh !important;
+  }
+  
+  .mantine-Modal-header {
+    padding: 16px !important;
+  }
+  
+  .mantine-Modal-body {
+    padding: 16px !important;
+  }
+  
+  .mantine-Modal-title {
+    font-size: 1rem !important;
+  }
+}
+
+/* Loading overlays */
+.mantine-LoadingOverlay-root {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(5px) !important;
+}
+
+.mantine-LoadingOverlay-loader {
+  color: #00ff9d !important;
+}
+
+/* Custom classes for different modal types */
+.modal-success .mantine-Modal-content {
+  border-color: rgba(0, 255, 157, 0.5) !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 255, 157, 0.2) !important;
+}
+
+.modal-error .mantine-Modal-content {
+  border-color: rgba(220, 38, 38, 0.5) !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(220, 38, 38, 0.2) !important;
+}
+
+.modal-warning .mantine-Modal-content {
+  border-color: rgba(255, 193, 7, 0.5) !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 193, 7, 0.2) !important;
+}

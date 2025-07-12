@@ -27,6 +27,7 @@ import {
 import type { LucideProps } from 'lucide-react'
 import styles from './index.module.css'
 import { supabase } from '@/lib/supabaseClient'
+import { useSupabaseAuth } from '@/context/SupabaseAuthContext'
 import { Rating } from '@mantine/core';
 import { DeactivateAccountModal } from '@/components/DeactivateAccountModal';
 
@@ -80,6 +81,7 @@ interface SubMenuItem {
 
 const ProfileView: React.FC = () => {
   const navigate = useNavigate()
+  const { signOut } = useSupabaseAuth()
   const [loading, setLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [vehicleStatus, setVehicleStatus] = useState<VehicleStatus>({
@@ -400,10 +402,8 @@ const ProfileView: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      localStorage.clear()
-      navigate({ to: '/' })
+      await signOut();
+      // El AuthGuard se encargará de la navegación
     } catch (error) {
       console.error('Error al cerrar sesión:', error)
     }

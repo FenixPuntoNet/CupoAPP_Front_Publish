@@ -28,6 +28,14 @@ function Index() {
     },
   ];
 
+  const handleRegisterClick = () => {
+    console.log('🔍 Register button clicked');
+  };
+
+  const handleLoginClick = () => {
+    console.log('🔍 Login button clicked');
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       setAnimatingText(true);
@@ -84,15 +92,15 @@ function Index() {
         </div>
 
         <div className={styles.actionButtons}>
-          <Link to="/Registro" className={styles.registerLink}>
-            <Button className={styles.registerButton}>Crear cuenta</Button>
+          <Link to="/Registro" className={styles.registerLink} onClick={handleRegisterClick}>
+            <Button className={styles.registerButton}>
+              Crear cuenta
+            </Button>
           </Link>
-          <Link to="/Login" className={styles.loginLink}>
+          <Link to="/Login" className={styles.loginLink} onClick={handleLoginClick}>
             <Button variant="outline" className={styles.loginButton}>
               Iniciar sesión
             </Button>
-          </Link>
-          <Link to="/home" className={styles.noLoginLink}>
           </Link>
         </div>
       </main>

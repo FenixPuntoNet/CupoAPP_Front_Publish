@@ -1,0 +1,192 @@
+/* Modal de moderación de usuario mejorado con tema oscuro */
+.modalContent {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  border: 1px solid rgba(0, 255, 157, 0.3) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 157, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.modalHeader {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  border-bottom: 1px solid rgba(0, 255, 157, 0.2) !important;
+  padding: 24px !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.modalHeader .mantine-Modal-title {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 1.25rem !important;
+}
+
+.modalBody {
+  padding: 24px !important;
+  background: transparent !important;
+  color: #ffffff !important;
+}
+
+/* Estilos del texto */
+.modalBody .mantine-Text-root {
+  color: #ffffff !important;
+  line-height: 1.6 !important;
+}
+
+.modalBody .mantine-Text-root[data-size="sm"] {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.modalBody .mantine-Text-root[data-size="lg"] {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+/* Alertas mejoradas */
+.suspensionAlert {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border: 1px solid rgba(220, 38, 38, 0.3) !important;
+  border-radius: 8px !important;
+  color: #dc2626 !important;
+  margin-bottom: 16px !important;
+}
+
+.suspensionAlert .mantine-Alert-icon {
+  color: #dc2626 !important;
+}
+
+.suspensionAlert .mantine-Alert-title {
+  color: #dc2626 !important;
+}
+
+.suspensionAlert .mantine-Alert-message {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.warningAlert {
+  background: rgba(255, 193, 7, 0.1) !important;
+  border: 1px solid rgba(255, 193, 7, 0.3) !important;
+  border-radius: 8px !important;
+  color: #ffc107 !important;
+  margin-bottom: 16px !important;
+}
+
+.warningAlert .mantine-Alert-icon {
+  color: #ffc107 !important;
+}
+
+.warningAlert .mantine-Alert-title {
+  color: #ffc107 !important;
+}
+
+.warningAlert .mantine-Alert-message {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.infoAlert {
+  background: rgba(0, 255, 157, 0.1) !important;
+  border: 1px solid rgba(0, 255, 157, 0.3) !important;
+  border-radius: 8px !important;
+  color: #00ff9d !important;
+  margin-bottom: 16px !important;
+}
+
+.infoAlert .mantine-Alert-icon {
+  color: #00ff9d !important;
+}
+
+.infoAlert .mantine-Alert-title {
+  color: #00ff9d !important;
+}
+
+.infoAlert .mantine-Alert-message {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Sección de información */
+.infoSection {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  margin-bottom: 16px !important;
+}
+
+.infoSection .mantine-Text-root {
+  color: #ffffff !important;
+}
+
+.infoSection .mantine-Text-root[data-size="sm"] {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Botones */
+.acknowledgeButton {
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7d 100%) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  color: #0a0a0a !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3) !important;
+}
+
+.acknowledgeButton:hover {
+  background: linear-gradient(135deg, #00cc7d 0%, #00b369 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(0, 255, 157, 0.4) !important;
+}
+
+.acknowledgeButton:disabled {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+.closeButton {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modalContent {
+    margin: 16px !important;
+    max-height: 85vh !important;
+  }
+  
+  .modalHeader {
+    padding: 20px !important;
+  }
+  
+  .modalBody {
+    padding: 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modalContent {
+    margin: 8px !important;
+    max-height: 90vh !important;
+  }
+  
+  .modalHeader {
+    padding: 16px !important;
+  }
+  
+  .modalBody {
+    padding: 16px !important;
+  }
+}

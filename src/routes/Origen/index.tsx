@@ -1,216 +1,393 @@
-  import { useState, useEffect, useRef } from 'react';
-  import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-  import { Container, TextInput, Text, Button, Title } from '@mantine/core';
-  import { ArrowLeft, MapPin } from 'lucide-react';
-  import { GoogleMap, Marker } from '@react-google-maps/api';
-  import { mapOptions } from '../../types/PublicarViaje/TripDataManagement';
-  import styles from './index.module.css';
-  // Importa las utilidades
-  interface Suggestion {
-    id: string;
-    description: string;
-    main_text: string;
-    secondary_text: string;
-  }
+import { useState, useEffect, useRef } from 'react';
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Container, TextInput, Text, Button, Title } from '@mantine/core';
+import { ArrowLeft, MapPin, Navigation, Search, Star, Clock } from 'lucide-react';
+import { GoogleMap, Marker } from '@react-google-maps/api';
+import { mapOptions } from '../../types/PublicarViaje/TripDataManagement';
+import styles from './index.module.css';
 
-  interface Location {
-    lat: number;
-    lng: number;
-  }
+// Interfaces
+interface Suggestion {
+  id: string;
+  description: string;
+  main_text: string;
+  secondary_text: string;
+}
 
-  function OrigenView() {
-    const navigate = useNavigate();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [results, setResults] = useState<Suggestion[]>([]);
-    const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-    const [selectedAddress, setSelectedAddress] = useState('');
-    const [showMap, setShowMap] = useState(false);
-    const [, setError] = useState<string | null>(null);
-    const [, setIsSearching] = useState(false);
+interface Location {
+  lat: number;
+  lng: number;
+}
 
-    const mapRef = useRef<google.maps.Map | null>(null);
-    const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-    const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
-    const searchTimeout = useRef<NodeJS.Timeout>();
+function OrigenView() {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState<Suggestion[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState('');
+  const [showMap, setShowMap] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  const [recentSearches] = useState<string[]>([
+    'Aeropuerto El Dorado',
+    'Centro Comercial Andino',
+    'Universidad Nacional',
+    'Zona Rosa'
+  ]);
+  const [popularPlaces] = useState<string[]>([
+    'Bogotá Centro',
+    'Chapinero',
+    'Zona T',
+    'Candelaria'
+  ]);
 
-    useEffect(() => {
-      if (window.google && !autocompleteServiceRef.current) {
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const searchTimeout = useRef<NodeJS.Timeout>();
+
+  // Inicializar servicios de Google Maps
+  useEffect(() => {
+    if (window.google && window.google.maps && window.google.maps.places) {
+      if (!autocompleteServiceRef.current) {
         autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
       }
-    }, []);
-
-    useEffect(() => {
-      if (searchTimeout.current) {
-        clearTimeout(searchTimeout.current);
+      if (!placesServiceRef.current && mapRef.current) {
+        placesServiceRef.current = new google.maps.places.PlacesService(mapRef.current);
       }
+    }
+  }, [showMap]);
 
-      if (searchTerm && !selectedLocation) {
-        setIsSearching(true);
-        searchTimeout.current = setTimeout(() => {
-          if (autocompleteServiceRef.current) {
-            const request: google.maps.places.AutocompletionRequest = {
-              input: searchTerm,
-              componentRestrictions: { country: 'co' },
-            };
-
-            autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
-              setIsSearching(false);
-              if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-                setResults(
-                  predictions.map((prediction) => ({
-                    id: prediction.place_id,
-                    description: prediction.description,
-                    main_text: prediction.structured_formatting.main_text,
-                    secondary_text: prediction.structured_formatting.secondary_text,
-                  }))
-                );
-              } else {
-                setResults([]);
-              }
-            });
-          }
-        }, 300);
-      }
-
-      return () => {
-        if (searchTimeout.current) {
-          clearTimeout(searchTimeout.current);
+  // Obtener ubicación actual del usuario
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error obteniendo ubicación:', error);
+          // Ubicación por defecto (Bogotá)
+          setCurrentLocation({ lat: 4.6097, lng: -74.0817 });
         }
-      };
-    }, [searchTerm, selectedLocation]);
+      );
+    } else {
+      setCurrentLocation({ lat: 4.6097, lng: -74.0817 });
+    }
+  }, []);
 
-    const handlePlaceSelect = async (suggestion: Suggestion) => {
-      if (!placesServiceRef.current) return;
+  // Manejar búsqueda con debounce
+  useEffect(() => {
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
 
-      try {
-        const result = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
-          placesServiceRef.current?.getDetails(
-            { placeId: suggestion.id, fields: ['geometry', 'formatted_address'] },
-            (place, status) => {
-              if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-                resolve(place);
-              } else {
-                reject(new Error('Error obteniendo detalles del lugar'));
-              }
-            }
-          );
-        });
-
-        if (result.geometry?.location) {
-          const location = {
-            lat: result.geometry.location.lat(),
-            lng: result.geometry.location.lng(),
+    if (searchTerm && !selectedLocation) {
+      setIsSearching(true);
+      setError(null);
+      searchTimeout.current = setTimeout(() => {
+        if (autocompleteServiceRef.current) {
+          const request: google.maps.places.AutocompletionRequest = {
+            input: searchTerm,
+            componentRestrictions: { country: 'co' },
+            types: ['establishment', 'geocode']
           };
 
-          // Actualizar estados en orden para una transición suave
-          setSelectedLocation(location);
-          setSelectedAddress(result.formatted_address || suggestion.description);
-          setSearchTerm(result.formatted_address || suggestion.description);
-          setShowMap(true);
-          setResults([]); // Cerrar la lista después de seleccionar
-
-          // Asegurar que el mapa se actualice correctamente
-          requestAnimationFrame(() => {
-            if (mapRef.current) {
-              mapRef.current.panTo(location);
-              mapRef.current.setZoom(15);
+          autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
+            setIsSearching(false);
+            if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+              setResults(
+                predictions.map((prediction) => ({
+                  id: prediction.place_id,
+                  description: prediction.description,
+                  main_text: prediction.structured_formatting.main_text,
+                  secondary_text: prediction.structured_formatting.secondary_text || '',
+                }))
+              );
+            } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+              setResults([]);
+            } else {
+              setError('Error al buscar ubicaciones. Intenta nuevamente.');
+              setResults([]);
             }
           });
         }
-      } catch (err) {
-        console.error('Error:', err);
-        setError('Error al obtener la ubicación');
+      }, 300);
+    } else if (!searchTerm) {
+      setResults([]);
+      setIsSearching(false);
+    }
+
+    return () => {
+      if (searchTimeout.current) {
+        clearTimeout(searchTimeout.current);
       }
     };
+  }, [searchTerm, selectedLocation]);
 
-    const handleMapClick = async (event: google.maps.MapMouseEvent) => {
-      if (!event.latLng) return;
+  const handlePlaceSelect = async (suggestion: Suggestion) => {
+    // Inicializar el servicio de Places si no está disponible
+    if (!placesServiceRef.current) {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        // Crear un div temporal para el servicio de Places
+        const tempDiv = document.createElement('div');
+        placesServiceRef.current = new google.maps.places.PlacesService(tempDiv);
+      } else {
+        setError('Google Maps no está disponible. Por favor, recarga la página.');
+        return;
+      }
+    }
 
-      const location = {
-        lat: event.latLng.lat(),
-        lng: event.latLng.lng(),
-      };
+    try {
+      setError(null);
+      const result = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
+        placesServiceRef.current?.getDetails(
+          { placeId: suggestion.id, fields: ['geometry', 'formatted_address', 'name'] },
+          (place, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+              resolve(place);
+            } else {
+              reject(new Error(`Error obteniendo detalles del lugar: ${status}`));
+            }
+          }
+        );
+      });
 
-      try {
-        const geocoder = new google.maps.Geocoder();
-        const response = await geocoder.geocode({ location });
-        if (response.results[0]) {
-          setSelectedLocation(location);
-          setSelectedAddress(response.results[0].formatted_address);
-          setSearchTerm(response.results[0].formatted_address);
-          setResults([]); // Cerrar la lista si está abierta
+      if (result.geometry?.location) {
+        const location = {
+          lat: result.geometry.location.lat(),
+          lng: result.geometry.location.lng(),
+        };
+
+        setSelectedLocation(location);
+        setSelectedAddress(result.formatted_address || suggestion.description);
+        setSearchTerm(result.formatted_address || suggestion.description);
+        setShowMap(true);
+        setResults([]);
+
+        // Animar el mapa suavemente
+        setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.panTo(location);
+            mapRef.current.setZoom(16);
+          }
+        }, 100);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error al obtener la ubicación del origen. Intenta nuevamente.');
+    }
+  };
+
+  const handleMapClick = async (event: google.maps.MapMouseEvent) => {
+    if (!event.latLng) return;
+
+    const location = {
+      lat: event.latLng.lat(),
+      lng: event.latLng.lng(),
+    };
+
+    try {
+      setError(null);
+      const geocoder = new google.maps.Geocoder();
+      const response = await geocoder.geocode({ location });
+      
+      if (response.results[0]) {
+        setSelectedLocation(location);
+        setSelectedAddress(response.results[0].formatted_address);
+        setSearchTerm(response.results[0].formatted_address);
+        setResults([]);
+      } else {
+        setError('No se pudo obtener la dirección de esta ubicación');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error al obtener la dirección');
+    }
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (currentLocation) {
+      setSelectedLocation(currentLocation);
+      setShowMap(true);
+      
+      // Obtener dirección de la ubicación actual
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location: currentLocation }, (results, status) => {
+        if (status === 'OK' && results?.[0]) {
+          setSelectedAddress(results[0].formatted_address);
+          setSearchTerm(results[0].formatted_address);
+        } else {
+          setSelectedAddress('Ubicación actual');
+          setSearchTerm('Ubicación actual');
         }
-      } catch (err) {
-        console.error('Error:', err);
-        setError('Error al obtener la dirección');
-      }
-    };
+      });
 
-    const handleContinue = () => {
-      if (selectedAddress) {
-        navigate({
-          to: '/publicarviaje',
-          search: { selectedAddress },
-        });
-      }
-    };
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.panTo(currentLocation);
+          mapRef.current.setZoom(16);
+        }
+      }, 100);
+    }
+  };
 
-    return (
-      <Container fluid className={styles.container}>
-        <div className={styles.searchSection}>
-          <div className={styles.header}>
-            <Link to="/publicarviaje" className={styles.backButton}>
-              <ArrowLeft size={24} />
-            </Link>
-            <Title order={4} className={styles.headerTitle}>Origen del viaje</Title>
-          </div>
+  const handleQuickSearch = (place: string) => {
+    setSearchTerm(place);
+    setError(null);
+  };
 
-          <div className={styles.searchBox}>
-            <MapPin className={styles.searchIcon} size={20} />
-            <TextInput
-              placeholder="¿Desde dónde sales?"
-              value={searchTerm}
-              onChange={(e) => {
-                const newValue = e.currentTarget.value;
-                setSearchTerm(newValue);
-                if (newValue === '') {
-                  setSelectedLocation(null);
-                  setShowMap(false);
-                }
-              }}
-              variant="unstyled"
-              className={styles.input}
-            />
-          </div>
+  const handleContinue = () => {
+    if (selectedAddress) {
+      navigate({
+        to: '/Destino',
+        search: { originAddress: selectedAddress },
+      });
+    }
+  };
 
-          {results.length > 0 && !selectedLocation && (
-            <div className={styles.resultsList}>
-              {results.map((result) => (
-                <button
-                  key={result.id}
-                  className={styles.resultItem}
-                  onClick={() => handlePlaceSelect(result)}
-                >
-                  <MapPin size={18} className={styles.resultIcon} />
-                  <div className={styles.resultContent}>
-                    <Text className={styles.mainText}>{result.main_text}</Text>
-                    <Text className={styles.secondaryText}>{result.secondary_text}</Text>
-                  </div>
-                </button>
-              ))}
+  return (
+    <Container fluid className={styles.container}>
+      <div className={styles.header}>
+        <Link to="/publicarviaje" className={styles.backButton}>
+          <ArrowLeft size={24} />
+        </Link>
+        <Title order={4} className={styles.headerTitle}>Origen del viaje</Title>
+      </div>
+
+      <div className={styles.searchSection}>
+        <div className={styles.searchBox}>
+          <MapPin className={styles.searchIcon} size={20} />
+          <TextInput
+            placeholder="Escribe la dirección completa"
+            value={searchTerm}
+            onChange={(e) => {
+              const newValue = e.currentTarget.value;
+              setSearchTerm(newValue);
+              if (newValue === '') {
+                setSelectedLocation(null);
+                setShowMap(false);
+              }
+            }}
+            variant="unstyled"
+            className={styles.input}
+          />
+          {isSearching && (
+            <div className={styles.searchLoader}>
+              <div className={styles.spinner}></div>
             </div>
           )}
         </div>
 
-        <div className={`${styles.mapSection} ${showMap ? styles.mapSectionVisible : ''}`}>
+        {error && (
+          <div className={styles.errorMessage}>
+            <Text size="sm" color="red">{error}</Text>
+          </div>
+        )}
+
+        {results.length > 0 && !selectedLocation && (
+          <div className={styles.resultsList}>
+            {results.map((result) => (
+              <button
+                key={result.id}
+                className={styles.resultItem}
+                onClick={() => handlePlaceSelect(result)}
+              >
+                <MapPin size={18} className={styles.resultIcon} />
+                <div className={styles.resultContent}>
+                  <Text className={styles.mainText}>{result.main_text}</Text>
+                  <Text className={styles.secondaryText}>{result.secondary_text}</Text>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Mostrar sugerencias cuando no hay búsqueda activa */}
+        {!searchTerm && !selectedLocation && (
+          <div className={styles.suggestionsContainer}>
+            {/* Botón de ubicación actual */}
+            <button
+              className={styles.currentLocationButton}
+              onClick={handleUseCurrentLocation}
+            >
+              <Navigation size={20} className={styles.currentLocationIcon} />
+              <div className={styles.currentLocationContent}>
+                <Text className={styles.currentLocationText}>Usar ubicación actual</Text>
+                <Text className={styles.currentLocationSubtext}>Detectar automáticamente</Text>
+              </div>
+            </button>
+
+            {/* Búsquedas recientes */}
+            <div className={styles.suggestionsSection}>
+              <div className={styles.suggestionHeader}>
+                <Clock size={16} className={styles.suggestionIcon} />
+                <Text className={styles.suggestionTitle}>Búsquedas recientes</Text>
+              </div>
+              {recentSearches.map((search, index) => (
+                <button
+                  key={index}
+                  className={styles.suggestionItem}
+                  onClick={() => handleQuickSearch(search)}
+                >
+                  <Clock size={16} className={styles.suggestionItemIcon} />
+                  <Text className={styles.suggestionItemText}>{search}</Text>
+                </button>
+              ))}
+            </div>
+
+            {/* Lugares populares */}
+            <div className={styles.suggestionsSection}>
+              <div className={styles.suggestionHeader}>
+                <Star size={16} className={styles.suggestionIcon} />
+                <Text className={styles.suggestionTitle}>Lugares populares</Text>
+              </div>
+              {popularPlaces.map((place, index) => (
+                <button
+                  key={index}
+                  className={styles.suggestionItem}
+                  onClick={() => handleQuickSearch(place)}
+                >
+                  <Star size={16} className={styles.suggestionItemIcon} />
+                  <Text className={styles.suggestionItemText}>{place}</Text>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mapa */}
+      <div className={`${styles.mapSection} ${showMap ? styles.mapSectionVisible : ''}`}>
+        {!showMap && (
+          <div className={styles.noMapContainer}>
+            <div className={styles.noMapContent}>
+              <Search size={48} className={styles.noMapIcon} />
+              <Text className={styles.noMapTitle}>Selecciona tu origen</Text>
+              <Text className={styles.noMapSubtitle}>
+                Busca una dirección, explora lugares populares o usa tu ubicación actual
+              </Text>
+            </div>
+          </div>
+        )}
+        
+        {showMap && (
           <GoogleMap
             mapContainerStyle={{ width: '100%', height: '100%' }}
             options={{
               ...mapOptions,
               gestureHandling: 'greedy',
+              zoomControl: true,
+              streetViewControl: false,
+              fullscreenControl: false,
+              mapTypeControl: false,
             }}
-            center={selectedLocation || { lat: 4.6097, lng: -74.0817 }}
-            zoom={13}
+            center={selectedLocation || currentLocation || { lat: 4.6097, lng: -74.0817 }}
+            zoom={selectedLocation ? 16 : 13}
             onClick={handleMapClick}
             onLoad={(map) => {
               mapRef.current = map;
@@ -222,28 +399,29 @@
                 position={selectedLocation}
                 icon={{
                   path: google.maps.SymbolPath.CIRCLE,
-                  scale: 7,
+                  scale: 10,
                   fillColor: '#00ff9d',
                   fillOpacity: 1,
                   strokeColor: '#FFFFFF',
-                  strokeWeight: 2,
+                  strokeWeight: 3,
                 }}
               />
             )}
           </GoogleMap>
-        </div>
-
-        {selectedLocation && (
-          <Button className={styles.confirmButton} onClick={handleContinue}>
-            Siguiente
-          </Button>
         )}
-      </Container>
-    );
-  }
+      </div>
 
-  export const Route = createFileRoute('/Origen/')({
-    component: OrigenView,
-  });
+      {selectedLocation && (
+        <Button className={styles.confirmButton} onClick={handleContinue}>
+          Siguiente
+        </Button>
+      )}
+    </Container>
+  );
+}
 
-  export default OrigenView;
+export const Route = createFileRoute('/Origen/')({
+  component: OrigenView,
+});
+
+export default OrigenView;

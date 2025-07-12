@@ -145,6 +145,8 @@
     max-width: 200px;
     margin: 0 auto;
     margin-bottom: 1rem;
+    position: relative;
+    z-index: 10;
   }
   
   .registerButton, .loginButton {
@@ -191,6 +193,19 @@
   
   .loginButton:hover {
     background: rgba(0, 255, 157, 0.1);
+  }
+  
+  .registerLink, .loginLink {
+    text-decoration: none;
+    width: 100%;
+    display: block;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+  }
+  
+  .registerLink:hover, .loginLink:hover {
+    text-decoration: none;
   }
   
   @keyframes rotate {

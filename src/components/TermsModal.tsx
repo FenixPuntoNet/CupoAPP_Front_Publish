@@ -215,6 +215,8 @@ export const TermsModal: React.FC<TermsModalProps> = ({ opened, onClose }) => {
               size="sm"
               onClick={onClose}
               className={styles.closeButton}
+              tabIndex={0}
+              aria-label="Cerrar términos y condiciones"
             >
               <IconCheck size={16} />
             </Button>
@@ -229,6 +231,8 @@ export const TermsModal: React.FC<TermsModalProps> = ({ opened, onClose }) => {
                 size="xs"
                 onClick={() => goToSection(index)}
                 className={index === currentSectionIndex ? styles.activePill : styles.pill}
+                tabIndex={0}
+                aria-label={`Ver sección ${section.title}`}
               >
                 {section.icon}
                 <Text ml={4} size="xs">
@@ -257,6 +261,8 @@ export const TermsModal: React.FC<TermsModalProps> = ({ opened, onClose }) => {
               onClick={prevPage}
               disabled={!canGoPrev}
               className={styles.navButton}
+              tabIndex={0}
+              aria-label="Página anterior"
             >
               <IconChevronLeft size={16} />
               Anterior
@@ -277,6 +283,8 @@ export const TermsModal: React.FC<TermsModalProps> = ({ opened, onClose }) => {
               onClick={nextPage}
               disabled={!canGoNext}
               className={styles.navButton}
+              tabIndex={0}
+              aria-label="Página siguiente"
             >
               Siguiente
               <IconChevronRight size={16} />

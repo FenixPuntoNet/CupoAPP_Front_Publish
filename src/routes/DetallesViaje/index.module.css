@@ -931,3 +931,98 @@
     padding: 0.25rem 0;
   }
 }
+
+/* Estilos para el modal de saldo insuficiente */
+.modalIconContainer {
+  background: var(--primary-light);
+  border-radius: 50%;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.walletIcon {
+  color: var(--primary);
+}
+
+.modalContent {
+  text-align: center;
+  width: 100%;
+}
+
+.modalTitle {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.balanceCard {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 0.5rem 0;
+}
+
+.explanationBox {
+  background: rgba(0, 255, 157, 0.05);
+  border: 1px solid rgba(0, 255, 157, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.infoIcon {
+  color: var(--primary);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.rechargeButton {
+  background: var(--gradient-primary);
+  border: none;
+  font-weight: 600;
+  transition: all var(--animation-duration) ease;
+}
+
+.rechargeButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 255, 157, 0.3);
+}
+
+.modalHeader {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modalBody {
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+/* Responsive para el modal */
+@media (max-width: 768px) {
+  .modalIconContainer {
+    padding: 15px;
+  }
+  
+  .walletIcon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .explanationBox {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+}

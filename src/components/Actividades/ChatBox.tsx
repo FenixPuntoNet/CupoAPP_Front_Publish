@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useChatMessages } from './useChatMessages'
+import { moderateContent, getBlockedUsers } from '@/lib/contentModeration'
+import { ReportModal } from '@/components/ReportModal'
+import { BlockUserModal } from '@/components/BlockUserModal'
+import { IconFlag, IconUserX } from '@tabler/icons-react'
+import { Alert } from '@mantine/core'
+import styles from './ChatBox.module.css'
 
 type RoleInfo = {
   name: string
@@ -17,6 +23,13 @@ export function ChatBox({ chatId, currentUserId }: Props) {
   const messages = useChatMessages(chatId)
   const [input, setInput] = useState('')
   const [roles, setRoles] = useState<Record<string, RoleInfo>>({})
+  const [blockedUsers, setBlockedUsers] = useState<string[]>([])
+  const [reportModalOpened, setReportModalOpened] = useState(false)
+  const [blockModalOpened, setBlockModalOpened] = useState(false)
+  const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [selectedUserName, setSelectedUserName] = useState<string | null>(null)
+  const [contentModerationAlert, setContentModerationAlert] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -98,20 +111,67 @@ export function ChatBox({ chatId, currentUserId }: Props) {
       }
     }
 
+    const fetchBlockedUsers = async () => {
+      try {
+        const blocked = await getBlockedUsers(currentUserId)
+        setBlockedUsers(blocked)
+      } catch (error) {
+        console.error('❌ Error al obtener usuarios bloqueados:', error)
+      }
+    }
+
     fetchRoles()
-  }, [chatId])
+    fetchBlockedUsers()
+  }, [chatId, currentUserId])
 
   const sendMessage = async () => {
     if (!input.trim()) return
 
+    // Moderar el contenido antes de enviarlo
+    const moderationResult = moderateContent(input)
+    
+    if (!moderationResult.isAllowed) {
+      setContentModerationAlert(
+        `Tu mensaje no pudo ser enviado: ${moderationResult.reason}`
+      )
+      setTimeout(() => setContentModerationAlert(null), 5000)
+      return
+    }
+
+    // Si el contenido fue filtrado, usar la versión filtrada
+    const messageToSend = moderationResult.filteredContent || input
+
     const { error } = await supabase.from('chat_messages').insert({
       chat_id: chatId,
-      message: input,
+      message: messageToSend,
       user_id: currentUserId,
     })
 
-    if (!error) setInput('')
-    else console.error('❌ Error al enviar mensaje:', error)
+    if (!error) {
+      setInput('')
+      // Si se aplicó filtrado, informar al usuario
+      if (messageToSend !== input) {
+        setContentModerationAlert(
+          'Tu mensaje fue enviado con algunas modificaciones para cumplir con nuestras normas de comunidad.'
+        )
+        setTimeout(() => setContentModerationAlert(null), 5000)
+      }
+    } else {
+      console.error('❌ Error al enviar mensaje:', error)
+    }
+  }
+
+  const handleReportMessage = (messageId: number, userId: string, userName: string) => {
+    setSelectedMessageId(messageId)
+    setSelectedUserId(userId)
+    setSelectedUserName(userName)
+    setReportModalOpened(true)
+  }
+
+  const handleBlockUser = (userId: string, userName: string) => {
+    setSelectedUserId(userId)
+    setSelectedUserName(userName)
+    setBlockModalOpened(true)
   }
 
   useEffect(() => {
@@ -119,81 +179,160 @@ export function ChatBox({ chatId, currentUserId }: Props) {
   }, [messages])
 
   return (
-    <div className="flex flex-col h-full bg-[#0d0d0d] text-white">
-      <div className="flex-1 overflow-y-auto px-4 py-4 pb-32 space-y-4">
+    <div className={styles.chatContainer}>
+      {/* Alerta de moderación de contenido */}
+      {contentModerationAlert && (
+        <Alert 
+          color="orange" 
+          className={styles.moderationAlert}
+          onClose={() => setContentModerationAlert(null)}
+          withCloseButton
+        >
+          {contentModerationAlert}
+        </Alert>
+      )}
+
+      {/* Área de mensajes - WhatsApp Style */}
+      <div className={styles.messagesArea}>
         {messages.length === 0 ? (
-          <div className="text-center text-gray-600 mt-12 text-sm">
-            No hay mensajes aún. ¡Escribe el primero!
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>💬</div>
+            <h3>¡Comienza la conversación!</h3>
+            <p>Escribe el primer mensaje para iniciar el chat grupal</p>
           </div>
         ) : (
-          messages.map((msg) => {
-            const isOwn = msg.user_id === currentUserId
-            const userInfo = msg.user_id ? roles[msg.user_id.trim()] : undefined
+          messages
+            .filter(msg => !msg.user_id || !blockedUsers.includes(msg.user_id.trim()))
+            .map((msg) => {
+              const isOwn = msg.user_id === currentUserId
+              const userInfo = msg.user_id ? roles[msg.user_id.trim()] : undefined
 
-            const name = userInfo?.name ?? 'Sin nombre'
-            const role = userInfo?.role ?? ''
-            const photo = userInfo?.photo
+              const name = userInfo?.name ?? 'Sin nombre'
+              const role = userInfo?.role ?? ''
+              const photo = userInfo?.photo ?? 'https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/SinFotoPerfil.png'
 
-            return (
-              <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                {!isOwn && (
-                  <div className="flex items-start gap-2 max-w-[85%]">
-                    <img
-                      src={photo}
-                      alt={name}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <div>
-                      <div className="text-xs text-gray-400 font-semibold">
-                        {name} ({role})
+              return (
+                <div 
+                  key={msg.id} 
+                  className={`${styles.messageContainer} ${isOwn ? styles.own : styles.other}`}
+                >
+                  {!isOwn && (
+                    <div className={styles.messageOther}>
+                      <img
+                        src={photo}
+                        alt={name}
+                        className={styles.avatar}
+                      />
+                      <div className={styles.messageContent}>
+                        <div className={styles.messageHeader}>
+                          <div className={styles.userInfo}>
+                            <span className={styles.userName}>{name}</span>
+                            <span className={styles.userRole}>{role}</span>
+                          </div>
+                          <div className={styles.messageActions}>
+                            <button 
+                              className={styles.actionButton}
+                              onClick={() => handleReportMessage(msg.id, msg.user_id!, name)}
+                              title="Reportar mensaje"
+                            >
+                              <IconFlag size={16} />
+                            </button>
+                            <button 
+                              className={styles.actionButton}
+                              onClick={() => handleBlockUser(msg.user_id!, name)}
+                              title="Bloquear usuario"
+                            >
+                              <IconUserX size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className={`${styles.messageBubble} ${styles.other}`}>
+                          <p className={styles.messageText}>{msg.message}</p>
+                          <div className={styles.messageFooter}>
+                            <span className={styles.messageTime}>
+                              {new Date(msg.send_date ?? '').toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="relative px-4 py-2 rounded-2xl text-sm shadow-sm break-words bg-[#1f1f1f] border border-gray-700 text-gray-100">
-                        <p className="break-words whitespace-pre-wrap max-w-[260px]">{msg.message}</p>
-                        <div className="text-[10px] text-gray-400 mt-1 text-right">
+                    </div>
+                  )}
+                  {isOwn && (
+                    <div className={`${styles.messageBubble} ${styles.own}`}>
+                      <p className={styles.messageText}>{msg.message}</p>
+                      <div className={styles.messageFooter}>
+                        <span className={styles.messageTime}>
                           {new Date(msg.send_date ?? '').toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
-                        </div>
+                        </span>
+                        <span className={styles.messageStatus}>✓</span>
                       </div>
                     </div>
-                  </div>
-                )}
-                {isOwn && (
-                  <div className="flex items-end justify-end max-w-[85%]">
-                    <div className="relative px-4 py-2 rounded-2xl text-sm shadow-sm bg-indigo-600 text-white">
-                      <p className="break-words whitespace-pre-wrap max-w-[260px]">{msg.message}</p>
-                      <div className="text-[10px] text-gray-200 mt-1 text-right">
-                        {new Date(msg.send_date ?? '').toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })
+                  )}
+                </div>
+              )
+            })
         )}
         <div ref={bottomRef} />
       </div>
 
-      <div className="w-full px-4 py-3 bg-[#1a1a1a] border-t border-gray-800 flex items-center gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Escribe un mensaje..."
-          className="flex-1 px-4 py-2 text-sm text-white bg-[#111] border border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-500"
-        />
-        <button
-          onClick={sendMessage}
-          className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-full hover:bg-indigo-700 transition shadow-sm"
-        >
-          Enviar
-        </button>
+      {/* Área de input - WhatsApp Style */}
+      <div className={styles.inputArea}>
+        <div className={styles.inputContainer}>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder="Escribe un mensaje..."
+            className={styles.messageInput}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim()}
+            className={styles.sendButton}
+          >
+            <span className={styles.sendIcon}>
+              {input.trim() ? '➤' : '🎤'}
+            </span>
+          </button>
+        </div>
       </div>
+
+      {/* Modales */}
+      {selectedMessageId && selectedUserId && selectedUserName && (
+        <ReportModal
+          opened={reportModalOpened}
+          onClose={() => {
+            setReportModalOpened(false)
+            setSelectedMessageId(null)
+            setSelectedUserId(null)
+            setSelectedUserName(null)
+          }}
+          contentType="message"
+          contentId={selectedMessageId}
+          reporterId={currentUserId}
+          targetUserName={selectedUserName}
+        />
+      )}
+
+      {selectedUserId && selectedUserName && (
+        <BlockUserModal
+          opened={blockModalOpened}
+          onClose={() => {
+            setBlockModalOpened(false)
+            setSelectedUserId(null)
+            setSelectedUserName(null)
+          }}
+          targetUserId={selectedUserId}
+          targetUserName={selectedUserName}
+          currentUserId={currentUserId}
+        />
+      )}
     </div>
   )
 }

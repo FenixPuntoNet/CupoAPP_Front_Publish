@@ -15,7 +15,6 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useForm } from "@mantine/form";
 import styles from "./index.module.css";
 import { TermsModal } from "@/components/TermsModal";
-import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 
 interface RegisterFormValues {
@@ -28,6 +27,7 @@ interface RegisterFormValues {
 const RegisterView: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [subscribeEmails, setSubscribeEmails] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -36,7 +36,6 @@ const RegisterView: React.FC = () => {
   });
 
   const navigate = useNavigate();
-  const { signup, loading: authLoading } = useAuth();
 
 
   const form = useForm<RegisterFormValues>({
@@ -63,61 +62,45 @@ const RegisterView: React.FC = () => {
   const handleRegister = async (values: RegisterFormValues) => {
     try {
       setError(null);
+      setLoading(true);
   
-      // 1. Registrar usuario
-      const success = await signup(
-        values.email,
-        values.password,
-        values.nombre,
-        acceptTerms ? "aceptado" : "rechazado",
-        subscribeEmails ? "aceptado" : "rechazado"
-      );
-  
-      if (!success) {
-        setError("Ocurrió un error al registrar el usuario. Verifica los datos e intenta nuevamente.");
-        return;
-      }
-  
-      // 2. Iniciar sesión automáticamente
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // 1. Registrar usuario con Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
+        options: {
+          data: {
+            full_name: values.nombre,
+            terms_accepted: acceptTerms,
+            email_subscribed: subscribeEmails,
+          }
+        }
       });
   
-      if (authError || !authData.user) {
-        setError("No se pudo iniciar sesión automáticamente. Intenta ingresar manualmente.");
+      if (authError) {
+        setError(`Error al registrar: ${authError.message}`);
         return;
       }
   
-      // 3. Guardar datos mínimos en localStorage
-      localStorage.setItem('userEmail', values.email);
-      localStorage.setItem('userId', authData.user.id);
+      if (!authData.user) {
+        setError("No se pudo crear el usuario. Intenta nuevamente.");
+        return;
+      }
   
-      // 4. Redirigir según perfil
-      // (puedes consultar si el perfil está completo aquí si lo deseas)
-      navigate({ to: "/CompletarRegistro", replace: true });
+      // 2. Redirigir al login
+      navigate({ to: "/Login" });
   
     } catch (error) {
-      console.error("Registration error:", error);
-      let message = "Ocurrió un error al registrar el usuario. Verifica los datos e intenta nuevamente.";
-      if (
-        error instanceof Error &&
-        (
-          error.message.toLowerCase().includes("already registered") ||
-          error.message.toLowerCase().includes("already exists") ||
-          (error.message.toLowerCase().includes("email") && error.message.toLowerCase().includes("exist")) ||
-          error.message.toLowerCase().includes("correo ya registrado")
-        )
-      ) {
-        message = "Correo ya registrado";
-      }
-      setError(message);
+      console.error("Error durante el registro:", error);
+      setError("Error inesperado durante el registro. Intenta nuevamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <Container className={styles.container}>
-      <LoadingOverlay visible={authLoading} />
+      <LoadingOverlay visible={loading} />
 
       <Group justify="flex-start" mb="xl">
         <UnstyledButton component={Link} to="/" className={styles.backButton}>
@@ -227,16 +210,92 @@ const RegisterView: React.FC = () => {
           label="Deseo recibir correos con información y promociones"
           mt="sm"
         />
-        <div style={{ textAlign: "center", marginTop: 8 }}>
+        <div style={{ textAlign: "center", marginTop: 8, display: "flex", flexDirection: "column", gap: "8px" }}>
           <button
             type="button"
-            onClick={() => setShowTermsModal(true)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowTermsModal(true);
+            }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowTermsModal(true);
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             className={styles.termsLink}
             tabIndex={0}
-            style={{ textDecoration: "underline", background: "none", border: "none", color: "#00ff9d", fontWeight: 500, font: "inherit", cursor: "pointer" }}
+            role="button"
+            aria-label="Abrir términos y condiciones"
+            style={{ 
+              textDecoration: "underline", 
+              background: "none", 
+              border: "none", 
+              color: "#00ff9d", 
+              fontWeight: 500, 
+              font: "inherit", 
+              cursor: "pointer",
+              outline: "none",
+              WebkitTouchCallout: "none",
+              WebkitTapHighlightColor: "rgba(0, 255, 157, 0.2)",
+              touchAction: "manipulation",
+              minHeight: "44px",
+              minWidth: "44px",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "8px 12px"
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setShowTermsModal(true);
+              }
+            }}
           >
-            Haz clic aquí para leer los Términos y Condiciones
+            📄 Términos y Condiciones
           </button>
+          
+          {/* Alternativa adicional para dispositivos problemáticos */}
+          <Text
+            size="sm"
+            style={{ 
+              color: "#00ff9d", 
+              cursor: "pointer",
+              textDecoration: "underline",
+              textAlign: "center",
+              fontSize: "14px",
+              fontWeight: 500,
+              touchAction: "manipulation",
+              WebkitTouchCallout: "none",
+              WebkitTapHighlightColor: "rgba(0, 255, 157, 0.2)",
+              padding: "8px",
+              borderRadius: "4px",
+              transition: "background-color 0.2s ease"
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowTermsModal(true);
+            }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowTermsModal(true);
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Abrir términos y condiciones (alternativo)"
+          >
+          </Text>
         </div>
 
         {error && (
@@ -246,23 +305,17 @@ const RegisterView: React.FC = () => {
         )}
 
         <Button
-          loading={authLoading}
+          loading={loading}
           fullWidth
           size="lg"
           className={styles.loginButton}
           type="submit"
           mt="xl"
-          disabled={authLoading}
+          disabled={loading}
         >
           Registrarse
         </Button>
 
-        <UnstyledButton
-          className={styles.recoverAccount}
-          onClick={() => window.location.href = '/RecuperarCuenta'}
-        >
-          ¿Tienes una cuenta desactivada? Recupérala aquí
-        </UnstyledButton>
       </form>
 
       {/* Modal profesional y reutilizable */}

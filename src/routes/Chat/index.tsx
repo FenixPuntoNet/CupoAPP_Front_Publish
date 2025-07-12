@@ -1,178 +1,291 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { ChatBox } from '@/components/Actividades/ChatBox';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import styles from './index.module.css';
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabaseClient'
+import { ChatBox, ChatList } from '@/components/Actividades'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import styles from './index.module.css'
 
 interface Chat {
-  id: number;
-  trip_id: number | null;
-  origin?: string;
-  destination?: string;
+  id: number
+  trip_id: number | null
+  origin: string
+  destination: string
+  last_message: string
+  last_message_time: string
+  member_count: number
+  is_active: boolean
 }
 
-export default function ChatPage() {
-  const navigate = useNavigate();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
-  const { trip_id } = Route.useSearch();
+function ChatPage() {
+  const navigate = useNavigate()
+  const [userId, setUserId] = useState<string | null>(null)
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
+  const [currentView, setCurrentView] = useState<'list' | 'chat'>('list')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+  const { trip_id } = Route.useSearch()
 
+  // Detectar si es móvil
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
-    const fetchUserAndChats = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
+  // Inicialización del usuario
+  useEffect(() => {
+    initializeUser()
+  }, [])
+
+  const initializeUser = async () => {
+    try {
+      setIsLoading(true)
+      const { data: { session } } = await supabase.auth.getSession()
+      const user = session?.user
+      
       if (!user) {
-        navigate({ to: '/Login' });
-        return;
+        navigate({ to: '/Login' })
+        return
       }
 
-      setUserId(user.id);
+      setUserId(user.id)
 
-      const { data: chatParticipantData, error: participantError } = await supabase
-        .from('chat_participants')
-        .select('chat_id')
-        .eq('user_id', user.id);
-
-      if (participantError) {
-        console.error('Error al cargar participantes del chat:', participantError);
-        return;
+      // Si hay un trip_id específico, intentar abrir ese chat
+      if (trip_id) {
+        await openChatByTripId(Number(trip_id), user.id)
       }
+    } catch (error) {
+      console.error('Error al inicializar usuario:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-      const chatIds = chatParticipantData
-        .map((item) => item.chat_id)
-        .filter((id): id is number => id !== null);
-
+  const openChatByTripId = async (tripId: number, currentUserId: string) => {
+    try {
+      // Buscar el chat del viaje
       const { data: chatData, error: chatError } = await supabase
         .from('chats')
         .select('id, trip_id')
-        .in('id', chatIds);
+        .eq('trip_id', tripId)
+        .single()
 
-      if (chatError) {
-        console.error('Error al cargar chats:', chatError);
-        return;
+      if (chatError || !chatData) {
+        console.error('Chat no encontrado para el viaje:', tripId)
+        return
       }
 
-      const tripIds = chatData.map(c => c.trip_id).filter((id): id is number => id !== null);
+      // Verificar que el usuario sea participante del chat
+      const { data: participantData, error: participantError } = await supabase
+        .from('chat_participants')
+        .select('id')
+        .eq('chat_id', chatData.id)
+        .eq('user_id', currentUserId)
+        .single()
 
-      const { data: tripsData } = await supabase
+      if (participantError || !participantData) {
+        console.error('Usuario no es participante del chat')
+        return
+      }
+
+      // Obtener información del viaje
+      const { data: tripData } = await supabase
         .from('trips')
         .select(`
           id,
           origin:locations!trips_origin_id_fkey(main_text),
           destination:locations!trips_destination_id_fkey(main_text)
         `)
-        .in('id', tripIds);
+        .eq('id', tripId)
+        .single()
 
-      const chatsWithDetails = chatData.map(chat => {
-        const trip = tripsData?.find(t => t.id === chat.trip_id);
-        return {
-          ...chat,
-          origin: trip?.origin?.main_text || 'Origen',
-          destination: trip?.destination?.main_text || 'Destino',
-        };
-      });
-
-      setChats(chatsWithDetails);
-
-      if (trip_id) {
-        const matchedChat = chatsWithDetails.find(chat => chat.trip_id === Number(trip_id));
-        if (matchedChat) {
-          setSelectedChat(matchedChat);
-          setIsMobileChatOpen(true);
+      if (tripData) {
+        const chatInfo: Chat = {
+          id: chatData.id,
+          trip_id: tripId,
+          origin: tripData.origin?.main_text || 'Origen',
+          destination: tripData.destination?.main_text || 'Destino',
+          last_message: 'Conversación grupal',
+          last_message_time: 'Ahora',
+          member_count: 0,
+          is_active: true
         }
+
+        setSelectedChat(chatInfo)
+        setCurrentView('chat')
       }
-    };
+    } catch (error) {
+      console.error('Error al abrir chat por trip_id:', error)
+    }
+  }
 
-    fetchUserAndChats();
-  }, [navigate]);
-
+  // Manejar selección de chat
   const handleSelectChat = (chat: Chat) => {
-    setSelectedChat(chat);
-    setIsMobileChatOpen(true);
-  };
+    console.log('📱 Seleccionando chat:', chat.id)
+    setSelectedChat(chat)
+    setCurrentView('chat')
+  }
 
-  const handleBackToChats = () => {
-    setIsMobileChatOpen(false);
-  };
+  // Manejar regreso a lista
+  const handleBackToList = () => {
+    console.log('📱 Regresando a lista')
+    setCurrentView('list')
+    setSelectedChat(null)
+  }
+
+  // Mostrar loading inicial
+  if (isLoading) {
+    return (
+      <div className={styles.loadingScreen}>
+        <div className={styles.loadingContainer}>
+          <div className={styles.loadingSpinner}></div>
+          <h2 className={styles.loadingTitle}>Cargando chats...</h2>
+          <p className={styles.loadingText}>Preparando tu experiencia de chat</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Mostrar error si no hay usuario
+  if (!userId) {
+    return (
+      <div className={styles.errorScreen}>
+        <div className={styles.errorContainer}>
+          <div className={styles.errorIcon}>⚠️</div>
+          <h2 className={styles.errorTitle}>Error de autenticación</h2>
+          <p className={styles.errorDescription}>
+            Debes iniciar sesión para acceder a los chats
+          </p>
+          <button 
+            className={styles.errorButton}
+            onClick={() => navigate({ to: '/Login' })}
+          >
+            Iniciar sesión
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className={styles.chatContainer}>
-      <div style={{height: '30px'}} />
-      {/* Lista de chats */}
-      <aside
-        className={`${styles.chatSidebar} ${isMobileChatOpen ? styles.hideMobile : ''}`}
-      >
-        <div className={styles.chatHeader}>
-          <span className="text-xl">👥</span>
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">Mis Chats</h2>
-            <p className="text-xs text-gray-400">Salas comunitarias activas</p>
+    <div className={styles.chatApp}>
+      {/* Vista para móvil - Una sola vista a la vez */}
+      {isMobile && (
+        <>
+          {/* Lista de chats en móvil */}
+          {currentView === 'list' && (
+            <div className={styles.mobileView}>
+              <div className={styles.mobileHeader}>
+                <div className={styles.headerContent}>
+                  <h1 className={styles.headerTitle}>💬 Chats</h1>
+                  <p className={styles.headerSubtitle}>
+                    Conversaciones de viajes
+                  </p>
+                </div>
+              </div>
+              <div className={styles.mobileContent}>
+                <ChatList 
+                  onSelectChat={handleSelectChat}
+                  currentUserId={userId}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Chat individual en móvil */}
+          {currentView === 'chat' && selectedChat && (
+            <div className={styles.mobileView}>
+              <div className={styles.mobileChatHeader}>
+                <button 
+                  className={styles.backButton}
+                  onClick={handleBackToList}
+                  aria-label="Volver a chats"
+                >
+                  <span className={styles.backIcon}>←</span>
+                </button>
+                <div className={styles.chatHeaderInfo}>
+                  <h2 className={styles.chatTitle}>
+                    {selectedChat.origin} → {selectedChat.destination}
+                  </h2>
+                  <p className={styles.chatSubtitle}>
+                    👥 {selectedChat.member_count} miembros • En línea
+                  </p>
+                </div>
+              </div>
+              <div className={styles.mobileChatContent}>
+                <ChatBox 
+                  chatId={selectedChat.id} 
+                  currentUserId={userId} 
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Vista para desktop - Ambas vistas al mismo tiempo */}
+      {!isMobile && (
+        <div className={styles.desktopView}>
+          {/* Panel izquierdo - Lista de chats */}
+          <div className={styles.desktopSidebar}>
+            <div className={styles.desktopSidebarHeader}>
+              <h1 className={styles.sidebarTitle}>💬 Chats</h1>
+              <p className={styles.sidebarSubtitle}>
+                Conversaciones de viajes
+              </p>
+            </div>
+            <div className={styles.desktopSidebarContent}>
+              <ChatList 
+                onSelectChat={handleSelectChat}
+                currentUserId={userId}
+              />
+            </div>
+          </div>
+
+          {/* Panel derecho - Chat seleccionado */}
+          <div className={styles.desktopMain}>
+            {selectedChat ? (
+              <>
+                <div className={styles.desktopChatHeader}>
+                  <div className={styles.chatHeaderInfo}>
+                    <h2 className={styles.chatTitle}>
+                      {selectedChat.origin} → {selectedChat.destination}
+                    </h2>
+                    <p className={styles.chatSubtitle}>
+                      👥 {selectedChat.member_count} miembros • En línea
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.desktopChatContent}>
+                  <ChatBox 
+                    chatId={selectedChat.id} 
+                    currentUserId={userId} 
+                  />
+                </div>
+              </>
+            ) : (
+              <div className={styles.desktopEmptyState}>
+                <div className={styles.emptyStateIcon}>💬</div>
+                <h2 className={styles.emptyStateTitle}>Selecciona un chat</h2>
+                <p className={styles.emptyStateDescription}>
+                  Elige una conversación para comenzar a chatear
+                </p>
+              </div>
+            )}
           </div>
         </div>
-        <ul className={styles.chatList}>
-          {chats.map((chat) => (
-            <li
-              key={chat.id}
-              onClick={() => handleSelectChat(chat)}
-              className={`${styles.chatItem} ${
-                selectedChat?.id === chat.id ? styles.activeChatItem : ''
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-white">
-                  {chat.origin} → {chat.destination}
-                </span>
-                <span className="text-[11px] text-gray-500">Activo</span>
-              </div>
-              <p className="text-xs text-gray-400 mt-1 truncate">
-                Conversación grupal de este viaje
-              </p>
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      {/* Panel de chat */}
-      <main
-        className={`${styles.chatPanel} ${
-          isMobileChatOpen || window.innerWidth >= 768 ? 'block' : 'hidden'
-        }`}
-      >
-        {selectedChat && userId ? (
-          <div className="flex flex-col h-full">
-            <div className={styles.chatTopBar}>
-              <button
-                className="md:hidden text-indigo-400 mr-4 text-sm"
-                onClick={handleBackToChats}
-              >
-                ← Volver
-              </button>
-              <h3 className="text-lg font-semibold tracking-tight">
-                {selectedChat.origin} → {selectedChat.destination}
-              </h3>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <ChatBox chatId={selectedChat.id} currentUserId={userId} />
-            </div>
-          </div>
-        ) : (
-          <div className="m-auto text-center text-gray-500 px-6">
-            <h2 className="text-xl font-semibold mb-2">Selecciona un chat</h2>
-            <p className="text-sm">Aquí verás los mensajes del grupo</p>
-          </div>
-        )}
-      </main>
+      )}
     </div>
-  );
+  )
 }
 
 export const Route = createFileRoute('/Chat/')({
   component: ChatPage,
-  validateSearch: (search) => ({
+  validateSearch: (search: any) => ({
     trip_id: search.trip_id ? String(search.trip_id) : null,
   }),
-});
+})

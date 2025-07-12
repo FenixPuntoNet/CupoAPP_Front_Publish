@@ -401,24 +401,45 @@
 }
 
 .recoveryAlert {
-  background: rgba(51, 154, 240, 0.1);
-  border: 1px solid rgba(51, 154, 240, 0.3);
-  color: #339af0;
+  background: rgba(30, 58, 138, 0.9) !important;
+  border: 1px solid rgba(51, 154, 240, 0.6) !important;
+  color: #93c5fd !important;
+  border-radius: 8px !important;
 }
 
 .recoveryAlert :global(.mantine-Alert-message) {
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.recoveryAlert :global(.mantine-Alert-title) {
+  color: #93c5fd !important;
+  font-weight: 700 !important;
+}
+
+.recoveryAlert :global(.mantine-Alert-icon) {
+  color: #93c5fd !important;
 }
 
 .warningAlert {
-  background: rgba(255, 190, 11, 0.1);
-  border: 1px solid rgba(255, 190, 11, 0.3);
-  color: #ffbe0b;
-  border-radius: 8px;
+  background: rgba(139, 69, 19, 0.9) !important;
+  border: 1px solid rgba(255, 190, 11, 0.6) !important;
+  color: #fcd34d !important;
+  border-radius: 8px !important;
 }
 
 .warningAlert :global(.mantine-Alert-message) {
-  color: rgba(255, 255, 255, 0.9);
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.warningAlert :global(.mantine-Alert-title) {
+  color: #fcd34d !important;
+  font-weight: 700 !important;
+}
+
+.warningAlert :global(.mantine-Alert-icon) {
+  color: #fcd34d !important;
 }
 
 /* Additional mobile-specific improvements */

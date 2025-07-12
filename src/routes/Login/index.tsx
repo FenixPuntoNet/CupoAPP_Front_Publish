@@ -13,7 +13,7 @@ import {
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "@mantine/form";
-import { supabase } from "@/lib/supabaseClient";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
 import { RecoverAccountModal } from "@/components/RecoverAccountModal";
 import styles from "./index.module.css";
 
@@ -28,6 +28,7 @@ const LoginView: React.FC = () => {
   const [error, setError] = useState("");
   const [recoverModalOpened, setRecoverModalOpened] = useState(false);
   const navigate = useNavigate();
+  const { signIn } = useSupabaseAuth();
 
   const form = useForm<LoginFormValues>({
     initialValues: {
@@ -40,81 +41,28 @@ const LoginView: React.FC = () => {
     }
   });
 
-  const checkUserProfile = async (userId: string): Promise<{ hasProfile: boolean; status: string | null }> => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*, status')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) throw error;
-      return { hasProfile: !!data, status: data?.status || null };
-    } catch (error) {
-      console.error('Error checking user profile:', error);
-      return { hasProfile: false, status: null };
-    }
-  };
-
   const handleLogin = async (values: LoginFormValues) => {
     try {
       setLoading(true);
       setError("");
 
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
+      const result = await signIn(values.email, values.password);
 
-      if (authError) {
-        throw new Error(authError.message);
-      }
-
-      if (!authData.user) {
-        throw new Error('No user data received');
-      }
-
-      // Store session data
-      const session = authData.session;
-      if (session) {
-        // Store only necessary session data
-        localStorage.setItem('userEmail', values.email);
-        localStorage.setItem('userId', authData.user.id);
-      }
-
-      // Check user profile and status
-      const { hasProfile, status } = await checkUserProfile(authData.user.id);
-      
-      // Check if account is deactivated
-      if (status === 'temporarily_deactivated' || status === 'pending_deletion') {
-        await supabase.auth.signOut();
-        localStorage.clear();
+      if (!result.success) {
+        const errorMessage = result.error === 'Invalid login credentials'
+          ? 'Credenciales inválidas'
+          : result.error || 'Error al iniciar sesión';
         
-        const statusText = status === 'temporarily_deactivated' 
-          ? 'temporalmente desactivada' 
-          : 'marcada para eliminación';
-        
-        setError(`Tu cuenta está ${statusText}. Puedes recuperarla usando la opción "Recuperar cuenta".`);
+        setError(errorMessage);
         return;
       }
-      
-      // Navigate based on profile status
-      if (hasProfile) {
-        console.log('User has profile, redirecting to home');
-        navigate({ to: "/home" });
-      } else {
-        console.log('User needs to complete profile');
-        navigate({ to: "/CompletarRegistro" });
-      }
+
+      // El AuthGuard se encargará de la navegación automática
+      console.log('Login successful');
 
     } catch (error) {
       console.error('Login error:', error);
-      setError(
-        (error instanceof Error ? error.message : "") === 'Invalid login credentials'
-          ? 'Credenciales inválidas'
-          : 'Error al iniciar sesión'
-      );
-      localStorage.clear();
+      setError('Error inesperado al iniciar sesión');
     } finally {
       setLoading(false);
     }

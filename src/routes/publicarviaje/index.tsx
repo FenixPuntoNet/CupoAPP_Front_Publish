@@ -12,8 +12,7 @@ import {
   Loader,
   ActionIcon,
   Popover,
-  Switch,
-  Image
+  Switch
 } from '@mantine/core';
 import { 
   MapPin, 
@@ -23,7 +22,11 @@ import {
   Car,
   DollarSign,
   Settings,
-  Trees
+  Trees,
+  CheckCircle,
+  AlertCircle,
+  Sparkles,
+  X
 } from 'lucide-react';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { 
@@ -38,39 +41,6 @@ import { notifications } from '@mantine/notifications';
 import { supabase } from '@/lib/supabaseClient'; 
 
 
-const MARKER_ICONS = {
-  origin: {
-    path: window.google?.maps.SymbolPath.CIRCLE ?? '',
-    fillColor: "#4CAF50",
-    fillOpacity: 1,
-    strokeWeight: 2,
-    strokeColor: '#FFFFFF',
-    scale: 7,
-    labelOrigin: window.google ? new window.google.maps.Point(0, -3) : undefined,
-    label: {
-      text: 'A',
-      color: '#FFFFFF',
-      fontSize: '14px',
-      fontWeight: 'bold'
-    }
-  },
-  destination: {
-    path: window.google?.maps.SymbolPath.CIRCLE ?? '',
-    fillColor: "#FF0000",
-    fillOpacity: 1,
-    strokeWeight: 1,
-    strokeColor: '#FFFFFF',
-    scale: 7,
-    labelOrigin: window.google ? new window.google.maps.Point(0, -3) : undefined,
-    label: {
-      text: 'B',
-      color: '#FFFFFF',
-      fontSize: '14px',
-      fontWeight: 'bold'
-    }
-  }
-};
-
 interface RoutePreferences {
   avoidTolls: boolean;
   avoidHighways: boolean;
@@ -81,9 +51,6 @@ interface SearchParams {
   selectedAddress?: string;
   selectedDestination?: string;
 }
-interface ReservarViewProps {
-  isLoaded: boolean;
-}
 
 export const Route = createFileRoute('/publicarviaje/')({
   validateSearch: (search: Record<string, unknown>): SearchParams => ({
@@ -93,10 +60,8 @@ export const Route = createFileRoute('/publicarviaje/')({
   component: ReservarView,
 });
 
-function ReservarView({ isLoaded }: ReservarViewProps){
-
-  if (!isLoaded) {
-    const navigate = useNavigate();
+function ReservarView(){
+  const navigate = useNavigate();
   const { selectedAddress = '', selectedDestination = '' } = useSearch({ from: '/publicarviaje/' });
   
   // Estados base
@@ -106,9 +71,8 @@ function ReservarView({ isLoaded }: ReservarViewProps){
   const [routes, setRoutes] = useState<TripRoute[]>([]);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [originMarker, setOriginMarker] = useState<google.maps.Marker | null>(null);
-  const [destinationMarker, setDestinationMarker] = useState<google.maps.Marker | null>(null);
   
 useEffect(() => {
   const validateUserAccess = async () => {
@@ -162,6 +126,99 @@ useEffect(() => {
     optimizeFuel: false
   });
 
+  // Función para recalcular rutas cuando cambien las preferencias
+  const recalculateRoutes = useCallback(async () => {
+    if (!directions || !selectedAddress || !selectedDestination) return;
+    
+    console.log('Recalculando rutas con preferencias:', routePreferences);
+    
+    // Mostrar notificación de recálculo
+    notifications.show({
+      title: 'Recalculando rutas',
+      message: 'Aplicando nuevas preferencias...',
+      color: 'blue',
+      autoClose: 2000,
+    });
+    
+    try {
+      const directionsService = new google.maps.DirectionsService();
+      const result = await new Promise<google.maps.DirectionsResult>((resolve, reject) => {
+        directionsService.route({
+          origin: selectedAddress,
+          destination: selectedDestination,
+          travelMode: google.maps.TravelMode.DRIVING,
+          provideRouteAlternatives: true,
+          optimizeWaypoints: true,
+          avoidTolls: routePreferences.avoidTolls,
+          avoidHighways: routePreferences.avoidHighways,
+        }, (response, status) => {
+          if (status === google.maps.DirectionsStatus.OK && response) {
+            resolve(response);
+          } else {
+            reject(new Error('Error al recalcular rutas'));
+          }
+        });
+      });
+
+      const generateUniqueId = (): number => {
+        return Math.floor(Math.random() * 1000000);
+      };
+
+      const processedRoutes: TripRoute[] = result.routes.map((route, index) => ({
+        route_id: generateUniqueId(),
+        index,
+        distance: route.legs[0].distance?.text || '',
+        duration: route.legs[0].duration?.text || '',
+        summary: route.summary || '',
+        startAddress: route.legs[0].start_address,
+        endAddress: route.legs[0].end_address,
+        bounds: route.bounds,
+        polyline: route.overview_polyline,
+        warnings: route.warnings || []
+      }));
+
+      setDirections(result);
+      setRoutes(processedRoutes);
+      setSelectedRouteIndex(0);
+
+      if (processedRoutes.length > 0) {
+        tripStore.setRoutes(processedRoutes, processedRoutes[0]);
+      }
+
+      // Mostrar notificación de éxito
+      notifications.show({
+        title: 'Rutas actualizadas',
+        message: `Se encontraron ${processedRoutes.length} rutas con las nuevas preferencias`,
+        color: 'green',
+        autoClose: 3000,
+      });
+
+    } catch (error) {
+      console.error('Error recalculando rutas:', error);
+      notifications.show({
+        title: 'Error al recalcular',
+        message: 'No se pudieron aplicar las preferencias',
+        color: 'red',
+        autoClose: 3000,
+      });
+    }
+  }, [selectedAddress, selectedDestination, routePreferences, directions]);
+
+  // Efecto para recalcular cuando cambien las preferencias
+  useEffect(() => {
+    if (directions && showRouteMap) {
+      recalculateRoutes();
+    }
+  }, [routePreferences.avoidTolls, routePreferences.avoidHighways, routePreferences.optimizeFuel]);
+
+  // Manejador de cambio de preferencias
+  const handlePreferenceChange = useCallback((key: keyof RoutePreferences, value: boolean) => {
+    setRoutePreferences(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  }, []);
+
   // Referencias
   const mapRef = useRef<google.maps.Map | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
@@ -178,7 +235,14 @@ useEffect(() => {
       return;
     }
 
+    // Verificar si Google Maps está disponible
+    if (!window.google || !window.google.maps) {
+      setError('Google Maps no está disponible. Por favor, recarga la página.');
+      return;
+    }
+
     setIsLoading(true);
+    setIsCalculatingRoute(true);
     setError(null);
 
     try {
@@ -192,7 +256,7 @@ useEffect(() => {
       const destination = destResult.results[0];
 
       if (!origin?.geometry?.location || !destination?.geometry?.location) {
-        throw new Error(errorMessages.GEOCODING_ERROR);
+        throw new Error('No se pudieron encontrar las direcciones');
       }
 
       const originLocation: TripLocation = {
@@ -218,33 +282,9 @@ useEffect(() => {
         mainText: destination.address_components[0].long_name,
         secondaryText: destination.formatted_address
       };
-// Coordenadas del origen y destino
-const originLat = originLocation.coords.lat;
-const originLng = originLocation.coords.lng;
-const destinationLat = destinationLocation.coords.lat;
-const destinationLng = destinationLocation.coords.lng;
+// Coordenadas del origen y destino (ya no se usan para marcadores manuales)
 
-      // Actualizar marcadores
-      if (mapRef.current) {
-        originMarker?.setMap(null);
-        destinationMarker?.setMap(null);
-      
-        const newOriginMarker = new google.maps.Marker({
-          position: { lat: originLat, lng: originLng },
-          map: mapRef.current,
-          icon: MARKER_ICONS.origin,
-        });
-      
-        const newDestinationMarker = new google.maps.Marker({
-          position: { lat: destinationLat, lng: destinationLng },
-          map: mapRef.current,
-          icon: MARKER_ICONS.destination,
-        });
-      
-        setOriginMarker(newOriginMarker);
-        setDestinationMarker(newDestinationMarker);
-      }
-
+      // Actualizar almacenamiento de ubicaciones
       tripStore.setOrigin(originLocation);
       tripStore.setDestination(destinationLocation);
 
@@ -309,8 +349,9 @@ const destinationLng = destinationLocation.coords.lng;
       setError(errorMessages.ROUTE_CALCULATION_ERROR);
     } finally {
       setIsLoading(false);
+      setIsCalculatingRoute(false);
     }
-  }, [selectedAddress, selectedDestination, routePreferences, originMarker, destinationMarker]);
+  }, [selectedAddress, selectedDestination, routePreferences]);
 
   // Manejo del DirectionsRenderer
   useEffect(() => {
@@ -326,56 +367,78 @@ const destinationLng = destinationLocation.coords.lng;
       routeIndex: selectedRouteIndex,
       suppressMarkers: true,
       polylineOptions: {
-        strokeColor: '#4285F4',
-        strokeWeight: 3.5,
+        strokeColor: '#00ff9d',
+        strokeWeight: 5,
         strokeOpacity: 0.9,
+        zIndex: 100,
       },
+      suppressInfoWindows: false,
     });
   
     directionsRendererRef.current = renderer;
 
     if (directions.routes[selectedRouteIndex]?.bounds) {
-      mapInstance.fitBounds(directions.routes[selectedRouteIndex].bounds);
+      mapInstance.fitBounds(directions.routes[selectedRouteIndex].bounds, {
+        top: 50,
+        bottom: 50,
+        left: 50,
+        right: 50,
+      });
       setTimeout(() => {
         const zoom = mapInstance.getZoom();
-        if (zoom) {
-          mapInstance.setZoom(zoom - 0.5);
+        if (zoom && zoom > 16) {
+          mapInstance.setZoom(Math.min(zoom - 0.5, 16));
         }
-      }, 100);
+      }, 200);
     }
   }, [directions, selectedRouteIndex, mapInstance]);
 
-  // Limpieza
+  // Limpieza de recursos al desmontar el componente
   useEffect(() => {
     return () => {
-      originMarker?.setMap(null);
-      destinationMarker?.setMap(null);
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
       }
     };
-  }, [originMarker, destinationMarker]);
+  }, []);
 
   // Manejador de selección de ruta
   const handleRouteSelect = useCallback((index: number) => {
     if (!directions?.routes[index]) return;
     setSelectedRouteIndex(index);
     
-    if (directionsRendererRef.current) {
+    if (directionsRendererRef.current && mapInstance) {
       directionsRendererRef.current.setRouteIndex(index);
       directionsRendererRef.current.setOptions({
         polylineOptions: {
-          strokeColor: '#4285F4',
+          strokeColor: '#00ff9d',
           strokeWeight: 5,
-          strokeOpacity: 0.8
+          strokeOpacity: 0.9,
+          zIndex: 100,
         }
       });
+
+      // Ajustar vista del mapa a la ruta seleccionada
+      if (directions.routes[index]?.bounds) {
+        mapInstance.fitBounds(directions.routes[index].bounds, {
+          top: 50,
+          bottom: 50,
+          left: 50,
+          right: 50,
+        });
+        setTimeout(() => {
+          const zoom = mapInstance.getZoom();
+          if (zoom && zoom > 16) {
+            mapInstance.setZoom(Math.min(zoom - 0.5, 16));
+          }
+        }, 200);
+      }
     }
     
     if (routes[index]) {
       tripStore.setRoutes(routes, routes[index]);
     }
-  }, [directions, routes]);
+  }, [directions, routes, mapInstance]);
 
   // Manejador de confirmación
   const handleRouteConfirm = useCallback(() => {
@@ -396,22 +459,24 @@ const destinationLng = destinationLocation.coords.lng;
 
   return (
     <Container fluid className={styles.container}>
+      <div style={{height: '30px'}} />
       <div className={styles.header}>
         <Link to="/home" className={styles.backButton}>
           <ArrowLeft size={24} />
         </Link>
-        <Title order={4} className={styles.headerTitle}>Reservar viaje</Title>
+        <Title order={4} className={styles.headerTitle}>Publicar viaje</Title>
       </div>
 
       <Container size="sm" className={styles.content}>
          <div className={styles.heroSection}>
-          <Image src='https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/fondo2carro.png' alt="Carpooling" className={styles.heroImage} />
-          <Title order={2} className={styles.heroTitle}>
+          <div className={styles.heroTextContainer}>
+            <Title order={2} className={styles.heroTitle}>
               ¿Listo para compartir tu viaje?
-              </Title>
-              <Text size="md" color="dimmed" className={styles.heroText}>
-               Encuentra la ruta perfecta y ahorra en tus traslados
-                </Text>
+            </Title>
+            <Text size="md" color="dimmed" className={styles.heroText}>
+              Planifica tu ruta y encuentra compañeros de viaje
+            </Text>
+          </div>
         </div>
         <div className={styles.stepContent}>
           <Title className={styles.stepTitle}>¿Desde dónde sales?</Title>
@@ -452,13 +517,17 @@ const destinationLng = destinationLocation.coords.lng;
         )}
 
         {selectedAddress && selectedDestination && (
-          <Button 
-            onClick={calculateRoute}
-            className={styles.nextButton}
-            loading={isLoading}
-          >
-            Ver ruta en el mapa
-          </Button>
+          <div className={styles.actionButtonContainer}>
+            <Button 
+              onClick={calculateRoute}
+              className={styles.nextButton}
+              loading={isLoading}
+              leftSection={<Navigation size={20} />}
+              rightSection={<Sparkles size={16} />}
+            >
+              {isLoading ? 'Calculando ruta...' : 'Ver ruta en el mapa'}
+            </Button>
+          </div>
         )}
 
         <Modal
@@ -473,165 +542,243 @@ const destinationLng = destinationLocation.coords.lng;
           <div className={styles.routeContent}>
             <div className={styles.mapControls}>
               <div className={styles.mapOptions}>
-                <Popover width={300} position="bottom" shadow="md">
-                  <Popover.Target>
-                    <ActionIcon variant="light">
-                      <Settings size={20} />
-                    </ActionIcon>
-                  </Popover.Target>
-                  <Popover.Dropdown>
-                    <Stack gap="xs">
-                      <Text fw={500}>Preferencias de ruta</Text>
-                      <div className={styles.preference}>
-                        <Switch
-                          label="Evitar peajes"
-                          checked={routePreferences.avoidTolls}
-                          onChange={(e) => setRoutePreferences(prev => ({
-                            ...prev,
-                            avoidTolls: e?.currentTarget?.checked ?? !prev.avoidTolls
-                          }))}
-                        />
-                        <DollarSign size={16} className={styles.preferenceIcon} />
+                <div className={styles.mapOptionsLeft}>
+                  <div>
+                    <Text className={styles.mapTitle}>Selecciona tu ruta</Text>
+                    <Text className={styles.mapSubtitle}>
+                      {selectedAddress} → {selectedDestination}
+                    </Text>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Popover width={300} position="bottom" shadow="md">
+                    <Popover.Target>
+                      <div style={{ position: 'relative' }}>
+                        <ActionIcon 
+                          variant="light"
+                          color={Object.values(routePreferences).some(v => v) ? 'green' : 'gray'}
+                          size="lg"
+                        >
+                          <Settings size={20} />
+                        </ActionIcon>
+                        {Object.values(routePreferences).some(v => v) && (
+                          <div className={styles.activePreferenceIndicator}>
+                            <Sparkles size={10} />
+                          </div>
+                        )}
                       </div>
-                      <div className={styles.preference}>
-                        <Switch
-                          label="Evitar autopistas"
-                          checked={routePreferences.avoidHighways}
-                          onChange={(e) => setRoutePreferences(prev => ({
-                            ...prev,
-                            avoidHighways: e?.currentTarget?.checked ?? !prev.avoidHighways
-                          }))}
-                        />
-                        <Car size={16} className={styles.preferenceIcon} />
-                      </div>
-                      <div className={styles.preference}>
-                        <Switch
-                          label="Optimizar consumo"
-                          checked={routePreferences.optimizeFuel}
-                          onChange={(e) => setRoutePreferences(prev => ({
-                            ...prev,
-                            optimizeFuel: e?.currentTarget?.checked ?? !prev.optimizeFuel
-                          }))}
-                        />
-                        <Trees size={16} className={styles.preferenceIcon} />
-                      </div>
-                    </Stack>
-                  </Popover.Dropdown>
-                </Popover>
+                    </Popover.Target>
+                    <Popover.Dropdown>
+                      <Stack gap="xs">
+                        <Text fw={500}>Preferencias de ruta</Text>
+                        <div className={styles.preference}>
+                          <Switch
+                            label="Evitar peajes"
+                            checked={routePreferences.avoidTolls}
+                            onChange={(e) => handlePreferenceChange('avoidTolls', e.currentTarget.checked)}
+                            color="green"
+                            size="md"
+                            thumbIcon={routePreferences.avoidTolls ? <CheckCircle size={12} /> : null}
+                          />
+                          <DollarSign size={16} className={styles.preferenceIcon} />
+                        </div>
+                        <div className={styles.preference}>
+                          <Switch
+                            label="Evitar autopistas"
+                            checked={routePreferences.avoidHighways}
+                            onChange={(e) => handlePreferenceChange('avoidHighways', e.currentTarget.checked)}
+                            color="green"
+                            size="md"
+                            thumbIcon={routePreferences.avoidHighways ? <CheckCircle size={12} /> : null}
+                          />
+                          <Car size={16} className={styles.preferenceIcon} />
+                        </div>
+                        <div className={styles.preference}>
+                          <Switch
+                            label="Optimizar consumo"
+                            checked={routePreferences.optimizeFuel}
+                            onChange={(e) => handlePreferenceChange('optimizeFuel', e.currentTarget.checked)}
+                            color="green"
+                            size="md"
+                            thumbIcon={routePreferences.optimizeFuel ? <CheckCircle size={12} /> : null}
+                          />
+                          <Trees size={16} className={styles.preferenceIcon} />
+                        </div>
+                        <div className={styles.preferenceStatus}>
+                          <Text size="xs" color="dimmed">
+                            {Object.values(routePreferences).some(v => v) 
+                              ? '✓ Preferencias activas' 
+                              : 'Sin preferencias activas'}
+                          </Text>
+                        </div>
+                      </Stack>
+                    </Popover.Dropdown>
+                  </Popover>
+                  <ActionIcon
+                    className={styles.closeButton}
+                    onClick={() => setShowRouteMap(false)}
+                    size="lg"
+                  >
+                    <X size={20} />
+                  </ActionIcon>
+                </div>
               </div>
             </div>
         
-            <div className={styles.mapSection}>
-              {isLoading && (
-                <div className={styles.mapLoading}>
-                  <Loader color="#4285F4" size="lg" />
-                </div>
-              )}
-              <GoogleMap
+            {/* Layout horizontal - Mapa y rutas lado a lado */}
+            <div className={styles.mainLayout}>
+              <div className={styles.mapSection}>
+                {isCalculatingRoute && (
+                  <div className={styles.mapLoading}>
+                    <Loader color="#00ff9d" size="lg" />
+                    <Text mt="md" fw={500} color="dimmed">
+                      Calculando las mejores rutas...
+                    </Text>
+                  </div>
+                )}
+                
+                <GoogleMap
                 mapContainerStyle={{ width: '100%', height: '100%' }}
                 options={{
                   ...mapOptions,
                   gestureHandling: 'greedy',
-                  disableDoubleClickZoom: true,
+                  disableDoubleClickZoom: false,
                   zoomControl: true,
                   fullscreenControl: true,
                   streetViewControl: false,
-                  mapTypeControl: true,
+                  mapTypeControl: false,
                   styles: [
-                    { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "true" }] },
-                    { featureType: "poi", stylers: [{ visibility: "true" }] },
-                    { featureType: "transit", stylers: [{ visibility: "true" }] },
-                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#FFBE00" }] },
-                    { featureType: "landscape", stylers: [{ color: "#f5f5f5" }] },
-                    { featureType: "water", stylers: [{ color: "#c9e7ff" }] },
+                    // Tema oscuro personalizado
+                    { featureType: "all", elementType: "geometry", stylers: [{ color: "#2c3e50" }] },
+                    { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#ecf0f1" }] },
+                    { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#34495e" }] },
+                    { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#00ff9d" }, { lightness: -10 }] },
+                    { featureType: "administrative.land_parcel", elementType: "geometry.stroke", stylers: [{ color: "#00ff9d" }, { lightness: -5 }] },
+                    { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#34495e" }] },
+                    { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#2c3e50" }] },
+                    { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#2c3e50" }] },
+                    { featureType: "poi", elementType: "geometry", stylers: [{ color: "#34495e" }] },
+                    { featureType: "poi", elementType: "labels.text", stylers: [{ visibility: "off" }] },
+                    { featureType: "poi.park", elementType: "geometry.fill", stylers: [{ color: "#27ae60" }, { lightness: -10 }] },
+                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#95a5a6" }] },
+                    { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#ecf0f1" }] },
+                    { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e74c3c" }] },
+                    { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#c0392b" }] },
+                    { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#7f8c8d" }] },
+                    { featureType: "road.local", elementType: "geometry", stylers: [{ color: "#bdc3c7" }] },
+                    { featureType: "transit", elementType: "geometry", stylers: [{ color: "#9b59b6" }] },
+                    { featureType: "transit.line", elementType: "geometry.fill", stylers: [{ color: "#00ff9d" }] },
+                    { featureType: "transit.station", elementType: "geometry", stylers: [{ color: "#00ff9d" }] },
+                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#3498db" }] },
+                    { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#ecf0f1" }] },
+                    { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#2980b9" }] }
                   ]
                 }}
                 onLoad={(map) => {
                   setMapInstance(map);
                   mapRef.current = map;
+                  console.log('Mapa cargado correctamente');
                 }}
               >
-                {originMarker && destinationMarker && (
+                {/* Marcadores simples tipo pin */}
+                {directions && (
                   <>
                     <Marker
-                      position={originMarker.getPosition() as google.maps.LatLng}
-                      icon={MARKER_ICONS.origin}
+                      position={{
+                        lat: directions.routes[0].legs[0].start_location.lat(),
+                        lng: directions.routes[0].legs[0].start_location.lng(),
+                      }}
+                      title="Punto de Origen"
                     />
                     <Marker
-                      position={destinationMarker.getPosition() as google.maps.LatLng}
-                      icon={MARKER_ICONS.destination}
+                      position={{
+                        lat: directions.routes[0].legs[0].end_location.lat(),
+                        lng: directions.routes[0].legs[0].end_location.lng(),
+                      }}
+                      title="Punto de Destino"
                     />
                   </>
                 )}
               </GoogleMap>
-            </div>
-        
-            <div className={styles.routesSection}>
-              <div className={styles.routesList}>
-                <Text className={styles.routesTitle}>Rutas disponibles</Text>
-                {routes.map((route) => (
-                  <div
-                    key={route.index}
-                    className={`${styles.routeOption} ${
-                      route.index === selectedRouteIndex ? styles.routeOptionSelected : ''
-                    }`}
-                    onClick={() => handleRouteSelect(route.index)}
-                  >
-                    <Stack gap="xs">
-                      <div className={styles.routeInfo}>
-                        <div className={styles.routeTime}>
-                          <Clock size={16} />
-                          <Text fw={500}>{route.duration}</Text>
-                        </div>
-                        <div className={styles.routeDistance}>
-                          <Navigation size={16} />
-                          <Text>{route.distance}</Text>
-                        </div>
-                      </div>
-                      <Text size="sm" color="dimmed">
-                        Vía {route.summary}
-                      </Text>
-                      {route.warnings?.map((warning: string, i: number) => (
-                        <Badge key={i} color="yellow" size="sm">
-                          {warning}
-                        </Badge>
-                      ))}
-                    </Stack>
-                  </div>
-                ))}
               </div>
         
-              {routes.length > 0 && (
-                <div className={styles.routeActionsRow}>
-                  <Button
-                    className={styles.cancelButton}
-                    onClick={() => setShowRouteMap(false)}
-                    size="lg"
-                    color="red"
-                    variant="outline"
-                    style={{ flex: 1 }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    className={styles.selectRouteButton}
-                    onClick={handleRouteConfirm}
-                    size="lg"
-                    leftSection={<MapPin size={18} />}
-                    loading={isLoading}
-                    style={{ flex: 1 }}
-                  >
-                    Confirmar ruta
-                  </Button>
+              <div className={styles.routesSection}>
+                {/* Contenedor de scroll independiente */}
+                <div className={styles.routesList}>
+                  <div className={styles.routesSectionHeader}>
+                    <Text className={styles.routesTitle}>Rutas disponibles</Text>
+                    <Badge variant="light" color="green" size="sm">
+                      {routes.length} opciones
+                    </Badge>
+                  </div>
+                  
+                  {/* Mensaje de ayuda */}
+                  <div className={styles.helpMessage}>
+                    {routes.length > 0 && (
+                      <Button
+                        className={styles.selectRouteButton}
+                        onClick={handleRouteConfirm}
+                        size="lg"
+                        leftSection={<CheckCircle size={18} />}
+                        loading={isLoading}
+                        fullWidth
+                      >
+                        Confirmar Ruta {selectedRouteIndex + 1} • {routes[selectedRouteIndex]?.duration}
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Lista de rutas con scroll COMPLETAMENTE independiente */}
+                  <div className={styles.routesListContent}>
+                    {routes.map((route, index) => (
+                      <div
+                        key={route.index}
+                        className={`${styles.routeOption} ${
+                          route.index === selectedRouteIndex ? styles.routeOptionSelected : ''
+                        }`}
+                        onClick={() => handleRouteSelect(route.index)}
+                      >
+                        <div className={styles.routeHeader}>
+                          <div className={styles.routeNumber}>
+                            <Text size="xs" fw={600}>{index + 1}</Text>
+                          </div>
+                          <div className={styles.routeMainInfo}>
+                            <div className={styles.routeTime}>
+                              <Clock size={16} />
+                              <Text size="xs" fw={600}>{route.duration}</Text>
+                            </div>
+                            <div className={styles.routeDistance}>
+                              <Navigation size={16} />
+                              <Text size="xs" fw={600}>{route.distance}</Text>
+                            </div>
+                          </div>
+                          {route.index === selectedRouteIndex && (
+                            <CheckCircle size={20} className={styles.routeSelectedIcon} />
+                          )}
+                        </div>
+                        <Text size="sm" color="dimmed" className={styles.routeSummary}>
+                          Vía {route.summary}
+                        </Text>
+                        {route.warnings && route.warnings.length > 0 && (
+                          <div className={styles.routeWarnings}>
+                            {route.warnings.map((warning: string, i: number) => (
+                              <Badge key={i} color="yellow" size="sm" leftSection={<AlertCircle size={12} />}>
+                                {warning}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </Modal>
-</Container>
-</Container>
-);
-  }
-  
+      </Container>
+    </Container>
+  );
 }
+
 export default ReservarView;

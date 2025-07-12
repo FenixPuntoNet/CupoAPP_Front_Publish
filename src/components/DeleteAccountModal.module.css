@@ -67,25 +67,68 @@
   margin: 0;
 }
 
-/* Alerts */
+/* Alerts con mejor contraste */
 .alert {
   border-radius: 12px !important;
   border: 1px solid !important;
+  padding: 16px !important;
 }
 
 .alert[data-color="red"] {
-  background: var(--error-light) !important;
-  border-color: rgba(255, 77, 77, 0.3) !important;
+  background: rgba(153, 27, 27, 0.9) !important;
+  border-color: rgba(255, 77, 77, 0.6) !important;
+}
+
+.alert[data-color="red"] :global(.mantine-Alert-message) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.alert[data-color="red"] :global(.mantine-Alert-title) {
+  color: #fecaca !important;
+  font-weight: 700 !important;
+}
+
+.alert[data-color="red"] :global(.mantine-Alert-icon) {
+  color: #fecaca !important;
 }
 
 .alert[data-color="blue"] {
-  background: var(--blue-light) !important;
-  border-color: rgba(51, 154, 240, 0.3) !important;
+  background: rgba(30, 58, 138, 0.9) !important;
+  border-color: rgba(51, 154, 240, 0.6) !important;
+}
+
+.alert[data-color="blue"] :global(.mantine-Alert-message) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.alert[data-color="blue"] :global(.mantine-Alert-title) {
+  color: #93c5fd !important;
+  font-weight: 700 !important;
+}
+
+.alert[data-color="blue"] :global(.mantine-Alert-icon) {
+  color: #93c5fd !important;
 }
 
 .alert[data-color="green"] {
-  background: var(--success-light) !important;
-  border-color: rgba(0, 255, 157, 0.3) !important;
+  background: rgba(5, 46, 22, 0.9) !important;
+  border-color: rgba(0, 255, 157, 0.6) !important;
+}
+
+.alert[data-color="green"] :global(.mantine-Alert-message) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.alert[data-color="green"] :global(.mantine-Alert-title) {
+  color: #6ee7b7 !important;
+  font-weight: 700 !important;
+}
+
+.alert[data-color="green"] :global(.mantine-Alert-icon) {
+  color: #6ee7b7 !important;
 }
 
 /* Checkboxes */

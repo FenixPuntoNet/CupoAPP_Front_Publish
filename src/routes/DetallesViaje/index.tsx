@@ -204,6 +204,108 @@ const PreviewInfo: React.FC<PreviewModalProps> = ({ isOpen, onClose, onConfirm, 
     );
 };
 
+// Modal de saldo insuficiente
+interface InsufficientBalanceModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    requiredAmount: number;
+    currentBalance: number;
+}
+
+const InsufficientBalanceModal: React.FC<InsufficientBalanceModalProps> = ({ 
+    isOpen, 
+    onClose, 
+    requiredAmount, 
+    currentBalance 
+}) => {
+    const handleRechargeWallet = () => {
+        window.location.href = 'https://www.cupo.dev/login';
+    };
+
+    return (
+        <Modal
+            opened={isOpen}
+            onClose={onClose}
+            title=""
+            size="md"
+            centered
+            withCloseButton={false}
+            classNames={{
+                header: styles.modalHeader,
+                body: styles.modalBody
+            }}
+        >
+            <Stack gap="xl" align="center">
+                <div className={styles.modalIconContainer}>
+                    <DollarSign size={48} className={styles.walletIcon} />
+                </div>
+                
+                <div className={styles.modalContent}>
+                    <Title order={3} ta="center" mb="md" className={styles.modalTitle}>
+                        ¡Necesitas recargar tu billetera!
+                    </Title>
+                    
+                    <Text ta="center" size="md" c="dimmed" mb="lg">
+                        Para publicar este viaje necesitas tener fondos disponibles en tu billetera como garantía.
+                    </Text>
+
+                    <Card className={styles.balanceCard} mb="lg">
+                        <Stack gap="sm">
+                            <Group justify="space-between">
+                                <Text size="sm" c="dimmed">Tu saldo actual:</Text>
+                                <Text size="sm" fw={500}>${currentBalance.toLocaleString()}</Text>
+                            </Group>
+                            <Group justify="space-between">
+                                <Text size="sm" c="dimmed">Monto requerido:</Text>
+                                <Text size="sm" fw={500} c="red">${requiredAmount.toLocaleString()}</Text>
+                            </Group>
+                            <div className={styles.divider} />
+                            <Group justify="space-between">
+                                <Text size="sm" fw={600}>Necesitas recargar:</Text>
+                                <Text size="sm" fw={600} c="orange">
+                                    ${(requiredAmount - currentBalance).toLocaleString()}
+                                </Text>
+                            </Group>
+                        </Stack>
+                    </Card>
+
+                    <div className={styles.explanationBox}>
+                        <AlertCircle size={20} className={styles.infoIcon} />
+                        <div>
+                            <Text size="sm" fw={500} mb="xs">¿Por qué necesito esto?</Text>
+                            <Text size="xs" c="dimmed">
+                                En Cupo, congelamos temporalmente un pequeño monto de tu billetera como garantía 
+                                cuando publicas un viaje. Esto asegura que todos los usuarios sean responsables 
+                                y comprometidos con sus viajes. El dinero se libera automáticamente cuando el 
+                                viaje se completa exitosamente.
+                            </Text>
+                        </div>
+                    </div>
+                </div>
+
+                <Group gap="md" style={{ width: '100%' }}>
+                    <Button 
+                        variant="default" 
+                        onClick={onClose}
+                        style={{ flex: 1 }}
+                        size="lg"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button 
+                        onClick={handleRechargeWallet}
+                        style={{ flex: 1 }}
+                        size="lg"
+                        className={styles.rechargeButton}
+                    >
+                        Recargar Wallet
+                    </Button>
+                </Group>
+            </Stack>
+        </Modal>
+    );
+};
+
 function FormattedNumberInput({
     value,
     onChange,
@@ -250,6 +352,9 @@ const DetallesViajeView = () => {
     const [formError, setFormError] = useState<string | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
     const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
+    const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] = useState<boolean>(false);
+    const [requiredAmount, setRequiredAmount] = useState<number>(0);
+    const [currentBalance, setCurrentBalance] = useState<number>(0);
     const [dateTime, setDateTime] = useState<Date | null>(null);
     const [stopovers, setStopovers] = useState<TripStopover[]>([]);
     const [loading, setLoading] = useState(false);
@@ -284,7 +389,11 @@ const DetallesViajeView = () => {
       
           const availableBalance = (wallet.balance || 0) - (wallet.frozen_balance || 0);
           if (availableBalance < requiredAmount) {
-            throw new Error(`Saldo insuficiente. Necesitas $${requiredAmount.toLocaleString()} disponibles en tu billetera para crear este viaje. Tu saldo disponible es $${availableBalance.toLocaleString()}`);
+            // Mostrar modal de saldo insuficiente
+            setRequiredAmount(requiredAmount);
+            setCurrentBalance(availableBalance);
+            setShowInsufficientBalanceModal(true);
+            return { success: false, showModal: true };
           }
       
           // Actualizar balance y frozen_balance
@@ -455,10 +564,15 @@ const DetallesViajeView = () => {
             }
 
             // Calcular y verificar el balance requerido
-            const requiredAmount = calculateRequiredBalance(seats, pricePerSeat);
+            const requiredAmountToCheck = calculateRequiredBalance(seats, pricePerSeat);
 
             // Intentar congelar el balance antes de crear el viaje
-            const walletCheck = await checkAndFreezeWalletBalance(session.user.id, requiredAmount);
+            const walletCheck = await checkAndFreezeWalletBalance(session.user.id, requiredAmountToCheck);
+
+            // Si no hay saldo suficiente, mostrar modal y salir
+            if (walletCheck.showModal) {
+                return;
+            }
 
             // Si el congelamiento fue exitoso, mostrar mensaje y continuar con la creación del viaje
             notifications.show({
@@ -506,8 +620,8 @@ const DetallesViajeView = () => {
                 index: routeCount ? routeCount + 1 : 1,
                 distance: tripData.selectedRoute.distance,
                 duration: tripData.selectedRoute.duration,
-                start_address: tripData.selectedRoute.startAddress,
-                end_address: tripData.selectedRoute.endAddress,
+                start_address: originLocation.id as any,
+                end_address: destinationLocation.id as any,
                 summary: tripData.selectedRoute.summary,
                 polyline: tripData.selectedRoute.polyline || null,
                 bounds_ne_lat: 0,
@@ -1067,6 +1181,14 @@ const DetallesViajeView = () => {
                         </Stack>
                     </Modal>
                 )}
+
+                {/* Modal de saldo insuficiente */}
+                <InsufficientBalanceModal
+                    isOpen={showInsufficientBalanceModal}
+                    onClose={() => setShowInsufficientBalanceModal(false)}
+                    requiredAmount={requiredAmount}
+                    currentBalance={currentBalance}
+                />
             </Container>
         </Container>
     );

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, createFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
 import { Container, TextInput, Text, Button, Title } from '@mantine/core';
-import { ArrowLeft, MapPin } from 'lucide-react';
+import { ArrowLeft, MapPin, Navigation, Search, Star, Clock } from 'lucide-react';
 import { GoogleMap, Marker } from '@react-google-maps/api';
-import { mapOptions } from '../../types/PublicarViaje/TripDataManagement'; // Configuración del mapa
+import { mapOptions } from '../../types/PublicarViaje/TripDataManagement';
 import styles from './index.module.css';
 
 // Interfaces
@@ -15,7 +15,7 @@ interface Suggestion {
 }
 
 interface Location {
-  lat: number;
+  lat: number; 
   lng: number;
 }
 
@@ -27,20 +27,62 @@ function DestinoView() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedAddress, setSelectedAddress] = useState('');
   const [showMap, setShowMap] = useState(false);
-  const [, setError] = useState<string | null>(null);
-  const [, setIsSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  const [popularDestinations] = useState<string[]>([
+    'Aeropuerto El Dorado',
+    'Terminal de Transporte',
+    'Centro Comercial Andino',
+    'Zona Rosa',
+    'Universidad Nacional'
+  ]);
+  const [recentDestinations] = useState<string[]>([
+    'Medellín, Antioquia',
+    'Cali, Valle del Cauca',
+    'Cartagena, Bolívar',
+    'Bucaramanga, Santander'
+  ]);
 
   const mapRef = useRef<google.maps.Map | null>(null);
   const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const searchTimeout = useRef<NodeJS.Timeout>();
 
+  // Inicializar servicios de Google Maps
   useEffect(() => {
-    if (window.google && !autocompleteServiceRef.current) {
-      autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+    if (window.google && window.google.maps && window.google.maps.places) {
+      if (!autocompleteServiceRef.current) {
+        autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+      }
+      if (!placesServiceRef.current && mapRef.current) {
+        placesServiceRef.current = new google.maps.places.PlacesService(mapRef.current);
+      }
+    }
+  }, [showMap]);
+
+  // Obtener ubicación actual del usuario
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error obteniendo ubicación:', error);
+          // Ubicación por defecto (Bogotá)
+          setCurrentLocation({ lat: 4.6097, lng: -74.0817 });
+        }
+      );
+    } else {
+      setCurrentLocation({ lat: 4.6097, lng: -74.0817 });
     }
   }, []);
 
+  // Manejar búsqueda con debounce mejorado
   useEffect(() => {
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
@@ -48,11 +90,13 @@ function DestinoView() {
 
     if (searchTerm && !selectedLocation) {
       setIsSearching(true);
+      setError(null);
       searchTimeout.current = setTimeout(() => {
         if (autocompleteServiceRef.current) {
           const request: google.maps.places.AutocompletionRequest = {
             input: searchTerm,
             componentRestrictions: { country: 'co' },
+            types: ['establishment', 'geocode']
           };
 
           autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
@@ -63,15 +107,21 @@ function DestinoView() {
                   id: prediction.place_id,
                   description: prediction.description,
                   main_text: prediction.structured_formatting.main_text,
-                  secondary_text: prediction.structured_formatting.secondary_text,
+                  secondary_text: prediction.structured_formatting.secondary_text || '',
                 }))
               );
+            } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+              setResults([]);
             } else {
+              setError('Error al buscar destinos. Intenta nuevamente.');
               setResults([]);
             }
           });
         }
       }, 300);
+    } else if (!searchTerm) {
+      setResults([]);
+      setIsSearching(false);
     }
 
     return () => {
@@ -82,17 +132,28 @@ function DestinoView() {
   }, [searchTerm, selectedLocation]);
 
   const handlePlaceSelect = async (suggestion: Suggestion) => {
-    if (!placesServiceRef.current) return;
+    // Inicializar el servicio de Places si no está disponible
+    if (!placesServiceRef.current) {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        // Crear un div temporal para el servicio de Places
+        const tempDiv = document.createElement('div');
+        placesServiceRef.current = new google.maps.places.PlacesService(tempDiv);
+      } else {
+        setError('Google Maps no está disponible. Por favor, recarga la página.');
+        return;
+      }
+    }
 
     try {
+      setError(null);
       const result = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
         placesServiceRef.current?.getDetails(
-          { placeId: suggestion.id, fields: ['geometry', 'formatted_address'] },
+          { placeId: suggestion.id, fields: ['geometry', 'formatted_address', 'name'] },
           (place, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK && place) {
               resolve(place);
             } else {
-              reject(new Error('Error obteniendo detalles del lugar'));
+              reject(new Error(`Error obteniendo detalles del lugar: ${status}`));
             }
           }
         );
@@ -108,18 +169,19 @@ function DestinoView() {
         setSelectedAddress(result.formatted_address || suggestion.description);
         setSearchTerm(result.formatted_address || suggestion.description);
         setShowMap(true);
-        setResults([]); // Cerrar la lista después de seleccionar
+        setResults([]);
 
-        requestAnimationFrame(() => {
+        // Animar el mapa suavemente
+        setTimeout(() => {
           if (mapRef.current) {
             mapRef.current.panTo(location);
-            mapRef.current.setZoom(15);
+            mapRef.current.setZoom(16);
           }
-        });
+        }, 100);
       }
     } catch (err) {
       console.error('Error:', err);
-      setError('Error al obtener la ubicación');
+      setError('Error al obtener la ubicación del destino. Intenta nuevamente.');
     }
   };
 
@@ -132,18 +194,53 @@ function DestinoView() {
     };
 
     try {
+      setError(null);
       const geocoder = new google.maps.Geocoder();
       const response = await geocoder.geocode({ location });
+      
       if (response.results[0]) {
         setSelectedLocation(location);
         setSelectedAddress(response.results[0].formatted_address);
         setSearchTerm(response.results[0].formatted_address);
-        setResults([]); // Cerrar la lista si está abierta
+        setResults([]);
+      } else {
+        setError('No se pudo obtener la dirección de esta ubicación');
       }
     } catch (err) {
       console.error('Error:', err);
       setError('Error al obtener la dirección');
     }
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (currentLocation) {
+      setSelectedLocation(currentLocation);
+      setShowMap(true);
+      
+      // Obtener dirección de la ubicación actual
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location: currentLocation }, (results, status) => {
+        if (status === 'OK' && results?.[0]) {
+          setSelectedAddress(results[0].formatted_address);
+          setSearchTerm(results[0].formatted_address);
+        } else {
+          setSelectedAddress('Ubicación actual');
+          setSearchTerm('Ubicación actual');
+        }
+      });
+
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.panTo(currentLocation);
+          mapRef.current.setZoom(16);
+        }
+      }, 100);
+    }
+  };
+
+  const handleQuickSearch = (destination: string) => {
+    setSearchTerm(destination);
+    setError(null);
   };
 
   const handleContinue = () => {
@@ -160,14 +257,14 @@ function DestinoView() {
 
   return (
     <Container fluid className={styles.container}>
-      <div className={styles.searchSection}>
-        <div className={styles.header}>
-          <Link to="/publicarviaje" className={styles.backButton}>
-            <ArrowLeft size={24} />
-          </Link>
-          <Title order={4} className={styles.headerTitle}>Destino del viaje</Title>
-        </div>
+      <div className={styles.header}>
+        <Link to="/publicarviaje" className={styles.backButton}>
+          <ArrowLeft size={24} />
+        </Link>
+        <Title order={4} className={styles.headerTitle}>Destino del viaje</Title>
+      </div>
 
+      <div className={styles.searchSection}>
         <div className={styles.originInfo}>
           <MapPin size={16} className={styles.originIcon} />
           <Text className={styles.originText}>Desde: {originAddress}</Text>
@@ -189,7 +286,18 @@ function DestinoView() {
             variant="unstyled"
             className={styles.input}
           />
+          {isSearching && (
+            <div className={styles.searchLoader}>
+              <div className={styles.spinner}></div>
+            </div>
+          )}
         </div>
+
+        {error && (
+          <div className={styles.errorMessage}>
+            <Text size="sm" color="red">{error}</Text>
+          </div>
+        )}
 
         {results.length > 0 && !selectedLocation && (
           <div className={styles.resultsList}>
@@ -208,34 +316,109 @@ function DestinoView() {
             ))}
           </div>
         )}
+
+        {/* Mostrar sugerencias cuando no hay búsqueda activa */}
+        {!searchTerm && !selectedLocation && (
+          <div className={styles.suggestionsContainer}>
+            {/* Botón de ubicación actual */}
+            <button
+              className={styles.currentLocationButton}
+              onClick={handleUseCurrentLocation}
+            >
+              <Navigation size={20} className={styles.currentLocationIcon} />
+              <div className={styles.currentLocationContent}>
+                <Text className={styles.currentLocationText}>Usar ubicación actual como destino</Text>
+                <Text className={styles.currentLocationSubtext}>Detectar automáticamente</Text>
+              </div>
+            </button>
+
+            {/* Destinos populares */}
+            <div className={styles.suggestionsSection}>
+              <div className={styles.suggestionHeader}>
+                <Star size={16} className={styles.suggestionIcon} />
+                <Text className={styles.suggestionTitle}>Destinos populares</Text>
+              </div>
+              {popularDestinations.map((destination, index) => (
+                <button
+                  key={index}
+                  className={styles.suggestionItem}
+                  onClick={() => handleQuickSearch(destination)}
+                >
+                  <Star size={16} className={styles.suggestionItemIcon} />
+                  <Text className={styles.suggestionItemText}>{destination}</Text>
+                </button>
+              ))}
+            </div>
+
+            {/* Destinos recientes */}
+            <div className={styles.suggestionsSection}>
+              <div className={styles.suggestionHeader}>
+                <Clock size={16} className={styles.suggestionIcon} />
+                <Text className={styles.suggestionTitle}>Destinos recientes</Text>
+              </div>
+              {recentDestinations.map((destination, index) => (
+                <button
+                  key={index}
+                  className={styles.suggestionItem}
+                  onClick={() => handleQuickSearch(destination)}
+                >
+                  <Clock size={16} className={styles.suggestionItemIcon} />
+                  <Text className={styles.suggestionItemText}>{destination}</Text>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Mapa */}
       <div className={`${styles.mapSection} ${showMap ? styles.mapSectionVisible : ''}`}>
-        <GoogleMap
-          mapContainerStyle={{ width: '100%', height: '100%' }}
-          options={mapOptions}
-          center={selectedLocation || { lat: 4.6097, lng: -74.0817 }}
-          zoom={13}
-          onClick={handleMapClick}
-          onLoad={(map) => {
-            mapRef.current = map;
-            placesServiceRef.current = new google.maps.places.PlacesService(map);
-          }}
-        >
-          {selectedLocation && (
-            <Marker
-              position={selectedLocation}
-              icon={{
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 7,
-                fillColor: '#ff3366',
-                fillOpacity: 1,
-                strokeColor: '#FFFFFF',
-                strokeWeight: 2,
-              }}
-            />
-          )}
-        </GoogleMap>
+        {!showMap && (
+          <div className={styles.noMapContainer}>
+            <div className={styles.noMapContent}>
+              <Search size={48} className={styles.noMapIcon} />
+              <Text className={styles.noMapTitle}>Selecciona tu destino</Text>
+              <Text className={styles.noMapSubtitle}>
+                Busca una dirección, explora destinos populares o usa tu ubicación actual
+              </Text>
+            </div>
+          </div>
+        )}
+        
+        {showMap && (
+          <GoogleMap
+            mapContainerStyle={{ width: '100%', height: '100%' }}
+            options={{
+              ...mapOptions,
+              gestureHandling: 'greedy',
+              zoomControl: true,
+              streetViewControl: false,
+              fullscreenControl: false,
+              mapTypeControl: false,
+            }}
+            center={selectedLocation || currentLocation || { lat: 4.6097, lng: -74.0817 }}
+            zoom={selectedLocation ? 16 : 13}
+            onClick={handleMapClick}
+            onLoad={(map) => {
+              mapRef.current = map;
+              placesServiceRef.current = new google.maps.places.PlacesService(map);
+            }}
+          >
+            {selectedLocation && (
+              <Marker
+                position={selectedLocation}
+                icon={{
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 10,
+                  fillColor: '#ff3366',
+                  fillOpacity: 1,
+                  strokeColor: '#FFFFFF',
+                  strokeWeight: 3,
+                }}
+              />
+            )}
+          </GoogleMap>
+        )}
       </div>
 
       {selectedLocation && (
