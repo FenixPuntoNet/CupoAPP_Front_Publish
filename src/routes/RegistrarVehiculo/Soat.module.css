@@ -336,6 +336,26 @@
     transform: translateY(-1px);
   }
   
+  .photoLabel.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  /* Loading container */
+  .loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .loadingText {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
   /* Estados de Error */
   .errorText {
     color: var(--error-color);

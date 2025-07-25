@@ -6,29 +6,17 @@ import { DatePickerInput } from '@mantine/dates';
 import { Calendar, User, Car, MapPin, Clock, Navigation } from 'lucide-react';
 import PassengerSelector from '../../components/ui/home/PassengerSelector';
 import dayjs from 'dayjs';
-import { supabase } from '@/lib/supabaseClient';
 import { getFromLocalStorage, saveToLocalStorage } from '../../types/PublicarViaje/localStorageHelper';
 import styles from './reservar.module.css';
 import { TripReservationModal } from '../Reservas/TripReservationModal';
-import { useJsApiLoader } from '@react-google-maps/api';
 import type { Trip } from '@/types/Trip';
 import { Modal } from '@mantine/core';
-import { GoogleMap } from '@react-google-maps/api';
 import { Rating } from '@mantine/core';
-import { useAssumptions } from '@/hooks/useAssumptions';
 import { IconArrowUpRight, IconArrowDownLeft, IconCheck, IconCircleCheck, IconCalendar, IconList, IconX, IconAlertCircle } from '@tabler/icons-react';
-
-
-
-interface PlaceSuggestion {
-    placeId: string;
-    mainText: string;
-    secondaryText: string;
-    fullText: string;
-}
-
-
-
+// Servicios del backend
+import { useMaps } from '@/hooks/useMaps';
+import { searchTrips, getAssumptions, type TripSearchResult } from '@/services/trips';
+import type { PlaceSuggestion } from '@/services/googleMaps';
 
 interface SearchFormData {
     origin: string;
@@ -40,11 +28,9 @@ interface SearchFormData {
 const ReservarView = () => {
     const [showRouteModal, setShowRouteModal] = useState(false);
     const [selectedRouteInfo, setSelectedRouteInfo] = useState<{ origin: string; destination: string } | null>(null);
-    const { isLoaded, loadError } = useJsApiLoader({
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-        libraries: ['places'],
-    });    
     const navigate = useNavigate();
+    const { searchPlaces, getDetails } = useMaps();
+    
     const [formData, setFormData] = useState<SearchFormData>(() => {
         const storedFormData = getFromLocalStorage<SearchFormData>('searchFormData');
         if (storedFormData && storedFormData.date) {
@@ -64,7 +50,7 @@ const ReservarView = () => {
         const storedTrip = getFromLocalStorage<Trip | null>('selectedTrip');
         return storedTrip || null;
     });
-    const [searchResults, setSearchResults] = useState<Trip[]>([]);
+    const [searchResults, setSearchResults] = useState<TripSearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [showPassengerSelector, setShowPassengerSelector] = useState(false);
     const [originSuggestions, setOriginSuggestions] = useState<PlaceSuggestion[]>([]);
@@ -74,22 +60,21 @@ const ReservarView = () => {
     const [searchMessage, setSearchMessage] = useState<string>('');
     const [searchStatus, setSearchStatus] = useState<'exact' | 'close' | 'date' | 'all' | 'none'>('none');
     const [formError, setFormError] = useState<string | null>(null);
-    const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-    const placesService = useRef<google.maps.places.PlacesService | null>(null);
+    const [assumptions, setAssumptions] = useState<any>(null);
     const searchTimeout = useRef<NodeJS.Timeout>();
-    const { assumptions } = useAssumptions();
 
+    // Cargar assumptions al montar el componente
     useEffect(() => {
-        if (
-            typeof window !== 'undefined' &&
-            isLoaded &&
-            window.google?.maps?.places &&
-            !autocompleteService.current
-        ) {
-            autocompleteService.current = new window.google.maps.places.AutocompleteService();
-            placesService.current = new window.google.maps.places.PlacesService(document.createElement('div'));
-        }
-    }, [isLoaded]);
+        const loadAssumptions = async () => {
+            try {
+                const data = await getAssumptions();
+                setAssumptions(data);
+            } catch (error) {
+                console.error('Error loading assumptions:', error);
+            }
+        };
+        loadAssumptions();
+    }, []);
     
 
     useEffect(() => {
@@ -103,68 +88,56 @@ const ReservarView = () => {
         saveToLocalStorage('selectedTrip', selectedTrip);
     }, [selectedTrip]);
 
-    const handlePlaceSearch = (input: string, type: 'origin' | 'destination') => {
-        if (!input.trim() || !autocompleteService.current) {
+    const handlePlaceSearch = async (input: string, type: 'origin' | 'destination') => {
+        if (!input.trim()) {
             type === 'origin' ? setOriginSuggestions([]) : setDestinationSuggestions([]);
             return;
         }
 
         if (searchTimeout.current) clearTimeout(searchTimeout.current);
 
-        searchTimeout.current = setTimeout(() => {
-            const request = {
-                input,
-                componentRestrictions: { country: 'co' },
-            };
-
-            autocompleteService.current?.getPlacePredictions(request, (predictions, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-                    const suggestions = predictions.map((prediction) => ({
-                        placeId: prediction.place_id,
-                        mainText: prediction.structured_formatting.main_text,
-                        secondaryText: prediction.structured_formatting.secondary_text,
-                        fullText: prediction.description,
-                    }));
-
-                    type === 'origin'
-                        ? setOriginSuggestions(suggestions)
-                        : setDestinationSuggestions(suggestions);
-                }
-            });
+        searchTimeout.current = setTimeout(async () => {
+            try {
+                const suggestions = await searchPlaces(input);
+                type === 'origin' 
+                    ? setOriginSuggestions(suggestions) 
+                    : setDestinationSuggestions(suggestions);
+            } catch (error) {
+                console.error('Error searching places:', error);
+            }
         }, 300);
     };
 
-    const fetchPlaceDetails = (placeId: string, type: 'origin' | 'destination') => {
-        if (!placesService.current) return;
-        placesService.current.getDetails(
-            { placeId, fields: ['formatted_address', 'address_components'] },
-            (place, status) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-                    const secondaryText =
-                        place.address_components?.find((component) =>
-                            component.types.includes('locality')
-                        )?.long_name ||
-                        place.address_components?.find((component) =>
-                            component.types.includes('administrative_area_level_2')
-                        )?.long_name ||
-                        place.address_components?.find((component) =>
-                            component.types.includes('administrative_area_level_1')
-                        )?.long_name ||
-                        place.formatted_address;
-
-                    setFormData((prev) => ({
-                        ...prev,
-                        [type]: secondaryText || place.formatted_address,
-                    }));
-                    type === 'origin' ? setOriginSuggestions([]) : setDestinationSuggestions([]);
-                }
+    const handleSuggestionClick = async (suggestion: PlaceSuggestion, type: 'origin' | 'destination') => {
+        try {
+            const details = await getDetails(suggestion.placeId);
+            if (details) {
+                setFormData((prev) => ({
+                    ...prev,
+                    [type]: details.formattedAddress,
+                }));
+            } else {
+                // Fallback al texto completo de la sugerencia
+                setFormData((prev) => ({
+                    ...prev,
+                    [type]: suggestion.fullText,
+                }));
             }
-        );
+            type === 'origin' ? setOriginSuggestions([]) : setDestinationSuggestions([]);
+        } catch (error) {
+            console.error('Error getting place details:', error);
+            // Fallback al texto completo de la sugerencia
+            setFormData((prev) => ({
+                ...prev,
+                [type]: suggestion.fullText,
+            }));
+            type === 'origin' ? setOriginSuggestions([]) : setDestinationSuggestions([]);
+        }
     };
 
 
 
-    const searchTrips = async (event: React.FormEvent) => {
+    const searchTripsHandler = async (event: React.FormEvent) => {
         event.preventDefault();
         setIsSearching(true);
         setSearchResults([]);
@@ -187,208 +160,18 @@ const ReservarView = () => {
     
             const formattedDate = dayjs(formData.date).format('YYYY-MM-DD');
     
-            // Obtener TODOS los viajes desde la fecha especificada
-            const { data, error } = await supabase
-              .from('trips')
-              .select(`
-                id,
-                date_time,
-                seats,
-                price_per_seat,
-                allow_pets,
-                allow_smoking,
-                vehicle_id,
-                user_id,
-                status,
-                route:routes(id, start_address, end_address, duration, distance),
-                vehicle:vehicles(
-                  brand,
-                  model,
-                  plate,
-                  color,
-                  photo_url,
-                  year
-                )
-              `)
-              .gte('date_time', formattedDate + ' 00:00:00')
-              .in('status', ['pending', 'A'])
-              .gt('seats', 0);
-    
-            if (error) {
-                console.error('Error fetching trips:', error);
-                setFormError('Error al buscar viajes. Intenta de nuevo.');
-                setIsSearching(false);
-                return;
-            }
-
-            // Obtener los perfiles de usuario relacionados
-            const userIds = data.map((trip) => trip.user_id).filter((id): id is string => id !== null);
-            
-            const { data: licenses } = await supabase
-              .from('driver_licenses')
-              .select('user_id, license_number, license_category, expiration_date');
-            
-            const { data: propertyCards } = await supabase
-              .from('property_cards')
-              .select('vehicle_id, passager_capacity');
-            
-            const { data: soats } = await supabase
-              .from('soat_details')
-              .select('vehicle_id, validity_to, insurance_company');
-            
-            const { data: userProfiles, error: userProfilesError } = await supabase
-                .from('user_profiles')
-                .select('user_id, first_name, last_name, photo_user')
-                .in('user_id', userIds);
-    
-            if (userProfilesError) {
-                console.error('Error fetching user profiles:', userProfilesError);
-                setFormError('Error al cargar información de conductores');
-                setIsSearching(false);
-                return;
-            }
-            
-            const { data: allCalifications, error: calificationsError } = await supabase
-            .from('califications')
-            .select('driver_id, value');
-            
-            if (calificationsError) {
-            console.error('Error fetching califications:', calificationsError);
-            }
-
-            // Función para normalizar texto (sin tildes, espacios, mayúsculas)
-            const normalize = (text: string) =>
-                text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-
-            const searchOrigin = normalize(formData.origin);
-            const searchDestination = normalize(formData.destination);
-            const searchDate = dayjs(formData.date).format('YYYY-MM-DD');
-
-            // PASO 1: Búsqueda de coincidencia EXACTA (origen, destino y fecha)
-            const exactMatches = data.filter((trip) => {
-                const tripDate = dayjs(trip.date_time).format('YYYY-MM-DD');
-                const tripOrigin = normalize(trip.route?.start_address || '');
-                const tripDestination = normalize(trip.route?.end_address || '');
-                
-                return tripDate === searchDate &&
-                       tripOrigin.includes(searchOrigin) &&
-                       tripDestination.includes(searchDestination);
+            // Usar el endpoint de búsqueda del backend
+            const response = await searchTrips({
+                origin: formData.origin,
+                destination: formData.destination,
+                date: formattedDate,
+                passengers: formData.passengers
             });
 
-            // PASO 2: Si no hay exactas, buscar coincidencias CERCANAS (origen O destino + fecha)
-            let closeMatches: any[] = [];
-            if (exactMatches.length === 0) {
-                closeMatches = data.filter((trip) => {
-                    const tripDate = dayjs(trip.date_time).format('YYYY-MM-DD');
-                    const tripOrigin = normalize(trip.route?.start_address || '');
-                    const tripDestination = normalize(trip.route?.end_address || '');
-                    
-                    return tripDate === searchDate && (
-                        tripOrigin.includes(searchOrigin) ||
-                        tripDestination.includes(searchDestination) ||
-                        searchOrigin.includes(tripOrigin) ||
-                        searchDestination.includes(tripDestination)
-                    );
-                });
-            }
-
-            // PASO 3: Si no hay cercanas, buscar solo por FECHA
-            let dateMatches: any[] = [];
-            if (exactMatches.length === 0 && closeMatches.length === 0) {
-                dateMatches = data.filter((trip) => {
-                    const tripDate = dayjs(trip.date_time).format('YYYY-MM-DD');
-                    return tripDate === searchDate;
-                });
-            }
-
-            // PASO 4: Si no hay nada, mostrar TODOS los viajes disponibles
-            const allAvailableTrips = data;
-
-            // Función para mapear trips a formato completo
-            const mapTripsToFormat = (trips: any[]) => {
-                return trips.map((trip) => {
-                    const userProfile = userProfiles.find((profile) => profile.user_id === trip.user_id);
-                    const driverRatings = allCalifications?.filter(c => c.driver_id === trip.user_id);
-                    const averageRating = driverRatings && driverRatings.length > 0
-                      ? driverRatings.reduce((acc, curr) => acc + (curr.value || 0), 0) / driverRatings.length
-                      : null;
-                    const licenseRaw = licenses?.find((l) => l.user_id === trip.user_id);
-                    const license = licenseRaw &&
-                      licenseRaw.license_number &&
-                      licenseRaw.license_category &&
-                      licenseRaw.expiration_date &&
-                      licenseRaw.user_id
-                      ? {
-                          license_number: licenseRaw.license_number!,
-                          license_category: licenseRaw.license_category!,
-                          expiration_date: licenseRaw.expiration_date!,
-                          user_id: licenseRaw.user_id!,
-                        }
-                      : undefined;
-                    const propertyCard = propertyCards?.find((p) => p.vehicle_id === trip.vehicle_id) || null;
-                    const soat = soats?.find((s) => s.vehicle_id === trip.vehicle_id) || null;
-              
-                    return {
-                      id: trip.id.toString(),
-                      origin: {
-                        address: trip.route?.start_address || 'Origen no disponible',
-                        secondaryText: 'Información adicional no disponible',
-                      },
-                      destination: {
-                        address: trip.route?.end_address || 'Destino no disponible',
-                        secondaryText: 'Información adicional no disponible',
-                      },
-                      dateTime: trip.date_time || '',
-                      seats: trip.seats ?? 0,
-                      pricePerSeat: trip.price_per_seat || 0,
-                      allowPets: trip.allow_pets === 'true',
-                      allowSmoking: trip.allow_smoking === 'true',
-                      selectedRoute: {
-                        duration: trip.route?.duration || 'Duración no disponible',
-                        distance: trip.route?.distance || 'Distancia no disponible',
-                      },
-                      driverName: userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : 'No disponible',
-                      photo: userProfile?.photo_user || 'https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/SinFotoPerfil.png',
-                      vehicle: trip.vehicle,
-                      license,
-                      propertyCard,
-                      soat,
-                      rating: averageRating !== null ? averageRating : undefined,
-                      suggestedPrice: trip.route?.distance ? calculateSuggestedPrice(trip.route.distance) : 0,
-                    };
-                });
-            };
-
-            // Determinar qué mostrar y con qué mensaje
-            let finalTrips: any[] = [];
-            let searchMessage = '';
-            let searchStatus: 'exact' | 'close' | 'date' | 'all' | 'none' = 'none';
-
-            if (exactMatches.length > 0) {
-                finalTrips = mapTripsToFormat(exactMatches);
-                searchMessage = `¡Perfecto! Encontramos ${exactMatches.length} viaje(s) que coinciden exactamente con tu búsqueda.`;
-                searchStatus = 'exact';
-            } else if (closeMatches.length > 0) {
-                finalTrips = mapTripsToFormat(closeMatches);
-                searchMessage = `Encontramos ${closeMatches.length} viaje(s) cercanos a tu destino en la fecha seleccionada.`;
-                searchStatus = 'close';
-            } else if (dateMatches.length > 0) {
-                finalTrips = mapTripsToFormat(dateMatches);
-                searchMessage = `No hay viajes exactos a tu destino, pero encontramos ${dateMatches.length} viaje(s) disponibles en la fecha seleccionada.`;
-                searchStatus = 'date';
-            } else if (allAvailableTrips.length > 0) {
-                finalTrips = mapTripsToFormat(allAvailableTrips);
-                searchMessage = `No encontramos viajes para tu búsqueda específica. Estos son todos los viajes disponibles en la plataforma:`;
-                searchStatus = 'all';
-            } else {
-                searchMessage = 'No hay viajes disponibles en este momento.';
-                searchStatus = 'none';
-            }
-
-            // Guardar los resultados y el estado de búsqueda
-            setSearchResults(finalTrips);
-            setSearchMessage(searchMessage);
-            setSearchStatus(searchStatus);
+            // Actualizar los resultados
+            setSearchResults(response.trips);
+            setSearchMessage(response.message);
+            setSearchStatus(response.status);
 
         } catch (error) {
             console.error('Error in search:', error);
@@ -408,13 +191,42 @@ const ReservarView = () => {
         setTimeout(() => setFocusedInput(null), 200);
     };
 
-    const handleSuggestionClick = (suggestion: PlaceSuggestion, type: 'origin' | 'destination') => {
-        fetchPlaceDetails(suggestion.placeId, type);
-    };
-
-    const handleReservation = (trip: Trip) => {
-        setSelectedTrip(trip);
-        saveToLocalStorage('currentTrip', trip);
+    const handleReservation = (trip: TripSearchResult) => {
+        // Convertir TripSearchResult a Trip para compatibilidad
+        const tripData: Trip = {
+            id: trip.id,
+            origin: {
+                address: trip.origin,
+                secondaryText: ''
+            },
+            destination: {
+                address: trip.destination,
+                secondaryText: ''
+            },
+            dateTime: trip.dateTime,
+            seats: trip.seats,
+            pricePerSeat: trip.pricePerSeat,
+            allowPets: trip.allowPets,
+            allowSmoking: trip.allowSmoking,
+            selectedRoute: trip.selectedRoute,
+            driverName: trip.driverName,
+            photo: trip.photo,
+            vehicle: trip.vehicle ? {
+                brand: trip.vehicle.brand || null,
+                model: trip.vehicle.model || null,
+                plate: trip.vehicle.plate || '',
+                color: trip.vehicle.color || null,
+                photo_url: trip.vehicle.photo_url || null,
+                year: trip.vehicle.year ? parseInt(trip.vehicle.year) : null
+            } : null,
+            license: trip.license,
+            propertyCard: trip.propertyCard,
+            soat: trip.soat,
+            rating: trip.rating
+        };
+        
+        setSelectedTrip(tripData);
+        saveToLocalStorage('currentTrip', tripData);
         navigate({ to: '/Reservas' });
     };
 
@@ -448,31 +260,6 @@ const ReservarView = () => {
         return { status: 'normal', color: 'green', icon: <IconCheck size={16} /> };
     };
 
-    // Función para calcular precio sugerido (tomada de assumptions)
-    const calculateSuggestedPrice = (distanceStr: string): number => {
-        if (!assumptions) return 0;
-        
-        const distanceMatch = distanceStr.match(/(\d+\.?\d*)/);
-        const distanceKm = distanceMatch ? parseFloat(distanceMatch[1]) : 0;
-        
-        if (distanceKm <= 0) return 0;
-        
-        const isUrban = distanceKm <= 30;
-        const pricePerKm = isUrban ? assumptions.urban_price_per_km : assumptions.interurban_price_per_km;
-        
-        const totalPrice = distanceKm * pricePerKm;
-        return Math.round(totalPrice / 4); // Dividir entre 4 cupos estándar
-    };
-
-    if (loadError) {
-        return <div>Error al cargar Google Maps</div>;
-      }
-      
-      if (!isLoaded) {
-        return <div>Cargando mapa...</div>;
-      }
-      
-
     return (
         <Container fluid className={styles.container}>
             <div className={styles.logoOverlay}></div>
@@ -485,7 +272,7 @@ const ReservarView = () => {
                         <div className={styles.titleUnderline} />
                     </Title>
                     <Card className={styles.searchCard}>
-                        <form onSubmit={searchTrips}>
+                        <form onSubmit={searchTripsHandler}>
                             <div className={styles.searchInputs}>
                                 {/* Origin Input */}
                                 <div className={styles.inputWrapper}>
@@ -798,8 +585,8 @@ const ReservarView = () => {
                                   <div className={styles.tripRoute}
                                     onClick={() => {
                                       setSelectedRouteInfo({
-                                        origin: trip.origin.address,
-                                        destination: trip.destination.address,
+                                        origin: trip.origin,
+                                        destination: trip.destination,
                                       });
                                       setShowRouteModal(true);
                                     }}
@@ -808,8 +595,8 @@ const ReservarView = () => {
                                     onKeyDown={(e) => {
                                       if (e.key === 'Enter') {
                                         setSelectedRouteInfo({
-                                          origin: trip.origin.address,
-                                          destination: trip.destination.address,
+                                          origin: trip.origin,
+                                          destination: trip.destination,
                                         });
                                         setShowRouteModal(true);
                                       }
@@ -822,7 +609,7 @@ const ReservarView = () => {
                                       </div>
                                       <div className={styles.routeDetails}>
                                         <Text fw={600} className={styles.routeLabel}>Origen</Text>
-                                        <Text fw={500} className={styles.routeAddress}>{trip.origin.address}</Text>
+                                        <Text fw={500} className={styles.routeAddress}>{trip.origin}</Text>
                                       </div>
                                     </div>
                                     <div className={styles.routeLineWrapper}>
@@ -834,7 +621,7 @@ const ReservarView = () => {
                                       </div>
                                       <div className={styles.routeDetails}>
                                         <Text fw={600} className={styles.routeLabel}>Destino</Text>
-                                        <Text fw={500} className={styles.routeAddress}>{trip.destination.address}</Text>
+                                        <Text fw={500} className={styles.routeAddress}>{trip.destination}</Text>
                                       </div>
                                     </div>
                                   </div>
@@ -846,8 +633,8 @@ const ReservarView = () => {
                                       className={styles.routeViewButton}
                                       onClick={() => {
                                         setSelectedRouteInfo({
-                                          origin: trip.origin.address,
-                                          destination: trip.destination.address,
+                                          origin: trip.origin,
+                                          destination: trip.destination,
                                         });
                                         setShowRouteModal(true);
                                       }}
@@ -941,38 +728,31 @@ const ReservarView = () => {
                   withCloseButton={false}
                 >
                     <div className={styles.mapContainer}>
-                      <GoogleMap
-                        mapContainerStyle={{ width: '100%', height: '100%' }}
-                        options={{
-                          zoomControl: true,
-                          fullscreenControl: true,
-                          streetViewControl: false,
-                          mapTypeControl: false,
-                          gestureHandling: 'greedy',
-                        }}
-                        onLoad={(map: google.maps.Map) => {
-                          const directionsService = new google.maps.DirectionsService();
-                          const directionsRenderer = new google.maps.DirectionsRenderer({
-                            map,
-                            suppressMarkers: false,
-                          });
-                
-                          directionsService.route(
-                            {
-                              origin: selectedRouteInfo.origin,
-                              destination: selectedRouteInfo.destination,
-                              travelMode: google.maps.TravelMode.DRIVING,
-                            },
-                            (result, status) => {
-                              if (status === google.maps.DirectionsStatus.OK && result) {
-                                directionsRenderer.setDirections(result);
-                              } else {
-                                console.error('Error al obtener ruta:', status);
-                              }
-                            }
-                          );
-                        }}
-                      />
+                      <div style={{ 
+                        width: '100%', 
+                        height: '400px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '8px',
+                        flexDirection: 'column',
+                        gap: '16px'
+                      }}>
+                        <MapPin size={48} color="#666" />
+                        <div style={{ textAlign: 'center' }}>
+                          <Text size="lg" fw={600} mb="xs">Ruta del viaje</Text>
+                          <Text size="sm" c="dimmed">
+                            <strong>Origen:</strong> {selectedRouteInfo.origin}
+                          </Text>
+                          <Text size="sm" c="dimmed">
+                            <strong>Destino:</strong> {selectedRouteInfo.destination}
+                          </Text>
+                          <Text size="xs" c="dimmed" mt="md">
+                            Mapa interactivo próximamente disponible
+                          </Text>
+                        </div>
+                      </div>
                     </div>
                   </Modal>
                 )}

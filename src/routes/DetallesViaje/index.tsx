@@ -39,7 +39,10 @@ import { tripStore, type TripData, type TripStopover } from '../../types/Publica
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import styles from './index.module.css';
-import { supabase } from '@/lib/supabaseClient';
+import { getCurrentUser } from '@/services/auth';
+import { publishTrip } from '@/services/viajes';
+import { checkAndFreezeBalance, getCurrentWallet } from '@/services/wallet';
+import { getUserVehicles } from '@/services/vehicles';
 import { useAssumptions } from '../../hooks/useAssumptions';
 
 interface FormattedNumberInputProps extends Omit<NumberInputProps, 'onChange'> {
@@ -374,62 +377,35 @@ const DetallesViajeView = () => {
         return Math.ceil(totalTripValue * fee);
     };
 
-    const checkAndFreezeWalletBalance = async (userId: string, requiredAmount: number) => {
+    const checkAndFreezeWalletBalance = async (requiredAmount: number) => {
         try {
-          const { data: wallet, error: walletError } = await supabase
-            .from('wallets')
-            .select('id, balance, frozen_balance')
-            .eq('user_id', userId)
-            .single();
-      
-          if (walletError) throw walletError;
-          if (!wallet) {
-            throw new Error('No tienes una billetera activa. Por favor, recarga tu billetera primero.');
-          }
-      
-          const availableBalance = (wallet.balance || 0) - (wallet.frozen_balance || 0);
-          if (availableBalance < requiredAmount) {
-            // Mostrar modal de saldo insuficiente
-            setRequiredAmount(requiredAmount);
-            setCurrentBalance(availableBalance);
-            setShowInsufficientBalanceModal(true);
-            return { success: false, showModal: true };
-          }
-      
-          // Actualizar balance y frozen_balance
-          const { error: updateError } = await supabase
-            .from('wallets')
-            .update({
-              balance: (wallet.balance ?? 0) - requiredAmount,
-              frozen_balance: (wallet.frozen_balance || 0) + requiredAmount
-            })
-            .eq('id', wallet.id);
-      
-          if (updateError) throw updateError;
-      
-          // Registrar transacción tipo "congelado"
-          const { error: insertError } = await supabase
-            .from('wallet_transactions')
-            .insert([{
-              wallet_id: wallet.id,
-              transaction_type: 'congelado',
-              amount: requiredAmount,
-              detail: 'Monto congelado al publicar viaje',
-              status: 'completed',
-              payment_gateway_id: null
-            }]);
-      
-          if (insertError) throw insertError;
-      
-          return {
-            success: true,
-            message: `Se han congelado $${requiredAmount.toLocaleString()} de tu billetera como garantía para este viaje.`
-          };
+            const result = await checkAndFreezeBalance(requiredAmount);
+            
+            if (result.showModal) {
+                // Obtener el wallet actual para mostrar los saldos
+                const walletData = await getCurrentWallet();
+                if (walletData.success && walletData.data) {
+                    const availableBalance = (walletData.data.balance || 0) - (walletData.data.frozen_balance || 0);
+                    setRequiredAmount(requiredAmount);
+                    setCurrentBalance(availableBalance);
+                    setShowInsufficientBalanceModal(true);
+                }
+                return { success: false, showModal: true };
+            }
+
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+
+            return {
+                success: true,
+                message: result.message
+            };
         } catch (error: any) {
-          console.error('Error checking wallet:', error);
-          throw error;
+            console.error('Error checking wallet:', error);
+            throw error;
         }
-      };
+    };
       
 
     // useEffect de carga inicial (solo una vez)
@@ -439,16 +415,10 @@ const DetallesViajeView = () => {
         setTripData(storedData);
 
         const fetchVehicles = async () => {
-            const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
-            if (sessionError || !sessionData?.user) return;
-            const { user } = sessionData;
-            const { data, error } = await supabase
-                .from('vehicles')
-                .select('id, brand, model, plate')
-                .eq('user_id', user.id);
-            if (!error && data) {
-                setVehicles(data);
-                if (data.length === 1) setVehicleId(data[0].id.toString());
+            const result = await getUserVehicles();
+            if (result.success && result.vehicle) {
+                setVehicles([result.vehicle]);
+                setVehicleId(result.vehicle.id.toString());
             }
         };
         fetchVehicles();
@@ -509,44 +479,6 @@ const DetallesViajeView = () => {
         }
     };
 
-    const getOrCreateLocation = async (locationData: any) => {
-        try {
-            // Primero intentar obtener la ubicación existente
-            const { data: existingLocation, } = await supabase
-                .from('locations')
-                .select('*')
-                .eq('place_id', locationData.place_id)
-                .single();
-
-            if (existingLocation) {
-                console.log('Location found:', existingLocation);
-                return existingLocation;
-            }
-
-            // Si no existe, crear nueva ubicación
-            const { data: newLocation, error: insertError } = await supabase
-                .from('locations')
-                .insert({
-                    place_id: locationData.place_id,
-                    address: locationData.address,
-                    latitude: locationData.latitude,
-                    longitude: locationData.longitude,
-                    postal_code: locationData.postal_code,
-                    main_text: locationData.main_text,
-                    secondary_text: locationData.secondary_text,
-                    user_id: locationData.user_id
-                })
-                .select()
-                .single();
-
-            if (insertError) throw insertError;
-            return newLocation;
-        } catch (error) {
-            console.error('Error in getOrCreateLocation:', error);
-            throw error;
-        }
-    };
-
     const handleSubmit = async () => {
         if (!validateForm()) return;
         if (isSubmittingRef.current) return; // evita múltiples clics
@@ -558,8 +490,8 @@ const DetallesViajeView = () => {
                 throw new Error("Los datos del viaje son incompletos.");
             }
 
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.user?.id) {
+            const user = await getCurrentUser();
+            if (!user.success || !user.user) {
                 throw new Error("Usuario no autenticado");
             }
 
@@ -567,7 +499,7 @@ const DetallesViajeView = () => {
             const requiredAmountToCheck = calculateRequiredBalance(seats, pricePerSeat);
 
             // Intentar congelar el balance antes de crear el viaje
-            const walletCheck = await checkAndFreezeWalletBalance(session.user.id, requiredAmountToCheck);
+            const walletCheck = await checkAndFreezeWalletBalance(requiredAmountToCheck);
 
             // Si no hay saldo suficiente, mostrar modal y salir
             if (walletCheck.showModal) {
@@ -581,174 +513,51 @@ const DetallesViajeView = () => {
                 color: 'green'
             });
 
-            // 1. Verificar si el usuario ya tiene rutas
-            const { count: routeCount } = await supabase
-                .from('routes')
-                .select('*', { count: 'exact' })
-                .eq('user_id', session.user.id);
-
-            // 2. Obtener o crear ubicaciones
-            const [originLocation, destinationLocation] = await Promise.all([
-                getOrCreateLocation({
-                    place_id: tripData.origin.placeId,
+            // Usar el servicio para publicar el viaje
+            const tripPublishData = {
+                origin: {
                     address: tripData.origin.address,
                     latitude: tripData.origin.coords.lat.toString(),
                     longitude: tripData.origin.coords.lng.toString(),
-                    postal_code: tripData.origin.postalCode || null,
-                    main_text: tripData.origin.mainText || null,
-                    secondary_text: tripData.origin.secondaryText || null,
-                    user_id: session.user.id
-                }),
-                getOrCreateLocation({
-                    place_id: tripData.destination.placeId,
+                    main_text: tripData.origin.mainText || tripData.origin.address,
+                    place_id: tripData.origin.placeId,
+                    secondary_text: tripData.origin.secondaryText
+                },
+                destination: {
                     address: tripData.destination.address,
                     latitude: tripData.destination.coords.lat.toString(),
                     longitude: tripData.destination.coords.lng.toString(),
-                    postal_code: tripData.destination.postalCode || null,
-                    main_text: tripData.destination.mainText || null,
-                    secondary_text: tripData.destination.secondaryText || null,
-                    user_id: session.user.id
-                })
-            ]);
-
-            // 3. Crear la ruta con índice y bounds simplificados
-            console.log('Bounds structure:', tripData.selectedRoute.bounds);
-            console.log('Tipo de dato de bounds:', typeof tripData.selectedRoute.bounds);
-
-            const routeData = {
-                user_id: session.user.id,
-                index: routeCount ? routeCount + 1 : 1,
-                distance: tripData.selectedRoute.distance,
-                duration: tripData.selectedRoute.duration,
-                start_address: originLocation.id as any,
-                end_address: destinationLocation.id as any,
-                summary: tripData.selectedRoute.summary,
-                polyline: tripData.selectedRoute.polyline || null,
-                bounds_ne_lat: 0,
-                bounds_ne_lng: 0,
-                bounds_sw_lat: 0,
-                bounds_sw_lng: 0
-            };
-
-            // Intentar extraer la información de los límites
-            try {
-                if (tripData.selectedRoute.bounds) {
-                    // Asumiendo que bounds es un objeto con northEast y southWest
-                    if (typeof tripData.selectedRoute.bounds === 'string') {
-                        // Si es una cadena JSON, parsearla
-                        tripData.selectedRoute.bounds = JSON.parse(tripData.selectedRoute.bounds);
-                    }
-
-                    const northEast = tripData.selectedRoute.bounds.getNorthEast();
-                    const southWest = tripData.selectedRoute.bounds.getSouthWest();
-                    routeData.bounds_ne_lat = Number(northEast.lat() || 0);
-                    routeData.bounds_ne_lng = Number(northEast.lng() || 0);
-                    routeData.bounds_sw_lat = Number(southWest.lat() || 0);
-                    routeData.bounds_sw_lng = Number(southWest.lng() || 0);
-                } else {
-                    console.warn('No se encontraron límites para la ruta.');
-                }
-            } catch (error) {
-                console.error('Error al procesar los límites:', error);
-            }
-
-            console.log('Route data a insertar:', routeData);
-
-            const { data: route, error: routeError } = await supabase
-                .from('routes')
-                .insert(routeData)
-                .select()
-                .single();
-
-            if (routeError) {
-                console.error('Route insertion error:', routeError);
-                throw routeError;
-            }
-
-            // 4. Crear el viaje (corregido para CHAR(1))
-            const tripDetails = {
-                user_id: session.user.id,
-                origin_id: originLocation.id,
-                destination_id: destinationLocation.id,
-                route_id: route.id,
+                    main_text: tripData.destination.mainText || tripData.destination.address,
+                    place_id: tripData.destination.placeId,
+                    secondary_text: tripData.destination.secondaryText
+                },
                 date_time: dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss'),
                 seats: Number(seats),
                 price_per_seat: Number(pricePerSeat),
                 description,
+                allow_pets: allowPets,
+                allow_smoking: allowSmoking,
                 vehicle_id: Number(vehicleId),
-                allow_pets: allowPets ? 'Y' : 'N',      // Cambiado a CHAR(1)
-                allow_smoking: allowSmoking ? 'Y' : 'N', // Cambiado a CHAR(1)
-                status: 'pending',
-                created_at: new Date().toISOString()
+                route_summary: tripData.selectedRoute.summary,
+                estimated_duration: tripData.selectedRoute.duration,
+                estimated_distance: tripData.selectedRoute.distance,
+                stopovers: stopovers.map(stopover => ({
+                    address: stopover.location.address,
+                    latitude: stopover.location.coords.lat.toString(),
+                    longitude: stopover.location.coords.lng.toString(),
+                    main_text: stopover.location.mainText || stopover.location.address,
+                    place_id: stopover.location.placeId,
+                    secondary_text: stopover.location.secondaryText
+                }))
             };
 
-            console.log('Trip details to insert:', tripDetails); // Para debugging
+            const result = await publishTrip(tripPublishData);
 
-            const { data: newTrip, error: tripError } = await supabase
-                .from('trips')
-                .insert([tripDetails])
-                .select()
-                .single();
+            if (!result.success) {
+                throw new Error(result.error || 'Error al publicar el viaje');
+            }
 
-            if (tripError) {
-                console.error('Trip insertion error:', tripError);
-                throw tripError;
-            }
-              
-            // Crear el chat vinculado al nuevo trip
-            const { data: newChat, error: chatError } = await supabase
-              .from('chats')
-              .insert([{ trip_id: newTrip.id }])
-              .select()
-              .single();
-            
-            if (chatError) {
-              console.error('Chat creation error:', chatError);
-              throw chatError;
-            }
-            
-            // ➕ Insertar conductor como participante en el chat
-            const { error: participantError } = await supabase
-              .from('chat_participants')
-              .insert([{
-                chat_id: newChat.id,
-                user_id: session.user.id,
-                role: 'driver'
-              }]);
-            
-            if (participantError) {
-              console.error('Error al agregar conductor al chat:', participantError);
-              throw participantError;
-            }
-          
-              
-            // 5. Procesar paradas con índices secuenciales
-            if (stopovers && stopovers.length > 0) {
-                const stopoverPromises = stopovers.map(async (stopover, index) => {
-                    const stopLocation = await getOrCreateLocation({
-                        place_id: stopover.location.placeId,
-                        address: stopover.location.address,
-                        latitude: stopover.location.coords.lat.toString(),
-                        longitude: stopover.location.coords.lng.toString(),
-                        postal_code: stopover.location.postalCode || null,
-                        main_text: stopover.location.mainText || null,
-                        secondary_text: stopover.location.secondaryText || null,
-                        user_id: session.user.id
-                    });
-
-                    return supabase
-                        .from('stopovers')
-                        .insert({
-                            trip_id: newTrip.id,
-                            location_id: stopLocation.id,
-                            order: index + 1,
-                            user_id: session.user.id,
-                            estimated_time: '5 minutes'
-                        });
-                });
-
-                await Promise.all(stopoverPromises);
-            }
+            console.log('Viaje publicado exitosamente:', result.data);
 
             setShowPreviewModal(false);
             setShowSuccessModal(true);

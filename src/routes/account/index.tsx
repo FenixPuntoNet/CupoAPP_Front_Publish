@@ -37,7 +37,9 @@ import {
 } from '@tabler/icons-react'
 import { IconExchange, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { getCurrentUserProfile } from '@/services/profile'
+import { getCurrentWallet } from '@/services/wallet'
+import { getUserCard, getAccountStats, claimGoalReward } from '@/services/account'
 import type { Database } from '@/types/Database'
 import './index.css'
 
@@ -116,101 +118,101 @@ function AccountView() {
       setLoading(true)
       setError(null)
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        const user = session?.user
-        if (!user) {
-          navigate({ to: '/Login' })
-          return
+        // Obtener perfil usando backend service
+        const profileResponse = await getCurrentUserProfile();
+        
+        if (!profileResponse.success || !profileResponse.data) {
+          navigate({ to: '/Login' });
+          return;
         }
-        setUserEmail(user.email ?? '')
 
-        // Perfil
-        const { data: profileData, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single()
-        if (profileError) throw profileError
-        setProfile(profileData)
+        const profileData = profileResponse.data;
+        setUserEmail(profileData.user_id); // Usando user_id como email temporal
+        
+        // Mapear datos del perfil al formato esperado
+        setProfile({
+          id: Number(profileData.id),
+          user_id: profileData.user_id,
+          first_name: profileData.user_id.split('@')[0] || 'Usuario',
+          last_name: '',
+          identification_type: 'CC',
+          identification_number: profileData.identification_number || '',
+          phone_number: profileData.phone_number || '',
+          status: profileData.status,
+          Verification: profileData.verification,
+          photo_user: profileData.profile_picture || '',
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at
+        } as UserProfile);
 
-        // Tarjeta
-        const { data: cardData, error: cardError } = await supabase
-          .from('user_cards')
-          .select('*')
-          .eq('user_id', user.id)
-          .single()
-        if (cardError) throw cardError
-        setCard(cardData)
-
-        // Wallet
-        const { data: walletData, error: walletError } = await supabase
-          .from('wallets')
-          .select('id, balance, frozen_balance')
-          .eq('user_id', user.id)
-          .single()
-        if (walletError) throw walletError
-        setWallet({
-          id: walletData?.id || 0,
-          balance: walletData?.balance || 0,
-          frozen_balance: walletData?.frozen_balance || 0,
-        })
-
-        // Metas activas
-        const { data: goalsData, error: goalsError } = await supabase
-          .from('goal_definitions')
-          .select('*')
-          .eq('is_active', true)
-          .order('goal', { ascending: true })
-        if (goalsError) throw goalsError
-        setGoalDefinitions(goalsData || [])
-
-        // Reclamos del usuario
-        const { data: claimsData, error: claimsError } = await supabase
-          .from('goal_claims')
-          .select('goal_id, claimed_at')
-          .eq('user_id', user.id)
-        if (claimsError) throw claimsError
-        setGoalClaims(claimsData || [])
-
-        // Referidos
-        const { data: cardData2 } = await supabase
-          .from('user_cards')
-          .select('card_code')
-          .eq('user_id', user.id)
-          .single()
-        const cardCode = cardData2?.card_code
-        let referralCount = 0
-        if (cardCode) {
-          const { count: referralCountRaw } = await supabase
-            .from('user_referrals')
-            .select('id', { count: 'exact', head: true })
-            .eq('promoter_card_code', cardCode)
-          referralCount = referralCountRaw || 0
+        // Obtener tarjeta usando backend service
+        const cardResponse = await getUserCard();
+        
+        if (cardResponse.success && cardResponse.data) {
+          const cardData = cardResponse.data;
+          setCard({
+            id: Number(cardData.id),
+            user_id: cardData.user_id,
+            card_code: cardData.card_number, // Usando card_number como card_code
+            unicoins: cardData.unicoins,
+            card_type: cardData.level,
+            card_level: cardData.experience_points > 1000 ? 2 : 1,
+            created_at: cardData.created_at,
+          });
+        } else {
+          // Valores por defecto si no hay tarjeta
+          setCard({
+            id: 0,
+            user_id: profileData.user_id,
+            card_code: '0000000',
+            unicoins: 0,
+            card_type: 'BRONZE',
+            card_level: 1,
+            created_at: new Date().toISOString(),
+          });
         }
-        setReferrals(referralCount)
 
-        // Viajes como pasajero SOLO CONFIRMADOS
-        const { count: passengerCount } = await supabase
-          .from('booking_passengers')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('status', 'confirmed')
-        setPassengerTrips(passengerCount || 0)
+        // Obtener wallet usando backend service
+        const walletResponse = await getCurrentWallet();
+        
+        if (walletResponse.success && walletResponse.data) {
+          const walletData = walletResponse.data;
+          setWallet({
+            id: Number(walletData.id),
+            balance: walletData.balance,
+            frozen_balance: walletData.frozen_balance,
+          });
+        } else {
+          setWallet({
+            id: 0,
+            balance: 0,
+            frozen_balance: 0,
+          });
+        }
 
-        // Viajes como conductor SOLO FINALIZADOS
-        const { count: driverCount } = await supabase
-          .from('trips')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('status', 'finished')
-        setDriverTrips(driverCount || 0)
+        // Obtener estadísticas usando backend service
+        const statsResponse = await getAccountStats();
+        
+        if (statsResponse.success && statsResponse.data) {
+          const stats = statsResponse.data;
+          setReferrals(stats.referrals);
+          setPassengerTrips(stats.passenger_trips);
+          setDriverTrips(stats.driver_trips);
+          setCo2Saved(stats.co2_saved);
+        } else {
+          // Valores por defecto
+          setReferrals(0);
+          setPassengerTrips(0);
+          setDriverTrips(0);
+          setCo2Saved(0);
+        }
 
-        // Ecofriendly
-        const totalTrips = (passengerCount || 0) + (driverCount || 0)
-        const kmPerTrip = 20
-        const co2PerKm = 0.21
-        setCo2Saved(Number((totalTrips * kmPerTrip * co2PerKm).toFixed(2)))
+        // TODO: Implementar metas cuando estén disponibles en el backend
+        setGoalDefinitions([]);
+        setGoalClaims([]);
+        
       } catch (err: any) {
+        console.error('Error loading account data:', err);
         setError('No se pudo cargar la información. Intenta de nuevo.')
       } finally {
         setLoading(false)
@@ -232,17 +234,15 @@ function AccountView() {
     if (goal.type === 'streak_driver') userProgress = driverTrips
     if (userProgress < goal.goal) return
 
-    await supabase.from('goal_claims').insert({
-      user_id: card.user_id,
-      goal_id: goal.id,
-      claimed_at: new Date().toISOString(),
-    })
+    // Usar el backend service para reclamar recompensa
+    const claimResponse = await claimGoalReward(goal.type, goal.goal);
+    
+    if (!claimResponse.success) {
+      console.error('Error claiming reward:', claimResponse.error);
+      return;
+    }
 
-    await supabase
-      .from('user_cards')
-      .update({ unicoins: (card.unicoins ?? 0) + goal.reward_unicoins })
-      .eq('id', card.id)
-
+    // Actualizar estado local
     setCard((prev) => prev ? { ...prev, unicoins: (prev.unicoins ?? 0) + goal.reward_unicoins } : prev)
     setGoalClaims((prev) => [...prev, { goal_id: goal.id, claimed_at: new Date().toISOString() }])
   }

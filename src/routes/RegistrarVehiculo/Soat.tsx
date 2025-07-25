@@ -8,16 +8,28 @@ import {
     FileText,
     Calendar,
     Shield,
-    RotateCw,
     AlertCircle,
     CheckCircle,
 } from 'lucide-react';
-import { INSURANCE_COMPANIES } from '../../types/SoatTypes';
 import styles from './Soat.module.css';
 import { TextInput, Modal, Button, Text } from '@mantine/core';
-import { supabase } from '@/lib/supabaseClient';
+import { getSoat, registerSoat, uploadSoatPhotos, fileToBase64, getMyVehicle, type SoatFormData as BackendSoatFormData } from '@/services/vehicles';
+import { useBackendAuth } from '@/context/BackendAuthContext';
 import { notifications } from '@mantine/notifications';
 
+// Constantes para las aseguradoras
+const INSURANCE_COMPANIES = [
+    { value: 'SURAMERICANA', label: 'Suramericana' },
+    { value: 'SURA', label: 'SURA' },
+    { value: 'MAPFRE', label: 'MAPFRE' },
+    { value: 'BOLIVAR', label: 'Bolívar' },
+    { value: 'LIBERTY', label: 'Liberty' },
+    { value: 'MUNDIAL', label: 'Mundial' },
+    { value: 'PREVISORA', label: 'Previsora' },
+    { value: 'AXA_COLPATRIA', label: 'AXA Colpatria' },
+    { value: 'ALLIANZ', label: 'Allianz' },
+    { value: 'OTRA', label: 'Otra' }
+];
 
 interface SoatFormData {
   policy_number: string;
@@ -37,6 +49,7 @@ interface SoatFormData {
 
 const Soat: React.FC = () => {
     const navigate = useNavigate();
+    const { user } = useBackendAuth();
     const [formData, setFormData] = useState<SoatFormData>({
         expedition_date: '',
         expiry_date: '',
@@ -45,20 +58,20 @@ const Soat: React.FC = () => {
         identification_number: '',
         frontPreview: undefined,
         backPreview: undefined,
-    })
-    const [initialFormData, ] = useState<SoatFormData | null>(null);
+    });
+    
+    const [initialFormData] = useState<SoatFormData | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
     const [hasSoat, setHasSoat] = useState(false);
     const [viewMode, setViewMode] = useState(true);
-    const [vehicleId, setVehicleId] = useState<number | null>(null);
-    const [soatId, setSoatId] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formHasChanged, setFormHasChanged] = useState(false);
-    const [submitMessage, ] = useState<string | null>(null);
-     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-     const [successMessage, setSuccessMessage] = useState<string>('');
+    const [submitMessage] = useState<string | null>(null);
+    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string>('');
+    const [vehicleId, setVehicleId] = useState<number | null>(null);
 
     const showErrorNotification = (message: string) => {
         notifications.show({
@@ -74,78 +87,72 @@ const Soat: React.FC = () => {
             try {
                 setLoading(true);
 
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session?.user?.id) {
+                if (!user?.id) {
                     navigate({ to: '/Login' });
                     return;
                 }
 
-                const userId = session.user.id;
+                console.log('Loading SOAT data for user:', user.id);
 
-                // Cargar datos del SOAT existente
-                const { data: existingSoat } = await supabase
-                    .from('soat_details')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .maybeSingle();
+                // Primero obtener el vehículo del usuario
+                const vehicleResponse = await getMyVehicle();
+                
+                if (!vehicleResponse.success || !vehicleResponse.vehicle) {
+                    showErrorNotification('Debes registrar un vehículo antes de registrar el SOAT');
+                    navigate({ to: '/RegistrarVehiculo' });
+                    return;
+                }
 
-                if (existingSoat) {
-                    setSoatId(existingSoat.id);
+                const vehicle = vehicleResponse.vehicle;
+                setVehicleId(vehicle.id);
+                console.log('Vehicle found:', vehicle.id);
+
+                // Luego obtener los datos del SOAT
+                const response = await getSoat();
+
+                if (response.success && response.hasSoat && response.soat) {
+                    const soat = response.soat;
+                    console.log('Found existing SOAT:', soat);
+                    
                     setHasSoat(true);
                     setFormData({
-                        policy_number: existingSoat.policy_number || '',
-                        insurance_company: existingSoat.insurance_company || '',
-                        identification_number: existingSoat.identification_number || '',
-                        expedition_date: existingSoat.validity_from?.split('T')[0] || '',
-                        expiry_date: existingSoat.validity_to?.split('T')[0] || '',
-                        photo_front_url: existingSoat.photo_front_url,
-                        photo_back_url: existingSoat.photo_back_url
+                        policy_number: soat.policy_number || '',
+                        insurance_company: soat.insurance_company || '',
+                        identification_number: soat.identification_number || '',
+                        expedition_date: soat.validity_from?.split('T')[0] || '',
+                        expiry_date: soat.validity_to?.split('T')[0] || '',
+                        photo_front_url: soat.photo_front_url,
+                        photo_back_url: soat.photo_back_url
                     });
                     setViewMode(true);
                 } else {
-                    // Cargar datos del perfil para nuevo SOAT
-                    const { data: profileData } = await supabase
-                        .from('user_profiles')
-                        .select('identification_number')
-                        .eq('user_id', userId)
-                        .single();
-
-                    if (profileData) {
-                        setFormData(prev => ({
-                            ...prev,
-                            identification_number: profileData.identification_number
-                        }));
-                    }
+                    console.log('No existing SOAT found');
+                    setHasSoat(false);
                     setViewMode(false);
                 }
 
-                // Obtener vehicleId
-                const { data: vehicleData } = await supabase
-                    .from('vehicles')
-                    .select('id')
-                    .eq('user_id', userId)
-                    .single();
-
-                if (vehicleData) {
-                    setVehicleId(vehicleData.id);
-                }
-
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Error loading SOAT data:', error);
-                showErrorNotification('Error al cargar los datos del SOAT');
+                showErrorNotification(error.message || 'Error al cargar los datos del SOAT');
             } finally {
                 setLoading(false);
             }
         };
 
         loadSoatData();
-    }, [navigate]);
+    }, [navigate, user?.id]);
 
-  // Validaciones específicas para SOAT
+    // Validaciones específicas para SOAT
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
 
-  
+        if (!formData.policy_number) {
+            newErrors.policy_number = 'El número de póliza es requerido';
+        }
+
+        if (!formData.insurance_company) {
+            newErrors.insurance_company = 'La aseguradora es requerida';
+        }
 
         if (!formData.expedition_date) {
             newErrors.expedition_date = 'La fecha de expedición es requerida';
@@ -160,65 +167,58 @@ const Soat: React.FC = () => {
                 newErrors.expiry_date = 'El SOAT debe tener una fecha de vencimiento futura';
             }
         }
-         if (!formData.insurance_company) {
-            newErrors.insurance_company = 'La aseguradora es requerida';
-        }
-       
 
-       if (!formData.identification_number) {
+        if (!formData.identification_number) {
             newErrors.identification_number = 'El número de identificación es requerido';
-       }
-      else if (!/^\d+$/.test(formData.identification_number)) {
-             newErrors.identification_number = 'Número de identificación inválido';
-       }
-
+        } else if (!/^\d+$/.test(formData.identification_number)) {
+            newErrors.identification_number = 'Número de identificación inválido';
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-  };
-
+    };
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
-          if (!viewMode) {
-        const { name, value } = e.currentTarget;
-         if (initialFormData && initialFormData[name as keyof SoatFormData] !== value) {
-          setFormHasChanged(true);
-         } else if (
-           initialFormData &&
-             initialFormData[name as keyof SoatFormData] === value &&
-             formHasChanged
-          ) {
-          setFormHasChanged(false);
-        }
-             setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-          }));
+        if (!viewMode) {
+            const { name, value } = e.currentTarget;
+            if (initialFormData && initialFormData[name as keyof SoatFormData] !== value) {
+                setFormHasChanged(true);
+            } else if (
+                initialFormData &&
+                initialFormData[name as keyof SoatFormData] === value &&
+                formHasChanged
+            ) {
+                setFormHasChanged(false);
+            }
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
         } else {
-         const { name, value } = e.currentTarget;
-          setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-          }));
-       }
+            const { name, value } = e.currentTarget;
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
 
-
-        // Asegúrate de que 'name' sea un string o el tipo correcto
-if (typeof name === "string" && errors[name]) {
-  setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors[name as keyof typeof errors];
-      return newErrors;
-  });
-}
-
+        // Limpiar errores cuando se corrige el campo
+        if (typeof name === "string" && errors[name]) {
+            setErrors((prev) => {
+                const newErrors = { ...prev };
+                delete newErrors[name as keyof typeof errors];
+                return newErrors;
+            });
+        }
     };
+
     // Manejador de archivos
     const handleFileUpload = (side: 'front' | 'back') => async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        
         const maxSize = 5 * 1024 * 1024; // 5MB
         if (file.size > maxSize) {
             setErrors(prev => ({
@@ -237,144 +237,141 @@ if (typeof name === "string" && errors[name]) {
             return;
         }
 
-        setFormData(prev => ({
-            ...prev,
-            [`${side}File`]: file,
-            [`${side}Preview`]: file.name
-        }));
+        try {
+            // Crear preview usando FileReader
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const result = event.target?.result as string;
+                setFormData(prev => ({
+                    ...prev,
+                    [`${side}File`]: file,
+                    [`${side}Preview`]: result
+                }));
+            };
+            reader.readAsDataURL(file);
 
-        if (errors[`${side}File`]) {
-            setErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[`${side}File`];
-                return newErrors;
-            });
+            // Limpiar errores previos
+            if (errors[`${side}File`]) {
+                setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors[`${side}File`];
+                    return newErrors;
+                });
+            }
+            
+            if (!viewMode) {
+                setFormHasChanged(true);
+            }
+        } catch (error) {
+            console.error('Error processing file:', error);
+            setErrors(prev => ({
+                ...prev,
+                [`${side}File`]: 'Error al procesar la imagen'
+            }));
         }
-         if (!viewMode) {
-           setFormHasChanged(true);
-         }
     };
 
+    const showSuccessModal = () => {
+        setSuccessMessage('SOAT registrado exitosamente');
+        setIsSuccessModalOpen(true);
+    };
 
-const showSuccessModal = () => {
-    setSuccessMessage('SOAT registrado exitosamente');
-    setIsSuccessModalOpen(true);
-};
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isSubmitting || !validateForm()) return;
 
-const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmitting || !validateForm()) return;
+        setIsSubmitting(true);
 
-    setIsSubmitting(true);
+        try {
+            if (!user?.id) {
+                throw new Error('Usuario no autenticado');
+            }
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+            if (!vehicleId) {
+                throw new Error('No se encontró el vehículo asociado');
+            }
 
-      if (!userId || !vehicleId) {
-        throw new Error('Información necesaria no disponible');
-      }
+            // Preparar datos base para el backend
+            const soatData: BackendSoatFormData = {
+                vehicle_id: vehicleId,
+                policy_number: formData.policy_number,
+                identification_number: formData.identification_number || '',
+                insurance_company: formData.insurance_company,
+                validity_from: formData.expedition_date,
+                validity_to: formData.expiry_date,
+                photo_front_url: formData.photo_front_url || null,
+                photo_back_url: formData.photo_back_url || null
+            };
 
-      // Preparar datos base
-      const soatData = {
-        user_id: userId,
-        vehicle_id: vehicleId,
-        policy_number: formData.policy_number,
-        identification_number: formData.identification_number,
-        insurance_company: formData.insurance_company,
-        validity_from: new Date(formData.expedition_date).toISOString(),
-        validity_to: new Date(formData.expiry_date).toISOString(),
-        photo_front_url: formData.photo_front_url,
-        photo_back_url: formData.photo_back_url
-      };
+            console.log('Sending SOAT data:', soatData);
 
-      // Procesar fotos nuevas si existen
-      if (formData.frontFile) {
-        const frontUrl = await uploadPhoto(formData.frontFile, 'front');
-        if (frontUrl) soatData.photo_front_url = frontUrl;
-      }
+            // Registrar/actualizar SOAT usando el backend
+            const response = await registerSoat(soatData);
 
-      if (formData.backFile) {
-        const backUrl = await uploadPhoto(formData.backFile, 'back');
-        if (backUrl) soatData.photo_back_url = backUrl;
-      }
+            if (!response.success) {
+                throw new Error(response.error || 'Error al procesar el SOAT');
+            }
 
-      if (hasSoat && soatId) {
-        // Actualizar SOAT existente
-        const { error: updateError } = await supabase
-          .from('soat_details')
-          .update(soatData)
-          .eq('id', soatId);
+            // Si hay fotos nuevas para subir
+            if (response.soat && (formData.frontFile || formData.backFile)) {
+                const photoUploadPromises: Promise<any>[] = [];
 
-        if (updateError) throw updateError;
+                if (formData.frontFile) {
+                    const frontBase64 = await fileToBase64(formData.frontFile);
+                    photoUploadPromises.push(
+                        uploadSoatPhotos(response.soat.id, {
+                            photo_front_base64: frontBase64,
+                            filename_front: formData.frontFile.name
+                        })
+                    );
+                }
 
-        notifications.show({
-          title: 'SOAT Actualizado',
-          message: 'La información del SOAT ha sido actualizada correctamente',
-          color: 'green',
-          icon: <CheckCircle />,
-          autoClose: 4000
-        });
+                if (formData.backFile) {
+                    const backBase64 = await fileToBase64(formData.backFile);
+                    photoUploadPromises.push(
+                        uploadSoatPhotos(response.soat.id, {
+                            photo_back_base64: backBase64,
+                            filename_back: formData.backFile.name
+                        })
+                    );
+                }
 
-        setViewMode(true);
-      } else {
-        // Crear nuevo SOAT
-        const { data: newSoat, error: insertError } = await supabase
-          .from('soat_details')
-          .insert([soatData])
-          .select()
-          .single();
+                // Esperar a que se suban las fotos
+                await Promise.all(photoUploadPromises);
+            }
 
-        if (insertError) throw insertError;
+            // Actualizar estado local
+            if (response.soat) {
+                setHasSoat(true);
+                setFormData(prev => ({
+                    ...prev,
+                    photo_front_url: response.soat?.photo_front_url || prev.photo_front_url,
+                    photo_back_url: response.soat?.photo_back_url || prev.photo_back_url,
+                }));
+            }
 
-        if (newSoat) {
-          setSoatId(newSoat.id);
-          setHasSoat(true);
-          showSuccessModal();
+            if (hasSoat) {
+                notifications.show({
+                    title: 'SOAT Actualizado',
+                    message: 'La información del SOAT ha sido actualizada correctamente',
+                    color: 'green',
+                    icon: <CheckCircle />,
+                    autoClose: 4000
+                });
+                setViewMode(true);
+            } else {
+                showSuccessModal();
+            }
+
+            setFormHasChanged(false);
+
+        } catch (error: any) {
+            console.error('Error:', error);
+            showErrorNotification(error.message || 'Error al procesar el SOAT');
+        } finally {
+            setIsSubmitting(false);
         }
-      }
-
-      setFormHasChanged(false);
-
-    } catch (error: any) {
-      console.error('Error:', error);
-      showErrorNotification(error.message || 'Error al procesar el SOAT');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-    //  función para subir fotos
-   const uploadPhoto = async (file: File, type: 'front' | 'back'): Promise<string | null> => {
-     try {
-       const { data: { session } } = await supabase.auth.getSession();
-       const userId = session?.user?.id;
-       if (!userId) throw new Error('Usuario no autenticado');
-   
-       const fileExt = file.name.split('.').pop();
-       const fileName = `${type}_${Date.now()}.${fileExt}`;
-       const filePath = `VehiclesDocuments/${userId}/soat/${fileName}`;
-   
-       const { error: uploadError } = await supabase.storage
-         .from('Resources')
-         .upload(filePath, file, {
-           upsert: true,
-           cacheControl: '3600'
-         });
-   
-       if (uploadError) throw uploadError;
-   
-       const { data: { publicUrl } } = supabase.storage
-         .from('Resources')
-         .getPublicUrl(filePath);
-   
-       return publicUrl;
-     } catch (error) {
-       console.error(`Error uploading ${type} photo:`, error);
-       return null;
-     }
-   };
-  
+    };
 
     const handleBack = () => {
         if (formHasChanged) {
@@ -393,19 +390,17 @@ const handleSubmit = async (e: React.FormEvent) => {
         navigate({ to: '/Perfil' });
     };
 
-     const handleSuccessModalClose = () => {
-         setIsSuccessModalOpen(false);
-           if (hasSoat) {
-                navigate({ to: '/Perfil' });
-            } else {
-               navigate({
+    const handleSuccessModalClose = () => {
+        setIsSuccessModalOpen(false);
+        if (hasSoat) {
+            navigate({ to: '/Perfil' });
+        } else {
+            navigate({
                 to: '/Perfil',
                 search: { documentType: 'soat', status: 'completed' },
-                });
-            }
-
+            });
+        }
     };
-
 
     const handleEditClick = () => {
         setViewMode(false);
@@ -425,8 +420,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     return (
         <div className={styles.container}>
-
-            {/* Confirmation Modal */}
+            {/* Success Modal */}
             <Modal
                 opened={isSuccessModalOpen}
                 onClose={handleSuccessModalClose}
@@ -436,14 +430,14 @@ const handleSubmit = async (e: React.FormEvent) => {
                     title: styles.modalTitle,
                     body: styles.modalBody,
                     header: styles.modalHeader,
-                   close: styles.modalCloseButton
+                    close: styles.modalCloseButton
                 }}
             >
-              <div className={styles.modalContent}>
-                <CheckCircle size={60} color="green" className={styles.modalIcon}/>
-                <Text size="xl" fw={500} mt="md" className={styles.modalParagraph}>{successMessage}</Text>
-                  <Button onClick={handleSuccessModalClose} variant="filled" color="green" className={styles.buttonModalPrimary}>
-                         {hasSoat ? 'Volver a Perfil' : 'Volver a Documentos'}
+                <div className={styles.modalContent}>
+                    <CheckCircle size={60} color="green" className={styles.modalIcon}/>
+                    <Text size="xl" fw={500} mt="md" className={styles.modalParagraph}>{successMessage}</Text>
+                    <Button onClick={handleSuccessModalClose} variant="filled" color="green" className={styles.buttonModalPrimary}>
+                        {hasSoat ? 'Volver a Perfil' : 'Volver a Documentos'}
                     </Button>
                 </div>
             </Modal>
@@ -458,14 +452,14 @@ const handleSubmit = async (e: React.FormEvent) => {
                     title: styles.modalTitle,
                     body: styles.modalBody,
                     header: styles.modalHeader,
-                   close: styles.modalCloseButton
+                    close: styles.modalCloseButton
                 }}
             >
                 <p className={styles.modalParagraph}>
                     ¿Estás seguro de que deseas salir sin guardar los cambios?
                 </p>
                 <div className={styles.modalButtons}>
-                    <Button onClick={handleModalClose} variant="outline" color="gray" className={styles.buttonModalSecondary} >
+                    <Button onClick={handleModalClose} variant="outline" color="gray" className={styles.buttonModalSecondary}>
                         Cancelar
                     </Button>
                     <Button onClick={handleModalConfirm} variant="filled" color="red" className={styles.buttonModalPrimary}>
@@ -473,7 +467,8 @@ const handleSubmit = async (e: React.FormEvent) => {
                     </Button>
                 </div>
             </Modal>
-          <div className={styles.gradientBackground} />
+
+            <div className={styles.gradientBackground} />
 
             <div className={styles.content}>
                 <div className={styles.header}>
@@ -497,7 +492,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                             <h2 className={styles.sectionTitle}>Información del SOAT</h2>
                         </div>
                         <div className={styles.formGrid}>
-
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>
                                     <FileText size={16} className={styles.labelIcon} />
@@ -510,7 +504,8 @@ const handleSubmit = async (e: React.FormEvent) => {
                                     onChange={handleInputChange}
                                     className={styles.input}
                                     placeholder="Número de identificación del usuario"
-                                    disabled={true}
+                                    disabled={viewMode}
+                                    error={errors.identification_number}
                                 />
                             </div>
 
@@ -553,11 +548,10 @@ const handleSubmit = async (e: React.FormEvent) => {
                                     onChange={handleInputChange}
                                     className={styles.input}
                                     placeholder="Número de póliza SOAT"
-                                    disabled={isSubmitting}
+                                    disabled={viewMode || isSubmitting}
                                     error={errors.policy_number}
                                 />
                             </div>
-
 
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>
@@ -568,10 +562,10 @@ const handleSubmit = async (e: React.FormEvent) => {
                                     type="date"
                                     name="expedition_date"
                                     value={formData.expedition_date}
-                                     onChange={handleInputChange}
+                                    onChange={handleInputChange}
                                     className={styles.input}
                                     max={new Date().toISOString().split('T')[0]}
-                                     disabled={isSubmitting}
+                                    disabled={viewMode || isSubmitting}
                                     error={errors.expedition_date}
                                 />
                             </div>
@@ -588,7 +582,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                                     onChange={handleInputChange}
                                     className={styles.input}
                                     min={new Date().toISOString().split('T')[0]}
-                                    disabled={isSubmitting}
+                                    disabled={viewMode || isSubmitting}
                                     error={errors.expiry_date}
                                 />
                             </div>
@@ -607,9 +601,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                         <div className={styles.photosGrid}>
                             {/* Foto Frontal */}
                             <div className={styles.photoUpload}>
-                                <div className={styles.photoPreview}>
+                                <div className={styles.photoPreview} onClick={() => !viewMode && document.getElementById('frontPhoto')?.click()}>
                                     {formData.frontPreview || formData.photo_front_url ? (
-                                          <img
+                                        <img
                                             src={formData.frontPreview || formData.photo_front_url || ""}
                                             alt="Cara frontal"
                                             className={styles.previewImage}
@@ -618,22 +612,25 @@ const handleSubmit = async (e: React.FormEvent) => {
                                         <div className={styles.photoPlaceholder}>
                                             <Camera size={40} className={styles.placeholderIcon} />
                                             <span className={styles.placeholderText}>
-                                                Cara frontal
+                                                Cara frontal del SOAT
                                             </span>
                                         </div>
                                     )}
                                 </div>
                                 <input
+                                    id="frontPhoto"
                                     type="file"
-                                    accept="image/jpeg,image/png,image/webp"
+                                    accept="image/*"
                                     onChange={handleFileUpload('front')}
                                     className={styles.photoInput}
-                                    id="front-photo"
-                                    disabled={isSubmitting}
+                                    disabled={viewMode || isSubmitting}
                                 />
-                                <label htmlFor="front-photo" className={styles.photoLabel}>
+                                <label 
+                                    htmlFor="frontPhoto" 
+                                    className={`${styles.photoLabel} ${viewMode ? styles.disabled : ''}`}
+                                >
                                     <Camera size={16} />
-                                    {formData.frontPreview || formData.frontPreview ? 'Cambiar foto frontal' : 'Agregar foto frontal'}
+                                    {formData.frontPreview || formData.photo_front_url ? 'Cambiar foto' : 'Subir foto frontal'}
                                 </label>
                                 {errors.frontFile && (
                                     <span className={styles.errorText}>
@@ -643,36 +640,38 @@ const handleSubmit = async (e: React.FormEvent) => {
                                 )}
                             </div>
 
-                            {/* Foto Posterior */}
+                            {/* Foto Trasera */}
                             <div className={styles.photoUpload}>
-                                <div className={styles.photoPreview}>
-                                   {formData.backPreview || formData.photo_back_url ? (
+                                <div className={styles.photoPreview} onClick={() => !viewMode && document.getElementById('backPhoto')?.click()}>
+                                    {formData.backPreview || formData.photo_back_url ? (
                                         <img
-                                          src={formData.backPreview || formData.photo_back_url || ""}
-                                          alt="Cara posterior"
-                                          className={styles.previewImage}
+                                            src={formData.backPreview || formData.photo_back_url || ""}
+                                            alt="Cara trasera"
+                                            className={styles.previewImage}
                                         />
-                                        
                                     ) : (
                                         <div className={styles.photoPlaceholder}>
-                                            <RotateCw size={40} className={styles.placeholderIcon} />
+                                            <Camera size={40} className={styles.placeholderIcon} />
                                             <span className={styles.placeholderText}>
-                                                Cara posterior
+                                                Cara trasera del SOAT
                                             </span>
                                         </div>
                                     )}
                                 </div>
                                 <input
+                                    id="backPhoto"
                                     type="file"
-                                    accept="image/jpeg,image/png,image/webp"
+                                    accept="image/*"
                                     onChange={handleFileUpload('back')}
                                     className={styles.photoInput}
-                                    id="back-photo"
-                                     disabled={isSubmitting}
+                                    disabled={viewMode || isSubmitting}
                                 />
-                                <label htmlFor="back-photo" className={styles.photoLabel}>
-                                    <RotateCw size={16} />
-                                    {formData.backPreview || formData.backPreview ? 'Cambiar foto posterior' : 'Agregar foto posterior'}
+                                <label 
+                                    htmlFor="backPhoto" 
+                                    className={`${styles.photoLabel} ${viewMode ? styles.disabled : ''}`}
+                                >
+                                    <Camera size={16} />
+                                    {formData.backPreview || formData.photo_back_url ? 'Cambiar foto' : 'Subir foto trasera'}
                                 </label>
                                 {errors.backFile && (
                                     <span className={styles.errorText}>
@@ -684,7 +683,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         </div>
                     </div>
 
-                   {/* Mensaje de Error General */}
+                    {/* Mensaje de Error General */}
                     {submitMessage && (
                         <div
                             className={`${styles.submitMessage} ${

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { getChatMessages } from "@/services/chat";
 
 type ChatMessage = {
   id: number;
@@ -14,68 +14,35 @@ export function useChatMessages(chatId: number) {
 
   useEffect(() => {
     const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from("chat_messages")
-        .select("*")
-        .eq("chat_id", chatId)
-        .order("send_date", { ascending: true });
-
-      if (!error && data) {
-        const cleaned: ChatMessage[] = data
-          .filter(
-            (m): m is Required<ChatMessage> =>
-              m.chat_id !== null &&
-              m.user_id !== null &&
-              m.send_date !== null
-          )
-          .map((m) => ({
+      try {
+        const result = await getChatMessages(chatId);
+        
+        if (result.success && result.data) {
+          const cleaned: ChatMessage[] = result.data.messages.map((m) => ({
             id: m.id,
-            chat_id: m.chat_id,
+            chat_id: chatId,
             user_id: m.user_id,
             message: m.message,
             send_date: m.send_date,
           }));
 
-        setMessages(cleaned);
+          setMessages(cleaned);
+        } else {
+          console.error('Error fetching messages:', result.error);
+        }
+      } catch (error) {
+        console.error('Error in fetchMessages:', error);
       }
     };
 
     fetchMessages();
 
-    const channel = supabase
-      .channel(`chat-${chatId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "chat_messages",
-          filter: `chat_id=eq.${chatId}`,
-        },
-        (payload) => {
-          const newMsg = payload.new;
-
-          if (
-            newMsg.chat_id !== null &&
-            newMsg.user_id !== null &&
-            newMsg.send_date !== null
-          ) {
-            const formattedMessage: ChatMessage = {
-              id: newMsg.id,
-              chat_id: newMsg.chat_id,
-              user_id: newMsg.user_id,
-              message: newMsg.message,
-              send_date: newMsg.send_date,
-            };
-
-            setMessages((prev) => [...prev, formattedMessage]);
-          }
-        }
-      )
-      .subscribe();
+    // TODO: Implementar polling o websockets para tiempo real
+    // Por ahora, refrescamos cada 5 segundos
+    const interval = setInterval(fetchMessages, 5000);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, [chatId]);
 

@@ -10,7 +10,7 @@ import {
   Tabs,
 } from '@mantine/core';
 import { ArrowLeft, DollarSign, Lock } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { getCurrentWallet, getWalletTransactions } from '@/services/wallet';
 import styles from './index.module.css';
 
 interface WalletData {
@@ -37,34 +37,41 @@ const WalletDetailView: React.FC = () => {
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate({ to: '/Login' });
-          return;
+        // Usar el backend service para obtener datos de la wallet
+        const walletResponse = await getCurrentWallet();
+        
+        if (!walletResponse.success || !walletResponse.data) {
+          if (walletResponse.error?.includes('auth') || walletResponse.error?.includes('token')) {
+            navigate({ to: '/Login' });
+            return;
+          }
+          throw new Error(walletResponse.error || 'Error al obtener wallet');
         }
 
-        const { data: wallet, error: walletError } = await supabase
-          .from('wallets')
-          .select('id, balance, frozen_balance')
-          .eq('user_id', session.user.id)
-          .single();
-
-        if (walletError) throw walletError;
-
+        const wallet = walletResponse.data;
         setWalletData({
-          id: wallet?.id || 0,
-          balance: wallet?.balance || 0,
-          frozen_balance: wallet?.frozen_balance || 0,
+          id: Number(wallet.id),
+          balance: wallet.balance,
+          frozen_balance: wallet.frozen_balance,
         });
 
-        const { data: walletTransactions, error: transactionsError } = await supabase
-          .from('wallet_transactions')
-          .select('id, amount, detail, transaction_date, transaction_type')
-          .eq('wallet_id', wallet?.id);
-
-        if (transactionsError) throw transactionsError;
-
-        setTransactions(walletTransactions || []);
+        // Obtener transacciones usando el backend service
+        const transactionsResponse = await getWalletTransactions();
+        
+        if (transactionsResponse.success && transactionsResponse.data) {
+          // Mapear las transacciones del servicio al formato local
+          const mappedTransactions: WalletTransaction[] = transactionsResponse.data.map(tx => ({
+            id: Number(tx.id),
+            amount: tx.amount,
+            detail: tx.detail,
+            transaction_date: tx.created_at,
+            transaction_type: tx.transaction_type,
+          }));
+          
+          setTransactions(mappedTransactions);
+        } else {
+          setTransactions([]);
+        }
       } catch (err) {
         console.error('Error fetching wallet data:', err);
         setError('Error al cargar información de la billetera');

@@ -13,7 +13,8 @@ import {
     Center,
 } from '@mantine/core';
 import { Clock, Navigation, User } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { bookTrip } from '@/services/reservas';
+import { getCurrentUser } from '@/services/auth';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 import { useNavigate } from '@tanstack/react-router';
@@ -35,222 +36,63 @@ interface TripReservationModalProps {
     onClose: () => void;
 }
 
-function generateShortUniqueCode(length = 6) {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let code = '';
-      for (let i = 0; i < length; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    
-  }
-  return code;
-}
-
 export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip, isOpen, onClose }) => {
     const [passengersCount, setPassengersCount] = React.useState(1);
     const [passengers, setPassengers] = React.useState<Passenger[]>([]);
-    const [currentStep, setCurrentStep] = React.useState<'confirm' | 'passengers' | 'finalize'>('confirm');
-    const [bookingId, setBookingId] = React.useState<number | null>(null);
     const navigate = useNavigate();
 
 
     const handleConfirmReservation = async () => {
-        const userId = localStorage.getItem('userId');
-    
-        if (!userId) {
-            console.error('No se encontró el ID del usuario en localStorage. Por favor, inicia sesión.');
-            return;
-        }
-    
-        if (passengersCount < 1 || passengersCount > trip.seats) {
-            console.error('Cantidad de asientos inválida. Por favor, verifica los campos.');
-            return;
-        }
-    
-        const bookingQr = generateShortUniqueCode();
-        const bookingData = {
-            trip_id: Number(trip.id), // Convertir a número si es string
-            user_id: userId,
-            seats_booked: passengersCount,
-            total_price: passengersCount * trip.pricePerSeat,
-            booking_status: 'pending',
-            booking_qr: bookingQr,
-            booking_date: dayjs().toISOString(),
-        };
-    
         try {
-            const { data: bookings, error: bookingError } = await supabase
-                .from('bookings')
-                .insert(bookingData)
-                .select();
-    
-            if (bookingError) {
-                console.error('Error al crear la reserva en bookings:', bookingError);
+            const user = await getCurrentUser();
+            if (!user.success || !user.user) {
+                console.error('Usuario no autenticado');
                 return;
             }
     
-            const booking = bookings?.[0];
-            if (!booking) {
-                console.error('No se pudo obtener el booking después de la inserción.');
+            if (passengersCount < 1 || passengersCount > trip.seats) {
+                console.error('Cantidad de asientos inválida');
                 return;
             }
-    
-            console.log('Reserva creada con éxito en bookings:', booking);
-            setBookingId(booking.id); // Guardar el ID del booking
-            setPassengers(Array(passengersCount).fill({ fullName: '', identificationNumber: '' }));
-            setCurrentStep('passengers');
+
+            // Preparar datos de pasajeros
+            const passengerData = passengers.map(passenger => ({
+                fullName: passenger.fullName,
+                identificationNumber: passenger.identificationNumber
+            }));
+
+            const totalPrice = passengersCount * trip.pricePerSeat;
+
+            const result = await bookTrip(
+                Number(trip.id),
+                passengerData,
+                passengersCount,
+                totalPrice
+            );
+
+            if (result.success && result.data) {
+                console.log('Reserva creada exitosamente:', result.data);
+                
+                // Redirigir al ticket
+                navigate({
+                    to: '/Cupos/ViewTicket',
+                    search: { booking_id: result.data.booking.id.toString() }
+                });
+                
+                onClose();
+            } else {
+                console.error('Error al crear reserva:', result.error);
+            }
+
         } catch (error) {
             console.error('Error al procesar la reserva:', error);
         }
     };
 
-    const handleSavePassengers = () => {
-        // Validar que todos los pasajeros tengan datos completos
-        for (const passenger of passengers) {
-            if (!passenger.fullName || !passenger.identificationNumber) {
-                console.error('Todos los pasajeros deben tener nombre e identificación.');
-                return;
-            }
-        }
-
-        setCurrentStep('finalize'); // Pasar a la subvista de confirmación
-    };
-
-    const handleFinalizeReservation = async () => {
-        if (!bookingId) {
-            console.error('No se encontró el ID del booking. No se puede continuar.');
-            return;
-        }
-    
-        const userId = localStorage.getItem('userId'); // Asegúrate de obtener userId aquí
-    
-        if (!userId) {
-            console.error('No se encontró el ID del usuario en localStorage. Por favor, inicia sesión.');
-            return;
-        }
-    
-        try {
-            console.log('Intentando actualizar el estado del booking con ID:', bookingId);
-    
-            // Actualizar el estado del booking a "reserved"
-            const { data: updatedBooking, error: bookingUpdateError } = await supabase
-                .from('bookings')
-                .update({ booking_status: 'reserved' })
-                .eq('id', bookingId)
-                .select();
-    
-            if (bookingUpdateError) {
-                console.error('Error al actualizar el estado del booking:', bookingUpdateError);
-                return;
-            }
-    
-            console.log('Estado del booking actualizado a "reserved":', updatedBooking);
-    
-            // Actualizar los asientos disponibles en la tabla trips
-            const { data: tripData, error: tripError } = await supabase
-                .from('trips')
-                .select('seats, seats_reserved')
-                .eq('id', Number(trip.id)) // Asegúrate de que trip.id sea un número
-                .single();
-    
-            if (tripError || !tripData) {
-                console.error('Error al obtener los datos del viaje:', tripError);
-                return;
-            }
-    
-            if (tripData.seats === null) {
-                console.error('El número de asientos no está disponible.');
-                return;
-            }
-    
-            // Calcular los nuevos valores de seats_reserved y seats
-            const newSeatsReserved = (tripData.seats_reserved || 0) + passengersCount;
-            const newSeatsAvailable = tripData.seats - passengersCount;
-    
-            // Actualizar los valores en la tabla trips
-            const { error: tripUpdateError } = await supabase
-                .from('trips')
-                .update({ seats_reserved: newSeatsReserved, seats: newSeatsAvailable })
-                .eq('id', Number(trip.id));
-    
-            if (tripUpdateError) {
-                console.error('Error al actualizar los asientos del viaje:', tripUpdateError);
-                return;
-            }
-    
-            console.log('Asientos actualizados en el viaje:', {
-                seats_reserved: newSeatsReserved,
-                seats: newSeatsAvailable,
-            });
-
-            // Preparar los datos de los pasajeros
-            const passengerData = passengers.map((passenger) => ({
-                booking_id: bookingId,
-                full_name: passenger.fullName,
-                identification_number: passenger.identificationNumber,
-                user_id: userId,
-                status: 'confirmed',
-              }));
-              
-              // Insertar los pasajeros en Supabase y obtener sus IDs
-              const { data: insertedPassengers, error: passengerError } = await supabase
-                .from('booking_passengers')
-                .insert(passengerData)
-                .select();
-              
-              if (passengerError || !insertedPassengers?.length) {
-                console.error('Error al crear los pasajeros en booking_passengers:', passengerError);
-                return;
-              }
-              
-              console.log('Pasajeros creados con éxito en booking_passengers');
-              
-              // Buscar el pasajero vinculado al usuario actual
-              const userPassenger = insertedPassengers.find((p) => p.user_id === userId);
-              
-              if (!userPassenger) {
-                console.error('No se encontró un pasajero asociado al usuario actual.');
-                return;
-              }
-
-              // Buscar el chat relacionado al trip
-            const { data: chatData, error: chatError } = await supabase
-             .from('chats')
-             .select('id')
-             .eq('trip_id', Number(trip.id))
-             .single();
-            
-            if (chatError || !chatData) {
-            console.error('Error al obtener el chat del viaje:', chatError);
-            return;
-            }
-            
-            // Insertar al usuario como participante (rol passenger)
-            const { error: participantInsertError } = await supabase
-             .from('chat_participants')
-             .insert([{
-               chat_id: chatData.id,
-               user_id: userId,
-               role: 'passenger',
-            }]);
-            
-            if (participantInsertError) {
-            console.error('Error al agregar al usuario al chat:', participantInsertError);
-            return;
-            }
-            
-            console.log('Usuario agregado al chat como pasajero');
-            
-              
-              // Redirigir al ticket con solo los parámetros necesarios
-              navigate({
-                to: '/Cupos/ViewTicket',
-                search: { booking_id: bookingId.toString() }, // ✅ solo booking_id como string
-              });     
-            
-        } catch (error) {
-            console.error('Error al procesar la reserva:', error);
-        }
-    };
+    // Inicializar pasajeros cuando cambie la cantidad
+    React.useEffect(() => {
+        setPassengers(Array(passengersCount).fill({ fullName: '', identificationNumber: '' }));
+    }, [passengersCount]);
 
     const handlePassengerChange = (index: number, field: keyof Passenger, value: string) => {
         setPassengers((prevPassengers) => {
@@ -264,15 +106,14 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
     };
 
     return (
-        <>
-            <Modal
-                opened={isOpen && currentStep === 'confirm'}
-                onClose={onClose}
-                title="Reservar Viaje"
-                size="lg"
-                centered
-                closeOnClickOutside={false}
-            >
+        <Modal
+            opened={isOpen}
+            onClose={onClose}
+            title="Reservar Viaje"
+            size="lg"
+            centered
+            closeOnClickOutside={false}
+        >
                 <Stack gap="xl">
                     <Center>
                         <Card className={styles.tripSummary} shadow="sm" withBorder>
@@ -383,95 +224,54 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                         }
                     />
 
+                    {/* Campos de pasajeros */}
+                    {passengers.length > 0 && (
+                        <Stack gap="md">
+                            <Text fw={500} size="md">Datos de los Pasajeros</Text>
+                            {passengers.map((passenger, index) => (
+                                <Card key={index} className={styles.passengerCard} shadow="sm" withBorder>
+                                    <Text fw={500} mb="xs">Pasajero {index + 1}</Text>
+                                    <TextInput
+                                        label="Nombre completo"
+                                        placeholder="Ej: Juan Pérez"
+                                        value={passenger.fullName}
+                                        onChange={(e) =>
+                                            handlePassengerChange(index, 'fullName', e.currentTarget.value)
+                                        }
+                                        required
+                                        mb="sm"
+                                    />
+                                    <TextInput
+                                        label="Número de identificación (solo números)"
+                                        placeholder="Ej: 123456789"
+                                        value={passenger.identificationNumber}
+                                        onChange={(e) => {
+                                            const value = e.currentTarget.value;
+                                            // Solo permitir números
+                                            const numericValue = value.replace(/\D/g, '');
+                                            handlePassengerChange(index, 'identificationNumber', numericValue);
+                                        }}
+                                        pattern="[0-9]*"
+                                        inputMode="numeric"
+                                        maxLength={15}
+                                        required
+                                    />
+                                </Card>
+                            ))}
+                        </Stack>
+                    )}
+
                     <Button
                         fullWidth
                         size="lg"
                         onClick={handleConfirmReservation}
                         className={styles.confirmButton}
+                        disabled={passengers.some(p => !p.fullName.trim() || !p.identificationNumber.trim())}
                     >
                         Confirmar Reserva
                     </Button>
                 </Stack>
-            </Modal>
-
-            <Modal
-                opened={isOpen && currentStep === 'passengers'}
-                onClose={onClose}
-                title="Datos de los Pasajeros"
-                size="lg"
-                centered
-                closeOnClickOutside={false}
-                classNames={{
-                    content: styles.passengersModal,
-                    title: styles.passengersModalTitle
-                }}
-            >
-                <Stack gap="xl">
-                    {passengers.map((passenger, index) => (
-                        <Card key={index} className={styles.passengerCard} shadow="sm" withBorder>
-                            <Text fw={500}>Pasajero {index + 1}</Text>
-                            <TextInput
-                                label="Nombre completo"
-                                placeholder="Ej: Juan Pérez"
-                                value={passenger.fullName}
-                                onChange={(e) =>
-                                    handlePassengerChange(index, 'fullName', e.currentTarget.value)
-                                }
-                                required
-                            />
-                            <TextInput
-                                label="Número de identificación (solo números)"
-                                placeholder="Ej: 123456789"
-                                value={passenger.identificationNumber}
-                                onChange={(e) => {
-                                    const value = e.currentTarget.value;
-                                    // Solo permitir números
-                                    const numericValue = value.replace(/\D/g, '');
-                                    handlePassengerChange(index, 'identificationNumber', numericValue);
-                                }}
-                                pattern="[0-9]*"
-                                inputMode="numeric"
-                                maxLength={15}
-                                required
-                            />
-                        </Card>
-                    ))}
-
-                    <Button
-                        fullWidth
-                        size="lg"
-                        onClick={handleSavePassengers}
-                        className={styles.confirmButton}
-                    >
-                        Confirmar Pasajeros
-                    </Button>
-                </Stack>
-            </Modal>
-
-            <Modal
-                opened={isOpen && currentStep === 'finalize'}
-                onClose={onClose}
-                title="Confirmar Reserva"
-                size="lg"
-                centered
-                closeOnClickOutside={false}
-            >
-                <Stack gap="xl">
-                    <Text>
-                        Está a punto de confirmar su reserva. Recuerde que debe realizar el pago
-                        directamente con el conductor (en efectivo, Nequi o Bancolombia).
-                    </Text>
-                    <Button
-                        fullWidth
-                        size="lg"
-                        onClick={handleFinalizeReservation}
-                        className={styles.confirmButton}
-                    >
-                        Reservar
-                    </Button>
-                </Stack>
-            </Modal>
-        </>
+        </Modal>
     );
 };
 

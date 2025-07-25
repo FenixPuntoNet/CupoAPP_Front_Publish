@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
-import { supabase } from '@/lib/supabaseClient';
 import {
   TextInput,
   Button,
@@ -13,7 +12,14 @@ import {
   ActionIcon,
 } from '@mantine/core';
 import { ArrowLeft } from 'lucide-react';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import { 
+  getOrCreateAssistant, 
+  getAssistantById, 
+  getMessages, 
+  sendMessage,
+  type Message 
+} from '@/services/ayuda';
+import { getCurrentUser } from '@/services/auth';
 import styles from './index.module.css';
 
 export const Route = createFileRoute('/ayuda/')({
@@ -27,14 +33,13 @@ export const Route = createFileRoute('/ayuda/')({
 
 function AssistantChat() {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<
-    { id: number; mensaje: string; user_id: string; created_at: string }[]
-  >([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [assistantId, setAssistantId] = useState<number | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const channelRef = useRef<RealtimeChannel | null>(null);
   const navigate = useNavigate();
   const search = useSearch({ from: '/ayuda/' });
   const queryAssistantId = search?.id ? parseInt(search.id) : null;
@@ -42,138 +47,139 @@ function AssistantChat() {
   const soporteUserId = '28262dc2-dca2-473a-be75-1aaa4c5bbf77';
 
   useEffect(() => {
-    const setupAssistant = async () => {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) {
-        console.error('No se pudo obtener el usuario:', userError?.message);
+    setupAssistant();
+  }, []);
+
+  const setupAssistant = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Obtener usuario actual
+      const userResult = await getCurrentUser();
+      if (!userResult.success || !userResult.user) {
+        setError('No se pudo obtener el usuario');
+        navigate({ to: '/Login' });
         return;
       }
 
+      const user = userResult.user;
       setUserId(user.id);
 
       let finalAssistantId = queryAssistantId;
 
       if (!finalAssistantId) {
-        const { data: existingAssistant } = await supabase
-          .from('assistent')
-          .select('id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        finalAssistantId = existingAssistant?.id || null;
-        setIsOwner(true);
-      } else {
-        const { data: owner } = await supabase
-          .from('assistent')
-          .select('user_id')
-          .eq('id', finalAssistantId)
-          .single();
-
-        if (owner?.user_id === user.id) {
-          setIsOwner(true);
-        }
-      }
-
-      if (finalAssistantId) {
-        setAssistantId(finalAssistantId);
-        fetchMessages(finalAssistantId);
-        subscribeToRealtime(finalAssistantId);
-      } else {
-        const { data: newAssistant } = await supabase
-          .from('assistent')
-          .insert({ user_id: user.id })
-          .select('id')
-          .single();
-
-        if (!newAssistant) {
-          console.error('No se pudo crear el asistente');
+        // Obtener o crear asistente para el usuario actual
+        const assistantResult = await getOrCreateAssistant();
+        if (!assistantResult.success || !assistantResult.data) {
+          setError(assistantResult.error || 'Error al obtener asistente');
           return;
         }
 
-        setAssistantId(newAssistant.id);
-        setIsOwner(true);
-        fetchMessages(newAssistant.id);
-        subscribeToRealtime(newAssistant.id);
-      }
-    };
+        finalAssistantId = assistantResult.data.assistant_id;
+        setIsOwner(assistantResult.data.is_owner);
+      } else {
+        // Obtener asistente específico (para soporte)
+        const assistantResult = await getAssistantById(finalAssistantId);
+        if (!assistantResult.success || !assistantResult.data) {
+          setError(assistantResult.error || 'Error al obtener asistente');
+          return;
+        }
 
-    setupAssistant();
-
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
+        setIsOwner(assistantResult.data.is_owner);
       }
-    };
-  }, []);
+
+      setAssistantId(finalAssistantId);
+      await fetchMessages(finalAssistantId);
+
+    } catch (error) {
+      console.error('Error setting up assistant:', error);
+      setError('Error inesperado al configurar el asistente');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchMessages = async (assistantId: number) => {
-    const { data, error } = await supabase
-      .from('assistent_chat')
-      .select('id, mensaje, user_id, created_at')
-      .eq('assistent_id', assistantId)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error cargando mensajes:', error.message);
-      return;
+    try {
+      const result = await getMessages(assistantId);
+      if (result.success && result.data) {
+        setMessages(result.data.messages);
+      } else {
+        console.error('Error loading messages:', result.error);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
-
-    setMessages(data || []);
   };
 
-  const sendMessage = async () => {
+  const handleSendMessage = async () => {
     if (!input.trim() || !assistantId || !userId) return;
 
-    const { error } = await supabase.from('assistent_chat').insert({
-      mensaje: input,
-      user_id: userId,
-      assistent_id: assistantId,
-    });
+    try {
+      const result = await sendMessage({
+        assistant_id: assistantId,
+        message: input.trim()
+      });
 
-    if (error) {
-      console.error('Error enviando mensaje:', error.message);
-    } else {
-      setInput('');
+      if (result.success && result.data) {
+        setMessages(prev => [...prev, result.data!.message]);
+        setInput('');
+      } else {
+        console.error('Error sending message:', result.error);
+        setError(result.error || 'Error al enviar mensaje');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setError('Error inesperado al enviar mensaje');
     }
-  };
-
-  const subscribeToRealtime = (assistantId: number) => {
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-    }
-
-    const channel = supabase
-      .channel(`realtime:assistent_chat:${assistantId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'assistent_chat',
-          filter: `assistent_id=eq.${assistantId}`,
-        },
-        (payload) => {
-          const newMessage = payload.new as {
-            id: number;
-            mensaje: string;
-            user_id: string;
-            created_at: string;
-          };
-
-          setMessages((prev) => [...prev, newMessage]);
-        }
-      )
-      .subscribe();
-
-    channelRef.current = channel;
   };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div style={{height: '30px'}} />
+        <div className={styles.inner}>
+          <Group mb="sm">
+            <ActionIcon variant="light" color="gray" onClick={() => navigate({ to: '/Perfil' })}>
+              <ArrowLeft size={20} />
+            </ActionIcon>
+            <Title order={3}>Centro de Soporte</Title>
+          </Group>
+          <Paper withBorder radius="md" className={styles.chatBox}>
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+              <Text>Cargando chat...</Text>
+            </div>
+          </Paper>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div style={{height: '30px'}} />
+        <div className={styles.inner}>
+          <Group mb="sm">
+            <ActionIcon variant="light" color="gray" onClick={() => navigate({ to: '/Perfil' })}>
+              <ArrowLeft size={20} />
+            </ActionIcon>
+            <Title order={3}>Centro de Soporte</Title>
+          </Group>
+          <Paper withBorder radius="md" className={styles.chatBox}>
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+              <Text color="red">{error}</Text>
+            </div>
+          </Paper>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -228,7 +234,7 @@ function AssistantChat() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              sendMessage();
+              handleSendMessage();
             }}
             className={styles.inputForm}
           >

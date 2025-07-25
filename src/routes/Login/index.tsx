@@ -13,8 +13,8 @@ import {
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "@mantine/form";
-import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
 import { RecoverAccountModal } from "@/components/RecoverAccountModal";
+import { useBackendAuth } from "@/context/BackendAuthContext";
 import styles from "./index.module.css";
 
 interface LoginFormValues {
@@ -28,7 +28,7 @@ const LoginView: React.FC = () => {
   const [error, setError] = useState("");
   const [recoverModalOpened, setRecoverModalOpened] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useSupabaseAuth();
+  const { signIn } = useBackendAuth();
 
   const form = useForm<LoginFormValues>({
     initialValues: {
@@ -45,23 +45,33 @@ const LoginView: React.FC = () => {
     try {
       setLoading(true);
       setError("");
+      
+      console.log('🔍 Login button clicked');
 
       const result = await signIn(values.email, values.password);
+      console.log('🔄 Login result:', result);
 
       if (!result.success) {
         const errorMessage = result.error === 'Invalid login credentials'
           ? 'Credenciales inválidas'
           : result.error || 'Error al iniciar sesión';
         
+        console.log('❌ Login failed:', errorMessage);
         setError(errorMessage);
         return;
       }
 
-      // El AuthGuard se encargará de la navegación automática
-      console.log('Login successful');
+      // Verificar si se recibió un token de autenticación
+      if (result.token) {
+        console.log('🔑 Login successful with auth token - AuthGuard will handle navigation');
+      } else {
+        console.log('⚠️ Login successful but no auth token received');
+      }
+      
+      // No navegar manualmente - dejar que el AuthGuard detecte el cambio de estado
 
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
       setError('Error inesperado al iniciar sesión');
     } finally {
       setLoading(false);

@@ -15,7 +15,7 @@ import html2canvas from 'html2canvas';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
-import { supabase } from '@/lib/supabaseClient';
+import { getTicketDetails } from '@/services/cupos';
 import dayjs from 'dayjs';
 import styles from './ViewTicket.module.css';
 import { useNavigate, useSearch, createFileRoute } from '@tanstack/react-router';
@@ -29,16 +29,6 @@ interface PassengerData {
 interface TripLocation {
   origin: { address: string };
   destination: { address: string };
-}
-
-// Generador de código corto, único y alfanumérico
-function generateShortCode(length = 7) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
 }
 
 const ViewTicket = () => {
@@ -59,82 +49,24 @@ const ViewTicket = () => {
       }
 
       try {
-        // 1. Obtener booking
-        const { data: bookingData, error: bookingError } = await supabase
-          .from('bookings')
-          .select('id, trip_id, booking_qr')
-          .eq('id', Number(booking_id))
-          .single();
-
-        if (bookingError || !bookingData) {
-          throw new Error('No se pudo obtener el booking');
-        }
-
-        const tripId = bookingData.trip_id;
-        let qr = bookingData.booking_qr;
-
-        // Si no hay código QR, genera uno único y guárdalo
-        if (!qr) {
-          let unique = false;
-          let newCode = '';
-          while (!unique) {
-            newCode = generateShortCode(7);
-            // Verifica que no exista en la base de datos
-            const { data: exists } = await supabase
-              .from('bookings')
-              .select('id')
-              .eq('booking_qr', newCode)
-              .maybeSingle();
-            if (!exists) unique = true;
+        const result = await getTicketDetails(Number(booking_id));
+        
+        if (result.success && result.data) {
+          const { booking, trip, passengers } = result.data;
+          
+          setBookingQr(booking.qr_code || booking.booking_qr);
+          setPassengers(passengers);
+          
+          if (trip) {
+            setTripLocations({
+              origin: { address: trip.origin?.address || 'Origen no disponible' },
+              destination: { address: trip.destination?.address || 'Destino no disponible' },
+            });
           }
-          await supabase
-            .from('bookings')
-            .update({ booking_qr: newCode })
-            .eq('id', Number(booking_id));
-          qr = newCode;
+        } else {
+          console.error('Error fetching ticket details:', result.error);
+          navigate({ to: '/Actividades' });
         }
-        setBookingQr(qr);
-
-        // 2. Obtener pasajeros asociados a ese booking
-        const { data: passengersData, error: passengersError } = await supabase
-          .from('booking_passengers')
-          .select('id, full_name, identification_number')
-          .eq('booking_id', Number(booking_id));
-
-        if (passengersError || !passengersData?.length) {
-          throw new Error('No se encontraron pasajeros');
-        }
-
-        setPassengers(passengersData);
-
-        // 3. Obtener viaje
-        const { data: tripData, error: tripError } = await supabase
-          .from('trips')
-          .select('origin_id, destination_id')
-          .eq('id', Number(tripId))
-          .single();
-
-        if (tripError || !tripData) {
-          throw new Error('No se pudo obtener el viaje');
-        }
-
-        // 4. Obtener direcciones
-        const { data: originLocation } = await supabase
-          .from('locations')
-          .select('address')
-          .eq('id', Number(tripData.origin_id ?? -1))
-          .single();
-
-        const { data: destinationLocation } = await supabase
-          .from('locations')
-          .select('address')
-          .eq('id', Number(tripData.destination_id ?? -1))
-          .single();
-
-        setTripLocations({
-          origin: originLocation || { address: 'Origen no disponible' },
-          destination: destinationLocation || { address: 'Destino no disponible' },
-        });
       } catch (error) {
         console.error('Error cargando datos del tiquete:', error);
         navigate({ to: '/Actividades' });

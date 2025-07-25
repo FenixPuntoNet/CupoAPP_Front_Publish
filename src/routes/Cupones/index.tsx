@@ -17,10 +17,14 @@ import {
   Paper,
   Space,
 } from '@mantine/core';
-import { CheckCircle, XCircle, ArrowLeft, UserCheck, Gift } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
-
-const REWARD_AMOUNT = 100; // Unicoins por referido
+import { CheckCircle, XCircle, ArrowLeft, Gift } from 'lucide-react';
+import { getCurrentUser } from '@/services/auth';
+import { 
+  getRedeemedCoupons, 
+  redeemCoupon, 
+  getReferralInfo, 
+  registerReferral 
+} from '@/services/cupones';
 
 const CuponesView = () => {
   const navigate = useNavigate();
@@ -47,24 +51,32 @@ const CuponesView = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    supabase.auth.getUser().then(async ({ data }) => {
-      const uid = data.user?.id ?? null;
-      setUserId(uid);
-      if (uid) {
-        fetchRedeemed(uid);
-        fetchReferral(uid);
+    const loadUserData = async () => {
+      try {
+        const response = await getCurrentUser();
+        if (response.success && response.user?.id) {
+          setUserId(response.user.id);
+          fetchRedeemed();
+          fetchReferral();
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
       }
-    });
+    };
+
+    loadUserData();
   }, []);
 
   // --- CUPONES ---
-  const fetchRedeemed = async (uid: string) => {
-    const { data } = await supabase
-      .from('driver_giftcards')
-      .select('code, balance, created_at')
-      .eq('user_id', uid)
-      .order('created_at', { ascending: false });
-    if (data) setRedeemedCoupons(data);
+  const fetchRedeemed = async () => {
+    try {
+      const result = await getRedeemedCoupons();
+      if (result.success && result.data) {
+        setRedeemedCoupons(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching redeemed coupons:', error);
+    }
   };
 
   const handleRedeem = async () => {
@@ -73,138 +85,61 @@ const CuponesView = () => {
 
     setLoadingCoupon(true);
 
-    const { data: giftcard, error: lookupError } = await supabase
-      .from('code_giftcards')
-      .select('*')
-      .eq('code', code)
-      .gt('expired_at', new Date().toISOString())
-      .maybeSingle();
-
-    if (!giftcard || lookupError) {
+    try {
+      const result = await redeemCoupon(code);
+      
+      if (result.success && result.data) {
+        setModal({
+          opened: true,
+          success: true,
+          title: '¡Cupón redimido!',
+          message: result.data.message,
+          icon: <Gift size={48} color="#00d084" />,
+        });
+        setCodeInput('');
+        fetchRedeemed();
+      } else {
+        setModal({
+          opened: true,
+          success: false,
+          title: 'Error al redimir cupón',
+          message: result.error || 'Error desconocido',
+          icon: <XCircle size={48} color="#e03131" />,
+        });
+      }
+    } catch (error) {
       setModal({
         opened: true,
         success: false,
-        title: 'Código inválido o expirado',
-        message: 'Este cupón no existe o ya expiró. Intenta con otro.',
+        title: 'Error',
+        message: 'Error al procesar la solicitud',
         icon: <XCircle size={48} color="#e03131" />,
       });
-      setLoadingCoupon(false);
-      return;
     }
 
-    const { data: alreadyUsed } = await supabase
-      .from('driver_giftcards')
-      .select('id')
-      .eq('code', code)
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (alreadyUsed) {
-      setModal({
-        opened: true,
-        success: false,
-        title: 'Cupón ya usado',
-        message: 'Este código ya fue redimido en tu cuenta.',
-        icon: <XCircle size={48} color="#e03131" />,
-      });
-      setLoadingCoupon(false);
-      return;
-    }
-
-    await supabase.from('driver_giftcards').insert({
-      user_id: userId,
-      code,
-      balance: giftcard.value,
-    });
-
-    const { data: wallet } = await supabase
-      .from('wallets')
-      .select('id, balance')
-      .eq('user_id', userId)
-      .single();
-
-    if (!wallet) {
-      setModal({
-        opened: true,
-        success: false,
-        title: 'Sin wallet activa',
-        message: 'Tu cuenta no tiene una billetera activa. Contáctanos.',
-        icon: <XCircle size={48} color="#e03131" />,
-      });
-      setLoadingCoupon(false);
-      return;
-    }
-
-    const newBalance = Number(wallet.balance ?? 0) + Number(giftcard.value);
-
-    await supabase
-      .from('wallets')
-      .update({
-        balance: newBalance,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', wallet.id);
-
-    await supabase.from('wallet_transactions').insert({
-      wallet_id: wallet.id,
-      transaction_type: 'cupon',
-      amount: giftcard.value,
-      detail: `Cupón redimido (${code})`,
-      status: 'completado',
-    });
-
-    setModal({
-      opened: true,
-      success: true,
-      title: '¡Cupón redimido!',
-      message: `Se acreditaron $${giftcard.value} a tu billetera.`,
-      icon: <Gift size={48} color="#00d084" />,
-    });
-
-    setCodeInput('');
-    fetchRedeemed(userId);
     setLoadingCoupon(false);
   };
 
   // --- REFERIDOS ---
-  const fetchReferral = async (uid: string) => {
-    // Busca si ya tiene un referido registrado
-    const { data: referralData } = await supabase
-      .from('user_referrals')
-      .select('promoter_card_code')
-      .eq('referred_user_id', uid)
-      .maybeSingle();
-
-    if (referralData && referralData.promoter_card_code) {
-      // Busca el perfil del promotor a través de user_cards y user_profiles
-      const { data: promoterCard } = await supabase
-        .from('user_cards')
-        .select('user_id')
-        .eq('card_code', referralData.promoter_card_code)
-        .maybeSingle();
-
-      let promoterProfile = null;
-      if (promoterCard && promoterCard.user_id) {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('first_name, last_name, photo_user')
-          .eq('user_id', promoterCard.user_id)
-          .maybeSingle();
-
-        if (profile) {
-          promoterProfile = {
-            full_name: `${profile.first_name} ${profile.last_name}`,
-            avatar_url: profile.photo_user ?? undefined,
-          };
+  const fetchReferral = async () => {
+    try {
+      const result = await getReferralInfo();
+      if (result.success && result.data) {
+        const referralData = result.data.referral;
+        if (referralData) {
+          setReferral({
+            promoter_card_code: referralData.promoter_card_code,
+            promoter_user: referralData.promoter_user ? {
+              full_name: referralData.promoter_user.full_name,
+              avatar_url: referralData.promoter_user.avatar_url || undefined
+            } : null
+          });
+        } else {
+          setReferral(null);
         }
       }
-
-      setReferral({
-        promoter_card_code: referralData.promoter_card_code,
-        promoter_user: promoterProfile,
-      });
-    } else {
-      setReferral(null);
+    } catch (error) {
+      console.error('Error fetching referral info:', error);
     }
   };
 
@@ -214,77 +149,38 @@ const CuponesView = () => {
 
     setLoadingReferral(true);
 
-    // 1. Verifica si ya tiene referido
-    const { data: alreadyReferred } = await supabase
-      .from('user_referrals')
-      .select('id')
-      .eq('referred_user_id', userId)
-      .maybeSingle();
-
-    if (alreadyReferred) {
+    try {
+      const result = await registerReferral(code);
+      
+      if (result.success && result.data) {
+        setModal({
+          opened: true,
+          success: true,
+          title: '¡Código de referido registrado!',
+          message: result.data.message,
+          icon: <CheckCircle size={48} color="#00d084" />,
+        });
+        setReferralInput('');
+        fetchReferral();
+      } else {
+        setModal({
+          opened: true,
+          success: false,
+          title: 'Error al registrar referido',
+          message: result.error || 'Error desconocido',
+          icon: <XCircle size={48} color="#e03131" />,
+        });
+      }
+    } catch (error) {
       setModal({
         opened: true,
         success: false,
-        title: 'Ya tienes un referido',
-        message: 'Solo puedes registrar un código de referido una vez.',
-        icon: <UserCheck size={48} color="#00b4d8" />,
-      });
-      setLoadingReferral(false);
-      return;
-    }
-
-    // 2. Busca el user_id del promotor en user_cards
-    const { data: promoterCard } = await supabase
-      .from('user_cards')
-      .select('user_id')
-      .eq('card_code', code)
-      .maybeSingle();
-
-    if (!promoterCard || !promoterCard.user_id) {
-      setModal({
-        opened: true,
-        success: false,
-        title: 'Código no válido',
-        message: 'No encontramos ningún usuario con ese código.',
+        title: 'Error',
+        message: 'Error al procesar la solicitud',
         icon: <XCircle size={48} color="#e03131" />,
       });
-      setLoadingReferral(false);
-      return;
     }
 
-    // 3. Registra el referido
-    await supabase.from('user_referrals').insert({
-      referred_user_id: userId,
-      promoter_card_code: code,
-      referred_at: new Date().toISOString(),
-    });
-
-    // 4. Suma 100 unicoins al usuario (NO wallet, solo user_cards.unicoins)
-    const { data: userCard } = await supabase
-      .from('user_cards')
-      .select('id, unicoins')
-      .eq('user_id', userId)
-      .single();
-
-    if (userCard) {
-      await supabase
-        .from('user_cards')
-        .update({
-          unicoins: (userCard.unicoins ?? 0) + REWARD_AMOUNT,
-        })
-        .eq('id', userCard.id);
-    }
-
-    setModal({
-      opened: true,
-      success: true,
-      title: '¡Código de referido registrado!',
-      message: `¡Felicidades! Has recibido ${REWARD_AMOUNT} UniCoins por unirte con un código de referido.`,
-      icon: <CheckCircle size={48} color="#00d084" />,
-    });
-
-    setReferralInput('');
-    fetchReferral(userId);
     setLoadingReferral(false);
   };
 
@@ -353,7 +249,7 @@ const CuponesView = () => {
               </Button>
             </Group>
             <Text size="xs" c="dimmed" mt={4}>
-              Recibe <b>{REWARD_AMOUNT} UniCoins</b> al ingresar un código válido. <br />
+              Recibe <b>100 UniCoins</b> al ingresar un código válido. <br />
               <span style={{ color: '#00ff9d' }}>Los UniCoins no son dinero real.</span>
             </Text>
           </>

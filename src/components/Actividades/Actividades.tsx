@@ -10,7 +10,13 @@ import TripFilter from './TripFilter';
 import Cupos from '../../routes/Cupos';
 import styles from './index.module.css';
 import TripCard from './TripCard';
-import { supabase } from '@/lib/supabaseClient';
+import { getCurrentUser } from '@/services/auth';
+import { 
+  getActivitySummary, 
+  getRecentActivities,
+  type Activity,
+  type ActivitySummary 
+} from '@/services/actividades';
 
 export interface Trip {
   id: number;
@@ -51,41 +57,47 @@ const Actividades: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
+  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const ActivityType = {
+    RESUMEN: 'Resumen de Actividades',
     VIAJES: 'Viajes Publicados',
     CUPOS: 'Cupos Creados',
   } as const;
-  type ActivityType = 'Viajes Publicados' | 'Cupos Creados' | null;
-  const [selectedActivity, setSelectedActivity] = useState<ActivityType>(null);
+  type ActivityType = 'Resumen de Actividades' | 'Viajes Publicados' | 'Cupos Creados' | null;
+  const [selectedActivity, setSelectedActivity] = useState<ActivityType>('Resumen de Actividades');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate({ to: '/Login' });
-        return;
-      }
-
       try {
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
+        const result = await getCurrentUser();
+        if (!result.success || !result.user) {
+          navigate({ to: '/Login' });
+          return;
+        }
 
-        if (error) throw error;
-
+        // Simular user profile basado en el usuario del backend
         setUserProfile({
-          ...data,
-          email: session.user.email || '',
-          user_type: data.status,
+          user_id: result.user.id,
+          email: result.user.email || '',
+          phone_number: null,
+          first_name: 'Usuario',
+          last_name: '',
+          identification_type: 'CC',
+          identification_number: null,
+          user_type: 'DRIVER', // Por defecto, se podría obtener del backend
         });
+
+        // Cargar resumen de actividades
+        await loadActivitySummary();
+        await loadRecentActivities();
+
       } catch (error: any) {
         console.error('Error fetching user profile:', error);
         showNotification({
           title: 'Error',
-          message: error.message,
+          message: 'Error al cargar el perfil de usuario',
           color: 'red',
         });
       } finally {
@@ -96,77 +108,47 @@ const Actividades: React.FC = () => {
     fetchSession();
   }, [navigate]);
 
+  const loadActivitySummary = async () => {
+    try {
+      const result = await getActivitySummary();
+      if (result.success && result.data) {
+        setActivitySummary(result.data.summary);
+      } else {
+        console.error('Error loading activity summary:', result.error);
+      }
+    } catch (error) {
+      console.error('Error loading activity summary:', error);
+    }
+  };
+
+  const loadRecentActivities = async () => {
+    try {
+      const result = await getRecentActivities(10);
+      if (result.success && result.data) {
+        setRecentActivities(result.data.activities);
+      } else {
+        console.error('Error loading recent activities:', result.error);
+      }
+    } catch (error) {
+      console.error('Error loading recent activities:', error);
+    }
+  };
+
   useEffect(() => {
     const loadTrips = async () => {
       setLoading(true);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
+        const result = await getCurrentUser();
+        if (!result.success || !result.user) {
           navigate({ to: '/Login' });
           return;
         }
 
-        const { data: tripsData, error } = await supabase
-          .from('trips')
-          .select(`
-            id,
-            created_at,
-            seats,
-            seats_reserved,
-            price_per_seat,
-            description,
-            allow_pets,
-            allow_smoking,
-            status,
-            user_id,
-            route_id,
-            routes (
-              duration,
-              distance,
-              summary
-            ),
-            origin:locations!trips_origin_id_fkey (
-              address
-            ),
-            destination:locations!trips_destination_id_fkey (
-              address
-            )
-          `)
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false });
+        // TODO: Implementar endpoint para obtener viajes del usuario desde el backend
+        // Por ahora, mostrar datos vacíos
+        setTrips([]);
+        setFilteredTrips([]);
 
-        if (error) throw error;
-
-        const formattedTrips = tripsData.map((trip) => ({
-          id: trip.id || 0,
-          origin: {
-            address: trip.origin?.address || 'Dirección no disponible',
-          },
-          destination: {
-            address: trip.destination?.address || 'Dirección no disponible',
-          },
-          date: trip.created_at
-            ? new Date(trip.created_at).toLocaleDateString()
-            : new Date().toLocaleDateString(),
-          time: trip.created_at
-            ? new Date(trip.created_at).toLocaleTimeString()
-            : new Date().toLocaleTimeString(),
-          duration: trip.routes?.duration || 'Desconocida',
-          distance: trip.routes?.distance || 'Desconocida',
-          seats: trip.seats || 0,
-          seats_reserved: Number(trip.seats_reserved) || 0,
-          pricePerSeat: trip.price_per_seat || 0,
-          description: trip.description || '',
-          allowPets: trip.allow_pets === 'Y',
-          allowSmoking: trip.allow_smoking === 'Y',
-          is_active: trip.status === 'A',
-          user_id: trip.user_id || '',
-          date_time: trip.created_at || new Date().toISOString(),
-          status: trip.status || 'inactive',
-        }));
-
-        setTrips(formattedTrips);
-        setFilteredTrips(formattedTrips);
       } catch (error) {
         console.error('Error loading trips:', error);
         showNotification({
@@ -183,6 +165,75 @@ const Actividades: React.FC = () => {
       loadTrips();
     }
   }, [selectedActivity, navigate]);
+
+  const renderActivitySummary = () => {
+    if (!activitySummary) {
+      return (
+        <Text className={styles.noTripsText}>
+          Cargando resumen de actividades...
+        </Text>
+      );
+    }
+
+    return (
+      <div className={styles.summaryContainer}>
+        <div className={styles.summaryGrid}>
+          <div className={styles.summaryCard}>
+            <Text className={styles.summaryLabel}>Viajes como Conductor</Text>
+            <Text className={styles.summaryValue}>{activitySummary.driver_trips}</Text>
+          </div>
+          <div className={styles.summaryCard}>
+            <Text className={styles.summaryLabel}>Reservas como Pasajero</Text>
+            <Text className={styles.summaryValue}>{activitySummary.passenger_bookings}</Text>
+          </div>
+          <div className={styles.summaryCard}>
+            <Text className={styles.summaryLabel}>Total Ganado</Text>
+            <Text className={styles.summaryValue}>${activitySummary.total_earned.toLocaleString()}</Text>
+          </div>
+          <div className={styles.summaryCard}>
+            <Text className={styles.summaryLabel}>Total Gastado</Text>
+            <Text className={styles.summaryValue}>${activitySummary.total_spent.toLocaleString()}</Text>
+          </div>
+          <div className={styles.summaryCard}>
+            <Text className={styles.summaryLabel}>Referidos Realizados</Text>
+            <Text className={styles.summaryValue}>{activitySummary.referrals_made}</Text>
+          </div>
+          <div className={styles.summaryCard}>
+            <Text className={styles.summaryLabel}>UniCoins</Text>
+            <Text className={styles.summaryValue}>🪙 {activitySummary.unicoins_balance}</Text>
+          </div>
+        </div>
+
+        <div className={styles.recentActivitiesSection}>
+          <Title order={3} className={styles.sectionTitle}>Actividad Reciente</Title>
+          {recentActivities.length > 0 ? (
+            <div className={styles.activitiesList}>
+              {recentActivities.map((activity) => (
+                <div key={activity.id} className={styles.activityItem}>
+                  <div className={styles.activityInfo}>
+                    <Text className={styles.activityTitle}>{activity.title}</Text>
+                    <Text className={styles.activityDescription}>{activity.description}</Text>
+                  </div>
+                  <div className={styles.activityMeta}>
+                    {activity.amount && (
+                      <Text className={styles.activityAmount}>
+                        ${activity.amount.toLocaleString()}
+                      </Text>
+                    )}
+                    <Text className={styles.activityTime}>
+                      {new Date(activity.timestamp).toLocaleDateString()}
+                    </Text>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Text className={styles.noTripsText}>No hay actividad reciente</Text>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     let filtered = [...trips];
@@ -223,10 +274,16 @@ const Actividades: React.FC = () => {
         <Title className={styles.title}>
           {selectedActivity === 'Viajes Publicados' && userProfile?.user_type === 'DRIVER'
             ? <>Tus viajes, <span className={styles.userName}>{userProfile?.first_name || 'Cliente'}</span></>
+            : selectedActivity === 'Resumen de Actividades'
+            ? <>Tu resumen, <span className={styles.userName}>{userProfile?.first_name || 'Usuario'}</span></>
             : 'Mis Actividades'}
         </Title>
         <RolSelector onSelect={(activity) => setSelectedActivity(activity as ActivityType)} />
       </div>
+
+      {selectedActivity === 'Resumen de Actividades' && (
+        renderActivitySummary()
+      )}
 
       {selectedActivity === 'Viajes Publicados' && userProfile?.user_type === 'DRIVER' && (
         <>

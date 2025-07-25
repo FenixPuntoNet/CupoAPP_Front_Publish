@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react';
-import { AssumptionsService } from '../lib/assumptionsService';
-import type { Database } from '../types/Database';
+import {
+  getAssumptions,
+  calculateTripPrice,
+  calculateFee,
+  calculateTotalPrice,
+  getCurrentPricing
+} from '../services/config';
 
-type AssumptionsRow = Database['public']['Tables']['assumptions']['Row'];
+interface Assumptions {
+  urban_price_per_km: number;
+  interurban_price_per_km: number;
+  price_limit_percentage: number;
+  alert_threshold_percentage: number;
+  fee_percentage?: number;
+}
 
 interface UseAssumptionsReturn {
-  assumptions: AssumptionsRow | null;
+  assumptions: Assumptions | null;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -19,7 +30,7 @@ interface UseAssumptionsReturn {
 }
 
 export const useAssumptions = (): UseAssumptionsReturn => {
-  const [assumptions, setAssumptions] = useState<AssumptionsRow | null>(null);
+  const [assumptions, setAssumptions] = useState<Assumptions | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +38,7 @@ export const useAssumptions = (): UseAssumptionsReturn => {
     try {
       setLoading(true);
       setError(null);
-      const data = await AssumptionsService.getAssumptions();
+      const data = await getAssumptions();
       setAssumptions(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar configuración');
@@ -37,27 +48,27 @@ export const useAssumptions = (): UseAssumptionsReturn => {
     }
   };
 
-  const calculateTripPrice = async (distanceKm: number, isUrban: boolean = true): Promise<number> => {
+  const calculateTripPriceWrapper = async (distanceKm: number, isUrban: boolean = true): Promise<number> => {
     try {
-      return await AssumptionsService.calculateTripPrice(distanceKm, isUrban);
+      return await calculateTripPrice(distanceKm, isUrban);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al calcular precio');
       throw err;
     }
   };
 
-  const calculateFee = async (tripPrice: number): Promise<number> => {
+  const calculateFeeWrapper = async (tripPrice: number): Promise<number> => {
     try {
-      return await AssumptionsService.calculateFee(tripPrice);
+      return await calculateFee(tripPrice);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al calcular fee');
       throw err;
     }
   };
 
-  const calculateTotalPrice = async (distanceKm: number, isUrban: boolean = true) => {
+  const calculateTotalPriceWrapper = async (distanceKm: number, isUrban: boolean = true) => {
     try {
-      return await AssumptionsService.calculateTotalPrice(distanceKm, isUrban);
+      return await calculateTotalPrice(distanceKm, isUrban);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al calcular precio total');
       throw err;
@@ -73,9 +84,9 @@ export const useAssumptions = (): UseAssumptionsReturn => {
     loading,
     error,
     refetch: fetchAssumptions,
-    calculateTripPrice,
-    calculateFee,
-    calculateTotalPrice
+    calculateTripPrice: calculateTripPriceWrapper,
+    calculateFee: calculateFeeWrapper,
+    calculateTotalPrice: calculateTotalPriceWrapper
   };
 };
 
@@ -96,7 +107,7 @@ export const usePricing = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await AssumptionsService.getCurrentPricing();
+        const data = await getCurrentPricing();
         setPricing(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al cargar precios');

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-import { ChatBox, ChatList } from '@/components/Actividades'
+import { ChatBox } from '@/components/Actividades/ChatBoxSimple'
+import { ChatList } from '@/components/Actividades/ChatListSimple'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { getCurrentUser } from '@/services/auth'
+import { getOrCreateTripChat } from '@/services/chat'
 import styles from './index.module.css'
 
 interface Chat {
@@ -44,19 +46,18 @@ function ChatPage() {
   const initializeUser = async () => {
     try {
       setIsLoading(true)
-      const { data: { session } } = await supabase.auth.getSession()
-      const user = session?.user
+      const result = await getCurrentUser()
       
-      if (!user) {
+      if (!result.success || !result.user) {
         navigate({ to: '/Login' })
         return
       }
 
-      setUserId(user.id)
+      setUserId(result.user.id)
 
       // Si hay un trip_id específico, intentar abrir ese chat
       if (trip_id) {
-        await openChatByTripId(Number(trip_id), user.id)
+        await openChatByTripId(Number(trip_id))
       }
     } catch (error) {
       console.error('Error al inicializar usuario:', error)
@@ -65,59 +66,30 @@ function ChatPage() {
     }
   }
 
-  const openChatByTripId = async (tripId: number, currentUserId: string) => {
+  const openChatByTripId = async (tripId: number) => {
     try {
-      // Buscar el chat del viaje
-      const { data: chatData, error: chatError } = await supabase
-        .from('chats')
-        .select('id, trip_id')
-        .eq('trip_id', tripId)
-        .single()
-
-      if (chatError || !chatData) {
+      // Obtener o crear chat para el viaje usando el backend
+      const result = await getOrCreateTripChat(tripId)
+      
+      if (!result.success || !result.data) {
         console.error('Chat no encontrado para el viaje:', tripId)
         return
       }
 
-      // Verificar que el usuario sea participante del chat
-      const { data: participantData, error: participantError } = await supabase
-        .from('chat_participants')
-        .select('id')
-        .eq('chat_id', chatData.id)
-        .eq('user_id', currentUserId)
-        .single()
-
-      if (participantError || !participantData) {
-        console.error('Usuario no es participante del chat')
-        return
+      // Crear objeto Chat compatible con la interfaz existente
+      const chatInfo: Chat = {
+        id: result.data.chat_id,
+        trip_id: tripId,
+        origin: 'Origen', // Se podría obtener del backend si es necesario
+        destination: 'Destino', // Se podría obtener del backend si es necesario
+        last_message: 'Conversación grupal',
+        last_message_time: 'Ahora',
+        member_count: 0,
+        is_active: true
       }
 
-      // Obtener información del viaje
-      const { data: tripData } = await supabase
-        .from('trips')
-        .select(`
-          id,
-          origin:locations!trips_origin_id_fkey(main_text),
-          destination:locations!trips_destination_id_fkey(main_text)
-        `)
-        .eq('id', tripId)
-        .single()
-
-      if (tripData) {
-        const chatInfo: Chat = {
-          id: chatData.id,
-          trip_id: tripId,
-          origin: tripData.origin?.main_text || 'Origen',
-          destination: tripData.destination?.main_text || 'Destino',
-          last_message: 'Conversación grupal',
-          last_message_time: 'Ahora',
-          member_count: 0,
-          is_active: true
-        }
-
-        setSelectedChat(chatInfo)
-        setCurrentView('chat')
-      }
+      setSelectedChat(chatInfo)
+      setCurrentView('chat')
     } catch (error) {
       console.error('Error al abrir chat por trip_id:', error)
     }
@@ -190,7 +162,6 @@ function ChatPage() {
               <div className={styles.mobileContent}>
                 <ChatList 
                   onSelectChat={handleSelectChat}
-                  currentUserId={userId}
                 />
               </div>
             </div>
@@ -241,7 +212,6 @@ function ChatPage() {
             <div className={styles.desktopSidebarContent}>
               <ChatList 
                 onSelectChat={handleSelectChat}
-                currentUserId={userId}
               />
             </div>
           </div>

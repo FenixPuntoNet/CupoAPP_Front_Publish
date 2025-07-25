@@ -1,28 +1,46 @@
 import { createFileRoute } from '@tanstack/react-router'
 import React, { useEffect, useState } from "react";
-import { Database } from "../../types/Database";
-import { supabase } from "../../lib/supabaseClient";
+import { useNavigate } from '@tanstack/react-router';
+import {
+  getBalance,
+  getRedeemItems,
+  redeemItems,
+  getRedeemHistory,
+  type RedeemItem as ServiceRedeemItem,
+  type RedeemHistoryItem,
+  type RedeemRequestItem
+} from '@/services/change';
+import { getCurrentUser } from '@/services/auth';
 import "./index.css";
 
-type RedeemItem = Database['public']['Tables']['redeem_items']['Row'];
-type RedeemRequest = Database['public']['Tables']['redeem_requests']['Row'] & { redeem_items?: RedeemItem };
-
-interface RedeemStoreProps {
-  userId: string;
-}
-
-type CartItem = RedeemItem & { quantity: number };
+type CartItem = ServiceRedeemItem & { quantity: number };
 
 const AccountView: React.FC = () => {
   const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUserId(data?.user?.id ?? null);
-    });
-  }, []);
+    const initUser = async () => {
+      try {
+        const result = await getCurrentUser();
+        if (result.success && result.user) {
+          setUserId(result.user.id);
+        } else {
+          navigate({ to: '/Login' });
+        }
+      } catch (error) {
+        console.error('Error getting user:', error);
+        navigate({ to: '/Login' });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!userId) {
+    initUser();
+  }, [navigate]);
+
+  if (loading) {
     return (
       <div className="redeem-store-container dark-bg" style={{ minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="redeem-loader" />
@@ -30,56 +48,88 @@ const AccountView: React.FC = () => {
     );
   }
 
+  if (!userId) {
+    return (
+      <div className="redeem-store-container dark-bg" style={{ minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: 'white' }}>
+          <p>Debes iniciar sesión para acceder</p>
+        </div>
+      </div>
+    );
+  }
+
   return <RedeemStore userId={userId} />;
 };
 
+interface RedeemStoreProps {
+  userId: string;
+}
+
 const RedeemStore: React.FC<RedeemStoreProps> = ({ userId }) => {
-  const [items, setItems] = useState<RedeemItem[]>([]);
-  const [requests, setRequests] = useState<RedeemRequest[]>([]);
+  const [items, setItems] = useState<ServiceRedeemItem[]>([]);
+  const [requests, setRequests] = useState<RedeemHistoryItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [confirm, setConfirm] = useState(false);
-  const [selecting, setSelecting] = useState<RedeemItem | null>(null);
+  const [selecting, setSelecting] = useState<ServiceRedeemItem | null>(null);
   const [selectQty, setSelectQty] = useState(1);
   const [coins, setCoins] = useState<number | null>(null);
 
-  // Traer saldo de coins del usuario desde user_cards.unicoins
+  // Cargar saldo de coins del usuario
   useEffect(() => {
     if (!userId) return;
-    supabase
-      .from("user_cards")
-      .select("unicoins")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single()
-      .then(({ data }) => setCoins(data?.unicoins ?? 0));
+    
+    const loadBalance = async () => {
+      try {
+        const result = await getBalance();
+        if (result.success && result.data) {
+          setCoins(result.data.balance);
+        }
+      } catch (error) {
+        console.error('Error loading balance:', error);
+      }
+    };
+
+    loadBalance();
   }, [userId]);
 
-  // Traer items activos
+  // Cargar items disponibles
   useEffect(() => {
-    supabase
-      .from("redeem_items")
-      .select("*")
-      .eq("is_active", true)
-      .order("value_unicoins", { ascending: true })
-      .then(({ data }) => setItems(data || []));
+    const loadItems = async () => {
+      try {
+        const result = await getRedeemItems();
+        if (result.success && result.data) {
+          setItems(result.data.items);
+        }
+      } catch (error) {
+        console.error('Error loading items:', error);
+      }
+    };
+
+    loadItems();
   }, []);
 
-  // Traer solicitudes del usuario
+  // Cargar historial de solicitudes
   useEffect(() => {
     if (!userId) return;
-    supabase
-      .from("redeem_requests")
-      .select("*, redeem_items(*)")
-      .eq("user_id", userId)
-      .order("requested_at", { ascending: false })
-      .then(({ data }) => setRequests(data || []));
+    
+    const loadHistory = async () => {
+      try {
+        const result = await getRedeemHistory();
+        if (result.success && result.data) {
+          setRequests(result.data.requests);
+        }
+      } catch (error) {
+        console.error('Error loading history:', error);
+      }
+    };
+
+    loadHistory();
   }, [userId, loading]);
 
   // Carrito: agregar/cambiar cantidad
-  function addToCart(item: RedeemItem, qty: number) {
+  function addToCart(item: ServiceRedeemItem, qty: number) {
     setCart((prev) => {
       const found = prev.find((i) => i.id === item.id);
       if (found) {
@@ -115,31 +165,35 @@ const RedeemStore: React.FC<RedeemStoreProps> = ({ userId }) => {
       setConfirm(false);
       return;
     }
+    
     setLoading(true);
     setConfirm(false);
     setMessage(null);
-    const inserts = cart.flatMap((item) =>
-      Array.from({ length: item.quantity }).map(() => ({
-        user_id: userId,
+    
+    try {
+      const requestItems: RedeemRequestItem[] = cart.map(item => ({
         item_id: item.id,
-        status: "requested" as const,
-      }))
-    );
-    const { error } = await supabase.from("redeem_requests").insert(inserts);
-    if (!error && coins !== null) {
-      setCoins(coins - cartTotal);
-      await supabase.from("user_cards").update({ unicoins: coins - cartTotal }).eq("user_id", userId);
-    }
-    setLoading(false);
-    if (!error) {
-      setCart([]);
-      setRedeemResult({ success: true, message: "¡Solicitud enviada! Pronto nos pondremos en contacto contigo." });
-    } else {
-      setRedeemResult({ success: false, message: "Error al solicitar canje. Intenta de nuevo." });
+        quantity: item.quantity
+      }));
+
+      const result = await redeemItems({ items: requestItems });
+      
+      if (result.success && result.data) {
+        setCart([]);
+        setCoins(result.data.new_balance);
+        setRedeemResult({ success: true, message: result.data.message });
+      } else {
+        setRedeemResult({ success: false, message: result.error || "Error al solicitar canje. Intenta de nuevo." });
+      }
+    } catch (error) {
+      console.error('Error redeeming items:', error);
+      setRedeemResult({ success: false, message: "Error inesperado al solicitar canje." });
+    } finally {
+      setLoading(false);
     }
   }
 
-  // Nuevo: Estado para mostrar resultado del canje en el modal
+  // Estado para mostrar resultado del canje en el modal
   const [redeemResult, setRedeemResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Cerrar modal de resultado

@@ -13,7 +13,7 @@ import {
 import { showNotification } from '@mantine/notifications'
 import { useNavigate } from '@tanstack/react-router'
 import { IconX } from '@tabler/icons-react'
-import { supabase } from '@/lib/supabaseClient'
+import { getCuposReservados } from '@/services/cupos'
 import styles from './index.module.css'
 
 // Asegúrate de tener este archivo creado: src/routes/CuposReservados/ValidarCupo.$bookingId.tsx
@@ -48,43 +48,24 @@ const CuposReservadosComponent: React.FC<CuposReservadosProps> = ({
     const fetchData = async () => {
       setLoading(true)
       try {
-        const { data, error } = await supabase
-          .from('booking_passengers')
-          .select(
-            `id, full_name, identification_number, booking_id, bookings ( trip_id, booking_status )`,
-          )
-          .eq('user_id', userId)
-
-        if (error) throw error
-
-        const grouped: Record<number, BookingWithPassengers> = {}
-
-        data?.forEach((p) => {
-          const bookingId = p.booking_id
-          const tripId = p.bookings?.trip_id
-
-          if (bookingId != null && tripId != null) {
-            if (!grouped[bookingId]) {
-              grouped[bookingId] = {
-                booking_id: bookingId,
-                trip_id: tripId,
-                booking_status: p.bookings!.booking_status,
-                passengers: [],
-              }
-            }
-            grouped[bookingId].passengers.push({
-              passenger_id: p.id,
-              full_name: p.full_name,
-              identification_number: p.identification_number,
-            })
-          }
-        })
-
-        const filtered = Object.values(grouped).filter(
-          (b) => b.trip_id === tripId,
-        )
-
-        setBookings(filtered)
+        const result = await getCuposReservados(tripId);
+        
+        if (result.success && result.data) {
+          const mappedBookings = result.data.bookings.map(booking => ({
+            booking_id: booking.id,
+            trip_id: tripId,
+            booking_status: booking.booking_status,
+            passengers: booking.passengers.map(passenger => ({
+              passenger_id: passenger.id,
+              full_name: passenger.full_name,
+              identification_number: passenger.identification_number,
+            }))
+          }));
+          
+          setBookings(mappedBookings);
+        } else {
+          console.error('Error fetching cupos reservados:', result.error);
+        }
       } catch (error) {
         showNotification({
           title: 'Error al obtener los cupos',

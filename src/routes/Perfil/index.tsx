@@ -26,24 +26,36 @@ import {
 } from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
 import styles from './index.module.css'
-import { supabase } from '@/lib/supabaseClient'
-import { useSupabaseAuth } from '@/context/SupabaseAuthContext'
-import { Rating } from '@mantine/core';
-import { DeactivateAccountModal } from '@/components/DeactivateAccountModal';
+import { useBackendAuth } from '@/context/BackendAuthContext'
+import { Rating } from '@mantine/core'
+import { DeactivateAccountModal } from '@/components/DeactivateAccountModal'
+import { getCurrentUserProfile } from '@/services/profile'
+import { 
+  getUserVehicles, 
+  getDriverLicense, 
+  getPropertyCard, 
+  getSoat,
+  getDocumentsStatus 
+} from '@/services/vehicles'
 
 // Interfaces
 interface UserProfile {
-  id: number
+  id: number | string;
   user_id: string;
-  phone_number: string
-  first_name: string
-  last_name: string
-  identification_type: string
-  identification_number: string | null
-  status: string
-  user_type: string
-  Verification: string | null
-  photo_user: string
+  phone_number?: string;
+  first_name?: string;
+  last_name?: string;
+  identification_type?: string;
+  identification_number?: string | null;
+  status?: string;
+  user_type?: string;
+  Verification?: string | null;
+  verification?: string;
+  photo_user?: string;
+  profile_picture?: string;
+  email?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface VehicleStatus {
@@ -81,7 +93,7 @@ interface SubMenuItem {
 
 const ProfileView: React.FC = () => {
   const navigate = useNavigate()
-  const { signOut } = useSupabaseAuth()
+  const { signOut, user } = useBackendAuth()
   const [loading, setLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [vehicleStatus, setVehicleStatus] = useState<VehicleStatus>({
@@ -93,7 +105,6 @@ const ProfileView: React.FC = () => {
   const [error, setError] = useState('')
   const [showVehicleOptions, setShowVehicleOptions] = useState(false)
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
-  const [successMessage, setSuccessMessage] = useState<string>('')
   const [showVehicleMessage, setShowVehicleMessage] = useState(false)
   const [showWalletOptions, setShowWalletOptions] = useState(false)
   const [averageRating, setAverageRating] = useState<number | null>(null);
@@ -172,58 +183,39 @@ const ProfileView: React.FC = () => {
     }
   ]
 
+  // Función para actualizar el estado del usuario (comentada hasta implementar en backend)
+  /*
   const checkAndUpdateUserRole = async (userId: string, hasAllDocs: boolean) => {
     try {
-      const { data: userProfile } = await supabase
-        .from('user_profiles')
-        .select('status')
-        .eq('user_id', userId)
-        .single();
-
-      if (userProfile?.status === 'PASSENGER' && hasAllDocs) {
-        const { error: updateError } = await supabase
-          .from('user_profiles')
-          .update({ status: 'DRIVER' })
-          .eq('user_id', userId);
-
-        if (updateError) throw updateError;
-
-        setUserProfile(prev => prev ? {
-          ...prev,
-          user_type: 'DRIVER'
-        } : null);
-
-        setSuccessMessage(
-          `¡Felicitaciones! Has completado todos los documentos requeridos. Ahora eres conductor verificado.`
-        );
-        setIsSuccessModalOpen(true);
-      }
+      // TODO: Implementar cuando esté disponible en el backend
+      console.log('Update user role functionality pending backend implementation');
     } catch (error) {
       console.error('Error updating user role:', error);
     }
   };
+  */
 
   useEffect(() => {
     const fetchAverageRating = async () => {
       if (!userProfile?.id) return;
   
-      const { data, error } = await supabase
-        .from('califications')
-        .select('value')
-        .eq('driver_id', userProfile?.user_id);
-  
-      if (error) {
-        console.error('Error al cargar calificaciones', error);
-        return;
+      // TODO: Implementar calificaciones cuando esté disponible en el backend
+      /*
+      const response = await getUserRatings(userProfile.user_id);
+      if (response.success && response.data) {
+        const data = response.data;
+        if (data.length > 0) {
+          const total = data.reduce((sum: number, r: any) => sum + r.value, 0);
+          const average = total / data.length;
+          setAverageRating(Number(average.toFixed(1)));
+        } else {
+          setAverageRating(null);
+        }
       }
-  
-      if (data && data.length > 0) {
-        const total = data.reduce((sum, r) => sum + r.value, 0);
-        const average = total / data.length;
-        setAverageRating(Number(average.toFixed(1)));
-      } else {
-        setAverageRating(null);
-      }
+      */
+      
+      // Por ahora, establecer null hasta implementar en backend
+      setAverageRating(null);
     };
   
     fetchAverageRating();
@@ -234,56 +226,96 @@ const ProfileView: React.FC = () => {
     const loadUserData = async () => {
       try {
         setLoading(true);
-        const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session?.user?.id) {
+        // Usar el backend service para obtener el perfil
+        const profileResponse = await getCurrentUserProfile();
+        
+        if (!profileResponse.success || !profileResponse.data) {
           navigate({ to: '/Login' });
           return;
         }
 
-        const [
-          { data: profile },
-          { data: vehicle },
-          { data: license },
-          { data: soat },
-          { data: propertyCard }
-        ] = await Promise.all([
-          supabase
-            .from('user_profiles')
-            .select('id, user_id, phone_number, first_name, last_name, identification_type, identification_number, status, Verification, photo_user')
-            .eq('user_id', session.user.id)
-            .single(),
-          supabase.from('vehicles').select('id').eq('user_id', session.user.id).maybeSingle(),
-          supabase.from('driver_licenses').select('id').eq('user_id', session.user.id).maybeSingle(),
-          supabase.from('soat_details').select('id').eq('user_id', session.user.id).maybeSingle(),
-          supabase.from('property_cards').select('id').eq('user_id', session.user.id).maybeSingle()
-        ]);
-
-        const hasAllDocuments = Boolean(vehicle && license && soat && propertyCard);
+        const profile = profileResponse.data;
         
-        await checkAndUpdateUserRole(session.user.id, hasAllDocuments);
+        // Obtener información de vehículos usando el backend service
+        const vehicleResponse = await getUserVehicles();
+        const hasVehicle = vehicleResponse.success && vehicleResponse.hasVehicle;
+
+        // Verificar documentos usando los servicios del backend
+        let hasLicense = false;
+        let hasSoat = false;
+        let hasPropertyCard = false;
+
+        if (hasVehicle) {
+          // Usar el endpoint optimizado que obtiene todos los documentos
+          try {
+            const documentsResponse = await getDocumentsStatus();
+            if (documentsResponse.success && documentsResponse.documentsStatus) {
+              hasLicense = documentsResponse.documentsStatus.license.complete;
+              hasSoat = documentsResponse.documentsStatus.insurance.complete;
+              hasPropertyCard = documentsResponse.documentsStatus.property.complete;
+              console.log('📋 Documents status:', {
+                hasLicense,
+                hasSoat,
+                hasPropertyCard
+              });
+            }
+          } catch (documentsError) {
+            console.warn('⚠️ Error fetching documents status, falling back to individual checks');
+            
+            // Fallback: verificar documentos individualmente
+            const [licenseResponse, soatResponse, propertyResponse] = await Promise.all([
+              getDriverLicense().catch(() => ({ success: false, hasLicense: false })),
+              getSoat().catch(() => ({ success: false, hasSoat: false })),
+              getPropertyCard().catch(() => ({ success: false, hasPropertyCard: false }))
+            ]);
+
+            hasLicense = licenseResponse.success && licenseResponse.hasLicense;
+            hasSoat = soatResponse.success && soatResponse.hasSoat;
+            hasPropertyCard = propertyResponse.success && propertyResponse.hasPropertyCard;
+            
+            console.log('📋 Individual document checks:', {
+              hasLicense,
+              hasSoat,
+              hasPropertyCard
+            });
+          }
+        }
 
         if (profile) {
+          // Use the user data from auth context instead of calling getUser()
+          console.log('🔍 User from auth context:', user);
+          
           setUserProfile({
-            id: profile.id,
-            user_id: session.user.id,
-            phone_number: profile.phone_number ?? '',
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            identification_type: profile.identification_type,
-            identification_number: profile.identification_number,
-            status: profile.status,
-            user_type: profile.status,
-            Verification: profile.Verification,
-            photo_user: profile.photo_user || '', 
+            id: Number(profile.id),
+            user_id: profile.user_id,
+            phone_number: profile.phone_number || '',
+            // Prefer profile data first, then fallback to user context
+            first_name: profile.first_name || (user ? user.username : 'Usuario'),
+            last_name: profile.last_name || '',
+            identification_type: profile.identification_type || 'CC',
+            identification_number: profile.identification_number || null,
+            status: profile.status || 'ACTIVE',
+            user_type: profile.status || 'PASSENGER',
+            Verification: profile.verification || 'SIN VERIFICAR',
+            photo_user: profile.profile_picture || '', 
           });
-          setUserEmail(session.user.email ?? '');
+          
+          // Set email from auth context - this ensures we display the email, not UUID
+          if (user && user.email) {
+            setUserEmail(user.email);
+            console.log('Using email from auth context:', user.email);
+          } else {
+            setUserEmail('usuario@example.com');
+            console.log('No email found in auth context, using default');
+          }
         }
+
         setVehicleStatus({
-          hasVehicle: Boolean(vehicle),
-          hasLicense: Boolean(license),
-          hasSoat: Boolean(soat),
-          hasPropertyCard: Boolean(propertyCard)
+          hasVehicle: Boolean(hasVehicle),
+          hasLicense: hasLicense,
+          hasSoat: hasSoat,
+          hasPropertyCard: hasPropertyCard
         });
 
       } catch (error) {
@@ -295,7 +327,7 @@ const ProfileView: React.FC = () => {
     };
 
     loadUserData();
-  }, [navigate]);
+  }, [navigate, user]);
 
   const renderUserSection = () => (
     <div className={styles.userSection}>
@@ -312,7 +344,10 @@ const ProfileView: React.FC = () => {
       </div>
       <div className={styles.userInfo}>
         <Text className={styles.userName}>
-          {userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : 'Usuario'}
+          {userProfile?.first_name ? 
+            `${userProfile.first_name} ${userProfile.last_name || ''}`.trim() : 
+            user?.username || 'Usuario'
+          }
         </Text>
         <Text className={styles.userEmail}>{userEmail}</Text>
         <div
@@ -361,29 +396,26 @@ const ProfileView: React.FC = () => {
         if (userProfile.user_type === 'PASSENGER' && allDocumentsComplete) {
           try {
             setLoading(true);
-            const userId = localStorage.getItem('userId');
+            // TODO: Implementar actualización de estado a conductor cuando esté disponible en el backend
+            /*
+            const updateResponse = await updateUserToDriver();
+            if (updateResponse.success) {
+              setUserProfile(prev => ({
+                ...(prev as UserProfile),
+                user_type: 'DRIVER'
+              }));
 
-            if (!userId) {
-              console.error('No hay userId disponible');
-              return;
+              setSuccessMessage(
+                `¡Felicitaciones ${userProfile.first_name}! Ya eres conductor en Cupo. Ahora puedes publicar viajes.`
+              );
+              setIsSuccessModalOpen(true);
+            } else {
+              throw new Error('Error updating user role');
             }
-
-            const { error: updateError } = await supabase
-              .from('user_profiles')
-              .update({ status: 'DRIVER' })
-              .eq('user_id', userId);
-
-            if (updateError) throw updateError;
-
-            setUserProfile(prev => ({
-              ...(prev as UserProfile),
-              user_type: 'DRIVER'
-            }));
-
-            setSuccessMessage(
-              `¡Felicitaciones ${userProfile.first_name}! Ya eres conductor en Cupo. Ahora puedes publicar viajes.`
-            );
-            setIsSuccessModalOpen(true);
+            */
+            
+            // Por ahora, solo mostrar mensaje sin actualizar en BD
+            console.log('User role update pending backend implementation');
 
           } catch (error) {
             console.error('Error al actualizar el rol:', error);
@@ -581,7 +613,7 @@ const ProfileView: React.FC = () => {
         <div className={styles.modalContent}>
           <CheckCircle size={60} color="green" className={styles.modalIcon} />
           <Text size="xl" fw={500} mt="md" className={styles.modalParagraph}>
-            {successMessage}
+            ¡Felicitaciones! Ya eres conductor en Cupo. Ahora puedes publicar viajes.
           </Text>
           <Button
             onClick={handleSuccessModalClose}

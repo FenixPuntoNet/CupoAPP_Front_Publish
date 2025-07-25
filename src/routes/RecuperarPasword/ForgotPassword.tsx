@@ -9,7 +9,7 @@ import {
   Paper,
   LoadingOverlay
 } from '@mantine/core';
-import { supabase } from '@/lib/supabaseClient';
+import { forgotPassword } from '@/services/auth';
 import styles from './RecuperarPassword.module.css';
 
 const ForgotPassword = () => {
@@ -19,25 +19,18 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const redirectURL =
-    window.location.hostname === 'localhost'
-      ? 'http://localhost:5173/RecuperarPasword'
-      : 'https://cupo.dev/RecuperarPasword';
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setSent(false);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectURL,
-    });
+    const result = await forgotPassword(email);
 
-    if (error) {
-      setError(error.message);
-    } else {
+    if (result.success) {
       setSent(true);
+    } else {
+      setError(result.error || 'Error enviando enlace de recuperación');
     }
     setLoading(false);
   };

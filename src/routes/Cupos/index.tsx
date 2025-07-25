@@ -13,7 +13,7 @@ import { showNotification } from '@mantine/notifications';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { supabase } from '@/lib/supabaseClient';
+import { getMisCupos } from '@/services/cupos';
 import { TripRating } from '@/components/Actividades/TripRating';
 
 
@@ -54,44 +54,30 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
     const fetchBookings = async () => {
       setLoading(true);
       try {
-        // 1. Obtener las reservas
-        const { data: bookingsData, error: bookingsError } = await supabase
-          .from('bookings')
-          .select(`
-            id,
-            booking_date,
-            booking_status,
-            total_price,
-            trip_id,
-            user_id,
-            seats_booked,
-            booking_qr,
-            booking_passengers(id, full_name, identification_number),
-            trips(user_id)
-          `)              
-          .eq('user_id', userId);
-    
-        if (bookingsError) throw bookingsError;
-    
-        const mappedBookings = bookingsData.map((booking) => ({
-          booking_id: booking.id,
-          booking_date: booking.booking_date,
-          booking_status: booking.booking_status,
-          total_price: booking.total_price,
-          trip_id: booking.trip_id ?? 0,
-          user_id: booking.user_id || '',
-          seats_booked: booking.seats_booked || 0,
-          booking_qr: booking.booking_qr || '',
-          driver_id: booking.trips?.user_id || '',
-          passengers: (booking.booking_passengers || []).map((passenger) => ({
-            passenger_id: passenger.id,
-            full_name: passenger.full_name,
-            identification_number: passenger.identification_number,
-          })),
-        }));
-    
-        setBookings(mappedBookings as BookingConductor[]);
-    
+        const result = await getMisCupos();
+        
+        if (result.success && result.data) {
+          const mappedBookings = result.data.cupos.map((cupo) => ({
+            booking_id: cupo.id,
+            booking_date: cupo.booking_date,
+            booking_status: cupo.booking_status,
+            total_price: cupo.total_price,
+            trip_id: cupo.trip_id,
+            user_id: userId,
+            seats_booked: cupo.seats_booked,
+            booking_qr: cupo.booking_qr,
+            driver_id: cupo.trip?.driver?.first_name ? `${cupo.trip.driver.first_name} ${cupo.trip.driver.last_name}` : '',
+            passengers: cupo.passengers.map((passenger) => ({
+              passenger_id: passenger.id,
+              full_name: passenger.full_name,
+              identification_number: passenger.identification_number,
+            })),
+          }));
+          
+          setBookings(mappedBookings);
+        } else {
+          console.error('Error fetching cupos:', result.error);
+        }
       } catch (error) {
         showNotification({
           title: 'Error al obtener los datos',

@@ -14,7 +14,7 @@ import {
 import { type PropertyCardData, SERVICE_TYPES } from '../../types/PropertyCardTypes';
 import styles from './PropertyCar.module.css';
 import { LoadingOverlay, Modal, Button, Text } from '@mantine/core';
- import { supabase } from '@/lib/supabaseClient';
+import { getPropertyCard, registerPropertyCard, uploadPropertyCardPhotos, fileToBase64, type PropertyCardFormData } from '@/services/vehicles';
 import { notifications } from '@mantine/notifications';
 
 
@@ -43,7 +43,6 @@ const PropertyCard: React.FC = () => {
     const [hasPropertyCard, setHasPropertyCard] = useState(false);
     const [viewMode, setViewMode] = useState(true);
     const [formHasChanged, setFormHasChanged] = useState(false);
-    const [propertyCardId, setPropertyCardId] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
@@ -51,61 +50,35 @@ const PropertyCard: React.FC = () => {
             try {
                 setLoading(true);
 
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session?.user?.id) {
+                // Cargar datos de la tarjeta de propiedad usando el backend
+                const response = await getPropertyCard();
+
+                if (!response.success) {
+                    console.error('Error loading property card:', response.error);
                     navigate({ to: '/Login' });
                     return;
                 }
 
-                const userId = session.user.id;
-
-                // Cargar datos de la tarjeta de propiedad existente
-                const { data: existingCard } = await supabase
-                    .from('property_cards')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .maybeSingle();
-
-                if (existingCard) {
-                    setPropertyCardId(existingCard.id);
+                if (response.hasPropertyCard && response.propertyCard) {
+                    const card = response.propertyCard;
                     setHasPropertyCard(true);
+                    setVehicleId(card.vehicle_id);
+                    
                     setFormData({
-                        propertyCardNumber: existingCard.license_number || '',
-                        identificationNumber: existingCard.identification_number || '',
-                        serviceType: (existingCard.service_type?.toLowerCase() === 'public' ? 'public' : 'private') as 'public' | 'private',
-                        passengerCapacity: existingCard.passager_capacity?.toString() || '',
-                        cylinderCapacity: existingCard.cylinder_capacity || '',
-                        propertyCardExpeditionDate: existingCard.expedition_date?.split('T')[0] || '',
-                        frontPreview: existingCard.photo_front_url || undefined,
-                        backPreview: existingCard.photo_back_url || undefined
+                        propertyCardNumber: card.license_number,
+                        identificationNumber: card.identification_number,
+                        serviceType: (card.service_type?.toLowerCase() === 'public' ? 'public' : 'private') as 'public' | 'private',
+                        passengerCapacity: card.passager_capacity.toString(),
+                        cylinderCapacity: card.cylinder_capacity,
+                        propertyCardExpeditionDate: card.expedition_date.split('T')[0],
+                        frontPreview: card.photo_front_url || undefined,
+                        backPreview: card.photo_back_url || undefined
                     });
                     setViewMode(true);
                 } else {
-                    // Cargar datos del perfil para nuevo registro
-                    const { data: profileData } = await supabase
-                        .from('user_profiles')
-                        .select('identification_number')
-                        .eq('user_id', userId)
-                        .single();
-
-                    if (profileData) {
-                        setFormData(prev => ({
-                            ...prev,
-                            identificationNumber: profileData.identification_number
-                        }));
-                    }
+                    // No hay tarjeta de propiedad, crear nueva
+                    setVehicleId(response.vehicleId || null);
                     setViewMode(false);
-                }
-
-                // Obtener vehicleId
-                const { data: vehicleData } = await supabase
-                    .from('vehicles')
-                    .select('id')
-                    .eq('user_id', userId)
-                    .single();
-
-                if (vehicleData) {
-                    setVehicleId(vehicleData.id);
                 }
 
             } catch (error) {
@@ -231,73 +204,75 @@ const PropertyCard: React.FC = () => {
         setIsSubmitting(true);
 
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            const userId = session?.user?.id;
-
-            if (!userId || !vehicleId) {
-                throw new Error('Información necesaria no disponible');
+            if (!vehicleId) {
+                throw new Error('Información del vehículo no disponible');
             }
 
-            // Preparar datos base
-            const propertyCardData = {
-                user_id: userId,
+            // Preparar datos para el backend
+            const propertyCardData: PropertyCardFormData = {
                 vehicle_id: vehicleId,
                 license_number: formData.propertyCardNumber,
-                identification_number: formData.identificationNumber,
+                identification_number: formData.identificationNumber || '',
                 service_type: formData.serviceType.toUpperCase(),
                 passager_capacity: parseInt(formData.passengerCapacity),
                 cylinder_capacity: formData.cylinderCapacity,
-                expedition_date: new Date(formData.propertyCardExpeditionDate).toISOString(),
-                photo_front_url: formData.frontPreview,
-                photo_back_url: formData.backPreview
+                expedition_date: formData.propertyCardExpeditionDate,
+                photo_front_url: formData.frontPreview || null,
+                photo_back_url: formData.backPreview || null
             };
 
-            // Procesar fotos si existen
-            if (formData.frontFile) {
-                const frontUrl = await uploadPhoto(formData.frontFile, 'front');
-                if (frontUrl) propertyCardData.photo_front_url = frontUrl;
+            // Registrar/actualizar tarjeta de propiedad usando el backend
+            const response = await registerPropertyCard(propertyCardData);
+
+            if (!response.success) {
+                throw new Error(response.error || 'Error al procesar tarjeta de propiedad');
             }
 
-            if (formData.backFile) {
-                const backUrl = await uploadPhoto(formData.backFile, 'back');
-                if (backUrl) propertyCardData.photo_back_url = backUrl;
+            // Si hay fotos nuevas para subir
+            if (response.propertyCard && (formData.frontFile || formData.backFile)) {
+                const photoUploadPromises: Promise<any>[] = [];
+
+                if (formData.frontFile) {
+                    const frontBase64 = await fileToBase64(formData.frontFile);
+                    photoUploadPromises.push(
+                        uploadPropertyCardPhotos(response.propertyCard.id, {
+                            photo_front_base64: frontBase64,
+                            filename_front: formData.frontFile.name
+                        })
+                    );
+                }
+
+                if (formData.backFile) {
+                    const backBase64 = await fileToBase64(formData.backFile);
+                    photoUploadPromises.push(
+                        uploadPropertyCardPhotos(response.propertyCard.id, {
+                            photo_back_base64: backBase64,
+                            filename_back: formData.backFile.name
+                        })
+                    );
+                }
+
+                // Esperar a que se suban las fotos
+                await Promise.all(photoUploadPromises);
             }
 
-            if (hasPropertyCard && propertyCardId) {
-                // Actualizar tarjeta existente
-                const { error: updateError } = await supabase
-                    .from('property_cards')
-                    .update(propertyCardData)
-                    .eq('id', propertyCardId);
+            notifications.show({
+                title: 'Éxito',
+                message: response.message || 'Tarjeta de propiedad procesada correctamente',
+                color: 'green',
+                icon: <CheckCircle />
+            });
 
-                if (updateError) throw updateError;
-
-                notifications.show({
-                    title: 'Éxito',
-                    message: 'Tarjeta de propiedad actualizada correctamente',
-                    color: 'green',
-                    icon: <CheckCircle />
-                });
-
-                setViewMode(true);
-            } else {
-                // Crear nueva tarjeta
-                const { data: newCard, error: insertError } = await supabase
-                    .from('property_cards')
-                    .insert([propertyCardData])
-                    .select()
-                    .single();
-
-                if (insertError) throw insertError;
-
-                if (newCard) {
-                    setPropertyCardId(newCard.id);
-                    setHasPropertyCard(true);
+            if (response.propertyCard) {
+                setHasPropertyCard(true);
+                
+                if (!hasPropertyCard) {
                     setSuccessMessage('Tarjeta de propiedad registrada exitosamente');
                     setIsSuccessModalOpen(true);
                 }
             }
 
+            setViewMode(true);
             setFormHasChanged(false);
 
         } catch (error: any) {
@@ -313,28 +288,11 @@ const PropertyCard: React.FC = () => {
         }
     };
 
-    const uploadPhoto = async (file: File, type: 'front' | 'back'): Promise<string | null> => {
-        try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${type}_${Math.random()}.${fileExt}`;
-            const filePath = `property_cards/${fileName}`;
-
-            const { error: uploadError } = await supabase.storage
-                .from('property_cards')
-                .upload(filePath, file);
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('property_cards')
-                .getPublicUrl(filePath);
-
-            return publicUrl;
-        } catch (error) {
-            console.error(`Error uploading ${type} photo:`, error);
-            return null;
-        }
-    };
+    // TODO: Implementar subida de fotos cuando esté disponible en el backend
+    // const uploadPhoto = async (file: File, type: 'front' | 'back'): Promise<string | null> => {
+    //     console.warn('Photo upload not yet implemented in backend');
+    //     return null;
+    // };
 
     const handleSuccessModalClose = () => {
         setIsSuccessModalOpen(false);

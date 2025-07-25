@@ -5,15 +5,12 @@ import {
     ArrowLeft,
     Camera,
     Calendar,
-    Heart,
     FileText,
-    Shield,
     AlertCircle,
     CheckCircle,
     User,
 } from 'lucide-react';
 import {
-    type DocumentFormData,
     LICENSE_CATEGORIES,
     BLOOD_TYPES,
 } from '../../types/DocumentTypes';
@@ -26,37 +23,33 @@ import {
     Button,
     Text,
 } from '@mantine/core';
-import { supabase } from '@/lib/supabaseClient';
-import { modals } from '@mantine/modals';
+import { getDriverLicense, registerDriverLicense, uploadDriverLicensePhotos, fileToBase64, type DriverLicenseFormData } from '@/services/vehicles';
 import { notifications } from '@mantine/notifications';
-
-
+import { useBackendAuth } from '@/context/BackendAuthContext';
 
 interface ValidationErrors {
     [key: string]: string;
 }
 
-interface DriverLicenseData extends Omit<DocumentFormData, 'vehicle_id' | 'documentType' | 'identificationNumber'> {
+interface DriverLicenseData {
     id?: number;
+    licenseNumber?: string;
+    expeditionDate?: string;
+    expiryDate?: string;
+    licenseCategory?: string;
+    bloodType?: string;
+    identificationNumber?: string | null;
     photo_front_url?: string | null;
     photo_back_url?: string | null;
-    expedition_date?: string;
-    expiry_date?: string;
-    user_id?: string;
     frontFile?: File;
     backFile?: File;
-    licenseNumber?: string;
-    identificationNumber?: string | null; // ahora es válido
-  }
-  
-
-interface UserProfileData {
-    identification_number: string | null;
-    identification_type: string;
+    frontPreview?: string;
+    backPreview?: string;
 }
 
 const License: React.FC = () => {
     const navigate = useNavigate();
+    const { user } = useBackendAuth();
     const [formData, setFormData] = useState<DriverLicenseData>({
         licenseNumber: '',
         expeditionDate: '',
@@ -76,136 +69,60 @@ const License: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [hasLicense, setHasLicense] = useState(false);
     const [viewMode, setViewMode] = useState(true);
-    const [vehicleId, setVehicleId] = useState<number | null>(null);
-    const [licenseId, setLicenseId] = useState<number | null>(null);
-    const [] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formHasChanged, setFormHasChanged] = useState(false);
-    const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
-
-    const fetchUserProfile = async (userId: string) => {
-        try {
-            const { data, error } = await supabase
-                .from('user_profiles')
-                .select('identification_number, identification_type')
-                .eq('user_id', userId)
-                .single();
-
-            if (error) {
-                showErrorNotification('Error al cargar datos del perfil');
-                return null;
-            }
-
-            return data;
-        } catch (error) {
-            console.error('Error fetching user profile:', error);
-            return null;
-        }
-    };
 
     useEffect(() => {
         const loadLicenseData = async () => {
             try {
                 setLoading(true);
 
-                // Obtener sesión y validar
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session?.user?.id) {
+                if (!user?.id) {
                     navigate({ to: '/Login' });
                     return;
                 }
 
-                const userId = session.user.id;
-                console.log('Loading license data for user:', userId);
+                console.log('Loading license data for user:', user.id);
 
-                // Cargar datos de la licencia existente primero
-                const { data: existingLicense } = await supabase
-                    .from('driver_licenses')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .maybeSingle();
+                // Get driver license data from backend
+                const response = await getDriverLicense();
 
-                if (existingLicense) {
-                    // Si existe licencia, guardar su ID
-                    setLicenseId(existingLicense.id);
-                    setHasLicense(true);
-                }
-
-                // Cargar datos del perfil primero
-                const profileData = await fetchUserProfile(userId);
-                if (!profileData) {
-                    showErrorNotification('Debe completar su perfil primero');
-                    navigate({ to: '/CompletarRegistro' });
-                    return;
-                }
-                setUserProfile(profileData);
-
-                // Obtener primero el vehículo asociado
-                const { data: vehicleData, error: vehicleError } = await supabase
-                    .from('vehicles')
-                    .select('id')
-                    .eq('user_id', userId)
-                    .single();
-
-                if (vehicleError) {
-                    console.error('Error fetching vehicle:', vehicleError);
-                    throw new Error('Debe registrar primero un vehículo');
-                }
-
-                // Consultar datos de la licencia
-                const { data: licenseData, error: licenseError } = await supabase
-                    .from('driver_licenses')
-                    .select('id, license_number, identification_number, blood_type, license_category, expedition_date, expiration_date, photo_front_url, photo_back_url')
-                    .eq('user_id', userId)
-                    .maybeSingle();
-
-                if (licenseError && licenseError.code !== 'PGRST116') {
-                    throw licenseError;
-                }
-
-                if (licenseData) {
-                    console.log('Found existing license:', licenseData);
+                if (response.success && response.hasLicense && response.license) {
+                    const license = response.license;
+                    console.log('Found existing license:', license);
+                    
                     setHasLicense(true);
                     setFormData({
-                        licenseNumber: licenseData.license_number || '',
-                        expeditionDate: licenseData.expedition_date?.split('T')[0] || '',
-                        expiryDate: licenseData.expiration_date?.split('T')[0] || '',
-                        bloodType: licenseData.blood_type || 'O+',
-                        licenseCategory: licenseData.license_category || 'B1',
-                        identificationNumber: licenseData.identification_number ?? undefined,
-                        photo_front_url: licenseData.photo_front_url ?? undefined,
-                        photo_back_url: licenseData.photo_back_url ?? undefined,
-                        frontPreview: undefined,
-                        backPreview: undefined,
+                        licenseNumber: license.license_number || '',
+                        expeditionDate: license.expedition_date?.split('T')[0] || '',
+                        expiryDate: license.expiration_date?.split('T')[0] || '',
+                        bloodType: license.blood_type || 'O+',
+                        licenseCategory: license.license_category || 'B1',
+                        identificationNumber: license.identification_number ?? undefined,
+                        photo_front_url: license.photo_front_url ?? undefined,
+                        photo_back_url: license.photo_back_url ?? undefined,  
+                        frontPreview: license.photo_front_url ?? undefined,
+                        backPreview: license.photo_back_url ?? undefined,
                         frontFile: undefined,
                         backFile: undefined
                     });
                     setViewMode(true);
                 } else {
                     console.log('No existing license found');
-                    setFormData(prev => ({
-                        ...prev,
-                        identificationNumber: profileData.identification_number
-                    }));
                     setHasLicense(false);
                     setViewMode(false);
                 }
 
-                setVehicleId(vehicleData.id);
-
             } catch (error: any) {
                 console.error('Error loading license data:', error);
-                showErrorNotification(error.message);
-                if (error.message.includes('vehículo')) {
-                    navigate({ to: '/RegistrarVehiculo' });
-                }
+                showErrorNotification(error.message || 'Error al cargar datos de la licencia');
             } finally {
                 setLoading(false);
             }
         };
 
         loadLicenseData();
-    }, [navigate]);
+    }, [navigate, user?.id]);
 
     const validateForm = (): boolean => {
         const newErrors: ValidationErrors = {};
@@ -222,7 +139,7 @@ const License: React.FC = () => {
         // Validaciones adicionales
         if (formData.expeditionDate && formData.expiryDate) {
             if (new Date(formData.expeditionDate) > new Date(formData.expiryDate)) {
-                newErrors.expeditionDate = 'La fecha de expedición no puede ser posterior a la fecha de vencimiento';
+                newErrors.expiryDate = 'La fecha de vencimiento debe ser posterior a la expedición';
             }
         }
 
@@ -283,55 +200,6 @@ const License: React.FC = () => {
             }
         };
 
-    const uploadPhoto = async (file: File, type: 'front' | 'back', userId: string): Promise<string | null> => {
-        try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${type}_${Date.now()}.${fileExt}`;
-            const filePath = `VehiclesDocuments/${userId}/${fileName}`;
-    
-            const { error: uploadError } = await supabase.storage
-                .from('Resources')
-                .upload(filePath, file, {
-                    upsert: true,
-                    cacheControl: '3600'
-                });
-    
-            if (uploadError) throw uploadError;
-    
-            const { data } = supabase.storage.from('Resources').getPublicUrl(filePath);
-            return data.publicUrl;
-        } catch (error) {
-            console.error(`Error uploading ${type} photo:`, error);
-            return null;
-        }
-    };
-    
-
-    const showSuccessModal = () => {
-        modals.open({
-            title: 'Operación Exitosa',
-            children: (
-                <div style={{ textAlign: 'center', padding: '20px' }}>
-                    <CheckCircle size={50} color="green" style={{ marginBottom: '15px' }} />
-                    <Text size="lg">
-                        {hasLicense ? 'Licencia actualizada correctamente' : 'Licencia registrada correctamente'}
-                    </Text>
-                    <Button
-                        onClick={() => {
-                            modals.closeAll();
-                            navigate({ to: '/Perfil' });
-                        }}
-                        style={{ marginTop: '20px' }}
-                    >
-                        Aceptar
-                    </Button>
-                </div>
-            ),
-            closeOnClickOutside: false,
-            closeOnEscape: false,
-        });
-    };
-
     const showErrorNotification = (message: string) => {
         notifications.show({
             title: 'Error',
@@ -341,7 +209,6 @@ const License: React.FC = () => {
         });
     };
 
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isSubmitting || !validateForm()) return;
@@ -349,98 +216,87 @@ const License: React.FC = () => {
         setIsSubmitting(true);
 
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            const userId = session?.user?.id;
-
-            if (!userId || !vehicleId) {
-                throw new Error('Información de usuario o vehículo no disponible');
+            if (!user?.id) {
+                throw new Error('Usuario no autenticado');
             }
 
-            // Preparar datos base
-            if (!formData.licenseNumber) {
-                throw new Error('Número de licencia es requerido');
-            }
-            
-            const licenseData = {
-                user_id: userId,
-                vehicle_id: vehicleId,
-                license_number: formData.licenseNumber.trim(),
-                identification_number: userProfile?.identification_number ?? null,
-                expedition_date: new Date(formData.expeditionDate).toISOString(),
-                expiration_date: new Date(formData.expiryDate).toISOString(),
+            // Preparar datos base para el backend
+            const licenseData: DriverLicenseFormData = {
+                license_number: formData.licenseNumber?.trim() || '',
+                identification_number: formData.identificationNumber || '',
                 license_category: formData.licenseCategory || 'B1',
                 blood_type: formData.bloodType || 'O+',
-                photo_front_url: formData.photo_front_url ?? null,
-                photo_back_url: formData.photo_back_url ?? null
+                expedition_date: formData.expeditionDate || '',
+                expiration_date: formData.expiryDate || '',
+                photo_front_url: formData.photo_front_url || null,
+                photo_back_url: formData.photo_back_url || null
             };
 
-            // Procesar fotos solo si se subieron nuevas
-            if (formData.frontFile) {
-                const frontUrl = await uploadPhoto(formData.frontFile, 'front', userId);
-                if (frontUrl) licenseData.photo_front_url = frontUrl;
+            // Registrar/actualizar licencia usando el backend
+            const response = await registerDriverLicense(licenseData);
+
+            if (!response.success) {
+                throw new Error(response.error || 'Error al procesar la licencia');
             }
 
-            if (formData.backFile) {
-                const backUrl = await uploadPhoto(formData.backFile, 'back', userId);
-                if (backUrl) licenseData.photo_back_url = backUrl;
+            // Si hay fotos nuevas para subir
+            if (response.license && (formData.frontFile || formData.backFile)) {
+                const photoUploadPromises: Promise<any>[] = [];
+
+                if (formData.frontFile) {
+                    const frontBase64 = await fileToBase64(formData.frontFile);
+                    photoUploadPromises.push(
+                        uploadDriverLicensePhotos(response.license.id, {
+                            photo_front_base64: frontBase64,
+                            filename_front: formData.frontFile.name
+                        })
+                    );
+                }
+
+                if (formData.backFile) {
+                    const backBase64 = await fileToBase64(formData.backFile);
+                    photoUploadPromises.push(
+                        uploadDriverLicensePhotos(response.license.id, {
+                            photo_back_base64: backBase64,
+                            filename_back: formData.backFile.name
+                        })
+                    );
+                }
+
+                // Esperar a que se suban las fotos
+                await Promise.all(photoUploadPromises);
             }
 
-            if (hasLicense && licenseId) {
-                // Actualizar licencia existente
-                const { error: updateError } = await supabase
-                    .from('driver_licenses')
-                    .update(licenseData)
-                    .eq('id', licenseId);
-
-                if (updateError) throw updateError;
-
-                // Actualizar estado local después de actualización exitosa
+            // Actualizar estado local
+            if (response.license) {
+                setHasLicense(true);
                 setFormData(prev => ({
                     ...prev,
-                    ...licenseData,
-                    expeditionDate: licenseData.expedition_date.split('T')[0],
-                    expiryDate: licenseData.expiration_date.split('T')[0],
+                    photo_front_url: response.license?.photo_front_url || prev.photo_front_url,
+                    photo_back_url: response.license?.photo_back_url || prev.photo_back_url,
                 }));
-
-                notifications.show({
-                    title: 'Actualización Exitosa',
-                    message: 'Los cambios han sido guardados correctamente',
-                    color: 'green',
-                    icon: <CheckCircle />
-                });
-
-                setViewMode(true); // Volver a modo vista
-                setFormHasChanged(false);
-            } else {
-                // Crear nueva licencia
-                const { data: newLicense, error: insertError } = await supabase
-                    .from('driver_licenses')
-                    .insert([licenseData])
-                    .select()
-                    .single();
-
-                if (insertError) throw insertError;
-
-                if (newLicense) {
-                    setLicenseId(newLicense.id);
-                    setHasLicense(true);
-                    showSuccessModal();
-                    setViewMode(true);
-                }
             }
+
+            notifications.show({
+                title: 'Éxito',
+                message: response.message || (hasLicense ? 'Licencia actualizada correctamente' : 'Licencia registrada correctamente'),
+                color: 'green',
+                icon: <CheckCircle />
+            });
+
+            setViewMode(true);
+            setFormHasChanged(false);
 
         } catch (error: any) {
             console.error('Error:', error);
-            showErrorNotification(
-                error.message || 'Error al procesar la licencia. Por favor, intente nuevamente.'
-            );
+            showErrorNotification(error.message || 'Error al procesar la licencia');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleEditClick = () => {
-        setViewMode(false); // Desbloquear campos
+        setViewMode(false);
         setFormHasChanged(false);
         notifications.show({
             title: 'Modo Edición Activado',
@@ -450,123 +306,9 @@ const License: React.FC = () => {
         });
     };
 
-    const loadLicenseData = async () => {
-        try {
-            setLoading(true);
-
-            // Obtener sesión y validar
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.user?.id) {
-                navigate({ to: '/Login' });
-                return;
-            }
-
-            const userId = session.user.id;
-            console.log('Loading license data for user:', userId);
-
-            // Cargar datos de la licencia existente primero
-            const { data: existingLicense } = await supabase
-                .from('driver_licenses')
-                .select('*')
-                .eq('user_id', userId)
-                .maybeSingle();
-
-            if (existingLicense) {
-                // Si existe licencia, guardar su ID
-                setLicenseId(existingLicense.id);
-                setHasLicense(true);
-            }
-
-            // Cargar datos del perfil primero
-            const profileData = await fetchUserProfile(userId);
-            if (!profileData) {
-                showErrorNotification('Debe completar su perfil primero');
-                navigate({ to: '/CompletarRegistro' });
-                return;
-            }
-            setUserProfile(profileData);
-
-            // Obtener primero el vehículo asociado
-            const { data: vehicleData, error: vehicleError } = await supabase
-                .from('vehicles')
-                .select('id')
-                .eq('user_id', userId)
-                .single();
-
-            if (vehicleError) {
-                console.error('Error fetching vehicle:', vehicleError);
-                throw new Error('Debe registrar primero un vehículo');
-            }
-
-            // Consultar datos de la licencia
-            const { data: licenseData, error: licenseError } = await supabase
-                .from('driver_licenses')
-                .select('id, license_number, identification_number, blood_type, license_category, expedition_date, expiration_date, photo_front_url, photo_back_url')
-                .eq('user_id', userId)
-                .maybeSingle();
-
-            if (licenseError && licenseError.code !== 'PGRST116') {
-                throw licenseError;
-            }
-
-            if (licenseData) {
-                console.log('Found existing license:', licenseData);
-                setHasLicense(true);
-                setFormData({
-                    licenseNumber: licenseData.license_number || '',
-                    expeditionDate: licenseData.expedition_date?.split('T')[0] || '',
-                    expiryDate: licenseData.expiration_date?.split('T')[0] || '',
-                    bloodType: licenseData.blood_type || 'O+',
-                    licenseCategory: licenseData.license_category || 'B1',
-                    identificationNumber: licenseData.identification_number ?? undefined,
-                    photo_front_url: licenseData.photo_front_url ?? undefined,
-                    photo_back_url: licenseData.photo_back_url ?? undefined,
-                    frontPreview: undefined,
-                    backPreview: undefined,
-                    frontFile: undefined,
-                    backFile: undefined
-                });
-                setViewMode(true);
-            } else {
-                console.log('No existing license found');
-                setFormData(prev => ({
-                    ...prev,
-                    identificationNumber: profileData.identification_number
-                }));
-                setHasLicense(false);
-                setViewMode(false);
-            }
-
-            setVehicleId(vehicleData.id);
-
-        } catch (error: any) {
-            console.error('Error loading license data:', error);
-            showErrorNotification(error.message);
-            if (error.message.includes('vehículo')) {
-                navigate({ to: '/RegistrarVehiculo' });
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleCancelEdit = () => {
         if (formHasChanged) {
-            // Mostrar confirmación si hay cambios
-            modals.openConfirmModal({
-                title: 'Cancelar edición',
-                children: (
-                    <Text>¿Estás seguro de que deseas cancelar la edición? Los cambios no guardados se perderán.</Text>
-                ),
-                labels: { confirm: 'Sí, cancelar', cancel: 'Seguir editando' },
-                confirmProps: { color: 'red' },
-                onConfirm: () => {
-                    setViewMode(true);
-                    setFormHasChanged(false);
-                    // Recargar datos originales
-                    loadLicenseData();
-                },
-            });
+            setIsModalOpen(true);
         } else {
             setViewMode(true);
         }
@@ -576,7 +318,7 @@ const License: React.FC = () => {
         if (formHasChanged) {
             setIsModalOpen(true);
         } else {
-            navigate({ to: '/Perfil' });
+            navigate({ to: hasLicense ? '/Perfil' : '/RegistrarVehiculo/DocumentsRequired' });
         }
     };
 
@@ -591,31 +333,19 @@ const License: React.FC = () => {
 
     const renderIdentificationField = () => (
         <div className={styles.formGroup}>
-            <label className={styles.label}>
-                <User size={16} className={styles.labelIcon} />
-                Número de Identificación
-            </label>
             <TextInput
               value={formData.identificationNumber ?? ''}
               disabled={true}
               className={`${styles.input} ${styles.disabledInput}`}
             />
-            
-            <small className={styles.helperText}>
-                Este campo no es editable y se obtiene de su perfil
-            </small>
         </div>
     );
 
-    const renderTextField = (label: string, name: keyof typeof formData, icon: React.ReactNode) => (
+    const renderTextField = (name: keyof typeof formData) => (
         <div className={styles.formGroup}>
-            <label className={styles.label}>
-                {icon}
-                {label}
-            </label>
             <TextInput
-                type="text" // Explicitly set the type to "text"
-                name={name}    // Set the name attribute to match the formData key
+                type="text"
+                name={name}
                 value={formData[name]?.toString() || ''}
                 onChange={(e) => handleInputChange(name, e.currentTarget.value)}
                 disabled={viewMode}
@@ -625,15 +355,11 @@ const License: React.FC = () => {
         </div>
     );
 
-    const renderDateField = (label: string, name: keyof typeof formData, icon: React.ReactNode) => (
+    const renderDateField = (name: keyof typeof formData) => (
         <div className={styles.formGroup}>
-            <label className={styles.label}>
-                {icon}
-                {label}
-            </label>
             <TextInput
                 type="date"
-                name={name}    // Set the name attribute to match the formData key
+                name={name}
                 value={formData[name]?.toString() || ''}
                 onChange={(e) => handleInputChange(name, e.currentTarget.value)}
                 disabled={viewMode}
@@ -651,18 +377,20 @@ const License: React.FC = () => {
                         type="button"
                         onClick={handleEditClick}
                         className={styles.buttonPrimary}
+                        disabled={isSubmitting}
                     >
-                        <FileText size={20} />
+                        <FileText size={20} style={{ marginRight: 8 }} />
                         Editar Licencia
                     </button>
                 );
             } else {
                 return (
-                    <>
+                    <div className={styles.editActions}>
                         <button
                             type="button"
                             onClick={handleCancelEdit}
                             className={styles.buttonSecondary}
+                            disabled={isSubmitting}
                         >
                             Cancelar
                         </button>
@@ -671,19 +399,9 @@ const License: React.FC = () => {
                             className={styles.buttonPrimary}
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? (
-                                <span className={styles.loadingText}>
-                                    <span className={styles.loadingSpinner} />
-                                    Guardando...
-                                </span>
-                            ) : (
-                                <>
-                                    <CheckCircle size={20} />
-                                    Guardar Cambios
-                                </>
-                            )}
+                            {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
                         </button>
-                    </>
+                    </div>
                 );
             }
         }
@@ -701,9 +419,9 @@ const License: React.FC = () => {
     if (loading) {
         return (
             <div className={styles.container}>
-                <div className={styles.gradientBackground} />
-                <div className={styles.loadingContainer}>
-                    <span className={styles.loadingSpinner} />
+                <div className={styles.loadingSpinner}>
+                    <div className={styles.spinner}></div>
+                    <Text>Cargando datos de licencia...</Text>
                 </div>
             </div>
         );
@@ -711,180 +429,144 @@ const License: React.FC = () => {
 
     return (
         <div className={styles.container}>
-            <Modal
-                opened={isModalOpen}
-                onClose={handleModalClose}
-                title="¿Salir sin guardar cambios?"
-                classNames={{
-                    root: styles.modalContainer,
-                    title: styles.modalTitle,
-                    body: styles.modalBody,
-                    header: styles.modalHeader,
-                    close: styles.modalCloseButton
-                }}
-            >
-                <p className={styles.modalParagraph}>
-                    ¿Estás seguro de que deseas salir sin guardar los cambios?
-                </p>
-                <div className={styles.modalButtons}>
-                    <Button onClick={handleModalClose} variant="outline" color="gray" className={styles.buttonModalSecondary} >
-                        Cancelar
-                    </Button>
-                    <Button onClick={handleModalConfirm} variant="filled" color="red" className={styles.buttonModalPrimary}>
-                        Salir sin guardar
-                    </Button>
-                </div>
-
-            </Modal>
             <div className={styles.gradientBackground} />
             <div className={styles.content}>
                 <div className={styles.header}>
-                    <button
-                        onClick={handleBack}
-                        className={styles.backButton}
-                    >
-                        <ArrowLeft size={20} />
-                        <span>Volver</span>
-                    </button>
-                    <h1 className={styles.title}>Licencia de Conducción</h1>
+                    <div className={styles.navigationHeader}>
+                        <button
+                            onClick={handleBack}
+                            className={styles.backButton}
+                            disabled={isSubmitting}
+                        >
+                            <ArrowLeft size={20} />
+                            <span>Volver</span>
+                        </button>
+                    </div>
+                    <h1 className={styles.title}>Licencia de Conducir</h1>
+                    <p className={styles.subtitle}>
+                        {hasLicense ? 'Información de tu licencia registrada' : 'Registra tu licencia de conducir'}
+                    </p>
                 </div>
-                <form onSubmit={handleSubmit} className={`${styles.form} ${!viewMode ? styles.editing : ''}`} >
-                    {/* Información de la Licencia */}
-                    <div className={styles.section}>
-                        <div className={styles.sectionHeader}>
-                            <FileText className={styles.sectionIcon} size={24} />
-                            <h2 className={styles.sectionTitle}>Información de la Licencia</h2>
-                        </div>
-                        <div className={styles.formGrid}>
-                             {renderTextField(
-                                  'Número de Licencia',
-                                  'licenseNumber',
-                                  <Shield size={16} className={styles.labelIcon} />
-                              )}
-                            {renderIdentificationField()}
-                             <div className={styles.formGroup}>
-                                 <label className={styles.label}>
-                                     <Shield size={16} className={styles.labelIcon} />
-                                     Categoría
-                                 </label>
-                                 <Select
-                                     name="licenseCategory"
-                                     value={formData.licenseCategory}
-                                     onChange={(value) => handleInputChange('licenseCategory', value || '')}
-                                     className={styles.select}
-                                     disabled={viewMode || isSubmitting}
-                                     data={LICENSE_CATEGORIES.map(category => ({ value: category.value, label: category.label }))}
-                                 />
-                             </div>
-                             <div className={styles.formGroup}>
-                                 <label className={styles.label}>
-                                     <Heart size={16} className={styles.labelIcon} />
-                                     Tipo de Sangre
-                                 </label>
-                                 <Select
-                                     name="bloodType"
-                                     value={formData.bloodType}
-                                     onChange={(value) => handleInputChange('bloodType', value || '')}
-                                     className={styles.select}
-                                     disabled={viewMode || isSubmitting}
-                                     data={BLOOD_TYPES.map(type => ({ value: type, label: type }))}
-                                 />
-                             </div>
-                             {renderDateField(
-                                  'Fecha de Expedición',
-                                  'expeditionDate',
-                                  <Calendar size={16} className={styles.labelIcon} />
-                              )}
-                             {renderDateField(
-                                  'Fecha de Vencimiento',
-                                  'expiryDate',
-                                  <Calendar size={16} className={styles.labelIcon} />
-                              )}
-                        </div>
-                    </div>
-                    {/* Fotos del Documento */}
-                    <div className={styles.section}>
-                        <div className={styles.sectionHeader}>
-                            <Camera className={styles.sectionIcon} size={24} />
-                            <h2 className={styles.sectionTitle}>Fotos de la Licencia</h2>
-                        </div>
-                        <div className={styles.photosGrid}>
-                            {/* Foto Frontal */}
-                            <div className={styles.photoUpload}>
-                                <div className={styles.photoPreview}>
-                                    {formData.frontPreview || formData.photo_front_url ? (
-                                        <img
-                                            src={formData.frontPreview || formData.photo_front_url || ""}
-                                            alt="Cara frontal"
-                                            className={styles.previewImage}
-                                        />
-                                    ) : (
-                                        <div className={styles.photoPlaceholder}>
-                                            <Camera size={40} className={styles.placeholderIcon} />
-                                            <span className={styles.placeholderText}>
-                                                Cara frontal
-                                            </span>
-                                        </div>
-                                    )}
+
+                <form onSubmit={handleSubmit} className={styles.form}>
+                    <div className={styles.formSections}>
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <User size={20} />
+                                Datos de la Licencia
+                            </h3>
+                            <div className={styles.formGrid}>
+                                {renderTextField('licenseNumber')}
+                                {renderIdentificationField()}
+                                <div className={styles.formGroup}>
+                                    <Select
+                                        value={formData.licenseCategory}
+                                        onChange={(value) => handleInputChange('licenseCategory', value || 'B1')}
+                                        data={LICENSE_CATEGORIES}
+                                        disabled={viewMode}
+                                        className={`${styles.input} ${viewMode ? styles.viewModeInput : ''}`}
+                                        error={errors.licenseCategory}
+                                    />
                                 </div>
-                                <input
-                                    type="file"
-                                    accept="image/jpeg,image/png,image.heic"
-                                    onChange={handleFileUpload('front')}
-                                    className={styles.photoInput}
-                                    id="front-photo"
-                                    disabled={viewMode || isSubmitting}
-                                />
-                                <label htmlFor="front-photo" className={styles.photoLabel}>
-                                    <Camera size={16} />
-                                    {formData.frontPreview || formData.photo_front_url ? 'Cambiar foto frontal' : 'Agregar foto frontal'}
-                                </label>
-                                {errors.frontFile && (
-                                    <span className={styles.errorText}>
-                                        <AlertCircle size={14} />
-                                        {errors.frontFile}
-                                    </span>
-                                )}
+                                <div className={styles.formGroup}>
+                                    <Select
+                                        value={formData.bloodType}
+                                        onChange={(value) => handleInputChange('bloodType', value || 'O+')}
+                                        data={BLOOD_TYPES}
+                                        disabled={viewMode}
+                                        className={`${styles.input} ${viewMode ? styles.viewModeInput : ''}`}
+                                        error={errors.bloodType}
+                                    />
+                                </div>
                             </div>
-                            {/* Foto Posterior */}
-                            <div className={styles.photoUpload}>
-                                <div className={styles.photoPreview}>
-                                    {formData.backPreview || formData.photo_back_url ? (
-                                        <img
-                                            src={formData.backPreview || formData.photo_back_url || ""}
-                                            alt="Cara posterior"
-                                            className={styles.previewImage}
-                                        />
-                                    ) : (
-                                        <div className={styles.photoPlaceholder}>
-                                            <Camera size={40} className={styles.placeholderIcon} />
-                                            <span className={styles.placeholderText}>
-                                                Cara posterior
-                                            </span>
-                                        </div>
+                        </div>
+
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <Calendar size={20} />
+                                Fechas
+                            </h3>
+                            <div className={styles.formGrid}>
+                                {renderDateField('expeditionDate')}
+                                {renderDateField('expiryDate')}
+                            </div>
+                        </div>
+
+                        <div className={styles.section}>
+                            <h3 className={styles.sectionTitle}>
+                                <Camera size={20} />
+                                Fotos de la Licencia
+                            </h3>
+                            <div className={styles.photoGrid}>
+                                <div className={styles.photoUpload}>
+                                    <h4>Foto Frontal</h4>
+                                    <div className={styles.photoPreview}>
+                                        {(formData.frontPreview || formData.photo_front_url) && (
+                                            <div className={styles.previewContainer}>
+                                                <img
+                                                    src={formData.frontPreview || formData.photo_front_url || ''}
+                                                    alt="Vista previa frontal"
+                                                    className={styles.previewImage}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image.heic"
+                                        onChange={handleFileUpload('front')}
+                                        className={styles.photoInput}
+                                        id="front-photo"
+                                        disabled={viewMode || isSubmitting}
+                                    />
+                                    <label htmlFor="front-photo" className={styles.photoLabel}>
+                                        <Camera size={16} />
+                                        {formData.frontPreview || formData.photo_front_url ? 'Cambiar foto frontal' : 'Agregar foto frontal'}
+                                    </label>
+                                    {errors.frontFile && (
+                                        <span className={styles.errorText}>
+                                            <AlertCircle size={14} />
+                                            {errors.frontFile}
+                                        </span>
                                     )}
                                 </div>
-                                <input
-                                    type="file"
-                                    accept="image/jpeg,image/png,image.heic"
-                                    onChange={handleFileUpload('back')}
-                                    className={styles.photoInput}
-                                    id="back-photo"
-                                    disabled={viewMode || isSubmitting}
-                                />
-                                <label htmlFor="back-photo" className={styles.photoLabel}>
-                                    <Camera size={16} />
-                                    {formData.backPreview || formData.photo_back_url ? 'Cambiar foto posterior' : 'Agregar foto posterior'}
-                                </label>
-                                {errors.backFile && (
-                                    <span className={styles.errorText}>
-                                        <AlertCircle size={14} />
-                                        {errors.backFile}
-                                    </span>
-                                )}
+
+                                <div className={styles.photoUpload}>
+                                    <h4>Foto Posterior</h4>
+                                    <div className={styles.photoPreview}>
+                                        {(formData.backPreview || formData.photo_back_url) && (
+                                            <div className={styles.previewContainer}>
+                                                <img
+                                                    src={formData.backPreview || formData.photo_back_url || ''}
+                                                    alt="Vista previa posterior"
+                                                    className={styles.previewImage}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/jpeg,image/png,image.heic"
+                                        onChange={handleFileUpload('back')}
+                                        className={styles.photoInput}
+                                        id="back-photo"
+                                        disabled={viewMode || isSubmitting}
+                                    />
+                                    <label htmlFor="back-photo" className={styles.photoLabel}>
+                                        <Camera size={16} />
+                                        {formData.backPreview || formData.photo_back_url ? 'Cambiar foto posterior' : 'Agregar foto posterior'}
+                                    </label>
+                                    {errors.backFile && (
+                                        <span className={styles.errorText}>
+                                            <AlertCircle size={14} />
+                                            {errors.backFile}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     {/* Mensaje de Error General */}
                     {errors.submit && (
                         <div className={styles.errorAlert}>
@@ -892,6 +574,7 @@ const License: React.FC = () => {
                             <span>{errors.submit}</span>
                         </div>
                     )}
+
                     {/* Botones de Acción */}
                     <div className={styles.formActions}>
                         <button
@@ -907,6 +590,28 @@ const License: React.FC = () => {
                     </div>
                 </form>
             </div>
+
+            {/* Modal de confirmación */}
+            {isModalOpen && (
+                <Modal
+                    opened={isModalOpen}
+                    onClose={handleModalClose}
+                    title="¿Descartar cambios?"
+                    centered
+                >
+                    <Text size="sm" style={{ marginBottom: '20px' }}>
+                        Tienes cambios sin guardar. ¿Estás seguro de que quieres salir sin guardar?
+                    </Text>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                        <Button variant="outline" onClick={handleModalClose}>
+                            Cancelar
+                        </Button>
+                        <Button color="red" onClick={handleModalConfirm}>
+                            Descartar
+                        </Button>
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };

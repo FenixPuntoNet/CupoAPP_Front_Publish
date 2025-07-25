@@ -15,12 +15,12 @@ import '@mantine/dates/styles.css';
 import { Search, PlusCircle, Car, User } from "lucide-react";
 import { config } from "telefunc/client";
 import styles from "./root.module.css";
-import { SupabaseAuthProvider } from '@/context/SupabaseAuthContext';
+import { BackendAuthProvider } from '@/context/BackendAuthContext';
 import { AuthGuard } from '@/components/AuthGuard';
 import { GoogleMapsProvider } from '@/components/GoogleMapsProvider';
 
-// Configure telefunc
-config.telefuncUrl = "http://localhost:3000/_telefunc";
+// Configure telefunc to use external backend
+config.telefuncUrl = "https://cupo-backend.fly.dev/_telefunc";
 
 // Theme configuration
 const theme = createTheme({
@@ -76,7 +76,7 @@ const RootComponent = () => {
   const showNavigation = !noNavBarRoutes.includes(location.pathname);
 
   return (
-    <SupabaseAuthProvider>
+    <BackendAuthProvider>
       <MantineProvider theme={theme} defaultColorScheme="dark">
         <GoogleMapsProvider>
           <AuthGuard>
@@ -151,7 +151,7 @@ const RootComponent = () => {
         </AuthGuard>
         </GoogleMapsProvider>
       </MantineProvider>
-    </SupabaseAuthProvider>
+    </BackendAuthProvider>
   );
 };
 

@@ -3,15 +3,15 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Container, TextInput, Text, Button, Title } from '@mantine/core';
 import { ArrowLeft, MapPin, Navigation, Search, Star, Clock } from 'lucide-react';
 import { GoogleMap, Marker } from '@react-google-maps/api';
-import { mapOptions } from '../../types/PublicarViaje/TripDataManagement';
 import styles from './index.module.css';
 
 // Interfaces
 interface Suggestion {
-  id: string;
-  description: string;
-  main_text: string;
-  secondary_text: string;
+  placeId: string;
+  mainText: string;
+  secondaryText: string;
+  fullText: string;
+  types?: string[];
 }
 
 interface Location {
@@ -29,6 +29,7 @@ function OrigenView() {
   const [error, setError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
   const [recentSearches] = useState<string[]>([
     'Aeropuerto El Dorado',
     'Centro Comercial Andino',
@@ -43,21 +44,32 @@ function OrigenView() {
   ]);
 
   const mapRef = useRef<google.maps.Map | null>(null);
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const searchTimeout = useRef<NodeJS.Timeout>();
 
-  // Inicializar servicios de Google Maps
+  // Verificar si Google Maps está cargado
   useEffect(() => {
-    if (window.google && window.google.maps && window.google.maps.places) {
-      if (!autocompleteServiceRef.current) {
-        autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+    const checkGoogleMaps = () => {
+      if (window.google?.maps?.places) {
+        setGoogleMapsLoaded(true);
+      } else {
+        setTimeout(checkGoogleMaps, 500);
       }
-      if (!placesServiceRef.current && mapRef.current) {
-        placesServiceRef.current = new google.maps.places.PlacesService(mapRef.current);
+    };
+    checkGoogleMaps();
+  }, []);
+
+  // Configuración básica del mapa
+  const mapOptions: google.maps.MapOptions = {
+    styles: [
+      {
+        featureType: "all",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#6b6b6b" }]
       }
-    }
-  }, [showMap]);
+    ],
+    disableDefaultUI: true,
+    zoomControl: true,
+  };
 
   // Obtener ubicación actual del usuario
   useEffect(() => {
@@ -80,41 +92,42 @@ function OrigenView() {
     }
   }, []);
 
-  // Manejar búsqueda con debounce
+  // Manejar búsqueda con debounce usando Google Maps directamente
   useEffect(() => {
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
 
-    if (searchTerm && !selectedLocation) {
+    if (searchTerm && !selectedLocation && window.google?.maps?.places) {
       setIsSearching(true);
       setError(null);
-      searchTimeout.current = setTimeout(() => {
-        if (autocompleteServiceRef.current) {
-          const request: google.maps.places.AutocompletionRequest = {
+      searchTimeout.current = setTimeout(async () => {
+        try {
+          const service = new google.maps.places.AutocompleteService();
+          service.getPlacePredictions({
             input: searchTerm,
-            componentRestrictions: { country: 'co' },
-            types: ['establishment', 'geocode']
-          };
-
-          autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
-            setIsSearching(false);
+            types: ['establishment', 'geocode'],
+            componentRestrictions: { country: 'co' }
+          }, (predictions, status) => {
             if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-              setResults(
-                predictions.map((prediction) => ({
-                  id: prediction.place_id,
-                  description: prediction.description,
-                  main_text: prediction.structured_formatting.main_text,
-                  secondary_text: prediction.structured_formatting.secondary_text || '',
-                }))
-              );
-            } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-              setResults([]);
+              const suggestions: Suggestion[] = predictions.map(prediction => ({
+                placeId: prediction.place_id,
+                mainText: prediction.structured_formatting.main_text,
+                secondaryText: prediction.structured_formatting.secondary_text || '',
+                fullText: prediction.description,
+                types: prediction.types
+              }));
+              setResults(suggestions);
             } else {
-              setError('Error al buscar ubicaciones. Intenta nuevamente.');
               setResults([]);
             }
+            setIsSearching(false);
           });
+        } catch (error) {
+          console.error('Error searching places:', error);
+          setError('Error al buscar ubicaciones. Intenta nuevamente.');
+          setResults([]);
+          setIsSearching(false);
         }
       }, 300);
     } else if (!searchTerm) {
@@ -130,53 +143,45 @@ function OrigenView() {
   }, [searchTerm, selectedLocation]);
 
   const handlePlaceSelect = async (suggestion: Suggestion) => {
-    // Inicializar el servicio de Places si no está disponible
-    if (!placesServiceRef.current) {
-      if (window.google && window.google.maps && window.google.maps.places) {
-        // Crear un div temporal para el servicio de Places
-        const tempDiv = document.createElement('div');
-        placesServiceRef.current = new google.maps.places.PlacesService(tempDiv);
-      } else {
-        setError('Google Maps no está disponible. Por favor, recarga la página.');
-        return;
-      }
-    }
-
     try {
       setError(null);
-      const result = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
-        placesServiceRef.current?.getDetails(
-          { placeId: suggestion.id, fields: ['geometry', 'formatted_address', 'name'] },
-          (place, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-              resolve(place);
-            } else {
-              reject(new Error(`Error obteniendo detalles del lugar: ${status}`));
-            }
-          }
-        );
-      });
-
-      if (result.geometry?.location) {
-        const location = {
-          lat: result.geometry.location.lat(),
-          lng: result.geometry.location.lng(),
-        };
-
-        setSelectedLocation(location);
-        setSelectedAddress(result.formatted_address || suggestion.description);
-        setSearchTerm(result.formatted_address || suggestion.description);
-        setShowMap(true);
-        setResults([]);
-
-        // Animar el mapa suavemente
-        setTimeout(() => {
-          if (mapRef.current) {
-            mapRef.current.panTo(location);
-            mapRef.current.setZoom(16);
-          }
-        }, 100);
+      
+      if (!window.google?.maps?.places) {
+        setError('Google Maps no está disponible');
+        return;
       }
+      
+      // Usar Google Maps PlacesService directamente
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      
+      service.getDetails({
+        placeId: suggestion.placeId,
+        fields: ['geometry', 'formatted_address', 'name']
+      }, (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+          const location = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+          };
+
+          setSelectedLocation(location);
+          setSelectedAddress(place.formatted_address || suggestion.fullText);
+          setSearchTerm(place.formatted_address || suggestion.fullText);
+          setShowMap(true);
+          setResults([]);
+
+          // Animar el mapa suavemente
+          setTimeout(() => {
+            if (mapRef.current) {
+              mapRef.current.panTo(location);
+              mapRef.current.setZoom(16);
+            }
+          }, 100);
+        } else {
+          setError('Error al obtener detalles del lugar');
+        }
+      });
+      
     } catch (err) {
       console.error('Error:', err);
       setError('Error al obtener la ubicación del origen. Intenta nuevamente.');
@@ -293,14 +298,14 @@ function OrigenView() {
           <div className={styles.resultsList}>
             {results.map((result) => (
               <button
-                key={result.id}
+                key={result.placeId}
                 className={styles.resultItem}
                 onClick={() => handlePlaceSelect(result)}
               >
                 <MapPin size={18} className={styles.resultIcon} />
                 <div className={styles.resultContent}>
-                  <Text className={styles.mainText}>{result.main_text}</Text>
-                  <Text className={styles.secondaryText}>{result.secondary_text}</Text>
+                  <Text className={styles.mainText}>{result.mainText}</Text>
+                  <Text className={styles.secondaryText}>{result.secondaryText}</Text>
                 </div>
               </button>
             ))}
@@ -389,9 +394,8 @@ function OrigenView() {
             center={selectedLocation || currentLocation || { lat: 4.6097, lng: -74.0817 }}
             zoom={selectedLocation ? 16 : 13}
             onClick={handleMapClick}
-            onLoad={(map) => {
+            onLoad={(map: google.maps.Map) => {
               mapRef.current = map;
-              placesServiceRef.current = new google.maps.places.PlacesService(map);
             }}
           >
             {selectedLocation && (

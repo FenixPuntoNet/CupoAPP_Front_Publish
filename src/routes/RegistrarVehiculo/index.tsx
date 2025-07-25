@@ -21,7 +21,16 @@ import {
     Box,
     UnstyledButton,
 } from '@mantine/core';
-import { supabase } from '@/lib/supabaseClient';
+import { 
+    getMyVehicle, 
+    registerVehicle, 
+    uploadVehiclePhoto,
+    deleteVehiclePhoto,
+    fileToBase64,
+    type VehicleFormData as BackendVehicleFormData,
+    validatePlate
+} from '@/services/vehicles';
+import { getCurrentUserProfile } from '@/services/profile';
 import styles from './index.module.css';
 import { notifications } from '@mantine/notifications';
 
@@ -54,16 +63,16 @@ interface ValidationErrors {
 
 interface VehicleData {
     id: number;
-    user_id: string | null;
-    brand: string | null;
-    model: string | null;
-    year: number | null;
-    plate: string | null;
-    color: string | null;
-    body_type: string | null;
-    engine_number: string | null;
-    chassis_number: string | null;
-    vin_number: string | null;
+    user_id: string;
+    brand: string;
+    model: string;
+    year: number;
+    plate: string;
+    color: string;
+    body_type: string;
+    engine_number: string;
+    chassis_number: string;
+    vin_number: string;
     photo_url?: string | null;
 }
 
@@ -101,7 +110,6 @@ const VehicleRegistration: React.FC = () => {
     const [error, setError] = useState("");
     const [viewMode, setViewMode] = useState(true);
     const [hasVehicle, setHasVehicle] = useState(false);
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
     const [formData, setFormData] = useState<VehicleFormData>({
         user_id: '',
@@ -126,47 +134,41 @@ const VehicleRegistration: React.FC = () => {
             setError("");
 
             try {
-                const { data: { session } } = await supabase.auth.getSession();
+                console.log('Loading user data using backend services');
 
-                console.log('Full session object:', session); // ADD THIS
+                const profile = await fetchUserProfile();
 
-                if (!session?.user?.id) {
-                    console.warn('No user ID found in session. Redirecting to /Login'); // ADD THIS
+                if (!profile) {
+                    console.warn('No user profile found. Redirecting to /Login');
                     navigate({ to: '/Login' });
                     return;
                 }
 
-                const userId = session.user.id;
-                console.log('User ID from session:', userId); // ADD THIS
-
-                const profile = await fetchUserProfile(userId);
-                setUserProfile(profile);
-
-                const vehicle = await fetchVehicleData(userId);
+                const vehicle = await fetchVehicleData();
 
                 if (vehicle) {
-                    console.log('Vehicle data fetched successfully:', vehicle); // ADD THIS
+                    console.log('Vehicle data fetched successfully:', vehicle);
                     setHasVehicle(true);
                     setViewMode(true);
                     setFormData({
                         id: vehicle.id,
-                        user_id: userId,
-                        brand: vehicle.brand || '',
-                        model: vehicle.model || '',
-                        year: vehicle.year ? vehicle.year.toString() : '',
-                        plate: vehicle.plate || '',
-                        color: vehicle.color || '',
-                        body_type: vehicle.body_type || '',
-                        engine_number: vehicle.engine_number || '',
-                        chassis_number: vehicle.chassis_number || '',
-                        vin_number: vehicle.vin_number || '',
+                        user_id: profile.user_id,
+                        brand: vehicle.brand,
+                        model: vehicle.model,
+                        year: vehicle.year.toString(),
+                        plate: vehicle.plate,
+                        color: vehicle.color,
+                        body_type: vehicle.body_type,
+                        engine_number: vehicle.engine_number,
+                        chassis_number: vehicle.chassis_number,
+                        vin_number: vehicle.vin_number,
                         photoUrl: vehicle.photo_url || null
                     });
                 } else {
-                    console.log('No vehicle data found for user.');  // ADD THIS
+                    console.log('No vehicle data found for user.');
                     setHasVehicle(false);
                     setViewMode(false);
-                    setFormData(prev => ({ ...prev, user_id: userId }));
+                    setFormData(prev => ({ ...prev, user_id: profile.user_id }));
                 }
 
             } catch (err: any) {
@@ -180,45 +182,55 @@ const VehicleRegistration: React.FC = () => {
         loadData();
     }, [navigate]);
 
-    const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    const fetchUserProfile = async (): Promise<UserProfile | null> => {
         try {
-            const { data, error } = await supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('user_id', userId)
-                .single();
-
-            if (error) {
-                console.warn("Error fetching user profile:", error);
+            const profileResponse = await getCurrentUserProfile();
+            
+            if (!profileResponse.success || !profileResponse.data) {
+                console.warn("Error fetching user profile:", profileResponse.error);
                 return null;
             }
 
-            return data || null;
+            const profile = profileResponse.data;
+            return {
+                id: Number(profile.id),
+                user_id: profile.user_id,
+                first_name: profile.first_name || (profile.user_id && typeof profile.user_id === 'string' ? profile.user_id.split('@')[0] : 'Usuario'),
+                last_name: profile.last_name || ''
+            };
         } catch (error) {
             console.error('Error fetching user profile:', error);
             return null;
         }
     };
 
-    const fetchVehicleData = async (userId: string): Promise<VehicleData | null> => {
+    const fetchVehicleData = async (): Promise<VehicleData | null> => {
         try {
-            console.log('Attempting to fetch vehicle data for user ID:', userId); // ADD THIS
-            const { data, error } = await supabase
-                .from('vehicles')
-                .select('*')
-                .eq('user_id', userId)
-                .limit(1)
-                .maybeSingle(); // Use maybeSingle
+            console.log('Attempting to fetch vehicle data using backend service');
+            const vehicleResponse = await getMyVehicle();
 
-            if (error) {
-                console.error("Error fetching vehicle data:", error);
-                setError(`Error loading vehicle information: ${error.message}`);
+            if (!vehicleResponse.success || !vehicleResponse.vehicle) {
+                console.log('No vehicle data found or error:', vehicleResponse.error);
                 return null;
             }
 
-            console.log('Vehicle data response:', data); // ADD THIS
+            const vehicle = vehicleResponse.vehicle;
+            console.log('Vehicle data response:', vehicle);
 
-            return data || null;
+            return {
+                id: vehicle.id,
+                user_id: vehicle.user_id,
+                brand: vehicle.brand,
+                model: vehicle.model,
+                year: vehicle.year,
+                plate: vehicle.plate,
+                color: vehicle.color,
+                body_type: vehicle.body_type,
+                engine_number: vehicle.engine_number,
+                chassis_number: vehicle.chassis_number,
+                vin_number: vehicle.vin_number,
+                photo_url: vehicle.photo_url
+            };
         } catch (error: any) {
             console.error('Error fetching vehicle data:', error);
             setError(`Error loading vehicle information: ${error.message}`);
@@ -239,8 +251,7 @@ const VehicleRegistration: React.FC = () => {
         if (!formData.chassis_number.trim()) newErrors.chassis_number = 'El número de chasis es requerido';
         if (!formData.vin_number.trim()) newErrors.vin_number = 'El número VIN es requerido';
 
-        const plateRegex = /^[A-Z]{3}\d{3}$/;
-        if (!plateRegex.test(formData.plate.toUpperCase())) {
+        if (formData.plate && !validatePlate(formData.plate)) {
             newErrors.plate = 'Formato de placa inválido (ejemplo: ABC123)';
         }
 
@@ -268,11 +279,11 @@ const VehicleRegistration: React.FC = () => {
         const file = e.target.files?.[0];
         if (!file) return;
       
-        const allowedTypes = ['image/jpeg', 'image/png'];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/heic'];
         const maxSizeInBytes = 5 * 1024 * 1024; // 5MB
       
         if (!allowedTypes.includes(file.type)) {
-          setError('Formato no soportado. Usa JPG o PNG.');
+          setError('Formato no soportado. Usa JPG, PNG o HEIC.');
           return;
         }
       
@@ -288,35 +299,65 @@ const VehicleRegistration: React.FC = () => {
             photo: file,
             photoUrl: reader.result as string,
           }));
-          setError(''); // Limpiar errores si todo sale bien
+          setError('');
+          
+          // Mostrar notificación de éxito
+          notifications.show({
+            title: 'Foto cargada',
+            message: 'La foto se ha cargado correctamente. Recuerda guardar los cambios.',
+            color: 'blue',
+            autoClose: 3000,
+          });
         };
       
         reader.readAsDataURL(file);
     };
-      
-    const uploadVehiclePhoto = async (file: File): Promise<string | null> => {
-        try {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}.${fileExt}`;
-          const userId = formData.user_id;
-          const filePath = `VehiclesDocuments/${userId}/${fileName}`;
-      
-          const { error: uploadError } = await supabase.storage
-            .from('Resources')
-            .upload(filePath, file, { upsert: true });
-      
-          if (uploadError) {
-            throw uploadError;
-          }
-      
-          const { data } = supabase.storage.from('Resources').getPublicUrl(filePath);
-          return data.publicUrl;
-        } catch (error) {
-          console.error('Error uploading photo:', error);
-          setError(`Error al subir la foto: ${error}`);
-          return null;
+
+    const handleRemovePhoto = async () => {
+        if (viewMode) return;
+
+        // Si es una foto nueva (no guardada), solo eliminarla del estado
+        if (formData.photo && !hasVehicle) {
+            setFormData(prev => ({ ...prev, photo: null, photoUrl: null }));
+            notifications.show({
+                title: 'Foto eliminada',
+                message: 'La foto ha sido eliminada.',
+                color: 'orange',
+                autoClose: 3000,
+            });
+            return;
         }
-    };      
+
+        // Si es una foto existente guardada en el servidor
+        if (hasVehicle && formData.id) {
+            try {
+                const response = await deleteVehiclePhoto(formData.id);
+                if (response.success) {
+                    setFormData(prev => ({ ...prev, photo: null, photoUrl: null }));
+                    notifications.show({
+                        title: 'Foto eliminada',
+                        message: 'La foto ha sido eliminada del servidor.',
+                        color: 'green',
+                        autoClose: 3000,
+                    });
+                } else {
+                    setError('Error al eliminar la foto del servidor');
+                }
+            } catch (error) {
+                console.error('Error deleting photo:', error);
+                setError('Error al eliminar la foto');
+            }
+        } else {
+            // Foto local no guardada
+            setFormData(prev => ({ ...prev, photo: null, photoUrl: null }));
+            notifications.show({
+                title: 'Foto eliminada',
+                message: 'La foto ha sido eliminada.',
+                color: 'orange',
+                autoClose: 3000,
+            });
+        }
+    };
 
     const showSuccessNotification = (message: string) => {
         notifications.show({
@@ -338,99 +379,103 @@ const VehicleRegistration: React.FC = () => {
         try {
             setLoading(true);
             setError("");
-
-            let photoUrl: string | null = null;
-
-            if (formData.photo) {
-                const uploadedUrl = await uploadVehiclePhoto(formData.photo);
-                if (uploadedUrl) {
-                    photoUrl = uploadedUrl; // solo URL pública real del Storage
-                }
-            } else if (formData.photoUrl && formData.photoUrl.startsWith('http')) {
-                // Si ya existía una URL previa válida
-                photoUrl = formData.photoUrl;
-            }
             
-
-            const vehicleData = {
-                user_id: formData.user_id,
+            const vehicleData: BackendVehicleFormData = {
                 brand: formData.brand.trim(),
                 model: formData.model.trim(),
-                year: parseInt(formData.year),
+                year: formData.year,
                 plate: formData.plate.trim().toUpperCase(),
                 color: formData.color,
                 body_type: formData.body_type,
                 engine_number: formData.engine_number.trim(),
                 chassis_number: formData.chassis_number.trim(),
                 vin_number: formData.vin_number.trim(),
-                photo_url: photoUrl,
+                photo_url: formData.photoUrl,
             };
 
-            if (hasVehicle && formData.id) {
-                const { error: updateError } = await supabase
-                    .from('vehicles')
-                    .update(vehicleData)
-                    .eq('id', formData.id);
+            const response = await registerVehicle(vehicleData);
 
-                if (updateError) {
-                    console.error("Update error:", updateError);
-                    setError(`Error updating vehicle: ${updateError.message}`);
-                    throw updateError;
-                }
-                
-                showSuccessNotification('Información del vehículo actualizada correctamente');
-                setViewMode(true);
-            } else {
-                const { data: existingVehicle, error: existingVehicleError } = await supabase
-                    .from('vehicles')
-                    .select('id')
-                    .eq('user_id', formData.user_id)
-                    .maybeSingle();
-
-                if (existingVehicleError) {
-                    console.error("Error checking for existing vehicle:", existingVehicleError);
-                    setError("Error al verificar si ya existe un vehículo registrado.");
-                    setLoading(false);
-                    return;
-                }
-
-                if (existingVehicle) {
-                    setError("Ya tienes un vehículo registrado. Para modificarlo, edita la información existente.");
-                    setLoading(false);
-                    return;
-                }
-
-                const { error: insertError } = await supabase
-                    .from('vehicles')
-                    .insert([vehicleData]);
-
-                if (insertError) {
-                    console.error("Insert error:", insertError);
-                    setError(`Error inserting vehicle: ${insertError.message}`);
-                    throw insertError;
-                }
-                
-                showSuccessNotification('Vehículo registrado correctamente');
+            if (!response.success) {
+                console.error("Registration error:", response.error);
+                setError(`Error al procesar vehículo: ${response.error}`);
+                return;
             }
 
+            let vehiclePhotoUrl = formData.photoUrl;
+
+            // Si hay una foto nueva y el vehículo se registró correctamente, subirla
+            if (response.vehicle && formData.photo) {
+                try {
+                    notifications.show({
+                        title: 'Subiendo foto...',
+                        message: 'Por favor espera mientras se sube la foto del vehículo.',
+                        color: 'blue',
+                        autoClose: false,
+                        id: 'photo-upload',
+                    });
+
+                    const photoBase64 = await fileToBase64(formData.photo);
+                    const photoResponse = await uploadVehiclePhoto(
+                        response.vehicle.id,
+                        photoBase64,
+                        formData.photo.name
+                    );
+                    
+                    // Cerrar notificación de carga
+                    notifications.hide('photo-upload');
+                    
+                    if (photoResponse.success) {
+                        vehiclePhotoUrl = photoResponse.photo_url || vehiclePhotoUrl;
+                        notifications.show({
+                            title: 'Foto subida',
+                            message: 'La foto del vehículo se ha subido correctamente.',
+                            color: 'green',
+                            autoClose: 3000,
+                        });
+                    } else {
+                        console.warn('Photo upload failed:', photoResponse.error);
+                        notifications.show({
+                            title: 'Error al subir foto',
+                            message: photoResponse.error || 'No se pudo subir la foto',
+                            color: 'orange',
+                            autoClose: 5000,
+                        });
+                    }
+                } catch (photoError) {
+                    notifications.hide('photo-upload');
+                    console.warn('Error uploading photo:', photoError);
+                    notifications.show({
+                        title: 'Error al subir foto',
+                        message: 'Hubo un problema al subir la foto, pero el vehículo se guardó correctamente.',
+                        color: 'orange',
+                        autoClose: 5000,
+                    });
+                }
+            }
+            
+            showSuccessNotification(response.message || 'Vehículo procesado correctamente');
+
             // Recargar los datos después de guardar
-            const updatedVehicle = await fetchVehicleData(formData.user_id);
+            const updatedVehicle = await fetchVehicleData();
             if (updatedVehicle) {
                 setFormData(prev => ({
                     ...prev,
                     id: updatedVehicle.id,
-                    user_id: updatedVehicle.user_id || '',
-                    brand: updatedVehicle.brand || '',
-                    model: updatedVehicle.model || '',
-                    year: updatedVehicle.year?.toString() || '',
-                    plate: updatedVehicle.plate || '',
-                    color: updatedVehicle.color || '',
-                    body_type: updatedVehicle.body_type || '',
-                    engine_number: updatedVehicle.engine_number || '',
-                    chassis_number: updatedVehicle.chassis_number || '',
-                    vin_number: updatedVehicle.vin_number || '',
-                    photoUrl: updatedVehicle.photo_url || null
+                    user_id: updatedVehicle.user_id,
+                    brand: updatedVehicle.brand,
+                    model: updatedVehicle.model,
+                    year: updatedVehicle.year.toString(),
+                    plate: updatedVehicle.plate,
+                    color: updatedVehicle.color,
+                    body_type: updatedVehicle.body_type,
+                    engine_number: updatedVehicle.engine_number,
+                    chassis_number: updatedVehicle.chassis_number,
+                    vin_number: updatedVehicle.vin_number,
+                    photoUrl: vehiclePhotoUrl,
+                    photo: null // Limpiar el archivo después de subirlo
                 }));
+                setHasVehicle(true);
+                setViewMode(true);
             }
 
             navigate({ to: '/Perfil' });
@@ -438,193 +483,231 @@ const VehicleRegistration: React.FC = () => {
         } catch (err: any) {
             console.error('Error processing vehicle:', err);
             setError(`Error saving vehicle data: ${err.message || "An error occurred"}`);
+            notifications.show({
+                title: 'Error',
+                message: `Error al procesar el vehículo: ${err.message}`,
+                color: 'red',
+                autoClose: 5000,
+            });
         } finally {
             setLoading(false);
         }
     };
 
-    const handleBack = () => {
-        navigate({ to: '/Perfil' });
+    const handleDocumentClick = () => {
+        navigate({ to: '/RegistrarVehiculo/DocumentsRequired' });
     };
-
-    const toggleViewMode = () => {
-        setViewMode(!viewMode);
-    };
-
-    const renderFormField = (
-        label: string,
-        name: keyof VehicleFormData,
-        type: 'text' | 'select' = 'text',
-        options?: { value: string; label: string }[]
-    ) => {
-        const value = formData[name]?.toString() || '';
-        const fieldError = errors[name];
-
-        return (
-            <div className={styles.formGroup}>
-                <label className={styles.label}>
-                    <FileText size={16} className={styles.labelIcon} />
-                    {label}
-                </label>
-                {type === 'select' ? (
-                    <Select
-                        data={options || []}
-                        value={value}
-                        onChange={(newValue) => handleInputChange(name, newValue || '')}
-                        disabled={viewMode}
-                        error={fieldError}
-                        className={viewMode ? styles.viewModeInput : ''}
-                    />
-                ) : (
-                    <TextInput
-                        value={value}
-                        onChange={(e) => handleInputChange(name, e.currentTarget.value)}
-                        disabled={viewMode}
-                        error={fieldError}
-                        className={viewMode ? styles.viewModeInput : ''}
-                    />
-                )}
-            </div>
-        );
-    };
-
-    if (initialLoading) {
-        return (
-            <Container className={styles.container}>
-                <LoadingOverlay visible={true} />
-            </Container>
-        );
-    }
 
     return (
-        <Container className={styles.container}>
-            <div className={styles.gradientBackground} />
-            <LoadingOverlay visible={loading} />
+        <Container fluid className={styles.container}>
+            <LoadingOverlay visible={initialLoading} />
 
-            <Group justify="flex-start" mb="xl">
-                <UnstyledButton onClick={handleBack} className={styles.backButton}>
+            <div className={styles.header}>
+                <UnstyledButton onClick={() => navigate({ to: '/Perfil' })} className={styles.backButton}>
                     <ArrowLeft size={24} />
                 </UnstyledButton>
-            </Group>
+                <Text className={styles.headerTitle}>
+                    {hasVehicle ? 'Mi Vehículo' : 'Registrar Vehículo'}
+                </Text>
+            </div>
 
-            <Paper className={styles.formWrapper}>
-                <Box className={styles.header}>
-                    <div style={{height: '10px'}} />
-                    <Group gap="apart" align="center">
-                        <Text className={styles.title}>
-                            {hasVehicle ? 'Información del Vehículo' : 'Registrar Vehículo'}
-                        </Text>
-                        {hasVehicle && (
-                            <Button
-                                onClick={() => setViewMode(!viewMode)}
-                                variant="light"
-                            >
-                                {viewMode ? 'Editar' : 'Cancelar Edición'}
-                            </Button>
-                        )}
-                    </Group>
-                    <Text className={styles.subtitle}>
-                        {hasVehicle
-                            ? 'Esta es la información registrada de tu vehículo'
-                            : 'Ingresa los datos de tu vehículo'
-                        }
-                    </Text>
-                </Box>
-                {userProfile && (
-                    <Box>
-                        <Text>Bienvenido, {userProfile.first_name || 'Usuario'}</Text>
-                    </Box>
-                )}
+            {error && (
+                <div className={styles.errorContainer}>
+                    <AlertCircle size={20} />
+                    <Text size="sm" color="red">{error}</Text>
+                </div>
+            )}
 
-                <form className={styles.form}>
-                    <div className={styles.formGroup}>
-                        <label className={styles.label}>
-                            <Camera size={16} className={styles.labelIcon} />
-                            Foto del vehículo
-                        </label>
-                        <div className={styles.photoSection}>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handlePhotoUpload}
-                                id="vehicle-photo"
-                                className={styles.hiddenInput}
-                                disabled={viewMode}
-                            />
-                            <label
-                                htmlFor="vehicle-photo"
-                                className={`${styles.photoUpload} ${viewMode ? styles.disabled : ''}`}
-                            >
-                                {formData.photoUrl ? (
-                                    <div className={styles.photoPreview}>
-                                        <img
-                                            src={formData.photoUrl}
-                                            alt="Vehículo"
-                                            className={styles.previewImage}
-                                        />
-                                        {!viewMode && (
-                                            <div className={styles.photoOverlay}>
-                                                <Camera size={24} />
-                                                <span>Cambiar foto</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className={styles.photoPlaceholder}>
-                                        <Camera size={32} />
-                                        <span>Agregar foto del vehículo</span>
-                                    </div>
-                                )}
-                            </label>
-                            {errors.photo && (
-                                <Text size="sm" color="red" mt="xs">
-                                    {errors.photo}
-                                </Text>
-                            )}
-                        </div>
-                    </div>
-
-                    {renderFormField('Marca', 'brand')}
-                    {renderFormField('Modelo', 'model')}
-                    {renderFormField('Año', 'year', 'select', YEARS)}
-                    {renderFormField('Color', 'color', 'select', COLORS)}
-                    {renderFormField('Placa', 'plate')}
-                    {renderFormField('Tipo de Vehículo', 'body_type', 'select', BODY_TYPES)}
-                    {renderFormField('Número de Motor', 'engine_number')}
-                    {renderFormField('Número de Chasis', 'chassis_number')}
-                    {renderFormField('Número VIN', 'vin_number')}
-
-                    {error && (
-                        <Text color="red" size="sm" mt="md" className={styles.errorMessage}>
-                            <AlertCircle size={16} style={{ marginRight: 8 }} />
-                            {error}
-                        </Text>
-                    )}
-
-                    <Group justify="space-between" mt="xl" className={styles.buttonGroup}>
+            <Paper className={styles.formContainer}>
+                <Group justify="space-between" className={styles.formHeader}>
+                    <Text size="lg" fw={600}>Información del Vehículo</Text>
+                    {hasVehicle && (
                         <Button
                             variant="outline"
-                            onClick={handleBack}
-                            className={styles.secondaryButton}
+                            size="sm"
+                            onClick={() => setViewMode(!viewMode)}
                         >
-                            Regresar
+                            {viewMode ? 'Editar' : 'Cancelar'}
                         </Button>
-                        {hasVehicle && (
-                            <Button onClick={toggleViewMode} className={styles.secondaryButton}>
-                                {viewMode ? 'Editar' : 'Ver'}
-                            </Button>
-                        )}
+                    )}
+                </Group>
 
-                        <Button
-                            onClick={handleSubmit}
-                            loading={loading}
-                            className={styles.primaryButton}
-                            disabled={viewMode}
-                        >
-                            {loading ? 'Guardando...' : 'Guardar'}
-                        </Button>
-                    </Group>
-                </form>
+                <div className={styles.formGrid}>
+                    <TextInput
+                        label="Marca"
+                        placeholder="Ej: Toyota, Chevrolet"
+                        value={formData.brand}
+                        onChange={(e) => handleInputChange('brand', e.target.value)}
+                        error={errors.brand}
+                        disabled={viewMode}
+                        required
+                    />
+
+                    <TextInput
+                        label="Modelo"
+                        placeholder="Ej: Corolla, Spark"
+                        value={formData.model}
+                        onChange={(e) => handleInputChange('model', e.target.value)}
+                        error={errors.model}
+                        disabled={viewMode}
+                        required
+                    />
+
+                    <Select
+                        label="Año"
+                        placeholder="Seleccionar año"
+                        data={YEARS}
+                        value={formData.year}
+                        onChange={(value) => handleInputChange('year', value || '')}
+                        error={errors.year}
+                        disabled={viewMode}
+                        required
+                    />
+
+                    <TextInput
+                        label="Placa"
+                        placeholder="ABC123"
+                        value={formData.plate}
+                        onChange={(e) => handleInputChange('plate', e.target.value.toUpperCase())}
+                        error={errors.plate}
+                        disabled={viewMode}
+                        required
+                    />
+
+                    <Select
+                        label="Color"
+                        placeholder="Seleccionar color"
+                        data={COLORS}
+                        value={formData.color}
+                        onChange={(value) => handleInputChange('color', value || '')}
+                        error={errors.color}
+                        disabled={viewMode}
+                        required
+                    />
+
+                    <Select
+                        label="Tipo de vehículo"
+                        placeholder="Seleccionar tipo"
+                        data={BODY_TYPES}
+                        value={formData.body_type}
+                        onChange={(value) => handleInputChange('body_type', value || '')}
+                        error={errors.body_type}
+                        disabled={viewMode}
+                        required
+                    />
+
+                    <TextInput
+                        label="Número de motor"
+                        placeholder="Número de motor"
+                        value={formData.engine_number}
+                        onChange={(e) => handleInputChange('engine_number', e.target.value)}
+                        error={errors.engine_number}
+                        disabled={viewMode}
+                        required
+                    />
+
+                    <TextInput
+                        label="Número de chasis"
+                        placeholder="Número de chasis"
+                        value={formData.chassis_number}
+                        onChange={(e) => handleInputChange('chassis_number', e.target.value)}
+                        error={errors.chassis_number}
+                        disabled={viewMode}
+                        required
+                    />
+
+                    <TextInput
+                        label="Número VIN"
+                        placeholder="Número VIN"
+                        value={formData.vin_number}
+                        onChange={(e) => handleInputChange('vin_number', e.target.value)}
+                        error={errors.vin_number}
+                        disabled={viewMode}
+                        required
+                    />
+                </div>
+
+                <Box className={styles.photoSection}>
+                    <Text size="sm" fw={500} mb="xs">
+                        Foto del vehículo
+                        {formData.photo && !viewMode && (
+                            <Text span size="xs" color="orange" ml={8}>
+                                (Foto nueva - Recuerda guardar)
+                            </Text>
+                        )}
+                    </Text>
+                    <div className={styles.photoUpload}>
+                        {formData.photoUrl ? (
+                            <div className={styles.photoContainer}>
+                                <img 
+                                    src={formData.photoUrl} 
+                                    alt="Vehículo" 
+                                    className={styles.photoPreview}
+                                />
+                                {!viewMode && (
+                                    <Button
+                                        size="xs"
+                                        variant="light"
+                                        color="red"
+                                        onClick={handleRemovePhoto}
+                                        className={styles.removePhotoButton}
+                                    >
+                                        ×
+                                    </Button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className={styles.photoPlaceholder}>
+                                <Camera size={40} />
+                                <Text size="sm" color="dimmed">Sin foto</Text>
+                            </div>
+                        )}
+                        {!viewMode && (
+                            <div className={styles.photoUploadControls}>
+                                <input
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/heic"
+                                    onChange={handlePhotoUpload}
+                                    className={styles.photoInput}
+                                    id="photo-upload"
+                                />
+                                <Button
+                                    component="label"
+                                    htmlFor="photo-upload"
+                                    variant="outline"
+                                    leftSection={<Camera size={16} />}
+                                    size="sm"
+                                    className={styles.uploadButton}
+                                >
+                                    {formData.photoUrl ? 'Cambiar foto' : 'Subir foto'}
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </Box>
+
+                {!viewMode && (
+                    <Button
+                        fullWidth
+                        onClick={handleSubmit}
+                        loading={loading}
+                        className={styles.submitButton}
+                    >
+                        {hasVehicle ? 'Actualizar Vehículo' : 'Registrar Vehículo'}
+                    </Button>
+                )}
+
+                {hasVehicle && (
+                    <Button
+                        fullWidth
+                        variant="outline"
+                        leftSection={<FileText size={20} />}
+                        onClick={handleDocumentClick}
+                        className={styles.documentsButton}
+                    >
+                        Gestionar Documentos
+                    </Button>
+                )}
             </Paper>
         </Container>
     );

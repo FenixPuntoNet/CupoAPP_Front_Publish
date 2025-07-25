@@ -3,15 +3,16 @@ import { Link, createFileRoute, useNavigate, useSearch } from '@tanstack/react-r
 import { Container, TextInput, Text, Button, Title } from '@mantine/core';
 import { ArrowLeft, MapPin, Navigation, Search, Star, Clock } from 'lucide-react';
 import { GoogleMap, Marker } from '@react-google-maps/api';
-import { mapOptions } from '../../types/PublicarViaje/TripDataManagement';
+import { getPlaceSuggestions, getPlaceDetails } from '@/services/googleMaps';
 import styles from './index.module.css';
 
 // Interfaces
 interface Suggestion {
-  id: string;
-  description: string;
-  main_text: string;
-  secondary_text: string;
+  placeId: string;
+  mainText: string;
+  secondaryText: string;
+  fullText: string;
+  types?: string[];
 }
 
 interface Location {
@@ -45,21 +46,20 @@ function DestinoView() {
   ]);
 
   const mapRef = useRef<google.maps.Map | null>(null);
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const searchTimeout = useRef<NodeJS.Timeout>();
 
-  // Inicializar servicios de Google Maps
-  useEffect(() => {
-    if (window.google && window.google.maps && window.google.maps.places) {
-      if (!autocompleteServiceRef.current) {
-        autocompleteServiceRef.current = new google.maps.places.AutocompleteService();
+  // Configuración básica del mapa
+  const mapOptions: google.maps.MapOptions = {
+    styles: [
+      {
+        featureType: "all",
+        elementType: "labels.text.fill",
+        stylers: [{ color: "#6b6b6b" }]
       }
-      if (!placesServiceRef.current && mapRef.current) {
-        placesServiceRef.current = new google.maps.places.PlacesService(mapRef.current);
-      }
-    }
-  }, [showMap]);
+    ],
+    disableDefaultUI: true,
+    zoomControl: true,
+  };
 
   // Obtener ubicación actual del usuario
   useEffect(() => {
@@ -82,7 +82,7 @@ function DestinoView() {
     }
   }, []);
 
-  // Manejar búsqueda con debounce mejorado
+  // Manejar búsqueda con debounce usando el servicio del backend
   useEffect(() => {
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
@@ -91,32 +91,16 @@ function DestinoView() {
     if (searchTerm && !selectedLocation) {
       setIsSearching(true);
       setError(null);
-      searchTimeout.current = setTimeout(() => {
-        if (autocompleteServiceRef.current) {
-          const request: google.maps.places.AutocompletionRequest = {
-            input: searchTerm,
-            componentRestrictions: { country: 'co' },
-            types: ['establishment', 'geocode']
-          };
-
-          autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
-            setIsSearching(false);
-            if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-              setResults(
-                predictions.map((prediction) => ({
-                  id: prediction.place_id,
-                  description: prediction.description,
-                  main_text: prediction.structured_formatting.main_text,
-                  secondary_text: prediction.structured_formatting.secondary_text || '',
-                }))
-              );
-            } else if (status === google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-              setResults([]);
-            } else {
-              setError('Error al buscar destinos. Intenta nuevamente.');
-              setResults([]);
-            }
-          });
+      searchTimeout.current = setTimeout(async () => {
+        try {
+          const suggestions = await getPlaceSuggestions(searchTerm);
+          setResults(suggestions);
+          setIsSearching(false);
+        } catch (error) {
+          console.error('Error searching places:', error);
+          setError('Error al buscar destinos. Intenta nuevamente.');
+          setResults([]);
+          setIsSearching(false);
         }
       }, 300);
     } else if (!searchTerm) {
@@ -132,42 +116,21 @@ function DestinoView() {
   }, [searchTerm, selectedLocation]);
 
   const handlePlaceSelect = async (suggestion: Suggestion) => {
-    // Inicializar el servicio de Places si no está disponible
-    if (!placesServiceRef.current) {
-      if (window.google && window.google.maps && window.google.maps.places) {
-        // Crear un div temporal para el servicio de Places
-        const tempDiv = document.createElement('div');
-        placesServiceRef.current = new google.maps.places.PlacesService(tempDiv);
-      } else {
-        setError('Google Maps no está disponible. Por favor, recarga la página.');
-        return;
-      }
-    }
-
     try {
       setError(null);
-      const result = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
-        placesServiceRef.current?.getDetails(
-          { placeId: suggestion.id, fields: ['geometry', 'formatted_address', 'name'] },
-          (place, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-              resolve(place);
-            } else {
-              reject(new Error(`Error obteniendo detalles del lugar: ${status}`));
-            }
-          }
-        );
-      });
-
-      if (result.geometry?.location) {
+      
+      // Usar el backend service para obtener detalles del lugar
+      const placeDetails = await getPlaceDetails(suggestion.placeId);
+      
+      if (placeDetails) {
         const location = {
-          lat: result.geometry.location.lat(),
-          lng: result.geometry.location.lng(),
+          lat: placeDetails.location.lat,
+          lng: placeDetails.location.lng,
         };
 
         setSelectedLocation(location);
-        setSelectedAddress(result.formatted_address || suggestion.description);
-        setSearchTerm(result.formatted_address || suggestion.description);
+        setSelectedAddress(placeDetails.formattedAddress || suggestion.fullText);
+        setSearchTerm(placeDetails.formattedAddress || suggestion.fullText);
         setShowMap(true);
         setResults([]);
 
@@ -303,14 +266,14 @@ function DestinoView() {
           <div className={styles.resultsList}>
             {results.map((result) => (
               <button
-                key={result.id}
+                key={result.placeId}
                 className={styles.resultItem}
                 onClick={() => handlePlaceSelect(result)}
               >
                 <MapPin size={18} className={styles.resultIcon} />
                 <div className={styles.resultContent}>
-                  <Text className={styles.mainText}>{result.main_text}</Text>
-                  <Text className={styles.secondaryText}>{result.secondary_text}</Text>
+                  <Text className={styles.mainText}>{result.mainText}</Text>
+                  <Text className={styles.secondaryText}>{result.secondaryText}</Text>
                 </div>
               </button>
             ))}
@@ -399,9 +362,8 @@ function DestinoView() {
             center={selectedLocation || currentLocation || { lat: 4.6097, lng: -74.0817 }}
             zoom={selectedLocation ? 16 : 13}
             onClick={handleMapClick}
-            onLoad={(map) => {
+            onLoad={(map: google.maps.Map) => {
               mapRef.current = map;
-              placesServiceRef.current = new google.maps.places.PlacesService(map);
             }}
           >
             {selectedLocation && (

@@ -15,7 +15,7 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useForm } from "@mantine/form";
 import styles from "./index.module.css";
 import { TermsModal } from "@/components/TermsModal";
-import { supabase } from "@/lib/supabaseClient";
+import { registerUser, type SignupRequest } from "@/services/auth";
 
 interface RegisterFormValues {
   nombre: string;
@@ -64,30 +64,25 @@ const RegisterView: React.FC = () => {
       setError(null);
       setLoading(true);
   
-      // 1. Registrar usuario con Supabase
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Preparar datos para el backend
+      const userData: SignupRequest = {
         email: values.email,
         password: values.password,
-        options: {
-          data: {
-            full_name: values.nombre,
-            terms_accepted: acceptTerms,
-            email_subscribed: subscribeEmails,
-          }
-        }
-      });
+        full_name: values.nombre,
+        terms_accepted: acceptTerms,
+        email_subscribed: subscribeEmails
+      };
+
+      // Registrar usuario usando el backend
+      const result = await registerUser(userData);
   
-      if (authError) {
-        setError(`Error al registrar: ${authError.message}`);
+      if (!result.success) {
+        setError(result.error || 'Error al registrar usuario');
         return;
       }
   
-      if (!authData.user) {
-        setError("No se pudo crear el usuario. Intenta nuevamente.");
-        return;
-      }
-  
-      // 2. Redirigir al login
+      // Registro exitoso - mostrar mensaje y redirigir al login
+      console.log('Registration successful:', result.message);
       navigate({ to: "/Login" });
   
     } catch (error) {

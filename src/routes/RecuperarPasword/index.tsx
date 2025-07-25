@@ -8,7 +8,7 @@ import {
   Text,
   LoadingOverlay
 } from '@mantine/core';
-import { supabase } from '@/lib/supabaseClient';
+import { resetPassword } from '@/services/auth';
 import styles from './RecuperarPassword.module.css';
 
 const RecoverPasswordView = () => {
@@ -19,25 +19,23 @@ const RecoverPasswordView = () => {
   const [tokenChecked, setTokenChecked] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [email, setEmail] = useState('');
+  const [token, setToken] = useState('');
 
   useEffect(() => {
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.replace('#', '?'));
     const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
-
-    if (!access_token || !refresh_token) {
+    const emailParam = params.get('email');
+    
+    if (!access_token || !emailParam) {
       setError('El enlace no es válido o ha expirado.');
       return;
     }
 
-    supabase.auth.setSession({ access_token, refresh_token }).then(({ error }) => {
-      if (error) {
-        setError('Error al establecer sesión. Intenta de nuevo.');
-      } else {
-        setTokenChecked(true);
-      }
-    });
+    setEmail(emailParam);
+    setToken(access_token);
+    setTokenChecked(true);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,15 +47,16 @@ const RecoverPasswordView = () => {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    
+    const result = await resetPassword(email, token, password);
 
-    if (error) {
-      setError('No se pudo actualizar la contraseña.');
-    } else {
+    if (result.success) {
       setSuccess(true);
       setTimeout(() => {
         navigate({ to: '/Login' });
       }, 2000);
+    } else {
+      setError(result.error || 'No se pudo actualizar la contraseña.');
     }
 
     setLoading(false);

@@ -19,6 +19,11 @@ import {
     type TripStopover,
     type StopData
 } from '../../types/PublicarViaje/TripDataManagement';
+import { 
+    createLocationForStopover, 
+    convertTripLocationToLocationData,
+    searchLocationsForStopovers
+} from '../../services/paradas';
 import styles from './index.module.css';
 
 interface StopLocation extends TripLocation {
@@ -110,7 +115,7 @@ function ParadasView() {
       };
     }, []);
 
-    // Buscar ciudades y pueblos cercanos
+    // Buscar ciudades y pueblos cercanos combinando Google Maps y backend
     const findStopsAlongRoute = useCallback(async () => {
         if (!window.google || !mapRef.current) {
             throw new Error('Google Maps no está inicializado');
@@ -144,6 +149,7 @@ function ParadasView() {
 
         const searchPromises: Promise<void>[] = [];
 
+        // Búsqueda con Google Maps Places API
         for (let i = 0; i < path.length; i += 20) {
           const location = path[i];
           
@@ -198,6 +204,51 @@ function ParadasView() {
       }
 
         await Promise.all(searchPromises);
+
+        // Búsqueda adicional en el backend para ubicaciones guardadas
+        try {
+          const backendLocations = await searchLocationsForStopovers({
+            limit: 50,
+            // Buscar ubicaciones que puedan estar cerca de la ruta
+            city: destination.secondaryText || origin.secondaryText
+          });
+
+          if (backendLocations.success && backendLocations.locations.length > 0) {
+            for (const location of backendLocations.locations) {
+              // Convertir ubicación del backend a formato local
+              if (!stops.has(location.place_id || `backend_${location.id}`)) {
+                try {
+                  const stopInfo = await calculateStopInfo(
+                    {
+                      lat: parseFloat(location.latitude),
+                      lng: parseFloat(location.longitude)
+                    },
+                    origin
+                  );
+
+                  stops.set(location.place_id || `backend_${location.id}`, {
+                    location_id: location.id,
+                    placeId: location.place_id || `backend_${location.id}`,
+                    address: location.address,
+                    coords: {
+                      lat: parseFloat(location.latitude),
+                      lng: parseFloat(location.longitude),
+                    },
+                    mainText: location.main_text,
+                    secondaryText: location.secondary_text || '',
+                    distance: stopInfo.distance,
+                    duration: stopInfo.duration,
+                  });
+                } catch (error) {
+                  console.error('Error calculando info de parada backend:', error);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.warn('Error buscando ubicaciones en backend:', error);
+          // No es crítico, continúa con las ubicaciones de Google Maps
+        }
         
         return Array.from(stops.values()).sort((a, b) => {
           const distA = Number.parseInt(a.distance.replace(/[^0-9]/g, ''));
@@ -415,16 +466,48 @@ function ParadasView() {
     const handleConfirm = async () => {
         setIsLoading(true)
       try {
+          // Crear las ubicaciones en el backend si son necesarias
           const selectedStopoversPromises = Array.from(selectedStops).map(async (stopId, index) => {
               const stop = allStops.find((s) => s.placeId === stopId);
-                if(!stop) return null;
-                 const stopDetails = await getStopDetails(stopId);
-                 
-            return stopDetails ? {
-                location: stopDetails,
-                order: index,
-              } : null
+              if(!stop) return null;
               
+              // Obtener detalles completos de la parada
+              const stopDetails = await getStopDetails(stopId);
+              if (!stopDetails) return null;
+
+              try {
+                // Crear o verificar la ubicación en el backend
+                const locationData = convertTripLocationToLocationData({
+                  mainText: stopDetails.mainText,
+                  address: stopDetails.address,
+                  coords: stopDetails.coords,
+                  secondaryText: stopDetails.secondaryText,
+                  placeId: stopDetails.placeId,
+                });
+
+                const locationResult = await createLocationForStopover(locationData);
+                
+                if (locationResult.success) {
+                  // Actualizar el stopDetails con el ID de la ubicación creada/encontrada
+                  return {
+                    location: {
+                      ...stopDetails,
+                      location_id: locationResult.location.id,
+                    },
+                    order: index,
+                  } as TripStopover;
+                } else {
+                  console.error('Error creating location for stopover:', locationResult);
+                  return null;
+                }
+              } catch (error) {
+                console.error('Error creating location in backend:', error);
+                // Si falla el backend, continúa con los datos locales
+                return {
+                  location: stopDetails,
+                  order: index,
+                } as TripStopover;
+              }
          });
 
            const selectedStopovers = (await Promise.all(selectedStopoversPromises)).filter(Boolean) as TripStopover[];

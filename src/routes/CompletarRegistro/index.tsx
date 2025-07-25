@@ -15,7 +15,8 @@ import { ArrowLeft, Camera } from 'lucide-react';
 import { useForm } from '@mantine/form';
 import { useNavigate, createFileRoute } from '@tanstack/react-router';
 import { notifications } from '@mantine/notifications';
-import { supabase } from '@/lib/supabaseClient';
+import { getCurrentUserProfile, updateUserProfile, completeUserProfile, uploadProfilePhoto } from '@/services/profile';
+import { useBackendAuth } from '@/context/BackendAuthContext';
 import styles from './index.module.css';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -30,7 +31,6 @@ interface ProfileFormData {
   identification_number: string;
   user_type: string;
   photo_user?: string | null;
-  file?: File;
 }
 
 const CompleteProfileView: React.FC = () => {
@@ -39,6 +39,7 @@ const CompleteProfileView: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { user } = useBackendAuth();
 
   const form = useForm<ProfileFormData>({
     initialValues: {
@@ -51,7 +52,6 @@ const CompleteProfileView: React.FC = () => {
       identification_number: '',
       user_type: 'PASSENGER',
       photo_user: null,
-      file: undefined,
     },
     validate: {
       phone_number: (v) => (!v || v.length < 10 ? 'Número inválido' : null),
@@ -64,35 +64,50 @@ const CompleteProfileView: React.FC = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return navigate({ to: '/Login' });
-
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (profile) {
-          setIsEditing(true);
-          setPreviewUrl(profile.photo_user || null);
-          form.setValues({
-            id: profile.id,
-            email: user.email || '',
-            phone_number: profile.phone_number || '',
-            first_name: profile.first_name || '',
-            last_name: profile.last_name || '',
-            identification_type: profile.identification_type || 'CC',
-            identification_number: profile.identification_number || '',
-            user_type: profile.status || 'PASSENGER',
-            photo_user: profile.photo_user || null,
-          });
-        } else {
+        // Obtener el email y nombre del usuario autenticado
+        const userEmail = user?.email || '';
+        const userName = user?.username || '';
+        
+        console.log('Auth context user:', { userEmail, userName });
+        
+        // Usar el backend service para obtener el perfil
+        const profileResponse = await getCurrentUserProfile();
+        
+        if (!profileResponse.success || !profileResponse.data) {
+          // Si no hay perfil, crear uno nuevo con los datos del usuario autenticado
           form.setValues({
             ...form.values,
-            email: user.email || '',
+            email: userEmail,
+            first_name: userName,
           });
+          console.log('No profile found, using auth data:', { userEmail, userName });
+          setInitialLoading(false);
+          return;
         }
+
+        const profile = profileResponse.data;
+        setIsEditing(true);
+        setPreviewUrl(profile.profile_picture || null);
+        
+        console.log('Profile data loaded:', profile);
+        
+        // Combinar datos del perfil con datos de autenticación
+        // Siempre usar el email del contexto de autenticación
+        form.setValues({
+          id: Number(profile.id),
+          email: userEmail, // Siempre usar el email del usuario autenticado
+          phone_number: profile.phone_number || '',
+          // Preferir first_name del perfil si existe, de lo contrario usar el nombre del usuario autenticado
+          first_name: profile.first_name && profile.first_name !== profile.user_id ? 
+                      profile.first_name : userName,
+          last_name: profile.last_name || '',
+          identification_type: profile.identification_type || 'CC',
+          identification_number: profile.identification_number || '',
+          user_type: profile.status || 'PASSENGER',
+          photo_user: profile.profile_picture || null,
+        });
+        
+        console.log('Form values set:', form.values);
       } catch (err) {
         console.error('Error loading profile:', err);
       } finally {
@@ -102,16 +117,62 @@ const CompleteProfileView: React.FC = () => {
 
     loadProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setPreviewUrl(URL.createObjectURL(file));
-    form.setFieldValue('file', file);
+    try {
+      setLoading(true);
+      
+      // Mostrar preview inmediatamente
+      const previewURL = URL.createObjectURL(file);
+      setPreviewUrl(previewURL);
+
+      // Subir la foto al backend
+      const uploadResult = await uploadProfilePhoto(file);
+      
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Error al subir la foto');
+      }
+
+      // Actualizar el formulario con la URL de la foto subida
+      form.setFieldValue('photo_user', uploadResult.photo_url);
+      
+      // Limpiar el preview URL del objeto para usar la URL del servidor
+      URL.revokeObjectURL(previewURL);
+      setPreviewUrl(uploadResult.photo_url || null);
+
+      notifications.show({
+        title: 'Foto subida',
+        message: 'Tu foto de perfil se ha subido correctamente',
+        color: 'green',
+      });
+
+      console.log('✅ Photo uploaded successfully:', {
+        url: uploadResult.photo_url,
+        compression: uploadResult.compression
+      });
+
+    } catch (error) {
+      console.error('❌ Error uploading photo:', error);
+      
+      // Revertir el preview en caso de error
+      setPreviewUrl(form.values.photo_user || null);
+      
+      notifications.show({
+        title: 'Error al subir foto',
+        message: error instanceof Error ? error.message : 'Error desconocido al subir la foto',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // TODO: Implementar uploadPhoto cuando esté disponible en el backend
+  /*
   const uploadPhoto = async (file: File, userId: string): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
@@ -134,37 +195,70 @@ const CompleteProfileView: React.FC = () => {
       return null;
     }
   };
+  */
 
   const handleSubmit = async (values: ProfileFormData) => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuario no autenticado');
 
-      let photoUrl = values.photo_user || null;
+      // La foto ya se subió en handleFileChange, así que usamos la URL que ya está en el formulario
+      const photoUrl = values.photo_user || null;
 
-      if (values.file) {
-        const uploadedUrl = await uploadPhoto(values.file, user.id);
-        if (uploadedUrl) photoUrl = uploadedUrl;
-      }
-
+      // Format data to match backend expectations
       const dataToSave = {
-        user_id: user.id,
         first_name: values.first_name.trim(),
         last_name: values.last_name.trim(),
         phone_number: values.phone_number.trim(),
         identification_type: values.identification_type,
         identification_number: values.identification_number.trim(),
+        // El backend espera status en lugar de user_type para algunos endpoints
         status: values.user_type,
-        Verification: 'SIN VERIFICAR',
-        photo_user: photoUrl,
+        user_type: values.user_type,
+        // Usa photo_user para la compatibilidad con ambos endpoints
+        photo_user: photoUrl || undefined,
+        profile_picture: photoUrl || undefined
       };
 
-      const result = isEditing
-        ? await supabase.from('user_profiles').update(dataToSave).eq('user_id', user.id)
-        : await supabase.from('user_profiles').insert([dataToSave]);
+      console.log('📝 Saving profile with data:', dataToSave);
 
-      if (result.error) throw result.error;
+      // First try with the specialized complete profile endpoint
+      let updateResponse;
+      try {
+        console.log('🔄 Attempting to use specialized complete profile endpoint');
+        console.log('📊 Data being sent to /profile POST:', JSON.stringify(dataToSave));
+        updateResponse = await completeUserProfile(dataToSave);
+        
+        if (updateResponse.success) {
+          console.log('✅ Profile completed successfully with /profile endpoint');
+        } else {
+          console.warn('⚠️ /profile endpoint returned error:', updateResponse.error);
+          throw new Error(updateResponse.error || 'Error al completar perfil');
+        }
+      } catch (completeError) {
+        console.error('❌ Error with /profile endpoint:', completeError);
+        
+        // Fallback to the update endpoint
+        console.log('🔄 Falling back to /me PUT endpoint');
+        try {
+          // Intentamos con el endpoint alternativo
+          console.log('📊 Data being sent to /me PUT:', JSON.stringify(dataToSave));
+          updateResponse = await updateUserProfile(dataToSave);
+          
+          if (updateResponse.success) {
+            console.log('✅ Profile updated successfully with /me endpoint');
+          } else {
+            console.error('❌ Error response from /me endpoint:', updateResponse.error);
+            throw new Error(updateResponse.error || 'Error al actualizar perfil');
+          }
+        } catch (updateError) {
+          console.error('❌ Error with fallback endpoint:', updateError);
+          throw new Error('No se pudo actualizar el perfil. Por favor, inténtalo de nuevo.');
+        }
+      }
+
+      if (!updateResponse.success) {
+        throw new Error(updateResponse.error || 'Error al guardar el perfil');
+      }
 
       notifications.show({
         title: 'Perfil guardado',
@@ -175,9 +269,14 @@ const CompleteProfileView: React.FC = () => {
       navigate({ to: values.user_type === 'DRIVER' ? '/RegistrarVehiculo' : '/home' });
     } catch (err: any) {
       console.error('Save error:', err);
+      
+      // Mostrar mensaje más descriptivo para ayudar a diagnosticar el problema
+      const errorMessage = err.message || 'Error al guardar';
+      const additionalInfo = err.cause ? ` (${err.cause})` : '';
+      
       notifications.show({
-        title: 'Error',
-        message: err.message || 'Error al guardar',
+        title: 'Error al actualizar perfil',
+        message: `${errorMessage}${additionalInfo}. Por favor, intenta nuevamente.`,
         color: 'red',
       });
     } finally {

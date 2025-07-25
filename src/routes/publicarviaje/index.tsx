@@ -38,7 +38,8 @@ import {
 } from '../../types/PublicarViaje/TripDataManagement';
 import styles from './index.module.css';
 import { notifications } from '@mantine/notifications';
-import { supabase } from '@/lib/supabaseClient'; 
+import { getCurrentUser } from '@/services/auth';
+import { getCurrentUserProfile } from '@/services/profile'; 
 
 
 interface RoutePreferences {
@@ -77,28 +78,22 @@ function ReservarView(){
 useEffect(() => {
   const validateUserAccess = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const user = await getCurrentUser();
 
-      if (!session?.user?.id) {
+      if (!user.success || !user.user) {
         navigate({ to: '/Login' });
         return;
       }
 
-      const { data: profileRaw, error } = await supabase
-        .from('user_profiles')
-        .select(`status, "Verification"`)
-        .eq('user_id', session.user.id)
-        .single();
+      const profile = await getCurrentUserProfile();
 
-      if (error || !profileRaw) {
-        console.error('Error cargando perfil:', error);
+      if (!profile.success || !profile.data) {
+        console.error('Error cargando perfil:', profile.error);
         return;
       }
 
-      const profile = profileRaw as { status: string; Verification: string };
-
-      const isDriver = profile.status === 'DRIVER';
-      const isVerified = profile.Verification === 'VERIFICADO';
+      const isDriver = profile.data.status === 'DRIVER';
+      const isVerified = profile.data.verification === 'VERIFICADO';
 
       if (!isDriver || !isVerified) {
         notifications.show({

@@ -17,7 +17,7 @@ import {
 import { showNotification } from '@mantine/notifications'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { IconAlertCircle, IconCheck, IconQrcode, IconX } from '@tabler/icons-react'
-import { supabase } from '@/lib/supabaseClient'
+import { validateCupo } from '@/services/cupos'
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner'
 import styles from './ValidarCupo.module.css'
 import { Capacitor } from '@capacitor/core'
@@ -49,42 +49,16 @@ const ValidarCupoComponent = () => {
       }
       setLoading(true)
       try {
-        const { data: booking, error: fetchError } = await supabase
-          .from('bookings')
-          .select('id, booking_qr, booking_status')
-          .eq('id', bookingId)
-          .single()
-
-        if (fetchError || !booking) {
-          throw new Error('No se encontró el booking.')
-        }
-
-        if (booking.booking_status === 'payed') {
-          setModalType('error')
-          setError('Este cupo ya fue validado anteriormente.')
+        const result = await validateCupo(bookingId, qrData);
+        
+        if (result.success && result.data) {
+          setModalType('success')
           setIsModalOpen(true)
-          return
-        }
-
-        if (booking.booking_qr !== qrData) {
+        } else {
           setModalType('error')
-          setError('Este código QR no coincide con la reserva seleccionada.')
+          setError(result.error || 'Error al validar el cupo')
           setIsModalOpen(true)
-          return
         }
-
-        await supabase
-          .from('booking_passengers')
-          .update({ status: 'validated' })
-          .eq('booking_id', bookingId)
-
-        await supabase
-          .from('bookings')
-          .update({ booking_status: 'payed' })
-          .eq('id', bookingId)
-
-        setModalType('success')
-        setIsModalOpen(true)
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Error al validar el cupo'
         setError(msg)
