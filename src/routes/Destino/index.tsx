@@ -3,7 +3,8 @@ import { Link, createFileRoute, useNavigate, useSearch } from '@tanstack/react-r
 import { Container, TextInput, Text, Button, Title } from '@mantine/core';
 import { ArrowLeft, MapPin, Navigation, Search, Star, Clock } from 'lucide-react';
 import { GoogleMap, Marker } from '@react-google-maps/api';
-import { getPlaceSuggestions, getPlaceDetails } from '@/services/googleMaps';
+import { useMaps } from '@/components/GoogleMapsProvider';
+import { getPlaceSuggestions, getPlaceDetails, reverseGeocode } from '@/services/googleMaps';
 import styles from './index.module.css';
 
 // Interfaces
@@ -22,6 +23,7 @@ interface Location {
 
 function DestinoView() {
   const navigate = useNavigate();
+  const { isLoaded, loadError } = useMaps();
   const { originAddress = '' } = useSearch({ from: '/Destino/' });
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<Suggestion[]>([]);
@@ -32,21 +34,32 @@ function DestinoView() {
   const [isSearching, setIsSearching] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [popularDestinations] = useState<string[]>([
-    'Aeropuerto El Dorado',
-    'Terminal de Transporte',
-    'Centro Comercial Andino',
-    'Zona Rosa',
-    'Universidad Nacional'
+    'Universidad Javeriana Cali',
+    'Universidad Autónoma de Occidente',
+    'Universidad Icesi',
+    'Universidad del Valle - Univalle',
+    'Universidad San Buenaventura'
   ]);
   const [recentDestinations] = useState<string[]>([
-    'Medellín, Antioquia',
-    'Cali, Valle del Cauca',
-    'Cartagena, Bolívar',
-    'Bucaramanga, Santander'
+    'Universidad Libre Cali',
+    'Universidad Santiago de Cali',
+    'Universidad Católica Luis Amigó',
+    'Aeropuerto Alfonso Bonilla Aragón'
   ]);
 
   const mapRef = useRef<google.maps.Map | null>(null);
   const searchTimeout = useRef<NodeJS.Timeout>();
+
+  // Verificar estado de Google Maps
+  useEffect(() => {
+    if (loadError) {
+      console.error('Google Maps load error:', loadError);
+      setError('Error cargando Google Maps. Por favor, recarga la página.');
+    } else if (isLoaded) {
+      console.log('✅ Google Maps loaded successfully for destination');
+      setError(null);
+    }
+  }, [isLoaded, loadError]);
 
   // Configuración básica del mapa
   const mapOptions: google.maps.MapOptions = {
@@ -73,12 +86,12 @@ function DestinoView() {
         },
         (error) => {
           console.error('Error obteniendo ubicación:', error);
-          // Ubicación por defecto (Bogotá)
-          setCurrentLocation({ lat: 4.6097, lng: -74.0817 });
+          // Ubicación por defecto (Cali)
+          setCurrentLocation({ lat: 3.4516, lng: -76.5320 });
         }
       );
     } else {
-      setCurrentLocation({ lat: 4.6097, lng: -74.0817 });
+      setCurrentLocation({ lat: 3.4516, lng: -76.5320 });
     }
   }, []);
 
@@ -158,46 +171,56 @@ function DestinoView() {
 
     try {
       setError(null);
-      const geocoder = new google.maps.Geocoder();
-      const response = await geocoder.geocode({ location });
+      console.log('🗺️ Reverse geocoding destination location:', location);
       
-      if (response.results[0]) {
+      // Usar el servicio del backend para geocodificación inversa
+      const address = await reverseGeocode(location.lat, location.lng);
+      
+      if (address) {
         setSelectedLocation(location);
-        setSelectedAddress(response.results[0].formatted_address);
-        setSearchTerm(response.results[0].formatted_address);
+        setSelectedAddress(address);
+        setSearchTerm(address);
         setResults([]);
+        console.log('✅ Destination address found:', address);
       } else {
         setError('No se pudo obtener la dirección de esta ubicación');
       }
     } catch (err) {
-      console.error('Error:', err);
+      console.error('❌ Error reverse geocoding destination:', err);
       setError('Error al obtener la dirección');
     }
   };
 
-  const handleUseCurrentLocation = () => {
+  const handleUseCurrentLocation = async () => {
     if (currentLocation) {
       setSelectedLocation(currentLocation);
       setShowMap(true);
       
-      // Obtener dirección de la ubicación actual
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ location: currentLocation }, (results, status) => {
-        if (status === 'OK' && results?.[0]) {
-          setSelectedAddress(results[0].formatted_address);
-          setSearchTerm(results[0].formatted_address);
+      try {
+        console.log('📍 Getting address for current location as destination:', currentLocation);
+        
+        // Obtener dirección de la ubicación actual usando el servicio del backend
+        const address = await reverseGeocode(currentLocation.lat, currentLocation.lng);
+        
+        if (address) {
+          setSelectedAddress(address);
+          setSearchTerm(address);
+          console.log('✅ Current location as destination address:', address);
         } else {
           setSelectedAddress('Ubicación actual');
           setSearchTerm('Ubicación actual');
         }
-      });
 
-      setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.panTo(currentLocation);
-          mapRef.current.setZoom(16);
-        }
-      }, 100);
+        setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.panTo(currentLocation);
+            mapRef.current.setZoom(16);
+          }
+        }, 100);
+      } catch (err) {
+        console.error('❌ Error with current location as destination:', err);
+        setError('Error al procesar tu ubicación actual');
+      }
     }
   };
 
@@ -359,7 +382,7 @@ function DestinoView() {
               fullscreenControl: false,
               mapTypeControl: false,
             }}
-            center={selectedLocation || currentLocation || { lat: 4.6097, lng: -74.0817 }}
+            center={selectedLocation || currentLocation || { lat: 3.4516, lng: -76.5320 }}
             zoom={selectedLocation ? 16 : 13}
             onClick={handleMapClick}
             onLoad={(map: google.maps.Map) => {

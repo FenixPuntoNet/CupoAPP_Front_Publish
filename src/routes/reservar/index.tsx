@@ -67,10 +67,20 @@ const ReservarView = () => {
     useEffect(() => {
         const loadAssumptions = async () => {
             try {
+                console.log('🔧 Loading assumptions...');
                 const data = await getAssumptions();
+                console.log('✅ Assumptions loaded:', data);
                 setAssumptions(data);
             } catch (error) {
-                console.error('Error loading assumptions:', error);
+                console.error('❌ Error loading assumptions:', error);
+                // Usar valores por defecto si falla
+                setAssumptions({
+                    urban_price_per_km: 2000,
+                    interurban_price_per_km: 1500,
+                    price_limit_percentage: 100,
+                    alert_threshold_percentage: 50,
+                    fee_percentage: 10
+                });
             }
         };
         loadAssumptions();
@@ -142,7 +152,10 @@ const ReservarView = () => {
         setIsSearching(true);
         setSearchResults([]);
         setFormError(null);
-        console.log('formData before API call:', formData);
+        setSearchMessage('');
+        setSearchStatus('none');
+        
+        console.log('🔍 Starting search with formData:', formData);
     
         try {
             if (!formData.origin || !formData.destination || !formData.date) {
@@ -159,6 +172,13 @@ const ReservarView = () => {
             }
     
             const formattedDate = dayjs(formData.date).format('YYYY-MM-DD');
+            
+            console.log('📅 Formatted search params:', {
+                origin: formData.origin,
+                destination: formData.destination,
+                date: formattedDate,
+                passengers: formData.passengers
+            });
     
             // Usar el endpoint de búsqueda del backend
             const response = await searchTrips({
@@ -168,22 +188,60 @@ const ReservarView = () => {
                 passengers: formData.passengers
             });
 
-            // Actualizar los resultados
-            setSearchResults(response.trips);
-            setSearchMessage(response.message);
-            setSearchStatus(response.status);
+            console.log('✅ Search response received:', response);
+
+            // Actualizar los resultados con logs informativos
+            setSearchResults(response.trips || []);
+            setSearchMessage(response.message || 'Búsqueda completada');
+            setSearchStatus(response.status || 'none');
+
+            // Log del tipo de búsqueda realizada
+            const searchType = {
+                'exact': '🎯 Búsqueda exacta: origen + destino + fecha',
+                'close': '📍 Búsqueda por ubicación: origen O destino coinciden',
+                'date': '📅 Búsqueda por fecha: viajes disponibles en la fecha',
+                'all': '🗂️ Búsqueda general: todos los viajes disponibles',
+                'none': '❌ Sin resultados'
+            };
+
+            console.log(`📊 Resultado de búsqueda: ${searchType[response.status || 'none']}`);
+            console.log(`📈 Viajes encontrados: ${response.trips.length}`);
+
+            // Si no hay resultados, mostrar mensaje informativo
+            if (response.trips.length === 0) {
+                setSearchMessage(response.message || 'No se encontraron viajes disponibles. El sistema buscó por exactitud, similitud, fecha y viajes generales.');
+            }
 
         } catch (error) {
-            console.error('Error in search:', error);
-            setFormError('Error al buscar viajes. Por favor intenta de nuevo.');
-            setSearchMessage('Error al buscar viajes. Por favor intenta de nuevo.');
+            console.error('❌ Error in search:', error);
+            
+            // Manejo más específico de errores
+            let errorMessage = 'Error al buscar viajes. Por favor intenta de nuevo.';
+            let errorDetails = 'Error al conectar con el servidor. Verifica tu conexión e intenta nuevamente.';
+            
+            if (error instanceof Error) {
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage = 'Error de conexión';
+                    errorDetails = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+                } else if (error.message.includes('500')) {
+                    errorMessage = 'Error del servidor';
+                    errorDetails = 'El servidor está experimentando problemas. Intenta nuevamente en unos momentos.';
+                } else if (error.message.includes('404')) {
+                    errorMessage = 'Servicio no disponible';
+                    errorDetails = 'El servicio de búsqueda no está disponible temporalmente.';
+                } else {
+                    errorDetails = `Error técnico: ${error.message}`;
+                }
+            }
+            
+            setFormError(errorMessage);
+            setSearchMessage(errorDetails);
             setSearchStatus('none');
+            setSearchResults([]);
         } finally {
             setIsSearching(false);
         }
-    };
-
-    const handleInputFocus = (type: 'origin' | 'destination') => {
+    };    const handleInputFocus = (type: 'origin' | 'destination') => {
         setFocusedInput(type);
     };
 
@@ -236,9 +294,10 @@ const ReservarView = () => {
 
     // Utilidad para parsear distancia ("123 km" o "12.3 km") a número
     const parseDistanceKm = (distanceStr: string): number => {
-        if (!distanceStr) return 0;
+        if (!distanceStr) return 15; // Valor por defecto
+        if (distanceStr.includes('no disponible')) return 15; // Valor por defecto
         const match = distanceStr.match(/([\d,.]+)/);
-        if (!match) return 0;
+        if (!match) return 15; // Valor por defecto
         return parseFloat(match[1].replace(',', '.'));
     };
 
@@ -258,6 +317,89 @@ const ReservarView = () => {
         if (actual < min) return { status: 'low', color: 'yellow', icon: <IconArrowDownLeft size={16} /> };
         if (actual > max) return { status: 'high', color: 'yellow', icon: <IconArrowUpRight size={16} /> };
         return { status: 'normal', color: 'green', icon: <IconCheck size={16} /> };
+    };
+
+    // Función para determinar el tipo de coincidencia de un viaje con la búsqueda
+    const getTripMatchType = (trip: TripSearchResult): { 
+        type: 'exact' | 'origin' | 'destination' | 'date' | 'general';
+        badge: React.ReactNode;
+        description: string;
+    } => {
+        const searchDate = formData.date ? dayjs(formData.date).format('YYYY-MM-DD') : '';
+        const tripDate = dayjs(trip.dateTime).format('YYYY-MM-DD');
+        
+        // Función helper para comparar ubicaciones (texto similar)
+        const isLocationMatch = (searchLocation: string, tripLocation: string): boolean => {
+            if (!searchLocation || !tripLocation) return false;
+            const searchLower = searchLocation.toLowerCase().trim();
+            const tripLower = tripLocation.toLowerCase().trim();
+            return tripLower.includes(searchLower) || searchLower.includes(tripLower);
+        };
+
+        const originMatch = isLocationMatch(formData.origin, trip.origin);
+        const destinationMatch = isLocationMatch(formData.destination, trip.destination);
+        const dateMatch = searchDate === tripDate;
+
+        // Coincidencia exacta: origen + destino + fecha
+        if (originMatch && destinationMatch && dateMatch) {
+            return {
+                type: 'exact',
+                badge: <Badge color="green" size="sm" leftSection={<IconCircleCheck size={12} />}>Coincidencia Exacta</Badge>,
+                description: 'Origen, destino y fecha coinciden perfectamente'
+            };
+        }
+
+        // Coincidencia de origen y fecha
+        if (originMatch && dateMatch) {
+            return {
+                type: 'origin',
+                badge: <Badge color="blue" size="sm" leftSection={<MapPin size={12} />}>Mismo Origen</Badge>,
+                description: 'Mismo origen y fecha'
+            };
+        }
+
+        // Coincidencia de destino y fecha
+        if (destinationMatch && dateMatch) {
+            return {
+                type: 'destination',
+                badge: <Badge color="cyan" size="sm" leftSection={<Navigation size={12} />}>Mismo Destino</Badge>,
+                description: 'Mismo destino y fecha'
+            };
+        }
+
+        // Solo coincidencia de origen
+        if (originMatch) {
+            return {
+                type: 'origin',
+                badge: <Badge color="indigo" size="sm" variant="light" leftSection={<MapPin size={12} />}>Origen Similar</Badge>,
+                description: 'Origen coincide'
+            };
+        }
+
+        // Solo coincidencia de destino
+        if (destinationMatch) {
+            return {
+                type: 'destination',
+                badge: <Badge color="violet" size="sm" variant="light" leftSection={<Navigation size={12} />}>Destino Similar</Badge>,
+                description: 'Destino coincide'
+            };
+        }
+
+        // Solo coincidencia de fecha
+        if (dateMatch) {
+            return {
+                type: 'date',
+                badge: <Badge color="orange" size="sm" leftSection={<IconCalendar size={12} />}>Misma Fecha</Badge>,
+                description: 'Fecha coincide'
+            };
+        }
+
+        // Viaje general (sin coincidencias específicas)
+        return {
+            type: 'general',
+            badge: <Badge color="gray" size="sm" variant="outline">Disponible</Badge>,
+            description: 'Viaje disponible'
+        };
     };
 
     return (
@@ -474,9 +616,31 @@ const ReservarView = () => {
                             >
                                 {searchMessage}
                             </Text>
+                            
+                            {/* Mensajes informativos basados en el tipo de búsqueda */}
+                            {searchStatus === 'exact' && (
+                                <Text size="sm" ta="center" c="green" mt="sm" fw={500}>
+                                    🎯 ¡Encontramos viajes exactos para tu ruta y fecha!
+                                </Text>
+                            )}
+                            {searchStatus === 'close' && (
+                                <Text size="sm" ta="center" c="blue" mt="sm" fw={500}>
+                                    📍 Viajes similares encontrados (origen o destino coinciden)
+                                </Text>
+                            )}
+                            {searchStatus === 'date' && (
+                                <Text size="sm" ta="center" c="orange" mt="sm" fw={500}>
+                                    📅 Viajes disponibles para la fecha seleccionada
+                                </Text>
+                            )}
                             {searchStatus === 'all' && (
+                                <Text size="sm" ta="center" c="indigo" mt="sm" fw={500}>
+                                    🗂️ Todos los viajes disponibles - Ajusta tu búsqueda para mayor precisión
+                                </Text>
+                            )}
+                            {searchStatus === 'none' && (
                                 <Text size="sm" ta="center" c="dimmed" mt="sm">
-                                    Puedes ajustar tu búsqueda para encontrar opciones más específicas
+                                    💡 Intenta cambiar las fechas o ubicaciones para encontrar más opciones
                                 </Text>
                             )}
                         </Card>
@@ -497,6 +661,9 @@ const ReservarView = () => {
                     {searchResults.length > 0 ? (
                         <div className={styles.resultsList}>
                             {searchResults.map((trip) => {
+                              // Obtener tipo de coincidencia
+                              const matchInfo = getTripMatchType(trip);
+                              
                               // Calcular sugerido y estado del precio
                               let priceBadge = null;
                               let priceStatusMsg = null;
@@ -543,19 +710,25 @@ const ReservarView = () => {
                               }
                                 return (
                                 <Card key={trip.id} className={styles.resultCard} shadow="md" radius="lg" p="lg">
-                                  {/* Header con fecha y precio */}
+                                  {/* Header con fecha, precio y tipo de coincidencia */}
                                   <div className={styles.headerSection}>
-                                    <Text fw={600} size="md" className={styles.dateText}>
-                                      {new Date(trip.dateTime).toLocaleString('es-ES', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        year: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: true,
-                                      })}
-                                    </Text>
-                                    {priceBadge}
+                                    <div className={styles.dateAndPrice}>
+                                      <Text fw={600} size="md" className={styles.dateText}>
+                                        {new Date(trip.dateTime).toLocaleString('es-ES', {
+                                          day: '2-digit',
+                                          month: '2-digit',
+                                          year: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                          hour12: true,
+                                        })}
+                                      </Text>
+                                      {priceBadge}
+                                    </div>
+                                    {/* Badge de tipo de coincidencia */}
+                                    <div style={{ marginTop: 4 }}>
+                                      {matchInfo.badge}
+                                    </div>
                                   </div>
                                   
                                   {/* Mensaje de estado de precio */}
@@ -567,6 +740,9 @@ const ReservarView = () => {
                                       src={trip.photo}
                                       alt="Foto del conductor"
                                       className={styles.driverPhoto}
+                                      onError={(e) => {
+                                        e.currentTarget.src = 'https://tddaveymppuhweujhzwz.supabase.co/storage/v1/object/public/resourcers/Home/SinFotoPerfil.png';
+                                      }}
                                     />
                                     <div className={styles.driverInfo}>
                                       <div className={styles.driverLabel}>Conductor</div>
@@ -683,11 +859,79 @@ const ReservarView = () => {
                             })}
                         </div>
                     ) : (
-                        <Text className={styles.resultsSubtitle}>
-                            {isSearching
-                                ? 'Buscando viajes disponibles...'
-                                : 'Ingresa los detalles de tu viaje para ver las opciones disponibles'}
-                        </Text>
+                        <div className={styles.emptyState}>
+                            {isSearching ? (
+                                <div className={styles.loadingState}>
+                                    <IconCalendar size={48} className={styles.loadingIcon} />
+                                    <Text size="lg" fw={600} ta="center" mt="md">
+                                        Buscando viajes disponibles...
+                                    </Text>
+                                    <Text size="sm" c="dimmed" ta="center" mt="xs">
+                                        Revisando todas las opciones para tu viaje
+                                    </Text>
+                                </div>
+                            ) : searchResults.length === 0 && (formData.origin || formData.destination || formData.date) ? (
+                                <div className={styles.noResultsState}>
+                                    <IconX size={48} className={styles.noResultsIcon} />
+                                    <Text size="lg" fw={600} ta="center" mt="md">
+                                        No se encontraron viajes
+                                    </Text>
+                                    <Text size="sm" c="dimmed" ta="center" mt="xs" maw={400} mx="auto">
+                                        El sistema buscó por coincidencia exacta, ubicaciones similares, misma fecha y viajes generales. 
+                                        Intenta cambiar las fechas o ubicaciones.
+                                    </Text>
+                                    <Group justify="center" mt="md" gap="sm">
+                                        <Button 
+                                            variant="light" 
+                                            onClick={() => {
+                                                setFormData({
+                                                    origin: '',
+                                                    destination: '',
+                                                    date: null,
+                                                    passengers: 1
+                                                });
+                                                setSearchResults([]);
+                                                setSearchMessage('');
+                                                setSearchStatus('none');
+                                            }}
+                                        >
+                                            Buscar de nuevo
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            onClick={async () => {
+                                                console.log('🔧 Testing backend connectivity...');
+                                                try {
+                                                    const testResponse = await searchTrips({
+                                                        origin: 'Test',
+                                                        destination: 'Test',
+                                                        date: dayjs().format('YYYY-MM-DD'),
+                                                        passengers: 1
+                                                    });
+                                                    console.log('✅ Backend test successful:', testResponse);
+                                                    setSearchMessage('Conectividad con el servidor OK - Intenta una búsqueda real');
+                                                } catch (error) {
+                                                    console.error('❌ Backend test failed:', error);
+                                                    setSearchMessage('Error de conectividad con el servidor');
+                                                }
+                                            }}
+                                        >
+                                            Probar conexión
+                                        </Button>
+                                    </Group>
+                                </div>
+                            ) : (
+                                <div className={styles.initialState}>
+                                    <MapPin size={48} className={styles.initialIcon} />
+                                    <Text size="lg" fw={600} ta="center" mt="md">
+                                        Encuentra tu viaje ideal
+                                    </Text>
+                                    <Text size="sm" c="dimmed" ta="center" mt="xs" maw={350} mx="auto">
+                                        Ingresa tu origen, destino y fecha para ver todas las opciones disponibles
+                                    </Text>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </Box>
 
@@ -705,13 +949,16 @@ const ReservarView = () => {
                   onClose={() => setShowRouteModal(false)}
                   title={
                     <div className={styles.routeMapModalHeader}>
-                      <h3 className={styles.routeMapModalTitle}>Ruta del viaje</h3>
+                      <h3 className={styles.routeMapModalTitle}>
+                        🗺️ Ruta del viaje
+                      </h3>
                       <button
                         className={styles.closeButton}
                         onClick={() => setShowRouteModal(false)}
-                        aria-label="Cerrar"
+                        aria-label="Cerrar modal"
+                        type="button"
                       >
-                        &times;
+                        ✕
                       </button>
                     </div>
                   }
@@ -728,29 +975,47 @@ const ReservarView = () => {
                   withCloseButton={false}
                 >
                     <div className={styles.mapContainer}>
-                      <div style={{ 
-                        width: '100%', 
-                        height: '400px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '8px',
-                        flexDirection: 'column',
-                        gap: '16px'
-                      }}>
-                        <MapPin size={48} color="#666" />
-                        <div style={{ textAlign: 'center' }}>
-                          <Text size="lg" fw={600} mb="xs">Ruta del viaje</Text>
-                          <Text size="sm" c="dimmed">
+                      <div 
+                        style={{ 
+                          width: '100%', 
+                          height: '100%',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          position: 'relative'
+                        }}
+                      >
+                        {/* Mapa embedido de Google Maps */}
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          style={{ border: 0, borderRadius: '8px' }}
+                          loading="lazy"
+                          allowFullScreen
+                          referrerPolicy="no-referrer-when-downgrade"
+                          src={`https://www.google.com/maps/embed/v1/directions?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&origin=${encodeURIComponent(selectedRouteInfo.origin)}&destination=${encodeURIComponent(selectedRouteInfo.destination)}&mode=driving&language=es&region=CO&zoom=12`}
+                          title="Ruta del viaje"
+                        />
+                        
+                        {/* Información de la ruta sobrepuesta */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '10px',
+                          left: '10px',
+                          background: 'rgba(0, 0, 0, 0.8)',
+                          color: 'white',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          maxWidth: '300px',
+                          backdropFilter: 'blur(4px)'
+                        }}>
+                          <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>📍 Ruta del Viaje</div>
+                          <div style={{ marginBottom: '4px' }}>
                             <strong>Origen:</strong> {selectedRouteInfo.origin}
-                          </Text>
-                          <Text size="sm" c="dimmed">
+                          </div>
+                          <div>
                             <strong>Destino:</strong> {selectedRouteInfo.destination}
-                          </Text>
-                          <Text size="xs" c="dimmed" mt="md">
-                            Mapa interactivo próximamente disponible
-                          </Text>
+                          </div>
                         </div>
                       </div>
                     </div>

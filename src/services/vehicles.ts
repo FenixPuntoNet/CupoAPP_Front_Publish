@@ -15,6 +15,7 @@ export interface Vehicle {
   chassis_number: string;
   vin_number: string;
   photo_url?: string | null;
+  status?: string; // Campo status que puede ser 'activo', 'pendiente', 'rechazado', 'inactivo'
   created_at?: string;
   updated_at?: string;
 }

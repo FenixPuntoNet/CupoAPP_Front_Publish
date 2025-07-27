@@ -76,19 +76,55 @@ export interface TripUpdateRequest {
 // Publicar un viaje
 export const publishTrip = async (tripData: PublishTripRequest): Promise<{ success: boolean; data?: PublishTripResponse; error?: string }> => {
   try {
+    // Convertir campos booleanos al formato esperado por el backend (character(1))
+    const formattedTripData = {
+      ...tripData,
+      allow_pets: tripData.allow_pets ? 'Y' : 'N',
+      allow_smoking: tripData.allow_smoking ? 'Y' : 'N'
+    };
+
+    console.log('🚀 Publishing trip with formatted data:', formattedTripData);
+
     const response = await apiRequest('/viajes/publish', {
       method: 'POST',
-      body: JSON.stringify(tripData)
+      body: JSON.stringify(formattedTripData)
     });
+    
+    console.log('✅ Trip published successfully:', response);
+    
     return {
       success: true,
       data: response
     };
   } catch (error) {
-    console.error('Error publishing trip:', error);
+    console.error('❌ Error publishing trip:', error);
+    
+    // Mejorar el manejo de errores con más detalles
+    let errorMessage = 'Error publicando viaje';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      console.error('Error message:', errorMessage);
+      console.error('Error stack:', error.stack);
+    } else if (typeof error === 'object' && error !== null) {
+      // Si el error tiene un formato específico del API
+      const apiError = error as any;
+      console.error('API Error object:', apiError);
+      
+      if (apiError.error) {
+        errorMessage = apiError.error;
+      } else if (apiError.message) {
+        errorMessage = apiError.message;
+      } else if (apiError.details) {
+        errorMessage = apiError.details;
+      }
+    }
+    
+    console.error('Final error message:', errorMessage);
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error publicando viaje'
+      error: errorMessage
     };
   }
 };
@@ -130,9 +166,16 @@ export const getTripById = async (tripId: number): Promise<{ success: boolean; d
 // Actualizar un viaje
 export const updateTrip = async (tripId: number, updateData: TripUpdateRequest): Promise<{ success: boolean; error?: string }> => {
   try {
+    // Convertir campos booleanos al formato esperado por el backend si están presentes
+    const formattedUpdateData = {
+      ...updateData,
+      ...(updateData.allow_pets !== undefined && { allow_pets: updateData.allow_pets ? 'Y' : 'N' }),
+      ...(updateData.allow_smoking !== undefined && { allow_smoking: updateData.allow_smoking ? 'Y' : 'N' })
+    };
+
     await apiRequest(`/viajes/trip/${tripId}`, {
       method: 'PUT',
-      body: JSON.stringify(updateData)
+      body: JSON.stringify(formattedUpdateData)
     });
     return {
       success: true

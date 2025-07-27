@@ -39,42 +39,50 @@ const WalletDetailView: React.FC = () => {
       try {
         // Usar el backend service para obtener datos de la wallet
         const walletResponse = await getCurrentWallet();
+        console.log('💰 Wallet response:', walletResponse);
         
-        if (!walletResponse.success || !walletResponse.data) {
-          if (walletResponse.error?.includes('auth') || walletResponse.error?.includes('token')) {
+        if (!walletResponse.success) {
+          if (walletResponse.error?.includes('auth') || walletResponse.error?.includes('token') || walletResponse.error?.includes('401')) {
             navigate({ to: '/Login' });
             return;
           }
           throw new Error(walletResponse.error || 'Error al obtener wallet');
         }
 
+        if (!walletResponse.data) {
+          throw new Error('No se recibieron datos de la wallet');
+        }
+
         const wallet = walletResponse.data;
+        console.log('💰 Wallet data:', wallet);
         setWalletData({
-          id: Number(wallet.id),
-          balance: wallet.balance,
-          frozen_balance: wallet.frozen_balance,
+          id: Number(wallet.id) || 0,
+          balance: Number(wallet.balance) || 0,
+          frozen_balance: Number(wallet.frozen_balance) || 0,
         });
 
         // Obtener transacciones usando el backend service
         const transactionsResponse = await getWalletTransactions();
+        console.log('💳 Transactions response:', transactionsResponse);
         
         if (transactionsResponse.success && transactionsResponse.data) {
           // Mapear las transacciones del servicio al formato local
           const mappedTransactions: WalletTransaction[] = transactionsResponse.data.map(tx => ({
             id: Number(tx.id),
-            amount: tx.amount,
-            detail: tx.detail,
+            amount: Number(tx.amount),
+            detail: tx.detail || 'Sin descripción',
             transaction_date: tx.created_at,
             transaction_type: tx.transaction_type,
           }));
           
           setTransactions(mappedTransactions);
         } else {
+          console.log('💳 No transactions found or error:', transactionsResponse.error);
           setTransactions([]);
         }
-      } catch (err) {
-        console.error('Error fetching wallet data:', err);
-        setError('Error al cargar información de la billetera');
+      } catch (err: any) {
+        console.error('❌ Error fetching wallet data:', err);
+        setError(`Error al cargar información de la billetera: ${err.message}`);
       }
     };
 

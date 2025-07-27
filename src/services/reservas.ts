@@ -135,26 +135,44 @@ export const bookTrip = async (
   seatsNeeded: number
 ): Promise<{ success: boolean; data?: BookingResult; error?: string }> => {
   try {
+    const requestData = {
+      trip_id: tripId,
+      passengers: passengers.map(p => ({
+        fullName: p.fullName,
+        identificationNumber: p.identificationNumber
+      })),
+      seats_booked: seatsNeeded
+    };
+    
+    console.log('🎫 Booking trip with data:', requestData);
+    
     const response = await apiRequest('/reservas/create', {
       method: 'POST',
-      body: JSON.stringify({
-        trip_id: tripId,
-        passengers: passengers.map(p => ({
-          fullName: p.fullName,
-          identificationNumber: p.identificationNumber
-        })),
-        seats_booked: seatsNeeded
-      })
+      body: JSON.stringify(requestData)
     });
+    
+    console.log('✅ Booking response:', response);
+    
     return {
       success: true,
       data: response
     };
   } catch (error) {
-    console.error('Error booking trip:', error);
+    console.error('❌ Error booking trip:', error);
+    
+    // Mejorar el logging del error
+    let errorMessage = 'Error reservando viaje';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      console.error('📋 Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error reservando viaje'
+      error: errorMessage
     };
   }
 };

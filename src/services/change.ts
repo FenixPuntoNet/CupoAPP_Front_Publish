@@ -71,25 +71,18 @@ export interface ClaimGoalResponse {
 // Obtener balance de UniCoins del usuario
 export async function getBalance(): Promise<{ success: boolean; data?: BalanceResponse; error?: string }> {
   try {
-    const response = await apiRequest('/change/balance', {
+    console.log('🪙 Fetching balance from backend...');
+    const data = await apiRequest('/change/balance', {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener balance' 
-      };
-    }
-
-    const data = await response.json();
+    console.log('✅ Balance response:', data);
     return { success: true, data };
-  } catch (error) {
-    console.error('Error in getBalance:', error);
+  } catch (error: any) {
+    console.error('❌ Error in getBalance:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al obtener balance' 
+      error: error.message || 'Error de conexión al obtener balance' 
     };
   }
 }
@@ -97,25 +90,18 @@ export async function getBalance(): Promise<{ success: boolean; data?: BalanceRe
 // Obtener items disponibles para canje
 export async function getRedeemItems(): Promise<{ success: boolean; data?: RedeemItemsResponse; error?: string }> {
   try {
-    const response = await apiRequest('/change/items', {
+    console.log('🛍️ Fetching redeem items from backend...');
+    const data = await apiRequest('/change/items', {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener items' 
-      };
-    }
-
-    const data = await response.json();
+    console.log('✅ Redeem items response:', data);
     return { success: true, data };
-  } catch (error) {
-    console.error('Error in getRedeemItems:', error);
+  } catch (error: any) {
+    console.error('❌ Error in getRedeemItems:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al obtener items' 
+      error: error.message || 'Error de conexión al obtener items' 
     };
   }
 }
@@ -123,26 +109,19 @@ export async function getRedeemItems(): Promise<{ success: boolean; data?: Redee
 // Solicitar canje de productos
 export async function redeemItems(request: RedeemRequest): Promise<{ success: boolean; data?: RedeemResponse; error?: string }> {
   try {
-    const response = await apiRequest('/change/redeem', {
+    console.log('🛒 Requesting redeem from backend...', request);
+    const data = await apiRequest('/change/redeem', {
       method: 'POST',
       body: JSON.stringify(request)
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al solicitar canje' 
-      };
-    }
-
-    const data = await response.json();
+    console.log('✅ Redeem response:', data);
     return { success: true, data };
-  } catch (error) {
-    console.error('Error in redeemItems:', error);
+  } catch (error: any) {
+    console.error('❌ Error in redeemItems:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al solicitar canje' 
+      error: error.message || 'Error de conexión al solicitar canje' 
     };
   }
 }
@@ -150,25 +129,18 @@ export async function redeemItems(request: RedeemRequest): Promise<{ success: bo
 // Obtener historial de solicitudes de canje del usuario
 export async function getRedeemHistory(): Promise<{ success: boolean; data?: RedeemHistoryResponse; error?: string }> {
   try {
-    const response = await apiRequest('/change/history', {
+    console.log('📋 Fetching redeem history from backend...');
+    const data = await apiRequest('/change/history', {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener historial' 
-      };
-    }
-
-    const data = await response.json();
+    console.log('✅ Redeem history response:', data);
     return { success: true, data };
-  } catch (error) {
-    console.error('Error in getRedeemHistory:', error);
+  } catch (error: any) {
+    console.error('❌ Error in getRedeemHistory:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al obtener historial' 
+      error: error.message || 'Error de conexión al obtener historial' 
     };
   }
 }
@@ -176,25 +148,18 @@ export async function getRedeemHistory(): Promise<{ success: boolean; data?: Red
 // Obtener logros disponibles
 export async function getGoals(): Promise<{ success: boolean; data?: GoalsResponse; error?: string }> {
   try {
-    const response = await apiRequest('/change/goals', {
+    console.log('🎯 Fetching goals from backend...');
+    const data = await apiRequest('/change/goals', {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener objetivos' 
-      };
-    }
-
-    const data = await response.json();
+    console.log('✅ Goals response:', data);
     return { success: true, data };
-  } catch (error) {
-    console.error('Error in getGoals:', error);
+  } catch (error: any) {
+    console.error('❌ Error in getGoals:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al obtener objetivos' 
+      error: error.message || 'Error de conexión al obtener objetivos' 
     };
   }
 }
@@ -202,25 +167,18 @@ export async function getGoals(): Promise<{ success: boolean; data?: GoalsRespon
 // Reclamar objetivo completado
 export async function claimGoal(goalId: number): Promise<{ success: boolean; data?: ClaimGoalResponse; error?: string }> {
   try {
-    const response = await apiRequest(`/change/claim-goal/${goalId}`, {
+    console.log('🎯 Claiming goal from backend...', goalId);
+    const data = await apiRequest(`/change/claim-goal/${goalId}`, {
       method: 'POST'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al reclamar objetivo' 
-      };
-    }
-
-    const data = await response.json();
+    console.log('✅ Claim goal response:', data);
     return { success: true, data };
-  } catch (error) {
-    console.error('Error in claimGoal:', error);
+  } catch (error: any) {
+    console.error('❌ Error in claimGoal:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al reclamar objetivo' 
+      error: error.message || 'Error de conexión al reclamar objetivo' 
     };
   }
 }

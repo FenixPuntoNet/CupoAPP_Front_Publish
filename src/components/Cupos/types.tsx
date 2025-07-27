@@ -50,8 +50,8 @@ export interface Passenger {
     seats: number;
     price_per_seat: string;
     description: string;
-    allow_pets: number;
-    allow_smoking: number;
+    allow_pets: string;
+    allow_smoking: string;
     status: string;
     created_at: string;
     main_text_origen: string;

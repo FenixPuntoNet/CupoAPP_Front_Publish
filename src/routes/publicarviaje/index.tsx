@@ -28,7 +28,7 @@ import {
   Sparkles,
   X
 } from 'lucide-react';
-import { GoogleMap, Marker } from '@react-google-maps/api';
+import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { 
   mapOptions, 
   tripStore,
@@ -36,10 +36,14 @@ import {
   type TripLocation,
   errorMessages
 } from '../../types/PublicarViaje/TripDataManagement';
+import { calculateSuggestedPrice } from '@/services/config';
+import { publishTrip } from '@/services/viajes';
+import { getMyVehicle } from '@/services/vehicles';
 import styles from './index.module.css';
 import { notifications } from '@mantine/notifications';
 import { getCurrentUser } from '@/services/auth';
-import { getCurrentUserProfile } from '@/services/profile'; 
+import { getCurrentUserProfile } from '@/services/profile';
+import { useMaps } from '@/components/GoogleMapsProvider'; 
 
 
 interface RoutePreferences {
@@ -64,6 +68,7 @@ export const Route = createFileRoute('/publicarviaje/')({
 function ReservarView(){
   const navigate = useNavigate();
   const { selectedAddress = '', selectedDestination = '' } = useSearch({ from: '/publicarviaje/' });
+  const { isLoaded, loadError } = useMaps();
   
   // Estados base
   const [showRouteMap, setShowRouteMap] = useState(false);
@@ -74,6 +79,17 @@ function ReservarView(){
   const [isLoading, setIsLoading] = useState(false);
   const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Estados para modal de información
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [modalInfo, setModalInfo] = useState<{
+    type: 'error' | 'warning' | 'info' | 'success';
+    title: string;
+    message: string;
+    actionText?: string;
+    actionLink?: string;
+    details?: string[];
+  } | null>(null);
   
 useEffect(() => {
   const validateUserAccess = async () => {
@@ -103,6 +119,45 @@ useEffect(() => {
         });
 
         navigate({ to: '/RegistrarVehiculo' });
+        return;
+      }
+
+      // Validar también el estado del vehículo
+      const vehicleCheck = await getMyVehicle();
+      if (!vehicleCheck.success || !vehicleCheck.vehicle) {
+        setModalInfo({
+          type: 'warning',
+          title: '🚗 Vehículo requerido',
+          message: 'Necesitas registrar un vehículo para publicar viajes.',
+          actionText: 'Registrar Vehículo',
+          actionLink: '/RegistrarVehiculo',
+          details: [
+            'Para publicar viajes necesitas tener un vehículo registrado',
+            'El proceso de registro es rápido y solo se hace una vez',
+            'También necesitarás subir los documentos del vehículo'
+          ]
+        });
+        setShowInfoModal(true);
+        return;
+      }
+
+      const vehicleStatus = vehicleCheck.vehicle.status || 'pendiente';
+      if (vehicleStatus !== 'activo') {
+        setModalInfo({
+          type: 'info',
+          title: '⏳ Vehículo en proceso',
+          message: `Tu vehículo está en estado: ${vehicleStatus}`,
+          actionText: 'Ver Estado',
+          actionLink: '/RegistrarVehiculo',
+          details: [
+            vehicleStatus === 'pendiente' ? 'Tu vehículo está siendo verificado por nuestro equipo' :
+            vehicleStatus === 'rechazado' ? 'Los documentos de tu vehículo no fueron aprobados' :
+            'Tu vehículo no está disponible para publicar viajes',
+            'Puedes preparar tu viaje, pero no podrás publicarlo hasta que esté activo',
+            'Te notificaremos cuando cambie el estado'
+          ]
+        });
+        setShowInfoModal(true);
       }
 
     } catch (error) {
@@ -111,7 +166,7 @@ useEffect(() => {
   };
 
   validateUserAccess();
-}, []);
+}, [navigate]);
 
 
   // Estados de preferencias
@@ -219,7 +274,7 @@ useEffect(() => {
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
   // Función para calcular rutas con manejo de marcadores
-  const calculateRoute = useCallback(async () => {
+  const calculateRouteWithDirections = useCallback(async () => {
       
     const generateUniqueId = (): number => {
       return Math.floor(Math.random() * 1000000);
@@ -231,7 +286,7 @@ useEffect(() => {
     }
 
     // Verificar si Google Maps está disponible
-    if (!window.google || !window.google.maps) {
+    if (!isLoaded || loadError) {
       setError('Google Maps no está disponible. Por favor, recarga la página.');
       return;
     }
@@ -348,46 +403,6 @@ useEffect(() => {
     }
   }, [selectedAddress, selectedDestination, routePreferences]);
 
-  // Manejo del DirectionsRenderer
-  useEffect(() => {
-    if (!mapInstance || !directions) return;
-
-    if (directionsRendererRef.current) {
-      directionsRendererRef.current.setMap(null);
-    }
-
-    const renderer = new google.maps.DirectionsRenderer({
-      map: mapInstance,
-      directions,
-      routeIndex: selectedRouteIndex,
-      suppressMarkers: true,
-      polylineOptions: {
-        strokeColor: '#00ff9d',
-        strokeWeight: 5,
-        strokeOpacity: 0.9,
-        zIndex: 100,
-      },
-      suppressInfoWindows: false,
-    });
-  
-    directionsRendererRef.current = renderer;
-
-    if (directions.routes[selectedRouteIndex]?.bounds) {
-      mapInstance.fitBounds(directions.routes[selectedRouteIndex].bounds, {
-        top: 50,
-        bottom: 50,
-        left: 50,
-        right: 50,
-      });
-      setTimeout(() => {
-        const zoom = mapInstance.getZoom();
-        if (zoom && zoom > 16) {
-          mapInstance.setZoom(Math.min(zoom - 0.5, 16));
-        }
-      }, 200);
-    }
-  }, [directions, selectedRouteIndex, mapInstance]);
-
   // Limpieza de recursos al desmontar el componente
   useEffect(() => {
     return () => {
@@ -402,32 +417,21 @@ useEffect(() => {
     if (!directions?.routes[index]) return;
     setSelectedRouteIndex(index);
     
-    if (directionsRendererRef.current && mapInstance) {
-      directionsRendererRef.current.setRouteIndex(index);
-      directionsRendererRef.current.setOptions({
-        polylineOptions: {
-          strokeColor: '#00ff9d',
-          strokeWeight: 5,
-          strokeOpacity: 0.9,
-          zIndex: 100,
-        }
+    // El DirectionsRenderer componente se actualizará automáticamente
+    // Solo necesitamos ajustar la vista del mapa
+    if (mapInstance && directions.routes[index]?.bounds) {
+      mapInstance.fitBounds(directions.routes[index].bounds, {
+        top: 50,
+        bottom: 50,
+        left: 50,
+        right: 50,
       });
-
-      // Ajustar vista del mapa a la ruta seleccionada
-      if (directions.routes[index]?.bounds) {
-        mapInstance.fitBounds(directions.routes[index].bounds, {
-          top: 50,
-          bottom: 50,
-          left: 50,
-          right: 50,
-        });
-        setTimeout(() => {
-          const zoom = mapInstance.getZoom();
-          if (zoom && zoom > 16) {
-            mapInstance.setZoom(Math.min(zoom - 0.5, 16));
-          }
-        }, 200);
-      }
+      setTimeout(() => {
+        const zoom = mapInstance.getZoom();
+        if (zoom && zoom > 16) {
+          mapInstance.setZoom(Math.min(zoom - 0.5, 16));
+        }
+      }, 200);
     }
     
     if (routes[index]) {
@@ -436,21 +440,417 @@ useEffect(() => {
   }, [directions, routes, mapInstance]);
 
   // Manejador de confirmación
-  const handleRouteConfirm = useCallback(() => {
+  const handleRouteConfirm = useCallback(async () => {
+    // Prevent multiple clicks while loading
+    if (isLoading) {
+      return;
+    }
+
     if (routes[selectedRouteIndex]) {
       const selectedRoute = routes[selectedRouteIndex];
-      tripStore.updateData({
-        currentStep: 'paradas',
-        selectedRoute: selectedRoute
-      });
-      navigate({ 
-        to: '/Paradas',
-        search: {
-          routeId: selectedRoute.index.toString()
+      
+      try {
+        setIsLoading(true);
+        
+        // Calcular precio sugerido basado en la distancia de la ruta
+        const priceCalculation = await calculateSuggestedPrice(selectedRoute.distance);
+
+        // Actualizar el store con la ruta seleccionada
+        tripStore.updateData({
+          currentStep: 'paradas',
+          selectedRoute: selectedRoute
+        });
+
+        // Mostrar información del precio calculado si está disponible
+        if (priceCalculation?.suggested_price_per_seat) {
+          notifications.show({
+            title: 'Ruta confirmada',
+            message: `Precio sugerido: $${priceCalculation.suggested_price_per_seat.toLocaleString()} COP por asiento`,
+            color: 'green',
+            autoClose: 4000,
+          });
+        } else {
+          notifications.show({
+            title: 'Ruta confirmada',
+            message: 'Procediendo a configurar las paradas del viaje',
+            color: 'green',
+            autoClose: 2000,
+          });
         }
-      });
+
+        navigate({ 
+          to: '/Paradas',
+          search: {
+            routeId: selectedRoute.index.toString()
+          }
+        });
+      } catch (error) {
+        console.error('Error calculando precio:', error);
+        // Continuar sin precio sugerido
+        tripStore.updateData({
+          currentStep: 'paradas',
+          selectedRoute: selectedRoute
+        });
+        
+        notifications.show({
+          title: 'Ruta confirmada',
+          message: 'Procediendo a configurar las paradas del viaje',
+          color: 'green',
+          autoClose: 2000,
+        });
+
+        navigate({ 
+          to: '/Paradas',
+          search: {
+            routeId: selectedRoute.index.toString()
+          }
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [navigate, routes, selectedRouteIndex]);
+  }, [navigate, routes, selectedRouteIndex, isLoading]);
+
+  // Función de utilidad para preparar datos del viaje (usada por publishTrip más adelante en el flujo)
+  const prepareTripData = useCallback(() => {
+    if (!routes[selectedRouteIndex]) return null;
+
+    const selectedRoute = routes[selectedRouteIndex];
+    const originData = tripStore.getOrigin();
+    const destinationData = tripStore.getDestination();
+
+    if (!originData || !destinationData) return null;
+
+    // Preparar los datos en el formato que espera publishTrip
+    const tripData = {
+      origin: {
+        address: originData.address,
+        latitude: originData.coords.lat.toString(),
+        longitude: originData.coords.lng.toString(),
+        main_text: originData.mainText,
+        place_id: originData.placeId,
+        secondary_text: originData.secondaryText
+      },
+      destination: {
+        address: destinationData.address,
+        latitude: destinationData.coords.lat.toString(),
+        longitude: destinationData.coords.lng.toString(),
+        main_text: destinationData.mainText,
+        place_id: destinationData.placeId,
+        secondary_text: destinationData.secondaryText
+      },
+      route_summary: selectedRoute.summary,
+      estimated_duration: selectedRoute.duration,
+      estimated_distance: selectedRoute.distance
+    };
+
+    return tripData;
+  }, [routes, selectedRouteIndex]);
+
+  // Esta función será llamada desde otras páginas del flujo cuando se complete el proceso
+  const handlePublishTrip = useCallback(async (additionalData: any) => {
+    // Prevent multiple clicks while loading
+    if (isLoading) {
+      return null;
+    }
+
+    try {
+      // Validar vehículo antes de publicar
+      const vehicleCheck = await getMyVehicle();
+      
+      if (!vehicleCheck.success || !vehicleCheck.vehicle) {
+        setModalInfo({
+          type: 'error',
+          title: '🚗 Vehículo no encontrado',
+          message: 'Necesitas registrar un vehículo antes de publicar un viaje.',
+          actionText: 'Registrar Vehículo',
+          actionLink: '/RegistrarVehiculo',
+          details: [
+            'Para publicar viajes necesitas tener un vehículo registrado',
+            'El proceso de registro es rápido y solo se hace una vez',
+            'También necesitarás subir los documentos del vehículo'
+          ]
+        });
+        setShowInfoModal(true);
+        return null;
+      }
+
+      // Verificar estado del vehículo
+      const vehicleStatus = vehicleCheck.vehicle.status || 'pendiente';
+      if (vehicleStatus !== 'activo') {
+        const statusMessages = {
+          'pendiente': {
+            title: '⏳ Vehículo en verificación',
+            message: 'Tu vehículo está siendo verificado por nuestro equipo.',
+            details: [
+              'Los documentos de tu vehículo están en proceso de verificación',
+              'Este proceso puede tomar entre 24-48 horas',
+              'Te notificaremos cuando esté aprobado',
+              'Revisa que todos los documentos estén completos y legibles'
+            ]
+          },
+          'rechazado': {
+            title: '❌ Vehículo no aprobado',
+            message: 'Tu vehículo no cumple con los requisitos necesarios.',
+            details: [
+              'Los documentos presentados no fueron aprobados',
+              'Verifica que todos los documentos estén vigentes',
+              'Las fotos deben ser claras y legibles',
+              'Contacta soporte si necesitas ayuda: support@cupo.dev'
+            ]
+          },
+          'inactivo': {
+            title: '🔒 Vehículo inactivo',
+            message: 'Tu vehículo ha sido desactivado temporalmente.',
+            details: [
+              'Tu vehículo fue desactivado por motivos administrativos',
+              'Puede ser por documentos vencidos o problemas de verificación',
+              'Contacta soporte para reactivarlo: support@cupo.dev',
+              'Revisa si algún documento necesita renovación'
+            ]
+          }
+        };
+
+        const statusInfo = statusMessages[vehicleStatus as keyof typeof statusMessages] || {
+          title: '⚠️ Estado del vehículo',
+          message: 'Tu vehículo no está disponible para publicar viajes.',
+          details: ['Contacta soporte para más información: support@cupo.dev']
+        };
+
+        setModalInfo({
+          type: 'warning',
+          title: statusInfo.title,
+          message: statusInfo.message,
+          actionText: 'Contactar Soporte',
+          actionLink: 'mailto:support@cupo.dev',
+          details: statusInfo.details
+        });
+        setShowInfoModal(true);
+        return null;
+      }
+
+      // Si llegamos aquí, el vehículo está activo, proceder con la publicación
+      const preparedData = prepareTripData();
+      if (!preparedData) {
+        setModalInfo({
+          type: 'error',
+          title: '📋 Datos incompletos',
+          message: 'Faltan datos necesarios para publicar el viaje.',
+          details: [
+            'Asegúrate de haber seleccionado origen y destino',
+            'La ruta debe estar calculada correctamente',
+            'Verifica que todos los campos estén completos'
+          ]
+        });
+        setShowInfoModal(true);
+        return null;
+      }
+
+      const fullTripData = {
+        ...preparedData,
+        vehicle_id: vehicleCheck.vehicle.id,
+        ...additionalData // Datos adicionales como fecha, asientos, precio, etc.
+      };
+
+      // Mostrar loading
+      setIsLoading(true);
+      notifications.show({
+        id: 'publishing-trip',
+        title: '🚀 Publicando viaje...',
+        message: 'Procesando tu viaje, por favor espera',
+        color: 'blue',
+        loading: true,
+        autoClose: false,
+      });
+
+      // Obtener el usuario actual para logging
+      const currentUser = await getCurrentUser();
+      const userId = currentUser.success && currentUser.user ? currentUser.user.id : 'unknown';
+      
+      console.log('🚀 Publishing trip for user:', userId);
+      console.log('📝 Trip data to publish:', fullTripData);
+
+      const result = await publishTrip(fullTripData);
+      
+      console.log('📡 Publish trip result:', result);
+      
+      // Quitar loading
+      setIsLoading(false);
+      notifications.hide('publishing-trip');
+      
+      if (result.success) {
+        setModalInfo({
+          type: 'success',
+          title: '🎉 ¡Viaje publicado exitosamente!',
+          message: `Tu viaje ha sido publicado y está disponible para reservas.`,
+          details: [
+            `ID del viaje: #${result.data?.trip_id}`,
+            `Garantía congelada: $${result.data?.frozen_amount?.toLocaleString()} COP`,
+            'Los pasajeros ya pueden ver y reservar tu viaje',
+            'Te notificaremos cuando alguien haga una reserva'
+          ]
+        });
+        setShowInfoModal(true);
+        return result;
+      } else {
+        throw new Error(result.error || 'Error al publicar viaje');
+      }
+    } catch (error) {
+      setIsLoading(false);
+      notifications.hide('publishing-trip');
+      
+      console.error('Error publishing trip:', error);
+      
+      // Analizar el tipo de error para mostrar mensaje específico
+      let errorMessage = 'Error desconocido';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        const apiError = error as any;
+        if (apiError.error) {
+          errorMessage = apiError.error;
+        } else if (apiError.message) {
+          errorMessage = apiError.message;
+        }
+      }
+      
+      // Mensajes específicos basados en el error
+      if (errorMessage.includes('vehículo debe estar activo') || errorMessage.includes('vehicle') && errorMessage.includes('activo')) {
+        setModalInfo({
+          type: 'error',
+          title: '🚗 Problema con el vehículo',
+          message: 'Tu vehículo debe estar activo para publicar viajes.',
+          actionText: 'Verificar Vehículo',
+          actionLink: '/RegistrarVehiculo',
+          details: [
+            'Tu vehículo no está en estado activo',
+            'Revisa el estado en la sección de vehículos',
+            'Los documentos pueden estar vencidos o pendientes',
+            'Contacta soporte si necesitas ayuda'
+          ]
+        });
+      } else if (errorMessage.includes('balance') || errorMessage.includes('saldo') || errorMessage.includes('insufficient')) {
+        setModalInfo({
+          type: 'error',
+          title: '💰 Saldo insuficiente',
+          message: 'No tienes saldo suficiente para la garantía del viaje.',
+          actionText: 'Recargar Saldo',
+          actionLink: '/wallet',
+          details: [
+            'Se requiere el 5% del valor total como garantía',
+            'Esta garantía se congela temporalmente',
+            'Se devuelve al completar el viaje exitosamente',
+            'Puedes recargar saldo desde la sección wallet'
+          ]
+        });
+      } else if (errorMessage.includes('character(1)') || errorMessage.includes('value too long')) {
+        setModalInfo({
+          type: 'error',
+          title: '📝 Error en los datos',
+          message: 'Hay un problema con el formato de los datos del viaje.',
+          details: [
+            'Error en el formato de las preferencias del viaje',
+            'Por favor intenta publicar el viaje nuevamente',
+            'Si el problema persiste, contacta soporte',
+            `Error técnico: ${errorMessage}`
+          ]
+        });
+      } else if (errorMessage.includes('Token') || errorMessage.includes('auth')) {
+        setModalInfo({
+          type: 'error',
+          title: '🔒 Sesión expirada',
+          message: 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
+          actionText: 'Iniciar Sesión',
+          actionLink: '/Login',
+          details: [
+            'Tu sesión de usuario ha expirado',
+            'Necesitas iniciar sesión para continuar',
+            'Tus datos del viaje se mantendrán temporalmente'
+          ]
+        });
+      } else if (errorMessage.includes('network') || errorMessage.includes('Network') || errorMessage.includes('fetch')) {
+        setModalInfo({
+          type: 'error',
+          title: '🌐 Error de conexión',
+          message: 'No se pudo conectar con el servidor. Verifica tu conexión.',
+          details: [
+            'Verifica tu conexión a internet',
+            'El servidor puede estar temporalmente no disponible',
+            'Intenta nuevamente en unos momentos',
+            'Si el problema persiste, contacta soporte'
+          ]
+        });
+      } else {
+        setModalInfo({
+          type: 'error',
+          title: '❌ Error al publicar viaje',
+          message: 'No se pudo publicar el viaje. Por favor intenta de nuevo.',
+          details: [
+            'Verifica que todos los datos estén completos',
+            'Asegúrate de tener una conexión estable',
+            'Si el problema persiste, contacta soporte',
+            `Error técnico: ${errorMessage}`
+          ]
+        });
+      }
+      
+      console.log('🚨 Error detected, showing modal with info:', {
+        type: modalInfo?.type,
+        title: modalInfo?.title,
+        message: modalInfo?.message,
+        errorMessage: errorMessage
+      });
+      
+      setShowInfoModal(true);
+      return null;
+    }
+  }, [prepareTripData, isLoading]);
+
+  // Hacer la función disponible globalmente para otras páginas del flujo
+  (window as any).handlePublishTrip = handlePublishTrip;
+
+  // Mostrar estado de carga si Google Maps no está disponible
+  if (!isLoaded) {
+    return (
+      <Container fluid className={styles.container}>
+        <div style={{height: '30px'}} />
+        <div className={styles.header}>
+          <Link to="/home" className={styles.backButton}>
+            <ArrowLeft size={24} />
+          </Link>
+          <Title order={4} className={styles.headerTitle}>Publicar viaje</Title>
+        </div>
+        <Container size="sm" className={styles.content}>
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <Loader size="lg" />
+            <Text size="sm" c="dimmed" mt="md">Cargando Google Maps...</Text>
+          </div>
+        </Container>
+      </Container>
+    );
+  }
+
+  // Mostrar error si Google Maps falló al cargar
+  if (loadError) {
+    return (
+      <Container fluid className={styles.container}>
+        <div style={{height: '30px'}} />
+        <div className={styles.header}>
+          <Link to="/home" className={styles.backButton}>
+            <ArrowLeft size={24} />
+          </Link>
+          <Title order={4} className={styles.headerTitle}>Publicar viaje</Title>
+        </div>
+        <Container size="sm" className={styles.content}>
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <AlertCircle size={48} color="red" />
+            <Text size="sm" c="red" mt="md">Error al cargar Google Maps. Por favor, recarga la página.</Text>
+          </div>
+        </Container>
+      </Container>
+    );
+  }
 
   return (
     <Container fluid className={styles.container}>
@@ -514,7 +914,7 @@ useEffect(() => {
         {selectedAddress && selectedDestination && (
           <div className={styles.actionButtonContainer}>
             <Button 
-              onClick={calculateRoute}
+              onClick={calculateRouteWithDirections}
               className={styles.nextButton}
               loading={isLoading}
               leftSection={<Navigation size={20} />}
@@ -675,6 +1075,24 @@ useEffect(() => {
                   console.log('Mapa cargado correctamente');
                 }}
               >
+                {/* Mostrar direcciones usando DirectionsRenderer */}
+                {directions && (
+                  <DirectionsRenderer
+                    directions={directions}
+                    routeIndex={selectedRouteIndex}
+                    options={{
+                      suppressMarkers: true,
+                      polylineOptions: {
+                        strokeColor: '#00ff9d',
+                        strokeWeight: 5,
+                        strokeOpacity: 0.9,
+                        zIndex: 100,
+                      },
+                      suppressInfoWindows: false,
+                    }}
+                  />
+                )}
+
                 {/* Marcadores simples tipo pin */}
                 {directions && (
                   <>
@@ -770,6 +1188,107 @@ useEffect(() => {
               </div>
             </div>
           </div>
+        </Modal>
+
+        {/* Modal de información/errores */}
+        <Modal
+          opened={showInfoModal}
+          onClose={() => setShowInfoModal(false)}
+          centered
+          size="md"
+          title={null}
+          withCloseButton={false}
+          styles={{
+            content: {
+              backgroundColor: 'var(--mantine-color-dark-7)',
+              border: '1px solid var(--mantine-color-dark-4)',
+            },
+            body: {
+              padding: '2rem',
+            }
+          }}
+        >
+          {modalInfo && (
+            <Stack gap="lg" align="center">
+              {/* Título con emoji e ícono */}
+              <div style={{ textAlign: 'center' }}>
+                <Title order={3} style={{ 
+                  color: modalInfo.type === 'success' ? '#51cf66' : 
+                         modalInfo.type === 'warning' ? '#ffd43b' : 
+                         modalInfo.type === 'error' ? '#ff6b6b' : '#74c0fc',
+                  marginBottom: '0.5rem',
+                  fontSize: '1.5rem'
+                }}>
+                  {modalInfo.title}
+                </Title>
+                <Text size="lg" c="dimmed" ta="center">
+                  {modalInfo.message}
+                </Text>
+              </div>
+
+              {/* Detalles */}
+              {modalInfo.details && modalInfo.details.length > 0 && (
+                <div style={{ width: '100%' }}>
+                  <Text size="sm" fw={500} c="dimmed" mb="xs">
+                    Detalles:
+                  </Text>
+                  <Stack gap="xs">
+                    {modalInfo.details.map((detail, index) => (
+                      <Text key={index} size="sm" c="dimmed" style={{
+                        paddingLeft: '1rem',
+                        borderLeft: '2px solid var(--mantine-color-dark-4)',
+                        lineHeight: 1.5
+                      }}>
+                        • {detail}
+                      </Text>
+                    ))}
+                  </Stack>
+                </div>
+              )}
+
+              {/* Botones de acción */}
+              <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+                <Button
+                  variant="light"
+                  color="gray"
+                  onClick={() => setShowInfoModal(false)}
+                  style={{ flex: 1 }}
+                >
+                  Cerrar
+                </Button>
+                
+                {modalInfo.actionText && modalInfo.actionLink && (
+                  modalInfo.actionLink.startsWith('mailto:') ? (
+                    <Button
+                      variant="filled"
+                      color={modalInfo.type === 'success' ? 'green' : 
+                             modalInfo.type === 'warning' ? 'yellow' : 
+                             modalInfo.type === 'error' ? 'red' : 'blue'}
+                      component="a"
+                      href={modalInfo.actionLink}
+                      onClick={() => setShowInfoModal(false)}
+                      style={{ flex: 1 }}
+                    >
+                      {modalInfo.actionText}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="filled"
+                      color={modalInfo.type === 'success' ? 'green' : 
+                             modalInfo.type === 'warning' ? 'yellow' : 
+                             modalInfo.type === 'error' ? 'red' : 'blue'}
+                      component={Link}
+                      to={modalInfo.actionLink}
+                      onClick={() => setShowInfoModal(false)}
+                      style={{ flex: 1 }}
+                    >
+                      {modalInfo.actionText}
+                    </Button>
+                  )
+                )}
+              </div>
+            </Stack>
+          )}
         </Modal>
       </Container>
     </Container>

@@ -39,7 +39,8 @@ import { IconExchange, IconX } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { getCurrentUserProfile } from '@/services/profile'
 import { getCurrentWallet } from '@/services/wallet'
-import { getUserCard, getAccountStats, claimGoalReward } from '@/services/account'
+import { getUserCard, getAccountStats, claimGoalReward, getGoalDefinitions, getGoalClaims } from '@/services/account'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import type { Database } from '@/types/Database'
 import './index.css'
 
@@ -92,7 +93,6 @@ function AccountView() {
   const [card, setCard] = useState<UserCard | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [wallet, setWallet] = useState<WalletData>({ id: 0, balance: 0, frozen_balance: 0 })
-  const [userEmail, setUserEmail] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -119,30 +119,42 @@ function AccountView() {
       setError(null)
       try {
         // Obtener perfil usando backend service
+        console.log('🔄 Fetching user profile...');
         const profileResponse = await getCurrentUserProfile();
+        console.log('📝 Profile response:', profileResponse);
         
-        if (!profileResponse.success || !profileResponse.data) {
+        if (!profileResponse.success) {
+          console.error('❌ Error loading profile:', profileResponse.error);
+          setError('No se pudo cargar el perfil. Por favor, intenta de nuevo.');
+          return;
+        }
+
+        if (!profileResponse.data) {
+          console.error('❌ No profile data received');
           navigate({ to: '/Login' });
           return;
         }
 
         const profileData = profileResponse.data;
-        setUserEmail(profileData.user_id); // Usando user_id como email temporal
+        console.log('👤 Profile data:', profileData);
+        
+        // Extraer el nombre real del usuario (no el email)
+        const displayName = profileData.first_name || (profileData as any).username || profileData.user_id || 'Usuario';
         
         // Mapear datos del perfil al formato esperado
         setProfile({
           id: Number(profileData.id),
-          user_id: profileData.user_id,
-          first_name: profileData.user_id.split('@')[0] || 'Usuario',
-          last_name: '',
+          user_id: profileData.user_id || '',
+          first_name: displayName,
+          last_name: profileData.last_name || '',
           identification_type: 'CC',
           identification_number: profileData.identification_number || '',
           phone_number: profileData.phone_number || '',
-          status: profileData.status,
-          Verification: profileData.verification,
+          status: profileData.status || 'PASSENGER',
+          Verification: profileData.verification || 'PENDIENTE',
           photo_user: profileData.profile_picture || '',
-          created_at: profileData.created_at,
-          updated_at: profileData.updated_at
+          created_at: profileData.created_at || new Date().toISOString(),
+          updated_at: profileData.updated_at || new Date().toISOString()
         } as UserProfile);
 
         // Obtener tarjeta usando backend service
@@ -153,9 +165,9 @@ function AccountView() {
           setCard({
             id: Number(cardData.id),
             user_id: cardData.user_id,
-            card_code: cardData.card_number, // Usando card_number como card_code
+            card_code: cardData.card_number, // Usar card_number del response
             unicoins: cardData.unicoins,
-            card_type: cardData.level,
+            card_type: cardData.level || 'BRONZE', // Usar level del response como card_type
             card_level: cardData.experience_points > 1000 ? 2 : 1,
             created_at: cardData.created_at,
           });
@@ -174,15 +186,18 @@ function AccountView() {
 
         // Obtener wallet usando backend service
         const walletResponse = await getCurrentWallet();
+        console.log('💰 Wallet response:', walletResponse);
         
         if (walletResponse.success && walletResponse.data) {
           const walletData = walletResponse.data;
+          console.log('💰 Wallet data:', walletData);
           setWallet({
-            id: Number(walletData.id),
-            balance: walletData.balance,
-            frozen_balance: walletData.frozen_balance,
+            id: Number(walletData.id) || 0,
+            balance: Number(walletData.balance) || 0,
+            frozen_balance: Number(walletData.frozen_balance) || 0,
           });
         } else {
+          console.log('💰 Using default wallet values:', walletResponse.error);
           setWallet({
             id: 0,
             balance: 0,
@@ -207,9 +222,22 @@ function AccountView() {
           setCo2Saved(0);
         }
 
-        // TODO: Implementar metas cuando estén disponibles en el backend
-        setGoalDefinitions([]);
-        setGoalClaims([]);
+        // Obtener definiciones de metas y reclamos usando el nuevo backend
+        try {
+          const goalsResponse = await getGoalDefinitions();
+          if (goalsResponse.success && goalsResponse.data) {
+            setGoalDefinitions(goalsResponse.data);
+          }
+
+          const claimsResponse = await getGoalClaims();
+          if (claimsResponse.success && claimsResponse.data) {
+            setGoalClaims(claimsResponse.data);
+          }
+        } catch (goalError) {
+          console.log('Metas no disponibles aún:', goalError);
+          setGoalDefinitions([]);
+          setGoalClaims([]);
+        }
         
       } catch (err: any) {
         console.error('Error loading account data:', err);
@@ -234,8 +262,8 @@ function AccountView() {
     if (goal.type === 'streak_driver') userProgress = driverTrips
     if (userProgress < goal.goal) return
 
-    // Usar el backend service para reclamar recompensa
-    const claimResponse = await claimGoalReward(goal.type, goal.goal);
+    // Usar el backend service para reclamar recompensa (pasar goal.id en lugar de goal.goal)
+    const claimResponse = await claimGoalReward(goal.type, goal.id);
     
     if (!claimResponse.success) {
       console.error('Error claiming reward:', claimResponse.error);
@@ -418,7 +446,7 @@ function AccountView() {
           </div>
           <div className="card-uni-wallet-side">
             <div className="card-uni-type">
-              <span>{card.card_type?.toUpperCase() || 'GREEN'}</span>
+              <span>{card.card_type?.toUpperCase() || 'BRONZE'}</span>
               <Badge variant="light" size="sm" color="gray" ml={6}>
                 Lv {card.card_level}
               </Badge>
@@ -521,7 +549,7 @@ function AccountView() {
           <div className="details">
             <div className="detail-line">
               <IconUser size={18} color="#0a7557" />
-              <Text size="sm" c="black">{userEmail}</Text>
+              <Text size="sm" c="black">{profile.user_id}</Text>
             </div>
             <div className="detail-line">
               <IconCalendar size={18} color="#0a7557" />
@@ -911,5 +939,9 @@ function AccountView() {
 }
 
 export const Route = createFileRoute('/account/')({
-  component: AccountView,
+  component: () => (
+    <ErrorBoundary>
+      <AccountView />
+    </ErrorBoundary>
+  ),
 })

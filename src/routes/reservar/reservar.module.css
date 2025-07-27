@@ -417,18 +417,27 @@
 
 /* Badge de precio en header - alineado a la derecha */
 .priceBadge, .resultCard .mantine-Badge-root {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.9rem !important;
   font-weight: 700 !important;
-  letter-spacing: 0.3px;
-  min-width: 110px;
-  box-shadow: 0 3px 12px rgba(0,255,157,0.12);
+  letter-spacing: 0.1px !important;
+  min-width: 95px !important;
+  max-width: 150px !important;
+  width: auto !important;
+  height: auto !important;
+  box-shadow: 0 3px 12px rgba(0,255,157,0.12) !important;
   border-radius: 10px !important;
-  padding: 0.7rem 1rem !important;
-  gap: 0.4rem;
+  padding: 0.55rem 0.85rem !important;
+  gap: 0.3rem !important;
   margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  flex-shrink: 0 !important;
+  word-break: keep-all !important;
+  line-height: 1.2 !important;
 }
 
 /* Badge colores personalizados para estados */
@@ -451,14 +460,30 @@
 
 /* Mejorar separación visual en móvil */
 @media (max-width: 600px) {
+  .priceBadge, .resultCard .mantine-Badge-root {
+    font-size: 0.8rem !important;
+    min-width: 85px !important;
+    max-width: 120px !important;
+    padding: 0.45rem 0.7rem !important;
+    gap: 0.2rem !important;
+    border-radius: 8px !important;
+  }
+  
   .headerSection {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 0.5rem;
     margin-bottom: 0.8rem;
     padding-bottom: 0.6rem;
   }
+
+  .headerSection .dateAndPrice {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    width: 100%;
+  }
+  
   .dateText {
     font-size: 0.95rem;
   }
@@ -505,11 +530,18 @@
 /* Sección de fecha y precio - mejorada */
 .headerSection {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     margin-bottom: 1rem;
     padding-bottom: 0.8rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.headerSection .dateAndPrice {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
 }
 
 .dateText {
@@ -709,40 +741,57 @@
 }
 
 .routeMapModalHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid rgba(0, 255, 157, 0.2);
-  background: transparent;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 1rem 1.25rem !important;
+  border-bottom: 2px solid rgba(0, 255, 157, 0.3) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(8px) !important;
+  border-radius: 12px 12px 0 0 !important;
 }
 
 .routeMapModalTitle {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #00ff9d;
-  margin: 0;
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  color: #00ff9d !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
 }
 
 .closeButton {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 1.4rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  margin-left: 1rem;
-  transition: color 0.2s ease;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid rgba(0, 255, 157, 0.4) !important;
+  color: #222 !important;
+  font-size: 1.4rem !important;
+  font-weight: bold !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  padding: 8px 12px !important;
+  margin-left: 1rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
 .closeButton:hover {
-  color: #00ff9d;
+  background: rgba(0, 255, 157, 0.9) !important;
+  border-color: #00ff9d !important;
+  color: #0a0a0a !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3) !important;
 }
 
 .mapContainer {
-  margin-top: 1rem;
-  height: 70vh;
+  margin-top: 0.5rem;
+  height: 55vh;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 255, 157, 0.1);
@@ -761,16 +810,25 @@
 
 @media (max-width: 768px) {
   .routeMapModal {
-    padding: 0.5rem;
-    border-radius: 12px;
+    padding: 0.5rem !important;
+    border-radius: 12px !important;
   }
 
   .routeMapModalTitle {
-    font-size: 1.25rem;
+    font-size: 1.2rem !important;
+  }
+
+  .closeButton {
+    min-width: 38px !important;
+    height: 38px !important;
+    font-size: 1.2rem !important;
+    padding: 6px 10px !important;
+    margin-left: 0.5rem !important;
   }
 
   .mapContainer {
-    height: 60vh;
+    height: 50vh !important;
+    margin-top: 0.3rem !important;
   }
 }
 
@@ -914,6 +972,11 @@
   color: #ff5e62; 
   border-left-color: #ff5e62;
   background: rgba(255,94,98,0.05);
+}
+.priceStatusMsg--blue { 
+  color: #4a9eff; 
+  border-left-color: #4a9eff;
+  background: rgba(74,158,255,0.05);
 }
 
 /* Información adicional - mejorada */

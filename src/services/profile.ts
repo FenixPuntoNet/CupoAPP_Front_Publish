@@ -37,23 +37,28 @@ export const getCurrentUserProfile = async (): Promise<ProfileResponse> => {
       method: 'GET'
     });
     
-    console.log('✅ Profile fetched successfully from /auth/me');
+    console.log('✅ Profile response from /auth/me:', response);
     
     // El endpoint /auth/me devuelve el usuario con el perfil incluido
     // Extraer los datos del perfil de la respuesta
-    const profileData = response.profile || {
-      id: response.id,
-      user_id: response.id,
-      first_name: response.profile?.first_name,
-      last_name: response.profile?.last_name,
-      phone_number: response.profile?.phone_number,
-      identification_type: response.profile?.identification_type,
-      identification_number: response.profile?.identification_number,
-      status: response.profile?.status,
-      user_type: response.profile?.user_type,
-      profile_picture: response.profile?.profile_picture,
-      photo_user: response.profile?.photo_user
+    const profileData = {
+      id: response.id || response.profile?.id,
+      user_id: response.id || response.email,
+      first_name: response.profile?.first_name || response.first_name,
+      last_name: response.profile?.last_name || response.last_name,
+      phone_number: response.profile?.phone_number || response.phone_number,
+      identification_type: response.profile?.identification_type || 'CC',
+      identification_number: response.profile?.identification_number || response.identification_number,
+      status: response.profile?.status || response.status || 'PASSENGER',
+      user_type: response.profile?.user_type || response.user_type,
+      profile_picture: response.profile?.profile_picture || response.profile_picture,
+      photo_user: response.profile?.photo_user || response.photo_user,
+      verification: response.profile?.verification || response.verification || 'PENDIENTE',
+      created_at: response.profile?.created_at || response.created_at,
+      updated_at: response.profile?.updated_at || response.updated_at
     };
+    
+    console.log('📝 Processed profile data:', profileData);
     
     return {
       success: true,

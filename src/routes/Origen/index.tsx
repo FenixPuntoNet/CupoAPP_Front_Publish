@@ -3,6 +3,9 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Container, TextInput, Text, Button, Title } from '@mantine/core';
 import { ArrowLeft, MapPin, Navigation, Search, Star, Clock } from 'lucide-react';
 import { GoogleMap, Marker } from '@react-google-maps/api';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { useMaps } from '@/components/GoogleMapsProvider';
+import { getPlaceSuggestions, getPlaceDetails, reverseGeocode } from '@/services/googleMaps';
 import styles from './index.module.css';
 
 // Interfaces
@@ -21,6 +24,7 @@ interface Location {
 
 function OrigenView() {
   const navigate = useNavigate();
+  const { isLoaded, loadError } = useMaps();
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<Suggestion[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -29,18 +33,17 @@ function OrigenView() {
   const [error, setError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
-  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
   const [recentSearches] = useState<string[]>([
-    'Aeropuerto El Dorado',
-    'Centro Comercial Andino',
-    'Universidad Nacional',
-    'Zona Rosa'
+    'Universidad Javeriana Cali',
+    'Universidad Autónoma de Occidente',
+    'Universidad Icesi',
+    'Universidad del Valle - Univalle'
   ]);
   const [popularPlaces] = useState<string[]>([
-    'Bogotá Centro',
-    'Chapinero',
-    'Zona T',
-    'Candelaria'
+    'Universidad San Buenaventura',
+    'Universidad Libre Cali',
+    'Universidad Santiago de Cali',
+    'Centro de Cali - Plaza Caicedo'
   ]);
 
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -48,15 +51,14 @@ function OrigenView() {
 
   // Verificar si Google Maps está cargado
   useEffect(() => {
-    const checkGoogleMaps = () => {
-      if (window.google?.maps?.places) {
-        setGoogleMapsLoaded(true);
-      } else {
-        setTimeout(checkGoogleMaps, 500);
-      }
-    };
-    checkGoogleMaps();
-  }, []);
+    if (loadError) {
+      console.error('Google Maps load error:', loadError);
+      setError('Error cargando Google Maps. Por favor, recarga la página.');
+    } else if (isLoaded) {
+      console.log('✅ Google Maps loaded successfully');
+      setError(null);
+    }
+  }, [isLoaded, loadError]);
 
   // Configuración básica del mapa
   const mapOptions: google.maps.MapOptions = {
@@ -83,48 +85,33 @@ function OrigenView() {
         },
         (error) => {
           console.error('Error obteniendo ubicación:', error);
-          // Ubicación por defecto (Bogotá)
-          setCurrentLocation({ lat: 4.6097, lng: -74.0817 });
+          // Ubicación por defecto (Cali)
+          setCurrentLocation({ lat: 3.4516, lng: -76.5320 });
         }
       );
     } else {
-      setCurrentLocation({ lat: 4.6097, lng: -74.0817 });
+      setCurrentLocation({ lat: 3.4516, lng: -76.5320 });
     }
   }, []);
 
-  // Manejar búsqueda con debounce usando Google Maps directamente
+  // Manejar búsqueda con debounce usando el servicio del backend
   useEffect(() => {
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
 
-    if (searchTerm && !selectedLocation && window.google?.maps?.places) {
+    if (searchTerm && !selectedLocation) {
       setIsSearching(true);
       setError(null);
       searchTimeout.current = setTimeout(async () => {
         try {
-          const service = new google.maps.places.AutocompleteService();
-          service.getPlacePredictions({
-            input: searchTerm,
-            types: ['establishment', 'geocode'],
-            componentRestrictions: { country: 'co' }
-          }, (predictions, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-              const suggestions: Suggestion[] = predictions.map(prediction => ({
-                placeId: prediction.place_id,
-                mainText: prediction.structured_formatting.main_text,
-                secondaryText: prediction.structured_formatting.secondary_text || '',
-                fullText: prediction.description,
-                types: prediction.types
-              }));
-              setResults(suggestions);
-            } else {
-              setResults([]);
-            }
-            setIsSearching(false);
-          });
+          console.log('🔍 Searching places with backend service:', searchTerm);
+          const suggestions = await getPlaceSuggestions(searchTerm);
+          console.log('✅ Search results received:', suggestions.length);
+          setResults(suggestions);
+          setIsSearching(false);
         } catch (error) {
-          console.error('Error searching places:', error);
+          console.error('❌ Error searching places:', error);
           setError('Error al buscar ubicaciones. Intenta nuevamente.');
           setResults([]);
           setIsSearching(false);
@@ -145,45 +132,33 @@ function OrigenView() {
   const handlePlaceSelect = async (suggestion: Suggestion) => {
     try {
       setError(null);
+      console.log('📍 Getting place details for:', suggestion.placeId);
       
-      if (!window.google?.maps?.places) {
-        setError('Google Maps no está disponible');
-        return;
+      // Usar el servicio del backend para obtener detalles del lugar
+      const placeDetails = await getPlaceDetails(suggestion.placeId);
+      
+      if (placeDetails && placeDetails.location) {
+        setSelectedLocation(placeDetails.location);
+        setSelectedAddress(placeDetails.formattedAddress);
+        setSearchTerm(placeDetails.formattedAddress);
+        setShowMap(true);
+        setResults([]);
+
+        console.log('✅ Place details received:', placeDetails);
+
+        // Animar el mapa suavemente
+        setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.panTo(placeDetails.location);
+            mapRef.current.setZoom(16);
+          }
+        }, 100);
+      } else {
+        setError('Error al obtener detalles del lugar');
       }
       
-      // Usar Google Maps PlacesService directamente
-      const service = new google.maps.places.PlacesService(document.createElement('div'));
-      
-      service.getDetails({
-        placeId: suggestion.placeId,
-        fields: ['geometry', 'formatted_address', 'name']
-      }, (place, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
-          const location = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-          };
-
-          setSelectedLocation(location);
-          setSelectedAddress(place.formatted_address || suggestion.fullText);
-          setSearchTerm(place.formatted_address || suggestion.fullText);
-          setShowMap(true);
-          setResults([]);
-
-          // Animar el mapa suavemente
-          setTimeout(() => {
-            if (mapRef.current) {
-              mapRef.current.panTo(location);
-              mapRef.current.setZoom(16);
-            }
-          }, 100);
-        } else {
-          setError('Error al obtener detalles del lugar');
-        }
-      });
-      
     } catch (err) {
-      console.error('Error:', err);
+      console.error('❌ Error getting place details:', err);
       setError('Error al obtener la ubicación del origen. Intenta nuevamente.');
     }
   };
@@ -198,39 +173,49 @@ function OrigenView() {
 
     try {
       setError(null);
-      const geocoder = new google.maps.Geocoder();
-      const response = await geocoder.geocode({ location });
+      console.log('🗺️ Reverse geocoding location:', location);
       
-      if (response.results[0]) {
+      // Usar el servicio del backend para geocodificación inversa
+      const address = await reverseGeocode(location.lat, location.lng);
+      
+      if (address) {
         setSelectedLocation(location);
-        setSelectedAddress(response.results[0].formatted_address);
-        setSearchTerm(response.results[0].formatted_address);
+        setSelectedAddress(address);
+        setSearchTerm(address);
         setResults([]);
+        console.log('✅ Address found:', address);
       } else {
         setError('No se pudo obtener la dirección de esta ubicación');
       }
     } catch (err) {
-      console.error('Error:', err);
+      console.error('❌ Error reverse geocoding:', err);
       setError('Error al obtener la dirección');
     }
   };
 
-  const handleUseCurrentLocation = () => {
-    if (currentLocation) {
-      setSelectedLocation(currentLocation);
-      setShowMap(true);
+  const handleUseCurrentLocation = async () => {
+    if (!currentLocation) {
+      setError('No se pudo obtener tu ubicación actual');
+      return;
+    }
+
+    setSelectedLocation(currentLocation);
+    setShowMap(true);
+    
+    try {
+      console.log('📍 Getting address for current location:', currentLocation);
       
-      // Obtener dirección de la ubicación actual
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ location: currentLocation }, (results, status) => {
-        if (status === 'OK' && results?.[0]) {
-          setSelectedAddress(results[0].formatted_address);
-          setSearchTerm(results[0].formatted_address);
-        } else {
-          setSelectedAddress('Ubicación actual');
-          setSearchTerm('Ubicación actual');
-        }
-      });
+      // Obtener dirección de la ubicación actual usando el servicio del backend
+      const address = await reverseGeocode(currentLocation.lat, currentLocation.lng);
+      
+      if (address) {
+        setSelectedAddress(address);
+        setSearchTerm(address);
+        console.log('✅ Current location address:', address);
+      } else {
+        setSelectedAddress('Ubicación actual');
+        setSearchTerm('Ubicación actual');
+      }
 
       setTimeout(() => {
         if (mapRef.current) {
@@ -238,6 +223,9 @@ function OrigenView() {
           mapRef.current.setZoom(16);
         }
       }, 100);
+    } catch (err) {
+      console.error('❌ Error with current location:', err);
+      setError('Error al procesar tu ubicación actual');
     }
   };
 
@@ -256,13 +244,14 @@ function OrigenView() {
   };
 
   return (
-    <Container fluid className={styles.container}>
-      <div className={styles.header}>
-        <Link to="/publicarviaje" className={styles.backButton}>
-          <ArrowLeft size={24} />
-        </Link>
-        <Title order={4} className={styles.headerTitle}>Origen del viaje</Title>
-      </div>
+    <ErrorBoundary>
+      <Container fluid className={styles.container}>
+        <div className={styles.header}>
+          <Link to="/publicarviaje" className={styles.backButton}>
+            <ArrowLeft size={24} />
+          </Link>
+          <Title order={4} className={styles.headerTitle}>Origen del viaje</Title>
+        </div>
 
       <div className={styles.searchSection}>
         <div className={styles.searchBox}>
@@ -391,7 +380,7 @@ function OrigenView() {
               fullscreenControl: false,
               mapTypeControl: false,
             }}
-            center={selectedLocation || currentLocation || { lat: 4.6097, lng: -74.0817 }}
+            center={selectedLocation || currentLocation || { lat: 3.4516, lng: -76.5320 }}
             zoom={selectedLocation ? 16 : 13}
             onClick={handleMapClick}
             onLoad={(map: google.maps.Map) => {
@@ -415,16 +404,15 @@ function OrigenView() {
         )}
       </div>
 
-      {selectedLocation && (
-        <Button className={styles.confirmButton} onClick={handleContinue}>
-          Siguiente
-        </Button>
-      )}
-    </Container>
+        {selectedLocation && (
+          <Button className={styles.confirmButton} onClick={handleContinue}>
+            Siguiente
+          </Button>
+        )}
+      </Container>
+    </ErrorBoundary>
   );
-}
-
-export const Route = createFileRoute('/Origen/')({
+}export const Route = createFileRoute('/Origen/')({
   component: OrigenView,
 });
 
