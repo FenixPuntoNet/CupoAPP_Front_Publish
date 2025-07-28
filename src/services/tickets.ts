@@ -81,13 +81,24 @@ export interface QRValidationResult {
 // Obtener detalles del ticket para mostrar
 export const getTicketDetails = async (bookingId: string): Promise<{ success: boolean; data?: { ticket: TicketData }; error?: string }> => {
   try {
+    console.log('🎫 [tickets.ts] Fetching ticket details for booking:', bookingId);
     const response = await apiRequest(`/tickets/view?booking_id=${bookingId}`);
-    return {
-      success: true,
-      data: response
-    };
+    
+    console.log('📡 [tickets.ts] Backend response:', response);
+    
+    if (response.success && response.ticket) {
+      return {
+        success: true,
+        data: { ticket: response.ticket }
+      };
+    } else {
+      return {
+        success: false,
+        error: response.error || 'No se encontraron datos del ticket'
+      };
+    }
   } catch (error) {
-    console.error('Error getting ticket details:', error);
+    console.error('❌ [tickets.ts] Error getting ticket details:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error obteniendo detalles del ticket'

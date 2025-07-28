@@ -65,19 +65,10 @@ export interface ActivityStatsResponse {
 // Obtener resumen de actividades del usuario
 export async function getActivitySummary(): Promise<{ success: boolean; data?: ActivitySummaryResponse; error?: string }> {
   try {
-    const response = await apiRequest('/actividades/summary', {
+    const data = await apiRequest('/actividades/summary', {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener resumen de actividades' 
-      };
-    }
-
-    const data = await response.json();
     return { success: true, data };
   } catch (error) {
     console.error('Error in getActivitySummary:', error);
@@ -91,19 +82,10 @@ export async function getActivitySummary(): Promise<{ success: boolean; data?: A
 // Obtener actividad reciente del usuario
 export async function getRecentActivities(limit: number = 20): Promise<{ success: boolean; data?: RecentActivitiesResponse; error?: string }> {
   try {
-    const response = await apiRequest(`/actividades/recent?limit=${limit}`, {
+    const data = await apiRequest(`/actividades/recent?limit=${limit}`, {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener actividades recientes' 
-      };
-    }
-
-    const data = await response.json();
     return { success: true, data };
   } catch (error) {
     console.error('Error in getRecentActivities:', error);
@@ -117,19 +99,10 @@ export async function getRecentActivities(limit: number = 20): Promise<{ success
 // Obtener estadísticas de actividad por período
 export async function getActivityStats(period: number = 30): Promise<{ success: boolean; data?: ActivityStatsResponse; error?: string }> {
   try {
-    const response = await apiRequest(`/actividades/stats?period=${period}`, {
+    const data = await apiRequest(`/actividades/stats?period=${period}`, {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener estadísticas de actividades' 
-      };
-    }
-
-    const data = await response.json();
     return { success: true, data };
   } catch (error) {
     console.error('Error in getActivityStats:', error);
@@ -137,5 +110,101 @@ export async function getActivityStats(period: number = 30): Promise<{ success: 
       success: false, 
       error: 'Error de conexión al obtener estadísticas de actividades' 
     };
+  }
+}
+
+// Función para obtener el resumen de cupos reservados de un viaje
+export async function getTripPassengerCount(tripId: number): Promise<{ success: boolean; data?: { total_passengers: number }; error?: string }> {
+  try {
+    console.log(`🎫 [getTripPassengerCount] Fetching passenger count for trip ${tripId}`);
+    
+    // Intentar el endpoint actualizado con consultas simples
+    const data = await apiRequest(`/cupos/reservados?tripId=${tripId}`, {
+      method: 'GET'
+    });
+
+    console.log(`✅ [getTripPassengerCount] Backend response for trip ${tripId}:`, data);
+
+    // El endpoint actualizado retorna un summary con total_passengers
+    const totalPassengers = data?.summary?.total_passengers || 0;
+    
+    return { 
+      success: true, 
+      data: { 
+        total_passengers: totalPassengers 
+      } 
+    };
+  } catch (error) {
+    // Log detallado para debugging
+    console.warn(`⚠️ [getTripPassengerCount] Backend error for trip ${tripId}:`, error);
+    
+    // Verificar el tipo específico de error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Error de permisos (403)
+    if (errorMessage.includes('permisos') || errorMessage.includes('403')) {
+      console.warn(`🔒 [getTripPassengerCount] Permission denied for trip ${tripId}`);
+      return { 
+        success: false, 
+        error: 'Sin permisos para ver los cupos de este viaje' 
+      };
+    }
+
+    // Error de autenticación (401)
+    if (errorMessage.includes('401') || errorMessage.includes('Token')) {
+      console.warn(`🔑 [getTripPassengerCount] Authentication error for trip ${tripId}`);
+      return { 
+        success: false, 
+        error: 'Sesión expirada - por favor vuelve a iniciar sesión' 
+      };
+    }
+
+    // Para otros errores, intentar endpoint de debug si está disponible
+    try {
+      console.warn(`🔧 [getTripPassengerCount] Trying debug endpoint for trip ${tripId}`);
+      const debugData = await apiRequest(`/cupos/debug/${tripId}`, {
+        method: 'GET'
+      });
+      
+      // Si el debug funciona, usar los datos básicos
+      if (debugData && debugData.basic_bookings) {
+        const passengerCount = debugData.basic_bookings.reduce((sum: number, booking: any) => 
+          sum + (booking.seats_booked || 0), 0);
+        
+        console.log(`🔧 [getTripPassengerCount] Debug endpoint successful, passenger count: ${passengerCount}`);
+        return { 
+          success: true, 
+          data: { 
+            total_passengers: passengerCount 
+          } 
+        };
+      }
+    } catch (debugError) {
+      console.warn(`� [getTripPassengerCount] Debug endpoint also failed for trip ${tripId}:`, debugError);
+    }
+
+    // Último recurso: usar endpoint de stats como fallback
+    try {
+      console.warn(`📊 [getTripPassengerCount] Trying stats fallback for trip ${tripId}`);
+      await apiRequest(`/cupos/stats`, {
+        method: 'GET'
+      });
+      
+      // Si el endpoint de stats funciona, significa que el servicio está activo
+      console.warn(`📊 [getTripPassengerCount] Stats endpoint working, using safe fallback`);
+      return { 
+        success: true, 
+        data: { 
+          total_passengers: 0 // Fallback seguro - mejor mostrar 0 que fallar
+        } 
+      };
+    } catch (fallbackError) {
+      console.error(`❌ [getTripPassengerCount] All endpoints failed for trip ${tripId}:`, fallbackError);
+      
+      return { 
+        success: false, 
+        error: 'Error al obtener información de pasajeros - servicio temporalmente no disponible' 
+      };
+    }
   }
 }

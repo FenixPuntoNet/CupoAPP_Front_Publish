@@ -9,8 +9,8 @@ import {
   LoadingOverlay,
   Divider,
 } from '@mantine/core';
+import { supabase } from '@/lib/supabaseClient';
 import { notifications } from '@mantine/notifications';
-import { getExistingRating, submitRating } from '@/services/ratings';
 import styles from './index.module.css';
 
 interface TripRatingProps {
@@ -35,36 +35,37 @@ export const TripRating: React.FC<TripRatingProps> = ({
 
   useEffect(() => {
     const fetchExistingRating = async () => {
-      if (!opened || !tripId) return;
-      
       setLoading(true);
       setRating(0);
       setReport('');
       setIsExisting(false);
 
-      console.log('⭐ [TripRating] Fetching existing rating for trip:', tripId);
-      
-      const result = await getExistingRating(tripId);
+      const { data, error } = await supabase
+        .from('califications')
+        .select('value, report')
+        .eq('user_id', userId)
+        .eq('trip_id', tripId)
+        .maybeSingle();
 
-      if (result.success && result.data) {
-        console.log('⭐ [TripRating] Found existing rating:', result.data);
-        setRating(result.data.value);
-        setReport(result.data.report || '');
+      if (error) {
+        notifications.show({
+          color: 'red',
+          title: 'Error al cargar calificación',
+          message: 'No se pudo cargar tu experiencia previa.',
+        });
+      } else if (data) {
+        setRating(data.value);
+        setReport(data.report || '');
         setIsExisting(true);
-      } else if (result.success && !result.data) {
-        console.log('⭐ [TripRating] No existing rating found - new rating');
-        setIsExisting(false);
-      } else if (result.error) {
-        console.log('⭐ [TripRating] Error fetching rating:', result.error);
-        // Si hay error, asumir que no existe calificación y permitir crear una nueva
-        setIsExisting(false);
       }
 
       setLoading(false);
     };
 
-    fetchExistingRating();
-  }, [opened, tripId, userId]);
+    if (opened && tripId && userId) {
+      fetchExistingRating();
+    }
+  }, [tripId, userId, opened]);
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -78,23 +79,25 @@ export const TripRating: React.FC<TripRatingProps> = ({
 
     setLoading(true);
 
-    console.log('⭐ [TripRating] Submitting rating:', {
-      trip_id: tripId,
-      driver_id: driverId,
-      value: rating,
-      report
-    });
-
-    const result = await submitRating({
-      trip_id: tripId,
-      driver_id: driverId,
-      value: rating,
-      report,
-    });
+    const { error } = await supabase.from('califications').insert([
+      {
+        trip_id: tripId,
+        driver_id: driverId,
+        user_id: userId,
+        value: rating,
+        report,
+      },
+    ]);
 
     setLoading(false);
 
-    if (result.success) {
+    if (error) {
+      notifications.show({
+        color: 'red',
+        title: 'Algo salió mal',
+        message: 'No pudimos guardar tu calificación. Intenta de nuevo.',
+      });
+    } else {
       notifications.show({
         color: 'teal',
         title: '¡Gracias por tu feedback!',
@@ -102,13 +105,6 @@ export const TripRating: React.FC<TripRatingProps> = ({
       });
 
       setIsExisting(true);
-      onClose(); // Cerrar el modal después de enviar exitosamente
-    } else {
-      notifications.show({
-        color: 'red',
-        title: 'Algo salió mal',
-        message: result.error || 'No pudimos guardar tu calificación. Intenta de nuevo.',
-      });
     }
   };
 

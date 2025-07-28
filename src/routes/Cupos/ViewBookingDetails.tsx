@@ -9,13 +9,13 @@ import {
   Divider,
   Title,
   Container,
-  Alert,
 } from '@mantine/core';
 import { useState, useEffect } from 'react';
 import detailStyles from './ViewBookingDetails.module.css';
 import dayjs from 'dayjs';
 import { useNavigate, useSearch, createFileRoute } from '@tanstack/react-router';
-import { getBookingDetails } from '@/services/reservas';
+import { showNotification } from '@mantine/notifications';
+import { supabase } from '@/lib/supabaseClient';
 
 export const Route = createFileRoute('/Cupos/ViewBookingDetails')({
   component: ViewBookingDetails,
@@ -42,14 +42,10 @@ function ViewBookingDetails() {
       plate: string;
       color: string;
     };
-    bookingStatus: string;
-    totalPrice: number;
-    seatsBooked: number;
-    tripDataMissing: boolean;
   }>({
     main_text_origen: '',
     main_text_destination: '',
-    date_time: null,
+    date_time: null, // ahora es string | null, así que está bien
     driverName: '',
     loading: true,
     tripStatus: '',
@@ -60,77 +56,79 @@ function ViewBookingDetails() {
       plate: '',
       color: '',
     },
-    bookingStatus: '',
-    totalPrice: 0,
-    seatsBooked: 0,
-    tripDataMissing: false,
   });
   
 
   useEffect(() => {
-    const fetchBookingDetails = async () => {
-      try {
-        const response = await getBookingDetails(Number(booking_id));
-        
-        if (!response.success || !response.data) {
-          throw new Error(response.error || 'Error al obtener detalles de la reserva');
-        }
-
-        const bookingDetails = response.data;
-        console.log('📋 [ViewBookingDetails] === BOOKING DETAILS DEBUG ===');
-        console.log('📋 [ViewBookingDetails] Full booking response:', JSON.stringify(bookingDetails, null, 2));
-        console.log('📋 [ViewBookingDetails] Booking ID:', bookingDetails.id);
-        console.log('📋 [ViewBookingDetails] Booking Status:', bookingDetails.booking_status);
-        console.log('📋 [ViewBookingDetails] Trip ID from booking:', bookingDetails.trip_id);
-        console.log('📋 [ViewBookingDetails] Trip data exists?', !!bookingDetails.trip);
-        
-        if (bookingDetails.trip) {
-          console.log('✅ [ViewBookingDetails] Trip data loaded successfully!');
-          console.log('📋 [ViewBookingDetails] Trip details:', {
-            id: bookingDetails.trip.id,
-            status: bookingDetails.trip.status,
-            date_time: bookingDetails.trip.date_time,
-            origin: bookingDetails.trip.origin,
-            destination: bookingDetails.trip.destination,
-            driver: bookingDetails.trip.driver,
-            vehicle: bookingDetails.trip.vehicle
-          });
-        } else {
-          console.warn('⚠️ [ViewBookingDetails] Trip data is still null - backend may need more time');
-        }
-        
-        console.log('📋 [ViewBookingDetails] Passengers data:', bookingDetails.passengers);
-        console.log('📋 [ViewBookingDetails] === END BOOKING DETAILS DEBUG ===');
-        
-        setTripDetails({
-          main_text_origen: bookingDetails.trip?.origin?.address || bookingDetails.trip?.origin?.main_text || 'Origen no disponible',
-          main_text_destination: bookingDetails.trip?.destination?.address || bookingDetails.trip?.destination?.main_text || 'Destino no disponible',
-          date_time: bookingDetails.trip?.date_time || null,
-          driverName: bookingDetails.trip?.driver 
-            ? `${bookingDetails.trip.driver.first_name} ${bookingDetails.trip.driver.last_name}` 
-            : 'Conductor no disponible',
-          loading: false,
-          tripStatus: bookingDetails.trip?.status || 'Estado no disponible',
-          vehicle: {
-            brand: bookingDetails.trip?.vehicle?.brand || 'No disponible',
-            model: bookingDetails.trip?.vehicle?.model || 'No disponible',
-            year: bookingDetails.trip?.vehicle?.year || 0,
-            plate: bookingDetails.trip?.vehicle?.plate || 'No disponible',
-            color: bookingDetails.trip?.vehicle?.color || 'No disponible',
-          },
-          bookingStatus: bookingDetails.booking_status || 'No disponible',
-          totalPrice: bookingDetails.total_price || 0,
-          seatsBooked: bookingDetails.seats_booked || 0,
-          tripDataMissing: !bookingDetails.trip,
+    const fetchDetails = async () => {
+      if (!booking_id) {
+        showNotification({
+          title: 'Error',
+          message: 'ID de reserva no válido',
+          color: 'red',
         });
-      } catch (error) {
-        console.error('Error fetching booking details:', error);
-        setTripDetails(prev => ({ ...prev, loading: false, tripDataMissing: true }));
+        navigate({ to: '/Cupos' });
+        return;
+      }
+
+      try {
+        const { data: booking, error: bookingError } = await supabase
+          .from('bookings')
+          .select('trip_id')
+          .eq('id', Number(booking_id)) // ✅ se convierte a number
+          .single();
+
+        if (bookingError || !booking?.trip_id) throw new Error('Reserva no válida');
+
+        const { data: tripData, error: tripError } = await supabase
+          .from('trips')
+          .select(`
+            date_time,
+            status,
+            origin:locations!trips_origin_id_fkey(address),
+            destination:locations!trips_destination_id_fkey(address),
+            vehicle:vehicles(brand, model, year, plate, color),
+            user_id
+          `)
+          .eq('id', booking.trip_id)
+          .single();
+
+        if (tripError || !tripData) throw new Error('Viaje no encontrado');
+        if (!tripData.user_id) throw new Error('Falta user_id');
+
+        const { data: driverData } = await supabase
+          .from('user_profiles')
+          .select('first_name, last_name')
+          .eq('user_id', tripData.user_id)
+          .single();
+
+        setTripDetails({
+          main_text_origen: tripData.origin?.address || 'Origen no disponible',
+          main_text_destination: tripData.destination?.address || 'Destino no disponible',
+          date_time: tripData.date_time,
+          driverName: `${driverData?.first_name ?? ''} ${driverData?.last_name ?? ''}`,
+          loading: false,
+          tripStatus: tripData.status || '',
+          vehicle: {
+            brand: tripData.vehicle?.brand || 'No disponible',
+            model: tripData.vehicle?.model || 'No disponible',
+            year: tripData.vehicle?.year ?? 0,
+            plate: tripData.vehicle?.plate || 'No disponible',
+            color: tripData.vehicle?.color || 'No disponible',
+          },
+        });
+      } catch (err) {
+        showNotification({
+          title: 'Error',
+          message: 'No se pudieron cargar los detalles.',
+          color: 'red',
+        });
+        navigate({ to: '/Cupos' });
       }
     };
 
-    fetchBookingDetails();
-  }, [booking_id]);
+    fetchDetails();
+  }, [booking_id, navigate]);
 
   return (
     <Container size="sm" className={detailStyles.detailsContainer}>
@@ -140,27 +138,6 @@ function ViewBookingDetails() {
           <Title order={2} style={{ color: '#34D399', textAlign: 'center' }}>
             Detalles de tu Reserva
           </Title>
-
-          {tripDetails.tripDataMissing && (
-            <Alert color="blue" title="🔄 Cargando detalles del viaje">
-              <Text>Los detalles completos del viaje se están cargando...</Text>
-              <Text>Mientras tanto, puedes ver la información básica de tu reserva:</Text>
-              <Text style={{ marginTop: '10px', fontWeight: 'bold' }}>
-                ✅ Tu reserva está confirmada:
-              </Text>
-              <Text>• Estado: {tripDetails.bookingStatus}</Text>
-              <Text>• Precio: ${tripDetails.totalPrice.toLocaleString()}</Text>
-              <Text>• Asientos: {tripDetails.seatsBooked}</Text>
-              <Button 
-                size="sm" 
-                mt="md" 
-                onClick={() => window.location.reload()}
-                style={{ backgroundColor: '#34D399' }}
-              >
-                🔄 Actualizar información
-              </Button>
-            </Alert>
-          )}
 
           <Divider label="Información del Viaje" labelPosition="center" my="sm" />
 
@@ -178,39 +155,12 @@ function ViewBookingDetails() {
             </Badge>
           </Group>
 
-          <Divider label="Información de la Reserva" labelPosition="center" my="sm" />
-          
-          <Group gap="md"><Text fw={600}>ID de Reserva:</Text><Text>{booking_id}</Text></Group>
-          <Group gap="md">
-            <Text fw={600}>Estado de Reserva:</Text>
-            <Badge color={tripDetails.bookingStatus === 'confirmed' ? 'green' : tripDetails.bookingStatus === 'pending' ? 'yellow' : 'red'}>
-              {tripDetails.bookingStatus || 'No disponible'}
-            </Badge>
-          </Group>
-          <Group gap="md"><Text fw={600}>Asientos Reservados:</Text><Text>{tripDetails.seatsBooked}</Text></Group>
-          <Group gap="md"><Text fw={600}>Precio Total:</Text><Text>${tripDetails.totalPrice.toLocaleString()}</Text></Group>
-
           <Divider label="Vehículo" labelPosition="center" my="sm" />
-          <Group gap="md">
-            <Text fw={600}>Marca:</Text>
-            <Text>{tripDetails.vehicle.brand || 'No disponible'}</Text>
-          </Group>
-          <Group gap="md">
-            <Text fw={600}>Modelo:</Text>
-            <Text>{tripDetails.vehicle.model || 'No disponible'}</Text>
-          </Group>
-          <Group gap="md">
-            <Text fw={600}>Año:</Text>
-            <Text>{tripDetails.vehicle.year || 'No disponible'}</Text>
-          </Group>
-          <Group gap="md">
-            <Text fw={600}>Placa:</Text>
-            <Text>{tripDetails.vehicle.plate || 'No disponible'}</Text>
-          </Group>
-          <Group gap="md">
-            <Text fw={600}>Color:</Text>
-            <Text>{tripDetails.vehicle.color || 'No disponible'}</Text>
-          </Group>
+          <Text fw={600}>Marca: {tripDetails.vehicle.brand}</Text>
+          <Text fw={600}>Modelo: {tripDetails.vehicle.model}</Text>
+          <Text fw={600}>Año: {tripDetails.vehicle.year}</Text>
+          <Text fw={600}>Placa: {tripDetails.vehicle.plate}</Text>
+          <Text fw={600}>Color: {tripDetails.vehicle.color}</Text>
 
           <Button
             mt="md"

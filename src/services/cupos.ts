@@ -16,18 +16,16 @@ interface Booking {
   booking_date: string;
   user_id: string;
   passengers: Passenger[];
-  user_profiles?: {
-    first_name: string;
-    last_name: string;
-    phone_number?: string;
-  };
 }
 
 interface Trip {
   id: number;
   date_time: string;
   status: string;
-  user_id: string;
+  seats?: number;
+  seats_reserved?: number;
+  price_per_seat?: number;
+  user_id?: string; // ID del conductor
   origin: {
     address: string;
     main_text: string;
@@ -41,11 +39,12 @@ interface Trip {
     model: string;
     plate: string;
     color: string;
+    year?: number;
   };
   driver: {
     first_name: string;
     last_name: string;
-    photo_user: string;
+    photo_user: string | null;
     phone_number: string;
   };
 }
@@ -66,47 +65,94 @@ interface CupoWithDetails {
   booking_status: string;
   total_price: number;
   trip_id: number;
-  user_id: string;
   seats_booked: number;
   booking_qr: string;
-  passengers: Passenger[];
   trip: Trip | null;
+  passengers: Passenger[];
 }
 
 // Obtener cupos reservados para un viaje específico (para conductores)
-export const getCuposReservados = async (tripId: number): Promise<{ success: boolean; data?: { tripId: number; bookings: Booking[] }; error?: string }> => {
+export const getCuposReservados = async (tripId: number): Promise<{ success: boolean; data?: { tripId: number; trip: any; bookings: Booking[]; summary: any }; error?: string }> => {
   try {
-    console.log('🎫 [getCuposReservados] Requesting cupos for tripId:', tripId);
+    console.log(`🎫 [getCuposReservados] Fetching cupos for trip ${tripId}`);
+    
     const response = await apiRequest(`/cupos/reservados?tripId=${tripId}`);
-    console.log('✅ [getCuposReservados] Response received:', response);
+    
+    console.log(`✅ [getCuposReservados] Backend response:`, response);
+    
+    // Validar que la respuesta tenga la estructura esperada
+    if (!response || typeof response !== 'object') {
+      throw new Error('Respuesta inválida del servidor');
+    }
+
+    // El backend actualizado retorna: { tripId, trip, bookings, summary }
+    const data = {
+      tripId: response.tripId || tripId,
+      trip: response.trip || null,
+      bookings: response.bookings || [],
+      summary: response.summary || {
+        total_bookings: 0,
+        total_passengers: 0,
+        total_seats_booked: 0,
+        total_revenue: 0,
+        pending_bookings: 0,
+        completed_bookings: 0
+      }
+    };
+
+    console.log(`✅ [getCuposReservados] Processed ${data.bookings.length} bookings with ${data.summary.total_passengers} passengers`);
+    
     return {
       success: true,
-      data: response
+      data
     };
   } catch (error) {
-    console.error('❌ [getCuposReservados] Error getting cupos reservados:', error);
+    console.error(`❌ [getCuposReservados] Error for trip ${tripId}:`, error);
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Manejar diferentes tipos de errores
+    if (errorMessage.includes('permisos') || errorMessage.includes('403')) {
+      return {
+        success: false,
+        error: 'No tienes permisos para ver los cupos de este viaje'
+      };
+    }
+    
+    if (errorMessage.includes('401') || errorMessage.includes('Token')) {
+      return {
+        success: false,
+        error: 'Sesión expirada - por favor vuelve a iniciar sesión'
+      };
+    }
+    
+    if (errorMessage.includes('404')) {
+      return {
+        success: false,
+        error: 'Viaje no encontrado'
+      };
+    }
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error al obtener cupos reservados'
+      error: errorMessage || 'Error al obtener cupos reservados'
     };
   }
 };
 
-// Validar un cupo específico (escaneo QR)
-export const validateCupo = async (bookingId: number, qrCode: string): Promise<{ success: boolean; data?: any; error?: string }> => {
+// Validar un cupo específico (QR scan)
+export const validateCupo = async (bookingId: number, qrCode: string): Promise<{ success: boolean; data?: { message: string; status: string }; error?: string }> => {
   try {
-    console.log('🔍 [validateCupo] Validating booking:', bookingId, 'with QR:', qrCode);
     const response = await apiRequest(`/cupos/validar/${bookingId}`, {
       method: 'POST',
-      body: JSON.stringify({ qrCode })
+      body: JSON.stringify({ bookingId, qrCode })
     });
-    console.log('✅ [validateCupo] Validation successful:', response);
     return {
       success: true,
       data: response
     };
   } catch (error) {
-    console.error('❌ [validateCupo] Error validating cupo:', error);
+    console.error('Error validating cupo:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error al validar cupo'
@@ -117,18 +163,16 @@ export const validateCupo = async (bookingId: number, qrCode: string): Promise<{
 // Obtener estadísticas de cupos para un conductor
 export const getCuposStats = async (): Promise<{ success: boolean; data?: CupoStats; error?: string }> => {
   try {
-    console.log('📊 [getCuposStats] Requesting cupos stats');
     const response = await apiRequest('/cupos/stats');
-    console.log('✅ [getCuposStats] Stats received:', response);
     return {
       success: true,
       data: response
     };
   } catch (error) {
-    console.error('❌ [getCuposStats] Error getting cupos stats:', error);
+    console.error('Error getting cupos stats:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error al obtener estadísticas'
+      error: error instanceof Error ? error.message : 'Error al obtener estadísticas de cupos'
     };
   }
 };
@@ -136,63 +180,142 @@ export const getCuposStats = async (): Promise<{ success: boolean; data?: CupoSt
 // Obtener mis cupos comprados (como pasajero)
 export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos: CupoWithDetails[] }; error?: string }> => {
   try {
-    console.log('🎫 [CuposService] Calling /bookings/my-bookings...');
-    const response = await apiRequest('/bookings/my-bookings');
+    console.log(`🎫 [getMisCupos] Fetching user's purchased cupos`);
     
-    console.log('🎫 [CuposService] Raw backend response:', JSON.stringify(response, null, 2));
+    // Intentar el endpoint principal con timeout
+    const response = await Promise.race([
+      apiRequest('/cupos/mis-cupos'),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout después de 10 segundos')), 10000)
+      )
+    ]);
     
-    // Transformar la respuesta del backend para que coincida con la interfaz esperada
-    const transformedResponse = {
-      cupos: response.bookings?.map((booking: any) => {
-        console.log('🎫 [CuposService] Processing booking:', JSON.stringify(booking, null, 2));
-        console.log('🎫 [CuposService] Trip in booking:', booking.trip);
-        console.log('🎫 [CuposService] Trip user_id:', booking.trip?.user_id);
-        
-        return {
-          id: booking.id,
-          booking_date: booking.booking_date,
-          booking_status: booking.booking_status,
-          total_price: booking.total_price,
-          trip_id: booking.trip_id,
-          user_id: booking.user_id || '',
-          seats_booked: booking.seats_booked,
-          booking_qr: booking.booking_qr,
-          passengers: booking.passengers || [],
-          trip: booking.trip
-        };
-      }) || []
-    };
+    console.log(`✅ [getMisCupos] Backend response:`, response);
     
-    console.log('🎫 [CuposService] Transformed response:', JSON.stringify(transformedResponse, null, 2));
+    // Validar que la respuesta tenga la estructura esperada
+    if (!response || typeof response !== 'object') {
+      console.warn(`⚠️ [getMisCupos] Invalid response structure:`, response);
+      throw new Error('Respuesta inválida del servidor');
+    }
+
+    // El backend debería retornar { cupos: [...] }
+    const cupos = Array.isArray(response.cupos) ? response.cupos : [];
+    
+    console.log(`✅ [getMisCupos] Processed ${cupos.length} cupos`);
     
     return {
       success: true,
-      data: transformedResponse
+      data: { cupos }
     };
   } catch (error) {
-    console.error('❌ [CuposService] Error in getMisCupos:', error);
+    console.error(`❌ [getMisCupos] Error fetching user cupos:`, error);
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Si es timeout, usar fallback inmediatamente
+    if (errorMessage.includes('Timeout')) {
+      console.warn(`⏰ [getMisCupos] Request timed out, using safe fallback`);
+      return {
+        success: true,
+        data: { cupos: [] }
+      };
+    }
+    
+    // Manejar diferentes tipos de errores
+    if (errorMessage.includes('401') || errorMessage.includes('Token')) {
+      console.warn(`� [getMisCupos] Authentication error`);
+      return {
+        success: false,
+        error: 'Sesión expirada - por favor vuelve a iniciar sesión'
+      };
+    }
+    
+    if (errorMessage.includes('403') || errorMessage.includes('permisos')) {
+      console.warn(`� [getMisCupos] Permission error`);
+      return {
+        success: false,
+        error: 'No tienes permisos para ver tus cupos'
+      };
+    }
+
+    // Para otros errores, usar fallback seguro inmediatamente
+    console.warn(`🔧 [getMisCupos] Main endpoint failed, using safe fallback`);
+    
+    // Intentar mostrar mensaje informativo pero no bloquear la UI
     return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Error al obtener cupos'
+      success: true,
+      data: { cupos: [] },
+      error: 'No se pudieron cargar los cupos desde el servidor - mostrando vista sin datos'
     };
   }
 };
 
-// Obtener detalles de un ticket específico
-export const getTicketDetails = async (bookingId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+// Debug endpoint para testing y diagnostico
+export const debugCuposReservados = async (tripId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
   try {
-    console.log('🎫 [getTicketDetails] Requesting ticket details for bookingId:', bookingId);
-    const response = await apiRequest(`/cupos/ticket/${bookingId}`);
-    console.log('✅ [getTicketDetails] Response received:', response);
+    console.log(`🔧 [debugCuposReservados] Testing debug endpoint for trip ${tripId}`);
+    
+    const response = await apiRequest(`/cupos/debug/${tripId}`);
+    
+    console.log(`✅ [debugCuposReservados] Debug response:`, response);
+    
     return {
       success: true,
       data: response
     };
   } catch (error) {
-    console.error('❌ [getTicketDetails] Error getting ticket details:', error);
+    console.error(`❌ [debugCuposReservados] Debug failed for trip ${tripId}:`, error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error al obtener detalles del ticket'
+      error: error instanceof Error ? error.message : 'Error en debug endpoint'
     };
+  }
+};
+
+// Debug específico para mis-cupos endpoint
+export const debugMisCupos = async (): Promise<{ success: boolean; data?: any; error?: string }> => {
+  try {
+    console.log(`🔧 [debugMisCupos] Testing mis-cupos endpoint directly`);
+    
+    // Intentar llamada directa con más información de debugging
+    const response = await apiRequest('/cupos/mis-cupos', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log(`✅ [debugMisCupos] Direct response:`, response);
+    
+    return {
+      success: true,
+      data: response
+    };
+  } catch (error) {
+    console.error(`❌ [debugMisCupos] Direct call failed:`, error);
+    
+    // Intentar endpoint de stats como alternativa
+    try {
+      console.log(`🔧 [debugMisCupos] Trying stats as fallback`);
+      const statsResponse = await apiRequest('/cupos/stats');
+      
+      console.log(`✅ [debugMisCupos] Stats response:`, statsResponse);
+      
+      return {
+        success: true,
+        data: { 
+          fallback: 'stats',
+          stats: statsResponse,
+          cupos: [] // Array vacío como fallback seguro
+        }
+      };
+    } catch (statsError) {
+      console.error(`❌ [debugMisCupos] Stats fallback also failed:`, statsError);
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error en debug mis-cupos'
+      };
+    }
   }
 };

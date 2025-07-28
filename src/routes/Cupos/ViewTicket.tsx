@@ -15,7 +15,7 @@ import html2canvas from 'html2canvas';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
-import { getTicketDetails } from '@/services/cupos';
+import { getTicketDetails } from '@/services/tickets';
 import dayjs from 'dayjs';
 import styles from './ViewTicket.module.css';
 import { useNavigate, useSearch, createFileRoute } from '@tanstack/react-router';
@@ -49,26 +49,32 @@ const ViewTicket = () => {
       }
 
       try {
-        const result = await getTicketDetails(Number(booking_id));
+        console.log('🎫 [ViewTicket] Fetching ticket details for booking:', booking_id);
+        const result = await getTicketDetails(booking_id);
         
-        if (result.success && result.data) {
-          const { booking, trip, passengers } = result.data;
+        if (result.success && result.data && result.data.ticket) {
+          const { ticket } = result.data;
+          console.log('✅ [ViewTicket] Ticket data received:', ticket);
           
-          setBookingQr(booking.qr_code || booking.booking_qr);
-          setPassengers(passengers);
+          // Set QR code from booking
+          setBookingQr(ticket.booking.booking_qr);
           
-          if (trip) {
+          // Set passengers
+          setPassengers(ticket.passengers || []);
+          
+          // Set trip locations from route data
+          if (ticket.trip && ticket.trip.route) {
             setTripLocations({
-              origin: { address: trip.origin?.address || 'Origen no disponible' },
-              destination: { address: trip.destination?.address || 'Destino no disponible' },
+              origin: { address: ticket.trip.route.origin },
+              destination: { address: ticket.trip.route.destination },
             });
           }
         } else {
-          console.error('Error fetching ticket details:', result.error);
+          console.error('❌ [ViewTicket] Error fetching ticket details:', result.error);
           navigate({ to: '/Actividades' });
         }
       } catch (error) {
-        console.error('Error cargando datos del tiquete:', error);
+        console.error('❌ [ViewTicket] Error cargando datos del tiquete:', error);
         navigate({ to: '/Actividades' });
       } finally {
         setLoading(false);

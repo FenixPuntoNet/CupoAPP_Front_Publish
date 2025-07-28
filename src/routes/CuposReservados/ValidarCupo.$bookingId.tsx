@@ -47,20 +47,51 @@ const ValidarCupoComponent = () => {
         setLoading(false)
         return
       }
+      
       setLoading(true)
+      console.log(`🔍 [ValidarCupo] Validating QR for booking ${bookingId} with code: ${qrData}`);
+      
       try {
         const result = await validateCupo(bookingId, qrData);
         
+        console.log(`✅ [ValidarCupo] Validation result:`, result);
+        
         if (result.success && result.data) {
+          console.log(`✅ [ValidarCupo] Cupo validated successfully`);
           setModalType('success')
           setIsModalOpen(true)
+          setScanResult(qrData) // Guardamos el QR validado
+          
+          showNotification({
+            title: '¡Validación exitosa!',
+            message: 'El cupo ha sido validado correctamente',
+            color: 'green',
+          });
         } else {
+          console.error(`❌ [ValidarCupo] Validation failed:`, result.error);
           setModalType('error')
-          setError(result.error || 'Error al validar el cupo')
+          
+          // Manejar diferentes tipos de errores
+          let errorMessage = 'Error al validar el cupo';
+          
+          if (result.error?.includes('QR inválido') || result.error?.includes('no coincide')) {
+            errorMessage = 'El código QR no coincide con esta reserva';
+          } else if (result.error?.includes('ya fue validado') || result.error?.includes('ya validado')) {
+            errorMessage = 'Este cupo ya fue validado anteriormente';
+          } else if (result.error?.includes('permisos')) {
+            errorMessage = 'No tienes permisos para validar este cupo';
+          } else if (result.error?.includes('no encontrada')) {
+            errorMessage = 'Reserva no encontrada';
+          } else if (result.error) {
+            errorMessage = result.error;
+          }
+          
+          setError(errorMessage)
           setIsModalOpen(true)
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Error al validar el cupo'
+        console.error(`❌ [ValidarCupo] Unexpected error:`, err);
+        const msg = err instanceof Error ? err.message : 'Error inesperado al validar el cupo'
         setError(msg)
         setModalType('error')
         setIsModalOpen(true)

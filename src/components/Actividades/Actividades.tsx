@@ -1,13 +1,13 @@
 // Actividades.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Title, Text, LoadingOverlay, Button } from '@mantine/core';
 import { useNavigate } from '@tanstack/react-router';
 import { showNotification } from '@mantine/notifications';
 import dayjs from 'dayjs';
 import RolSelector from './RolSelector';
 import TripFilter from './TripFilter';
-import CuposComponent from './CuposComponent';
+import Cupos from '../../routes/Cupos';
 import styles from './index.module.css';
 import TripCard from './TripCard';
 import { getCurrentUser } from '@/services/auth';
@@ -15,28 +15,35 @@ import {
   getActivitySummary, 
   getRecentActivities,
   type Activity,
-  type ActivitySummary 
+  type ActivitySummary
 } from '@/services/actividades';
-import { getMyTrips } from '@/services/viajes';
+import { getMyTrips, type TripDetails } from '@/services/viajes';
 
 export interface Trip {
   id: number;
-  origin: { address: string };
-  destination: { address: string };
+  origin: { address: string; main_text?: string };
+  destination: { address: string; main_text?: string };
   date: string;
   time: string;
-  duration: string;
-  distance: string;
+  duration?: string;
+  distance?: string;
   seats: number;
   seats_reserved: number;
   pricePerSeat: number;
-  description: string;
-  allowPets: boolean;
-  allowSmoking: boolean;
+  price_per_seat: number;
+  description?: string;
+  allowPets?: boolean;
+  allowSmoking?: boolean;
   is_active: boolean;
   user_id: string;
   date_time: string;
   status: string;
+  vehicle?: {
+    brand: string;
+    model: string;
+    plate: string;
+    color: string;
+  };
 }
 
 interface UserProfile {
@@ -58,26 +65,17 @@ const Actividades: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tripsLoading, setTripsLoading] = useState(false);
   const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const ActivityType = {
     RESUMEN: 'Resumen de Actividades',
     VIAJES: 'Viajes Publicados',
-    CUPOS: 'Cupos Reservados',
+    CUPOS: 'Cupos Creados',
   } as const;
-  type ActivityType = 'Resumen de Actividades' | 'Viajes Publicados' | 'Cupos Reservados' | null;
+  type ActivityType = 'Resumen de Actividades' | 'Viajes Publicados' | 'Cupos Creados' | null;
   const [selectedActivity, setSelectedActivity] = useState<ActivityType>('Resumen de Actividades');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-
-  // Log para debugging de cambios de actividad
-  useEffect(() => {
-    console.log('🎯 [Actividades] Selected activity changed to:', selectedActivity);
-    console.log('🎯 [Actividades] User profile:', userProfile);
-    console.log('🎯 [Actividades] Conditions check:');
-    console.log('  - Resumen?', selectedActivity === 'Resumen de Actividades');
-    console.log('  - Viajes?', selectedActivity === 'Viajes Publicados', '&& DRIVER?', userProfile?.user_type === 'DRIVER');
-    console.log('  - Cupos?', selectedActivity === 'Cupos Reservados', '&& user_id?', !!userProfile?.user_id);
-  }, [selectedActivity, userProfile]);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -147,57 +145,58 @@ const Actividades: React.FC = () => {
 
   useEffect(() => {
     const loadTrips = async () => {
-      setLoading(true);
+      setTripsLoading(true);
       try {
-        const result = await getCurrentUser();
-        if (!result.success || !result.user) {
-          navigate({ to: '/Login' });
+        console.log('🚀 [Actividades] Loading trips from backend...');
+        
+        const result = await getMyTrips();
+        if (!result.success) {
+          console.error('❌ [Actividades] Error loading trips:', result.error);
+          showNotification({
+            title: 'Error',
+            message: result.error || 'Error al cargar los viajes',
+            color: 'red',
+          });
           return;
         }
 
-        // Caregar viajes del usuario usando el servicio correcto
-        const tripsResult = await getMyTrips();
-        if (tripsResult.success && tripsResult.data?.trips) {
-          // Transformar TripDetails a Trip
-          const transformedTrips: Trip[] = tripsResult.data.trips.map(trip => ({
-            id: trip.id,
-            origin: { address: trip.origin.address },
-            destination: { address: trip.destination.address },
-            date: dayjs(trip.date_time).format('YYYY-MM-DD'),
-            time: dayjs(trip.date_time).format('HH:mm'),
-            duration: '41 min', // Valor por defecto, podría venir del backend
-            distance: '15.3 km', // Valor por defecto, podría venir del backend
-            seats: trip.seats,
-            seats_reserved: trip.seats_reserved,
-            pricePerSeat: trip.price_per_seat,
-            description: trip.description,
-            allowPets: trip.allow_pets === 'Y',
-            allowSmoking: trip.allow_smoking === 'Y',
-            is_active: trip.status === 'active',
-            user_id: trip.user_id,
-            date_time: trip.date_time,
-            status: trip.status
-          }));
-          
-          setTrips(transformedTrips);
-          setFilteredTrips(transformedTrips);
-        } else {
-          console.error('Error loading user trips:', tripsResult.error);
-          setTrips([]);
-          setFilteredTrips([]);
-        }
+        console.log('✅ [Actividades] Trips loaded:', result.data);
+        
+        // Transformar los datos del backend al formato esperado por el frontend
+        const transformedTrips: Trip[] = (result.data?.trips || []).map((trip: TripDetails) => ({
+          id: trip.id,
+          origin: trip.origin,
+          destination: trip.destination,
+          date: new Date(trip.date_time).toLocaleDateString(),
+          time: new Date(trip.date_time).toLocaleTimeString(),
+          duration: '30 min', // TODO: Agregar duration al backend
+          distance: '15 km', // TODO: Agregar distance al backend
+          seats: trip.seats,
+          seats_reserved: trip.seats_reserved,
+          pricePerSeat: trip.price_per_seat,
+          price_per_seat: trip.price_per_seat,
+          description: trip.description || '',
+          allowPets: trip.allow_pets === 'Y',
+          allowSmoking: trip.allow_smoking === 'Y',
+          is_active: trip.status !== 'canceled',
+          user_id: trip.user_id,
+          date_time: trip.date_time,
+          status: trip.status,
+          vehicle: trip.vehicle
+        }));
+
+        setTrips(transformedTrips);
+        setFilteredTrips(transformedTrips);
 
       } catch (error) {
-        console.error('Error loading trips:', error);
+        console.error('❌ [Actividades] Error loading trips:', error);
         showNotification({
           title: 'Error',
           message: 'Error al cargar los viajes',
           color: 'red',
         });
-        setTrips([]);
-        setFilteredTrips([]);
       } finally {
-        setLoading(false);
+        setTripsLoading(false);
       }
     };
 
@@ -295,7 +294,11 @@ const Actividades: React.FC = () => {
     setFilteredTrips(filtered);
   }, [trips, filterValue, statusFilter, dateFilter]);
 
-
+  // Usar useCallback para evitar recrear la función en cada render
+  const handleActivitySelect = useCallback((activity: string) => {
+    console.log('🎯 [Actividades] handleActivitySelect called with:', activity);
+    setSelectedActivity(activity as ActivityType);
+  }, []);
 
   if (loading) {
     return (
@@ -318,69 +321,44 @@ const Actividades: React.FC = () => {
             ? <>Tu resumen, <span className={styles.userName}>{userProfile?.first_name || 'Usuario'}</span></>
             : 'Mis Actividades'}
         </Title>
-        <RolSelector onSelect={(activity) => {
-          console.log('🎯 [Actividades] RolSelector callback called with:', activity);
-          setSelectedActivity(activity as ActivityType);
-        }} />
+        <RolSelector onSelect={handleActivitySelect} />
       </div>
 
       {selectedActivity === 'Resumen de Actividades' && (
-        <>
-          {console.log('🎯 [Actividades] Rendering Resumen de Actividades')}
-          {renderActivitySummary()}
-        </>
+        renderActivitySummary()
       )}
 
       {selectedActivity === 'Viajes Publicados' && userProfile?.user_type === 'DRIVER' && (
         <>
-          {console.log('🎯 [Actividades] Rendering Viajes Publicados')}
-          <div style={{ padding: '20px', background: '#333', margin: '20px 0', borderRadius: '8px' }}>
-            <Text style={{ color: '#34D399', fontSize: '18px', fontWeight: 'bold' }}>
-              🚗 Sección de Viajes Publicados
-            </Text>
-            <Text style={{ color: '#fff', marginTop: '10px' }}>
-              Viajes encontrados: {filteredTrips.length}
-            </Text>
-            {filteredTrips.length > 0 && (
-              <Text style={{ color: '#ccc', marginTop: '5px' }}>
-                Mostrando viajes de prueba...
-              </Text>
-            )}
-          </div>
-          <TripFilter
-            trips={trips}
-            filterValue={filterValue || ''}
-            onFilterChange={setFilterValue}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            dateFilter={dateFilter}
-            onDateFilterChange={setDateFilter}
-          />
-          <div className={styles.tripListContainer}>
-            {filteredTrips.map((trip, _) => (
-              <TripCard
-                key={trip.id}
-                trip={trip}
-                userId={userProfile?.user_id || ''}
+          {tripsLoading ? (
+            <Text className={styles.noTripsText}>Cargando viajes...</Text>
+          ) : (
+            <>
+              <TripFilter
+                trips={trips}
+                filterValue={filterValue || ''}
+                onFilterChange={setFilterValue}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                dateFilter={dateFilter}
+                onDateFilterChange={setDateFilter}
               />
-            ))}
-          </div>
+              <div className={styles.tripListContainer}>
+                {filteredTrips.map((trip, ) => (
+                  <TripCard
+                    key={trip.id}
+                    trip={trip}
+                    userId={userProfile?.user_id || ''}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
 
-      {selectedActivity === 'Cupos Reservados' && userProfile?.user_id && (
-        <>
-          {console.log('🎯 [Actividades] Rendering Cupos Reservados')}
-          <div style={{ padding: '20px', background: '#333', margin: '20px 0', borderRadius: '8px' }}>
-            <Text style={{ color: '#34D399', fontSize: '18px', fontWeight: 'bold' }}>
-              🎫 Sección de Cupos Reservados
-            </Text>
-            <Text style={{ color: '#fff', marginTop: '10px' }}>
-              Cargando tus cupos reservados...
-            </Text>
-          </div>
-          <CuposComponent userId={userProfile.user_id} />
-        </>
+      {selectedActivity === 'Cupos Creados' && userProfile?.user_id && (
+        <Cupos userId={userProfile.user_id} />
       )}
 
       {selectedActivity === 'Viajes Publicados' && userProfile?.user_type === 'PASSENGER' && (

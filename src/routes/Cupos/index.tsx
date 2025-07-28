@@ -37,7 +37,6 @@ type BookingConductor = {
   seats_booked: number;
   booking_qr: string;
   driver_id: string;
-  driver_name: string;
   passengers: PassengerLite[];
 };
 
@@ -54,36 +53,118 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
+      
+      // Timeout de seguridad para evitar carga infinita
+      const timeoutId = setTimeout(() => {
+        console.warn(`⏰ [Cupos] Fetch timeout reached, using empty state`);
+        setLoading(false);
+        setBookings([]);
+        showNotification({
+          title: 'Tiempo de carga agotado',
+          message: 'No se pudieron cargar los cupos en este momento. Intenta refrescar la página.',
+          color: 'yellow',
+        });
+      }, 15000); // 15 segundos máximo
+      
       try {
+        console.log(`🎫 [Cupos] Fetching user cupos for userId: ${userId}`);
+        
         const result = await getMisCupos();
         
+        // Limpiar timeout si la respuesta llegó a tiempo
+        clearTimeout(timeoutId);
+        
+        console.log(`📋 [Cupos] getMisCupos result:`, result);
+        
         if (result.success && result.data) {
-          const mappedBookings = result.data.cupos.map((cupo) => ({
-            booking_id: cupo.id,
-            booking_date: cupo.booking_date,
-            booking_status: cupo.booking_status,
-            total_price: cupo.total_price,
-            trip_id: cupo.trip_id,
-            user_id: userId,
-            seats_booked: cupo.seats_booked,
-            booking_qr: cupo.booking_qr,
-            driver_id: cupo.trip?.user_id || 'unknown',
-            driver_name: cupo.trip?.driver?.first_name ? `${cupo.trip.driver.first_name} ${cupo.trip.driver.last_name}` : 'Driver not available',
-            passengers: cupo.passengers.map((passenger) => ({
-              passenger_id: passenger.id,
-              full_name: passenger.full_name,
-              identification_number: passenger.identification_number,
-            })),
-          }));
+          console.log(`✅ [Cupos] Successfully fetched cupos`);
           
+          // Validar que cupos sea un array
+          const cuposArray = Array.isArray(result.data.cupos) ? result.data.cupos : [];
+          
+          if (cuposArray.length === 0) {
+            console.log(`📭 [Cupos] No cupos found for user`);
+            setBookings([]);
+            
+            showNotification({
+              title: 'Sin cupos comprados',
+              message: 'Aún no has comprado ningún cupo para viajes.',
+              color: 'blue',
+            });
+            
+            return;
+          }
+          
+          const mappedBookings = cuposArray.map((cupo) => {
+            // Verificar estructura de datos con valores por defecto
+            const tripData = cupo.trip || {};
+            const driverData = (tripData as any).driver || {};
+            const passengersData = Array.isArray(cupo.passengers) ? cupo.passengers : [];
+            
+            return {
+              booking_id: cupo.id || 0,
+              booking_date: cupo.booking_date || new Date().toISOString(),
+              booking_status: cupo.booking_status || 'unknown',
+              total_price: cupo.total_price || 0,
+              trip_id: cupo.trip_id || 0,
+              user_id: userId,
+              seats_booked: cupo.seats_booked || 1,
+              booking_qr: cupo.booking_qr || '',
+              driver_id: driverData.first_name 
+                ? `${driverData.first_name} ${driverData.last_name || ''}`.trim()
+                : 'Conductor no disponible',
+              passengers: passengersData.map((passenger) => ({
+                passenger_id: passenger.id || 0,
+                full_name: passenger.full_name || 'Sin nombre',
+                identification_number: passenger.identification_number || 'Sin ID',
+              })),
+            };
+          });
+          
+          console.log(`✅ [Cupos] Mapped ${mappedBookings.length} bookings`);
           setBookings(mappedBookings);
+          
+          showNotification({
+            title: 'Cupos cargados',
+            message: `Se encontraron ${mappedBookings.length} cupos comprados.`,
+            color: 'green',
+          });
+          
         } else {
-          console.error('Error fetching cupos:', result.error);
+          console.warn(`⚠️ [Cupos] Error or no success:`, result.error);
+          
+          // Si hay error pero no es crítico, mostrar array vacío
+          setBookings([]);
+          
+          // Mostrar mensaje apropiado
+          if (result.error?.includes('Sesión expirada')) {
+            showNotification({
+              title: 'Sesión expirada',
+              message: 'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.',
+              color: 'red',
+            });
+          } else if (result.error?.includes('permisos')) {
+            showNotification({
+              title: 'Sin permisos',
+              message: 'No tienes permisos para ver los cupos.',
+              color: 'red',
+            });
+          } else {
+            showNotification({
+              title: 'Sin cupos disponibles',
+              message: 'No se encontraron cupos comprados en este momento.',
+              color: 'blue',
+            });
+          }
         }
       } catch (error) {
+        clearTimeout(timeoutId);
+        console.error(`❌ [Cupos] Unexpected error:`, error);
+        
+        setBookings([]);
         showNotification({
-          title: 'Error al obtener los datos',
-          message: 'Hubo un problema al cargar tus reservas o calificaciones.',
+          title: 'Error inesperado',
+          message: 'Ocurrió un error al cargar los cupos. Intenta nuevamente.',
           color: 'red',
         });
       } finally {
@@ -91,7 +172,13 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
       }
     };
     
-    fetchBookings();
+    if (userId) {
+      fetchBookings();
+    } else {
+      console.warn(`⚠️ [Cupos] No userId provided`);
+      setLoading(false);
+      setBookings([]);
+    }
   }, [userId]);
 
   if (loading) {
@@ -148,7 +235,17 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
                 </Group>
                 <Group gap="apart">
                   <Text fw={600} style={{ color: '#ddd' }}>Estado del viaje:</Text>
-                  <Text style={{ color: '#fff' }}>{booking.booking_status}</Text>
+                  <Text 
+                    style={{ 
+                      color: booking.booking_status === 'completed' ? '#34D399' : 
+                             booking.booking_status === 'confirmed' ? '#3B82F6' :
+                             booking.booking_status === 'pending' ? '#F59E0B' : '#fff'
+                    }}
+                  >
+                    {booking.booking_status === 'completed' ? 'Completado ✓' : 
+                     booking.booking_status === 'confirmed' ? 'Confirmado' :
+                     booking.booking_status === 'pending' ? 'Pendiente' : booking.booking_status}
+                  </Text>
                 </Group>
                 <Group gap="apart">
                   <Text fw={600} style={{ color: '#ddd' }}>Precio Total:</Text>
@@ -220,32 +317,20 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
                   >
                     Ir al Chat
                   </Button>
-                  <Button
-                    size="xs"
-                    onClick={() => {
-                      console.log('⭐ [Cupos] Rating button clicked:', {
-                        trip_id: booking.trip_id,
-                        driver_id: booking.driver_id,
-                        driver_name: booking.driver_name,
-                        booking_id: booking.booking_id
-                      });
-                      
-                      if (booking.trip_id && booking.driver_id && booking.driver_id !== 'unknown') {
-                        openRatingModal(booking.trip_id, booking.driver_id);
-                      } else {
-                        console.error('❌ [Cupos] Missing trip_id or driver_id for rating');
-                        showNotification({
-                          title: 'Error',
-                          message: 'No se puede calificar este viaje. Información del conductor no disponible.',
-                          color: 'red',
-                        });
-                      }
-                    }}
-                    variant="filled"
-                    color="yellow"
-                  >
-                    Calificar viaje
-                  </Button>
+                  {booking.booking_status === 'completed' && (
+                    <Button
+                      size="xs"
+                      onClick={() => {
+                        if (booking.trip_id && booking.driver_id) {
+                          openRatingModal(booking.trip_id, booking.driver_id);
+                        }
+                      }}
+                      variant="filled"
+                      color="yellow"
+                    >
+                      Calificar viaje
+                    </Button>
+                  )}
                         
                 </Group>
               </Stack>

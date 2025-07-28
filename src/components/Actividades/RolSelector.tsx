@@ -11,6 +11,7 @@ interface RolSelectorProps {
 const RolSelector: React.FC<RolSelectorProps> = ({ onSelect }) => {
     const [selectedOption, setSelectedOption] = useState<string>('Resumen de Actividades');
     const [userType, setUserType] = useState<string | null>(null);
+    const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -26,19 +27,32 @@ const RolSelector: React.FC<RolSelectorProps> = ({ onSelect }) => {
         };
 
         fetchUserProfile();
-        // Seleccionar por defecto el resumen
-        onSelect('Resumen de Actividades');
-    }, [onSelect]);
+    }, []); // Sin dependencias para evitar re-renderizados
+
+    // Efecto para selección inicial - solo una vez
+    useEffect(() => {
+        if (!initialized && userType) {
+            console.log('🎯 [RolSelector] Initial selection: Resumen de Actividades');
+            onSelect('Resumen de Actividades');
+            setInitialized(true);
+        }
+    }, [userType, initialized]); // Removemos onSelect de las dependencias
 
     const handleOptionSelect = (option: string) => {
+        console.log('🎯 [RolSelector] Option selected:', option);
+        
         if (userType === 'PASSENGER' && option === 'Viajes Publicados') {
+            console.log('🚫 [RolSelector] Blocking Viajes Publicados for PASSENGER');
             return;
         }
+        if (userType === 'PASSENGER' && option === 'Cupos Reservados') {
+            console.log('🚫 [RolSelector] Blocking Cupos Reservados for PASSENGER');
+            return;
+        }
+        
         setSelectedOption(option);
         onSelect(option);
     };
-
-
     return (
         <Group gap="md" mt="md">
             <Button 

@@ -22,6 +22,7 @@ import type { Trip } from './Actividades'
 import { supabase } from '@/lib/supabaseClient'
 import { useNavigate } from '@tanstack/react-router'
 import { useAssumptions } from '../../hooks/useAssumptions'
+import { getTripPassengerCount } from '@/services/actividades'
 
 interface TripCardProps {
   trip: Trip
@@ -43,31 +44,33 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
 
   useEffect(() => {
     const fetchPassengerCount = async () => {
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('trip_id', trip.id)
-
-      const bookingIds = bookings?.map((b) => b.id) || []
-
-      if (bookingIds.length === 0) return setPassengerCount(0)
-
-      const { count } = await supabase
-        .from('booking_passengers')
-        .select('*', { count: 'exact', head: true })
-        .in('booking_id', bookingIds)
-
-      setPassengerCount(count || 0)
+      // Usar seats_reserved como fallback inmediato
+      const fallbackCount = trip.seats_reserved || 0;
+      setPassengerCount(fallbackCount);
+      
+      // Intentar obtener datos más precisos del backend (sin bloquear la UI)
+      try {
+        const result = await getTripPassengerCount(trip.id);
+        if (result.success && result.data && result.data.total_passengers !== undefined) {
+          // Solo actualizar si obtuvimos datos válidos
+          setPassengerCount(result.data.total_passengers);
+          console.log(`✅ Updated passenger count for trip ${trip.id}: ${result.data.total_passengers}`);
+        }
+      } catch (error) {
+        // Error silencioso - mantener el fallback
+        console.warn(`⚠️ Backend passenger count failed for trip ${trip.id}, keeping fallback: ${fallbackCount}`);
+      }
     }
 
     fetchPassengerCount()
-  }, [trip.id])
+  }, [trip.id, trip.seats_reserved])
 
   const handleCuposClick = () => {
     // Navegar a la página de Cupos Reservados con el tripId como parámetro
+    console.log('🚀 [TripCard] Navigating to CuposReservados with tripId:', trip.id);
     navigate({
       to: '/CuposReservados',
-      search: { tripId: trip.id.toString() }
+      search: { tripId: trip.id }
     });
   }
   const handleCloseActionModal = () => setModalAction(null)
@@ -89,7 +92,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
       const seatsAvailable = Number(trip.seats || 0) // Cupos disponibles
       const seatsReserved = Number(trip.seats_reserved || 0) // Cupos vendidos/reservados
       const totalSeatsPublished = seatsAvailable + seatsReserved // Total publicado originalmente
-      const seatPrice = trip.pricePerSeat || 0
+      const seatPrice = trip.pricePerSeat || trip.price_per_seat || 0
       const commissionPerSeat = seatPrice * feePercentage;
 
       if (modalAction === 'start') {
@@ -230,10 +233,10 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
       </Badge>
 
       <Group gap="sm" className={styles.tripInfoGroup}>
-        <Badge leftSection={<Clock size={14} />}>{trip.duration}</Badge>
-        <Badge leftSection={<Navigation size={14} />}>{trip.distance}</Badge>
+        <Badge leftSection={<Clock size={14} />}>{trip.duration || '30 min'}</Badge>
+        <Badge leftSection={<Navigation size={14} />}>{trip.distance || '15 km'}</Badge>
         <Badge leftSection={<Users size={14} />}>{totalSeats} Cupos</Badge>
-        <Badge leftSection={<DollarSign size={14} />}>{trip.pricePerSeat} COP/Cupo</Badge>
+        <Badge leftSection={<DollarSign size={14} />}>{trip.pricePerSeat || trip.price_per_seat} COP/Cupo</Badge>
       </Group>
 
       <Text size="sm" color="dimmed" className={styles.tripSummary}>
