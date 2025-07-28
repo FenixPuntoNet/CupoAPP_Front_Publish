@@ -208,7 +208,7 @@ const CuposReservadosComponent: React.FC = () => {
       <Group gap="apart" mb="md" className={styles.headerGroup}>
         
         <Title order={2} className={styles.title}>
-          <div style={{height: '40px'}} />
+          <div style={{height: '50px'}} />
           Cupos Reservados {tripId ? `- Viaje ${tripId}` : ''}
         </Title>
         <Button
