@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ChatBox } from '@/components/Actividades/ChatBoxSimple'
-import { ChatList } from '@/components/Actividades/ChatListSimple'
+import { ChatBox } from '@/components/Actividades/ChatBox'
+import { ChatList } from '@/components/Actividades/ChatList'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { getCurrentUser } from '@/services/auth'
 import { getOrCreateTripChat } from '@/services/chat'
@@ -68,30 +68,47 @@ function ChatPage() {
 
   const openChatByTripId = async (tripId: number) => {
     try {
+      console.log('💬 [ChatPage] Opening chat for trip:', tripId);
+      
       // Obtener o crear chat para el viaje usando el backend
       const result = await getOrCreateTripChat(tripId)
       
-      if (!result.success || !result.data) {
-        console.error('Chat no encontrado para el viaje:', tripId)
+      if (!result.success) {
+        console.error('❌ [ChatPage] Chat not available for trip:', tripId, 'Error:', result.error);
+        
+        // Mostrar error al usuario pero no bloquear completamente
+        // En el nuevo sistema, el chat debería crearse automáticamente
+        console.warn('⚠️ [ChatPage] Will retry after backend initializes the chat system');
         return
       }
+
+      if (!result.data) {
+        console.error('❌ [ChatPage] No chat data received for trip:', tripId);
+        return
+      }
+
+      console.log('✅ [ChatPage] Chat data received:', result.data);
 
       // Crear objeto Chat compatible con la interfaz existente
       const chatInfo: Chat = {
         id: result.data.chat_id,
         trip_id: tripId,
-        origin: 'Origen', // Se podría obtener del backend si es necesario
-        destination: 'Destino', // Se podría obtener del backend si es necesario
-        last_message: 'Conversación grupal',
+        origin: `Viaje #${tripId}`, // Información básica por ahora
+        destination: 'Chat grupal', // Se puede mejorar obteniendo datos del viaje
+        last_message: 'Chat del viaje disponible',
         last_message_time: 'Ahora',
-        member_count: 0,
+        member_count: 0, // Se actualizará cuando se carguen los mensajes
         is_active: true
       }
 
+      console.log('📱 [ChatPage] Setting selected chat:', chatInfo);
       setSelectedChat(chatInfo)
       setCurrentView('chat')
     } catch (error) {
-      console.error('Error al abrir chat por trip_id:', error)
+      console.error('❌ [ChatPage] Error opening chat for trip:', tripId, error)
+      
+      // No bloquear la experiencia del usuario, pero informar del problema
+      console.warn('⚠️ [ChatPage] Chat system may still be initializing. The chat will be available once you publish trips or make reservations.');
     }
   }
 
@@ -162,6 +179,7 @@ function ChatPage() {
               <div className={styles.mobileContent}>
                 <ChatList 
                   onSelectChat={handleSelectChat}
+                  currentUserId={userId}
                 />
               </div>
             </div>
@@ -212,6 +230,7 @@ function ChatPage() {
             <div className={styles.desktopSidebarContent}>
               <ChatList 
                 onSelectChat={handleSelectChat}
+                currentUserId={userId}
               />
             </div>
           </div>

@@ -1,5 +1,42 @@
 import { apiRequest } from '@/config/api';
 
+// Debug function to test chat API
+export async function debugChatAPI(): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    console.log('🔧 [debugChatAPI] Testing chat API endpoints');
+    
+    // Test if the user is authenticated first
+    const authTest = await apiRequest('/auth/me');
+    console.log('🔧 [debugChatAPI] Auth test result:', authTest);
+    
+    if (!authTest || authTest.error) {
+      return {
+        success: false,
+        error: 'Usuario no autenticado'
+      };
+    }
+    
+    // Now test the chat list endpoint
+    console.log('🔧 [debugChatAPI] Testing /chat/list endpoint');
+    const chatTest = await apiRequest('/chat/list');
+    console.log('🔧 [debugChatAPI] Chat test result:', chatTest);
+    
+    return {
+      success: true,
+      data: {
+        auth: authTest,
+        chat: chatTest
+      }
+    };
+  } catch (error) {
+    console.error('🔧 [debugChatAPI] Debug failed:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Debug test failed'
+    };
+  }
+}
+
 export interface ChatMessage {
   id: number;
   message: string;
@@ -15,21 +52,12 @@ export interface ChatMessage {
 export interface Chat {
   id: number;
   trip_id: number;
-  created_at: string;
-  trip: {
-    id: number;
-    date_time: string;
-    status: string;  
-    origin: {
-      main_text: string;
-    };
-    destination: {
-      main_text: string;
-    };
-  };
-  last_message: string | null;
-  last_message_time: string | null;
+  origin: string;
+  destination: string;
+  last_message: string;
+  last_message_time: string;
   member_count: number;
+  is_active: boolean;
 }
 
 export interface ChatListResponse {
@@ -53,107 +81,281 @@ export interface CreateTripChatResponse {
   trip_id: number;
 }
 
-// Obtener lista de chats del usuario
-export async function getChatList(): Promise<{ success: boolean; data?: ChatListResponse; error?: string }> {
+// Obtener lista de chats del usuario - OPTIMIZADO PARA BACKEND FUNCIONANDO
+export async function getChatList(): Promise<{ success: boolean; data?: ChatListResponse; error?: string }> { 
   try {
-    const response = await apiRequest('/chat/list', {
-      method: 'GET'
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener chats' 
+    console.log('💬 [getChatList] Loading chats from fixed backend...');
+    
+    const response = await apiRequest('/chat/list');
+    
+    console.log('📡 [getChatList] Backend response:', response);
+    
+    if (response && response.chats && Array.isArray(response.chats)) {
+      console.log(`✅ [getChatList] Successfully loaded ${response.chats.length} chats`);
+      
+      // Validar que cada chat tenga la estructura correcta
+      const validChats = response.chats.filter((chat: any) => 
+        chat.id && typeof chat.id === 'number' && 
+        chat.trip_id && typeof chat.trip_id === 'number'
+      );
+      
+      if (validChats.length !== response.chats.length) {
+        console.warn('⚠️ [getChatList] Some chats had invalid structure, filtered out');
+      }
+      
+      return {
+        success: true,
+        data: { chats: validChats }
+      };
+    } else {
+      console.warn('⚠️ [getChatList] Backend returned unexpected format:', response);
+      return {
+        success: true,
+        data: { chats: [] },
+        error: 'No se encontraron chats disponibles.'
       };
     }
-
-    const data = await response.json();
-    return { success: true, data };
   } catch (error) {
-    console.error('Error in getChatList:', error);
-    return { 
-      success: false, 
-      error: 'Error de conexión al obtener chats' 
+    console.error('❌ [getChatList] Error:', error);
+    
+    // Manejar errores específicos
+    if (error instanceof Error) {
+      if (error.message.includes('500')) {
+        console.error('🚨 [getChatList] Backend 500 error - this should not happen with the fixed backend!');
+        return {
+          success: false,
+          error: 'Error del servidor. El backend debería estar arreglado - contacta a soporte inmediatamente.'
+        };
+      }
+      
+      if (error.message.includes('401') || error.message.includes('Token')) {
+        return {
+          success: false,
+          error: 'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.'
+        };
+      }
+      
+      if (error.message.includes('403')) {
+        return {
+          success: false,
+          error: 'No tienes permisos para acceder a los chats.'
+        };
+      }
+    }
+    
+    return {
+      success: false,
+      error: 'Error de conexión al cargar chats. Verifica tu conexión a internet.'
     };
   }
 }
 
-// Obtener mensajes de un chat específico
+// Obtener mensajes de un chat específico - OPTIMIZADO
 export async function getChatMessages(chatId: number): Promise<{ success: boolean; data?: ChatMessagesResponse; error?: string }> {
   try {
-    const response = await apiRequest(`/chat/${chatId}/messages`, {
-      method: 'GET'
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
+    console.log('💬 [getChatMessages] Fetching messages for chat:', chatId);
+    const response = await apiRequest(`/chat/${chatId}/messages`);
+    
+    console.log('📡 [getChatMessages] Backend response:', response);
+    
+    if (response && response.messages && Array.isArray(response.messages)) {
+      console.log(`✅ [getChatMessages] Successfully loaded ${response.messages.length} messages`);
       return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener mensajes' 
+        success: true, 
+        data: { messages: response.messages } 
       };
     }
-
-    const data = await response.json();
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error in getChatMessages:', error);
+    
+    // Handle case where response is successful but no messages
+    if (response && !response.error) {
+      return { 
+        success: true, 
+        data: { messages: [] } 
+      };
+    }
+    
     return { 
       success: false, 
-      error: 'Error de conexión al obtener mensajes' 
+      error: response?.error || 'No se encontraron mensajes' 
+    };
+  } catch (error) {
+    console.error('❌ [getChatMessages] Error:', error);
+    
+    // Handle server errors gracefully
+    if (error instanceof Error) {
+      if (error.message.includes('500')) {
+        return { 
+          success: false, 
+          error: 'Error del servidor al cargar mensajes. Contacta a soporte.'
+        };
+      }
+      
+      if (error.message.includes('401')) {
+        return { 
+          success: false, 
+          error: 'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.'
+        };
+      }
+      
+      if (error.message.includes('403')) {
+        return { 
+          success: false, 
+          error: 'No tienes permisos para ver este chat.'
+        };
+      }
+    }
+    
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error de conexión al obtener mensajes' 
     };
   }
 }
 
-// Enviar mensaje a un chat
+// Enviar mensaje a un chat - OPTIMIZADO
 export async function sendChatMessage(chatId: number, request: SendMessageRequest): Promise<{ success: boolean; data?: SendMessageResponse; error?: string }> {
   try {
+    console.log('💬 [sendChatMessage] Sending message to chat:', chatId, request);
     const response = await apiRequest(`/chat/${chatId}/messages`, {
       method: 'POST',
       body: JSON.stringify(request)
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
+    
+    console.log('📡 [sendChatMessage] Backend response:', response);
+    
+    if (response && response.message) {
+      console.log('✅ [sendChatMessage] Message sent successfully');
       return { 
-        success: false, 
-        error: errorData.error || 'Error al enviar mensaje' 
+        success: true, 
+        data: { message: response.message } 
       };
     }
-
-    const data = await response.json();
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error in sendChatMessage:', error);
+    
     return { 
       success: false, 
-      error: 'Error de conexión al enviar mensaje' 
+      error: response?.error || 'Error al enviar mensaje' 
+    };
+  } catch (error) {
+    console.error('❌ [sendChatMessage] Error:', error);
+    
+    // Handle server errors gracefully
+    if (error instanceof Error) {
+      if (error.message.includes('500')) {
+        return { 
+          success: false, 
+          error: 'Error del servidor al enviar mensaje. Contacta a soporte.'
+        };
+      }
+      
+      if (error.message.includes('401')) {
+        return { 
+          success: false, 
+          error: 'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.'
+        };
+      }
+      
+      if (error.message.includes('403')) {
+        return { 
+          success: false, 
+          error: 'No tienes permisos para enviar mensajes en este chat.'
+        };
+      }
+    }
+    
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error de conexión al enviar mensaje' 
     };
   }
 }
 
-// Obtener o crear chat para un viaje
+// Obtener o crear chat para un viaje - OPTIMIZADO PARA CHATS AUTOMÁTICOS
 export async function getOrCreateTripChat(tripId: number): Promise<{ success: boolean; data?: CreateTripChatResponse; error?: string }> {
   try {
+    console.log('💬 [getOrCreateTripChat] Getting chat for trip:', tripId);
+    console.log('💡 [getOrCreateTripChat] With the new system, chats are created automatically when trips are published');
+    
+    // Con el nuevo sistema, los chats se crean automáticamente, así que solo necesitamos obtenerlos
     const response = await apiRequest(`/chat/trip/${tripId}`, {
       method: 'POST'
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
+    
+    console.log('📡 [getOrCreateTripChat] Backend response:', response);
+    
+    if (response && response.chat_id) {
+      console.log('✅ [getOrCreateTripChat] Chat found/created successfully:', response.chat_id);
       return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener chat del viaje' 
+        success: true, 
+        data: { 
+          chat_id: response.chat_id, 
+          trip_id: response.trip_id || tripId 
+        } 
       };
     }
-
-    const data = await response.json();
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error in getOrCreateTripChat:', error);
+    
     return { 
       success: false, 
-      error: 'Error de conexión al obtener chat del viaje' 
+      error: response?.error || 'No se encontró chat para este viaje. Los chats se crean automáticamente cuando publicas viajes.' 
+    };
+  } catch (error) {
+    console.error('❌ [getOrCreateTripChat] Error:', error);
+    
+    // Handle server errors gracefully
+    if (error instanceof Error) {
+      if (error.message.includes('500')) {
+        return { 
+          success: false, 
+          error: 'Error del servidor al obtener chat del viaje. Contacta a soporte.'
+        };
+      }
+      
+      if (error.message.includes('401')) {
+        return { 
+          success: false, 
+          error: 'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.'
+        };
+      }
+      
+      if (error.message.includes('403')) {
+        return { 
+          success: false, 
+          error: 'No tienes permisos para acceder al chat de este viaje.'
+        };  
+      }
+      
+      if (error.message.includes('404')) {
+        return { 
+          success: false, 
+          error: 'No se encontró el viaje especificado o no tienes un chat asignado aún.'
+        };
+      }
+    }
+    
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error de conexión al obtener chat del viaje' 
+    };
+  }
+}
+
+// Función para verificar el estado de un chat de viaje específico (útil para debugging)
+export async function debugTripChat(tripId: number): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    console.log('🔍 [debugTripChat] Checking chat status for trip:', tripId);
+    
+    const response = await apiRequest(`/chat/debug/${tripId}`);
+    
+    console.log('📡 [debugTripChat] Debug response:', response);
+    
+    return {
+      success: true,
+      data: response
+    };
+  } catch (error) {
+    console.error('❌ [debugTripChat] Error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error en debug de chat'
     };
   }
 }

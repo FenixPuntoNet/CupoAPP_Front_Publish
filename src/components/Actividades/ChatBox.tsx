@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useChatMessages } from './useChatMessages'
+import { sendChatMessage } from '@/services/chat'
 import { moderateContent, getBlockedUsers } from '@/lib/contentModeration'
 import { ReportModal } from '@/components/ReportModal'
 import { BlockUserModal } from '@/components/BlockUserModal'
@@ -127,6 +128,8 @@ export function ChatBox({ chatId, currentUserId }: Props) {
   const sendMessage = async () => {
     if (!input.trim()) return
 
+    console.log('💬 [ChatBox] Sending message to chat:', chatId);
+
     // Moderar el contenido antes de enviarlo
     const moderationResult = moderateContent(input)
     
@@ -141,23 +144,33 @@ export function ChatBox({ chatId, currentUserId }: Props) {
     // Si el contenido fue filtrado, usar la versión filtrada
     const messageToSend = moderationResult.filteredContent || input
 
-    const { error } = await supabase.from('chat_messages').insert({
-      chat_id: chatId,
-      message: messageToSend,
-      user_id: currentUserId,
-    })
-
-    if (!error) {
-      setInput('')
-      // Si se aplicó filtrado, informar al usuario
-      if (messageToSend !== input) {
+    try {
+      const result = await sendChatMessage(chatId, { message: messageToSend });
+      
+      if (result.success) {
+        console.log('✅ [ChatBox] Message sent successfully');
+        setInput('')
+        
+        // Si se aplicó filtrado, informar al usuario
+        if (messageToSend !== input) {
+          setContentModerationAlert(
+            'Tu mensaje fue enviado con algunas modificaciones para cumplir con nuestras normas de comunidad.'
+          )
+          setTimeout(() => setContentModerationAlert(null), 5000)
+        }
+      } else {
+        console.error('❌ [ChatBox] Error sending message:', result.error);
         setContentModerationAlert(
-          'Tu mensaje fue enviado con algunas modificaciones para cumplir con nuestras normas de comunidad.'
-        )
-        setTimeout(() => setContentModerationAlert(null), 5000)
+          `Error al enviar mensaje: ${result.error}`
+        );
+        setTimeout(() => setContentModerationAlert(null), 5000);
       }
-    } else {
-      console.error('❌ Error al enviar mensaje:', error)
+    } catch (error) {
+      console.error('❌ [ChatBox] Unexpected error sending message:', error);
+      setContentModerationAlert(
+        'Error inesperado al enviar el mensaje'
+      );
+      setTimeout(() => setContentModerationAlert(null), 5000);
     }
   }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { getChatList } from '@/services/chat'
 import styles from './ChatList.module.css'
 
 interface Chat {
@@ -30,86 +30,19 @@ export function ChatList({ onSelectChat, currentUserId }: ChatListProps) {
     try {
       setLoading(true)
       
-      // Obtener chats donde el usuario es participante
-      const { data: participantData, error: participantError } = await supabase
-        .from('chat_participants')
-        .select('chat_id')
-        .eq('user_id', currentUserId)
-
-      if (participantError) {
-        console.error('Error fetching participant chats:', participantError)
-        return
+      console.log('💬 [ChatList] Fetching chats for user:', currentUserId);
+      const result = await getChatList();
+      
+      if (result.success && result.data && result.data.chats) {
+        console.log('✅ [ChatList] Chats loaded successfully:', result.data.chats.length);
+        setChats(result.data.chats);
+      } else {
+        console.warn('⚠️ [ChatList] No chats or error:', result.error);
+        setChats([]);
       }
-
-      if (!participantData || participantData.length === 0) {
-        setChats([])
-        return
-      }
-
-      const chatIds = participantData.map(p => p.chat_id).filter((id): id is number => id !== null)
-
-      if (chatIds.length === 0) {
-        setChats([])
-        return
-      }
-
-      // Obtener información de los chats
-      const { data: chatsData, error: chatsError } = await supabase
-        .from('chats')
-        .select(`
-          id,
-          trip_id,
-          trips:trip_id (
-            id,
-            origin:locations!trips_origin_id_fkey(main_text),
-            destination:locations!trips_destination_id_fkey(main_text)
-          )
-        `)
-        .in('id', chatIds)
-
-      if (chatsError) {
-        console.error('Error fetching chats:', chatsError)
-        return
-      }
-
-      if (!chatsData) {
-        setChats([])
-        return
-      }
-
-      // Obtener último mensaje de cada chat
-      const chatsWithMessages = await Promise.all(
-        chatsData.map(async (chat) => {
-          const { data: lastMessage } = await supabase
-            .from('chat_messages')
-            .select('message, send_date')
-            .eq('chat_id', chat.id)
-            .order('send_date', { ascending: false })
-            .limit(1)
-            .single()
-
-          // Contar participantes
-          const { count: memberCount } = await supabase
-            .from('chat_participants')
-            .select('*', { count: 'exact' })
-            .eq('chat_id', chat.id)
-
-          return {
-            id: chat.id,
-            trip_id: chat.trip_id,
-            origin: chat.trips?.origin?.main_text || 'Origen',
-            destination: chat.trips?.destination?.main_text || 'Destino',
-            last_message: lastMessage?.message || 'Sin mensajes',
-            last_message_time: lastMessage?.send_date || new Date().toISOString(),
-            member_count: memberCount || 0,
-            is_active: true
-          }
-        })
-      )
-
-      setChats(chatsWithMessages)
     } catch (error) {
-      console.error('Error fetching chats:', error)
+      console.error('❌ [ChatList] Error fetching chats:', error)
+      setChats([]);
     } finally {
       setLoading(false)
     }

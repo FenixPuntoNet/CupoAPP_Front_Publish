@@ -7,6 +7,11 @@ type ChatMessage = {
   user_id: string;
   message: string;
   send_date: string;
+  user_profiles?: {
+    first_name: string;
+    last_name: string;
+    photo_user: string | null;
+  };
 };
 
 export function useChatMessages(chatId: number) {
@@ -15,35 +20,45 @@ export function useChatMessages(chatId: number) {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        console.log('💬 [useChatMessages] Fetching messages for chat:', chatId);
         const result = await getChatMessages(chatId);
         
-        if (result.success && result.data) {
+        if (result.success && result.data && result.data.messages) {
+          console.log('📦 [useChatMessages] Raw backend response:', result.data);
+          
           const cleaned: ChatMessage[] = result.data.messages.map((m) => ({
             id: m.id,
             chat_id: chatId,
             user_id: m.user_id,
             message: m.message,
             send_date: m.send_date,
+            user_profiles: m.user_profiles || undefined
           }));
 
+          console.log('✅ [useChatMessages] Messages processed:', cleaned.length);
           setMessages(cleaned);
         } else {
-          console.error('Error fetching messages:', result.error);
+          console.warn('⚠️ [useChatMessages] No messages or error:', result.error);
+          // En el nuevo sistema, es normal no tener mensajes inicialmente
+          setMessages([]); // Chat exists but no messages yet - this is normal
         }
       } catch (error) {
-        console.error('Error in fetchMessages:', error);
+        console.error('❌ [useChatMessages] Error in fetchMessages:', error);
+        // Don't clear messages on error - keep existing ones
       }
     };
 
-    fetchMessages();
+    if (chatId && chatId > 0) {
+      fetchMessages();
 
-    // TODO: Implementar polling o websockets para tiempo real
-    // Por ahora, refrescamos cada 5 segundos
-    const interval = setInterval(fetchMessages, 5000);
+      // TODO: Implementar websockets cuando esté listo en el backend
+      // Por ahora, refrescamos cada 5 segundos solo si hay chatId válido
+      const interval = setInterval(fetchMessages, 5000);
 
-    return () => {
-      clearInterval(interval);
-    };
+      return () => {
+        clearInterval(interval);
+      };
+    }
   }, [chatId]);
 
   return messages;
