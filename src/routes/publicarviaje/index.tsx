@@ -441,17 +441,10 @@ useEffect(() => {
 
   // Manejador de confirmación
   const handleRouteConfirm = useCallback(async () => {
-    // Prevent multiple clicks while loading
-    if (isLoading) {
-      return;
-    }
-
     if (routes[selectedRouteIndex]) {
       const selectedRoute = routes[selectedRouteIndex];
       
       try {
-        setIsLoading(true);
-        
         // Calcular precio sugerido basado en la distancia de la ruta
         const priceCalculation = await calculateSuggestedPrice(selectedRoute.distance);
 
@@ -505,11 +498,9 @@ useEffect(() => {
             routeId: selectedRoute.index.toString()
           }
         });
-      } finally {
-        setIsLoading(false);
       }
     }
-  }, [navigate, routes, selectedRouteIndex, isLoading]);
+  }, [navigate, routes, selectedRouteIndex]);
 
   // Función de utilidad para preparar datos del viaje (usada por publishTrip más adelante en el flujo)
   const prepareTripData = useCallback(() => {
@@ -549,11 +540,6 @@ useEffect(() => {
 
   // Esta función será llamada desde otras páginas del flujo cuando se complete el proceso
   const handlePublishTrip = useCallback(async (additionalData: any) => {
-    // Prevent multiple clicks while loading
-    if (isLoading) {
-      return null;
-    }
-
     try {
       // Validar vehículo antes de publicar
       const vehicleCheck = await getMyVehicle();
@@ -805,7 +791,7 @@ useEffect(() => {
       setShowInfoModal(true);
       return null;
     }
-  }, [prepareTripData, isLoading]);
+  }, [prepareTripData]);
 
   // Hacer la función disponible globalmente para otras páginas del flujo
   (window as any).handlePublishTrip = handlePublishTrip;

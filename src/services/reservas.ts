@@ -97,7 +97,7 @@ export const searchTrips = async (
     if (date) params.append('date', date);
     if (passengers) params.append('passengers', passengers.toString());
 
-    const response = await apiRequest(`/reservas/search?${params.toString()}`);
+    const response = await apiRequest(`/bookings/search?${params.toString()}`);
     return {
       success: true,
       data: response
@@ -146,7 +146,7 @@ export const bookTrip = async (
     
     console.log('🎫 Booking trip with data:', requestData);
     
-    const response = await apiRequest('/reservas/create', {
+    const response = await apiRequest('/bookings/book', {
       method: 'POST',
       body: JSON.stringify(requestData)
     });
@@ -180,7 +180,7 @@ export const bookTrip = async (
 // Obtener mis reservas como pasajero
 export const getMyBookings = async (): Promise<{ success: boolean; data?: { bookings: MyBooking[] }; error?: string }> => {
   try {
-    const response = await apiRequest('/reservas/my-bookings');
+    const response = await apiRequest('/bookings/my-bookings');
     return {
       success: true,
       data: response
@@ -197,7 +197,7 @@ export const getMyBookings = async (): Promise<{ success: boolean; data?: { book
 // Obtener detalles de una reserva específica
 export const getBookingDetails = async (bookingId: number): Promise<{ success: boolean; data?: BookingDetails; error?: string }> => {
   try {
-    const response = await apiRequest(`/reservas/booking/${bookingId}`);
+    const response = await apiRequest(`/bookings/booking/${bookingId}`);
     return {
       success: true,
       data: response
@@ -214,7 +214,7 @@ export const getBookingDetails = async (bookingId: number): Promise<{ success: b
 // Cancelar una reserva
 export const cancelBooking = async (bookingId: number): Promise<{ success: boolean; error?: string }> => {
   try {
-    await apiRequest(`/reservas/booking/${bookingId}`, {
+    await apiRequest(`/bookings/booking/${bookingId}`, {
       method: 'DELETE'
     });
     return {

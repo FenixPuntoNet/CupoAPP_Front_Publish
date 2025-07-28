@@ -37,6 +37,7 @@ type BookingConductor = {
   seats_booked: number;
   booking_qr: string;
   driver_id: string;
+  driver_name: string;
   passengers: PassengerLite[];
 };
 
@@ -66,7 +67,8 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
             user_id: userId,
             seats_booked: cupo.seats_booked,
             booking_qr: cupo.booking_qr,
-            driver_id: cupo.trip?.driver?.first_name ? `${cupo.trip.driver.first_name} ${cupo.trip.driver.last_name}` : '',
+            driver_id: cupo.trip?.user_id || 'unknown',
+            driver_name: cupo.trip?.driver?.first_name ? `${cupo.trip.driver.first_name} ${cupo.trip.driver.last_name}` : 'Driver not available',
             passengers: cupo.passengers.map((passenger) => ({
               passenger_id: passenger.id,
               full_name: passenger.full_name,
@@ -221,8 +223,22 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
                   <Button
                     size="xs"
                     onClick={() => {
-                      if (booking.trip_id && booking.driver_id) {
+                      console.log('⭐ [Cupos] Rating button clicked:', {
+                        trip_id: booking.trip_id,
+                        driver_id: booking.driver_id,
+                        driver_name: booking.driver_name,
+                        booking_id: booking.booking_id
+                      });
+                      
+                      if (booking.trip_id && booking.driver_id && booking.driver_id !== 'unknown') {
                         openRatingModal(booking.trip_id, booking.driver_id);
+                      } else {
+                        console.error('❌ [Cupos] Missing trip_id or driver_id for rating');
+                        showNotification({
+                          title: 'Error',
+                          message: 'No se puede calificar este viaje. Información del conductor no disponible.',
+                          color: 'red',
+                        });
                       }
                     }}
                     variant="filled"

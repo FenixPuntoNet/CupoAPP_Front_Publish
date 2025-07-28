@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Backend Booking</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #00ff00; }
+        .response { background: #333; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { color: #ff0000; }
+        .success { color: #00ff00; }
+        button { padding: 10px 20px; margin: 5px; background: #444; color: white; border: none; cursor: pointer; }
+        pre { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Backend Booking API</h1>
+    
+    <button onclick="testBookingDetails()">Test Booking ID 13</button>
+    <button onclick="testMyBookings()">Test My Bookings</button>
+    <button onclick="testAuth()">Test Auth</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'https://cupo-backend.fly.dev';
+        const TOKEN = 'eyJhbGciOiJIUzI1NiIsImtpZCI6InpWQ0Zja2NVUFhOWXpSczhLU1gyTzVmUGhyTGwiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzM3NjAwNTE5LCJpYXQiOjE3Mzc1OTY5MTksImlzcyI6Imh0dHBzOi8vdG9xdGN0YXNnY3VzbWd1YXN4aWsuY29tIiwic3ViIjoiYzk5YjliM2MtMDBjNC00NGRlLWFjYmUtNzhjOTU1Mjg2MzQwIiwiZW1haWwiOiJrYWx2YXJlejIwMDExOEBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7fSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTczNzU5NjkxOX1dLCJzZXNzaW9uX2lkIjoiYTFhYzhjNzUtMmJkYi00NWNjLTkyNGUtMWI4NzFiNTAxMWZlIn0.8HLtkCVXnm-hDMEiJhjJ0IbkEj1_0beIXkTu1hToGP4';
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `response ${type}`;
+            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function makeRequest(endpoint, options = {}) {
+            try {
+                log(`🔄 Making request to: ${endpoint}`);
+                
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${TOKEN}`,
+                        ...options.headers
+                    },
+                    ...options
+                });
+
+                log(`📡 Response status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                const data = await response.json();
+                log(`📋 Response data:\n<pre>${JSON.stringify(data, null, 2)}</pre>`, response.ok ? 'success' : 'error');
+                
+                return { response, data };
+            } catch (error) {
+                log(`❌ Request failed: ${error.message}`, 'error');
+                return { error };
+            }
+        }
+
+        async function testAuth() {
+            log('🔍 Testing /auth/me endpoint...');
+            await makeRequest('/auth/me');
+        }
+
+        async function testMyBookings() {
+            log('🔍 Testing /bookings/my-bookings endpoint...');
+            await makeRequest('/bookings/my-bookings');
+        }
+
+        async function testBookingDetails() {
+            log('🔍 Testing /bookings/booking/13 endpoint...');
+            const result = await makeRequest('/bookings/booking/13');
+            
+            if (result.data) {
+                log(`📊 Analysis of booking 13:`, 'success');
+                log(`   - Booking ID: ${result.data.id}`);
+                log(`   - Trip ID: ${result.data.trip_id}`);
+                log(`   - Trip data exists: ${!!result.data.trip}`);
+                log(`   - Trip value: ${JSON.stringify(result.data.trip)}`);
+                log(`   - Booking status: ${result.data.booking_status}`);
+                log(`   - Total price: ${result.data.total_price}`);
+                log(`   - Passengers count: ${result.data.passengers?.length || 0}`);
+                
+                if (!result.data.trip && result.data.trip_id) {
+                    log(`❌ CRITICAL ISSUE: Trip data is null but trip_id exists: ${result.data.trip_id}`, 'error');
+                    log(`❌ This indicates a backend database query problem`, 'error');
+                }
+            }
+        }
+
+        // Auto-run tests when page loads
+        window.onload = function() {
+            log('🚀 Starting backend debugging...');
+            testAuth();
+            setTimeout(() => testBookingDetails(), 1000);
+            setTimeout(() => testMyBookings(), 2000);
+        };
+    </script>
+</body>
+</html>

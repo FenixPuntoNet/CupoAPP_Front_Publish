@@ -15,7 +15,7 @@ import html2canvas from 'html2canvas';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
-import { getTicketDetails } from '@/services/tickets';
+import { getTicketDetails } from '@/services/cupos';
 import dayjs from 'dayjs';
 import styles from './ViewTicket.module.css';
 import { useNavigate, useSearch, createFileRoute } from '@tanstack/react-router';
@@ -49,37 +49,26 @@ const ViewTicket = () => {
       }
 
       try {
-        console.log('🎫 Fetching ticket details for booking_id:', booking_id);
-        const result = await getTicketDetails(booking_id);
-        console.log('🎫 Ticket details result:', result);
+        const result = await getTicketDetails(Number(booking_id));
         
         if (result.success && result.data) {
-          const { ticket } = result.data;
-          console.log('🎫 Ticket data:', ticket);
+          const { booking, trip, passengers } = result.data;
           
-          setBookingQr(ticket.booking.booking_qr);
-          setPassengers(ticket.passengers);
+          setBookingQr(booking.qr_code || booking.booking_qr);
+          setPassengers(passengers);
           
-          if (ticket.trip) {
+          if (trip) {
             setTripLocations({
-              origin: { address: ticket.trip.route.origin },
-              destination: { address: ticket.trip.route.destination },
+              origin: { address: trip.origin?.address || 'Origen no disponible' },
+              destination: { address: trip.destination?.address || 'Destino no disponible' },
             });
           }
         } else {
-          console.error('❌ Error fetching ticket details:', result.error);
-          // Show more specific error to user
-          if (result.error?.includes('404') || result.error?.includes('not found')) {
-            console.error('❌ Ticket not found, redirecting to activities');
-          } else if (result.error?.includes('401') || result.error?.includes('auth')) {
-            console.error('❌ Authentication error, user might need to login');
-          } else {
-            console.error('❌ Unknown error:', result.error);
-          }
+          console.error('Error fetching ticket details:', result.error);
           navigate({ to: '/Actividades' });
         }
       } catch (error) {
-        console.error('❌ Exception loading ticket data:', error);
+        console.error('Error cargando datos del tiquete:', error);
         navigate({ to: '/Actividades' });
       } finally {
         setLoading(false);

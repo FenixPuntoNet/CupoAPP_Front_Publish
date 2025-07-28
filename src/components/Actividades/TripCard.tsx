@@ -19,7 +19,6 @@ import {
 import { showNotification } from '@mantine/notifications'
 import styles from './SrylesComponents/TripCard.module.css'
 import type { Trip } from './Actividades'
-import CuposReservados from '../../routes/CuposReservados'
 import { supabase } from '@/lib/supabaseClient'
 import { useNavigate } from '@tanstack/react-router'
 import { useAssumptions } from '../../hooks/useAssumptions'
@@ -30,7 +29,6 @@ interface TripCardProps {
 }
 
 const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
-  const [cuposModalOpen, setCuposModalOpen] = useState(false)
   const [passengerCount, setPassengerCount] = useState(0)
   const [tripStatus, setTripStatus] = useState(trip.status)
   const [loading, setLoading] = useState(false)
@@ -65,8 +63,13 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
     fetchPassengerCount()
   }, [trip.id])
 
-  const handleCuposClick = () => setCuposModalOpen(true)
-  const handleCloseCuposModal = () => setCuposModalOpen(false)
+  const handleCuposClick = () => {
+    // Navegar a la página de Cupos Reservados con el tripId como parámetro
+    navigate({
+      to: '/CuposReservados',
+      search: { tripId: trip.id.toString() }
+    });
+  }
   const handleCloseActionModal = () => setModalAction(null)
 
   const executeAction = async () => {
@@ -274,10 +277,6 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId }) => {
           </Button>
         )}
       </Group>
-
-      <Modal opened={cuposModalOpen} onClose={handleCloseCuposModal}>
-        <CuposReservados tripId={trip.id} userId={userId} />
-      </Modal>
 
       <Modal opened={modalAction !== null} onClose={handleCloseActionModal} size="lg" centered>
         <Text size="lg" fw={700} mb="md">Confirmar Acción</Text>

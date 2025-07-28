@@ -81,25 +81,13 @@ export interface QRValidationResult {
 // Obtener detalles del ticket para mostrar
 export const getTicketDetails = async (bookingId: string): Promise<{ success: boolean; data?: { ticket: TicketData }; error?: string }> => {
   try {
-    console.log('🎫 [Service] Getting ticket details for booking_id:', bookingId);
-    console.log('🎫 [Service] API Base URL:', import.meta.env.VITE_API_URL || 'https://cupo-backend.fly.dev');
-    
     const response = await apiRequest(`/tickets/view?booking_id=${bookingId}`);
-    console.log('🎫 [Service] Ticket details response:', response);
-    
     return {
       success: true,
       data: response
     };
   } catch (error) {
-    console.error('❌ [Service] Error getting ticket details:', error);
-    
-    // Agregar más información sobre el error
-    if (error instanceof Error) {
-      console.error('❌ [Service] Error message:', error.message);
-      console.error('❌ [Service] Error stack:', error.stack);
-    }
-    
+    console.error('Error getting ticket details:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error obteniendo detalles del ticket'

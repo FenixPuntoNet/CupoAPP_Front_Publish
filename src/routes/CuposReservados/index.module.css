@@ -52,6 +52,93 @@
   color: #00ff9d;
 }
 
+.tripInfoCard {
+  background: rgba(0, 255, 157, 0.1);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  backdrop-filter: blur(10px);
+  margin-bottom: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+.tripInfoCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #00ff9d, #00cc7a);
+  border-radius: 16px 16px 0 0;
+}
+
+.tripTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #00ff9d;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.tripDetails {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.tripDetail {
+  text-align: center;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.tripDetailLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.tripDetailValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.summaryItem {
+  text-align: center;
+  padding: 12px;
+  background: rgba(0, 255, 157, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 157, 0.2);
+}
+
+.summaryLabel {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.summaryValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #00ff9d;
+}
+
 .passengersContainer {
   position: relative;
   z-index: 1;
@@ -64,10 +151,12 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(0, 255, 157, 0.2);
   border-radius: 16px;
-  padding: 20px;
+  padding: 24px;
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .passengerCard:hover {
@@ -75,25 +164,86 @@
   box-shadow: 0 6px 12px rgba(0, 255, 157, 0.1), 0 2px 4px rgba(0, 255, 157, 0.05);
 }
 
-.passengerHeader {
-  margin-bottom: 15px;
+.passengerCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00ff9d, #00cc7a);
+  opacity: 0.7;
+}
+
+.bookingHeader {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.bookingInfo {
+  margin-bottom: 16px;
+}
+
+.bookingMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.passengersList {
+  margin-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 16px;
+}
+
+.passengerItem {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border-left: 3px solid rgba(0, 255, 157, 0.3);
+  transition: background 0.2s ease;
+}
+
+.passengerItem:hover {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .passengerName {
-  font-size: 22px;
+  font-size: 16px;
+  font-weight: 600;
   color: #00ff9d;
-  text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+  margin-bottom: 4px;
+}
+
+.passengerId {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.qrCode {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.statusBadge {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .badge {
   padding: 8px 16px;
   border-radius: 10px;
   font-weight: 600;
-}
-
-.passengerId {
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 20px;
 }
 
 .validateButton {
