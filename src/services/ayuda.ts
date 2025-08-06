@@ -48,25 +48,16 @@ export interface SupportChatsResponse {
 // Obtener o crear asistente para el usuario
 export async function getOrCreateAssistant(): Promise<{ success: boolean; data?: AssistantResponse; error?: string }> {
   try {
-    const response = await apiRequest('/ayuda/assistant', {
+    const data = await apiRequest('/ayuda/assistant', {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener asistente' 
-      };
-    }
-
-    const data = await response.json();
     return { success: true, data };
   } catch (error) {
     console.error('Error in getOrCreateAssistant:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al obtener asistente' 
+      error: error instanceof Error ? error.message : 'Error de conexión al obtener asistente' 
     };
   }
 }
@@ -74,25 +65,16 @@ export async function getOrCreateAssistant(): Promise<{ success: boolean; data?:
 // Obtener asistente por ID (para soporte)
 export async function getAssistantById(assistantId: number): Promise<{ success: boolean; data?: AssistantResponse; error?: string }> {
   try {
-    const response = await apiRequest(`/ayuda/assistant/${assistantId}`, {
+    const data = await apiRequest(`/ayuda/assistant/${assistantId}`, {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener asistente' 
-      };
-    }
-
-    const data = await response.json();
     return { success: true, data };
   } catch (error) {
     console.error('Error in getAssistantById:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al obtener asistente' 
+      error: error instanceof Error ? error.message : 'Error de conexión al obtener asistente' 
     };
   }
 }
@@ -100,25 +82,16 @@ export async function getAssistantById(assistantId: number): Promise<{ success: 
 // Obtener mensajes del chat de soporte
 export async function getMessages(assistantId: number): Promise<{ success: boolean; data?: MessagesResponse; error?: string }> {
   try {
-    const response = await apiRequest(`/ayuda/messages/${assistantId}`, {
+    const data = await apiRequest(`/ayuda/messages/${assistantId}`, {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener mensajes' 
-      };
-    }
-
-    const data = await response.json();
     return { success: true, data };
   } catch (error) {
     console.error('Error in getMessages:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al obtener mensajes' 
+      error: error instanceof Error ? error.message : 'Error de conexión al obtener mensajes' 
     };
   }
 }
@@ -126,26 +99,17 @@ export async function getMessages(assistantId: number): Promise<{ success: boole
 // Enviar mensaje al chat de soporte
 export async function sendMessage(request: SendMessageRequest): Promise<{ success: boolean; data?: SendMessageResponse; error?: string }> {
   try {
-    const response = await apiRequest('/ayuda/send-message', {
+    const data = await apiRequest('/ayuda/send-message', {
       method: 'POST',
       body: JSON.stringify(request)
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al enviar mensaje' 
-      };
-    }
-
-    const data = await response.json();
     return { success: true, data };
   } catch (error) {
     console.error('Error in sendMessage:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al enviar mensaje' 
+      error: error instanceof Error ? error.message : 'Error de conexión al enviar mensaje' 
     };
   }
 }
@@ -153,25 +117,16 @@ export async function sendMessage(request: SendMessageRequest): Promise<{ succes
 // Obtener todos los chats de soporte (para soporte)
 export async function getSupportChats(): Promise<{ success: boolean; data?: SupportChatsResponse; error?: string }> {
   try {
-    const response = await apiRequest('/ayuda/support/chats', {
+    const data = await apiRequest('/ayuda/support/chats', {
       method: 'GET'
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { 
-        success: false, 
-        error: errorData.error || 'Error al obtener chats de soporte' 
-      };
-    }
-
-    const data = await response.json();
     return { success: true, data };
   } catch (error) {
     console.error('Error in getSupportChats:', error);
     return { 
       success: false, 
-      error: 'Error de conexión al obtener chats de soporte' 
+      error: error instanceof Error ? error.message : 'Error de conexión al obtener chats de soporte' 
     };
   }
 }

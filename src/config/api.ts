@@ -75,7 +75,12 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
     }
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { error: `HTTP error! status: ${response.status}` };
+      }
       
       // Si es un error 401, limpiar el token (excepto en login/signup)
       if (response.status === 401 && !isPublicEndpoint) {
@@ -110,7 +115,14 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
     }
 
     authRetries = 0; // Reset retries on success
-    return response.json();
+    
+    // Intentar parsear la respuesta como JSON
+    try {
+      return await response.json();
+    } catch (parseError) {
+      console.error(`❌ [API] Failed to parse JSON response from ${endpoint}:`, parseError);
+      throw new Error('Invalid JSON response from server');
+    }
   } catch (error) {
     console.error(`❌ [API] Request to ${endpoint} failed:`, error);
     throw error;
