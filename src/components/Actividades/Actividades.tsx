@@ -226,14 +226,6 @@ const Actividades: React.FC = () => {
             <Text className={styles.summaryValue}>{activitySummary.passenger_bookings}</Text>
           </div>
           <div className={styles.summaryCard}>
-            <Text className={styles.summaryLabel}>Total Ganado</Text>
-            <Text className={styles.summaryValue}>${activitySummary.total_earned.toLocaleString()}</Text>
-          </div>
-          <div className={styles.summaryCard}>
-            <Text className={styles.summaryLabel}>Total Gastado</Text>
-            <Text className={styles.summaryValue}>${activitySummary.total_spent.toLocaleString()}</Text>
-          </div>
-          <div className={styles.summaryCard}>
             <Text className={styles.summaryLabel}>Referidos Realizados</Text>
             <Text className={styles.summaryValue}>{activitySummary.referrals_made}</Text>
           </div>
@@ -358,7 +350,7 @@ const Actividades: React.FC = () => {
       )}
 
       {selectedActivity === 'Cupos Creados' && userProfile?.user_id && (
-        <Cupos userId={userProfile.user_id} />
+        <Cupos />
       )}
 
       {selectedActivity === 'Viajes Publicados' && userProfile?.user_type === 'PASSENGER' && (

@@ -266,7 +266,12 @@ const CompleteProfileView: React.FC = () => {
         color: 'green',
       });
 
-      navigate({ to: values.user_type === 'DRIVER' ? '/RegistrarVehiculo' : '/home' });
+      // Si estamos editando, regresar al perfil; si no, ir según el tipo de usuario
+      if (isEditing) {
+        navigate({ to: '/Perfil' });
+      } else {
+        navigate({ to: values.user_type === 'DRIVER' ? '/RegistrarVehiculo' : '/home' });
+      }
     } catch (err: any) {
       console.error('Save error:', err);
       

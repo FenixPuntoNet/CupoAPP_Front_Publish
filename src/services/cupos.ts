@@ -177,20 +177,14 @@ export const getCuposStats = async (): Promise<{ success: boolean; data?: CupoSt
   }
 };
 
-// Obtener mis cupos comprados (como pasajero)
+// Obtener mis cupos comprados (como pasajero) - Usar endpoint de bookings recomendado
 export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos: CupoWithDetails[] }; error?: string }> => {
   try {
-    console.log(`🎫 [getMisCupos] Fetching user's purchased cupos`);
+    console.log(`🎫 [getMisCupos] Fetching user's purchased cupos using /bookings/my-bookings`);
     
-    // Intentar el endpoint principal con timeout
-    const response = await Promise.race([
-      apiRequest('/cupos/mis-cupos'),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout después de 10 segundos')), 10000)
-      )
-    ]);
-    
-    console.log(`✅ [getMisCupos] Backend response:`, response);
+    // Usar directamente el endpoint recomendado por el backend para ratings
+    const response = await apiRequest('/bookings/my-bookings');
+    console.log(`✅ [getMisCupos] /bookings/my-bookings response:`, response);
     
     // Validar que la respuesta tenga la estructura esperada
     if (!response || typeof response !== 'object') {
@@ -198,8 +192,48 @@ export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos:
       throw new Error('Respuesta inválida del servidor');
     }
 
-    // El backend debería retornar { cupos: [...] }
-    const cupos = Array.isArray(response.cupos) ? response.cupos : [];
+    // El endpoint /bookings/my-bookings retorna { bookings: [...] }
+    let cupos = [];
+    if (Array.isArray(response.bookings)) {
+      // Mapear bookings a formato cupos, asegurando que tenemos driver_id correcto
+      cupos = response.bookings.map((booking: any) => {
+        console.log(`🔍 [getMisCupos] Processing booking:`, booking.id, {
+          trip: booking.trip,
+          tripUserId: booking.trip?.user_id,
+          driverInfo: booking.trip?.driver,
+          driverUserId: booking.trip?.driver?.user_id
+        });
+        
+        // Verificar que tenemos un driver_id válido según las instrucciones del backend
+        const driverIdFromTrip = booking.trip?.user_id;
+        const driverIdFromDriver = booking.trip?.driver?.user_id;
+        
+        if (!driverIdFromTrip && !driverIdFromDriver) {
+          console.error(`❌ [getMisCupos] CRITICAL: No driver user_id found for booking ${booking.id}`);
+          console.error(`❌ [getMisCupos] Trip data:`, booking.trip);
+        }
+        
+        return {
+          ...booking,
+          id: booking.id || booking.booking_id,
+          trip_id: booking.trip_id,
+          // Asegurar que tenemos la estructura completa del trip con driver info
+          trip: {
+            ...booking.trip,
+            user_id: driverIdFromTrip, // ID del conductor desde la tabla trips (PRINCIPAL)
+            driver: {
+              ...booking.trip?.driver,
+              user_id: driverIdFromDriver || driverIdFromTrip // ID del conductor desde user_profiles o trips (BACKUP)
+            }
+          }
+        };
+      });
+      console.log(`🔄 [getMisCupos] Mapped ${cupos.length} bookings to cupos format`);
+    } else {
+      console.warn(`⚠️ [getMisCupos] No bookings array found in response`);
+      console.warn(`⚠️ [getMisCupos] Response structure:`, response);
+      cupos = [];
+    }
     
     console.log(`✅ [getMisCupos] Processed ${cupos.length} cupos`);
     
@@ -212,18 +246,9 @@ export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos:
     
     const errorMessage = error instanceof Error ? error.message : String(error);
     
-    // Si es timeout, usar fallback inmediatamente
-    if (errorMessage.includes('Timeout')) {
-      console.warn(`⏰ [getMisCupos] Request timed out, using safe fallback`);
-      return {
-        success: true,
-        data: { cupos: [] }
-      };
-    }
-    
     // Manejar diferentes tipos de errores
     if (errorMessage.includes('401') || errorMessage.includes('Token')) {
-      console.warn(`� [getMisCupos] Authentication error`);
+      console.warn(`🔐 [getMisCupos] Authentication error`);
       return {
         success: false,
         error: 'Sesión expirada - por favor vuelve a iniciar sesión'
@@ -231,7 +256,7 @@ export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos:
     }
     
     if (errorMessage.includes('403') || errorMessage.includes('permisos')) {
-      console.warn(`� [getMisCupos] Permission error`);
+      console.warn(`🚫 [getMisCupos] Permission error`);
       return {
         success: false,
         error: 'No tienes permisos para ver tus cupos'
@@ -241,7 +266,6 @@ export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos:
     // Para otros errores, usar fallback seguro inmediatamente
     console.warn(`🔧 [getMisCupos] Main endpoint failed, using safe fallback`);
     
-    // Intentar mostrar mensaje informativo pero no bloquear la UI
     return {
       success: true,
       data: { cupos: [] },

@@ -29,6 +29,12 @@ export interface TripForBooking {
     latitude: string;
     longitude: string;
   };
+  route?: {
+    start_address: string;
+    end_address: string;
+    duration: string;
+    distance: string;
+  };
   vehicle: {
     brand: string;
     model: string;
@@ -72,15 +78,72 @@ export interface MyBooking {
 }
 
 export interface BookingDetails {
-  id: number;
-  booking_qr: string;
-  booking_status: string;
-  booking_date: string;
+  id: string | number;
+  trip_id?: string;
+  seats_reserved?: number;
+  seats_booked?: number;
+  status?: string;
+  booking_status?: string;
   total_price: number;
-  seats_booked: number;
-  trip_id: number;
-  trip: TripForBooking | null;
-  passengers: BookingPassenger[];
+  created_at?: string;
+  booking_date?: string;
+  booking_qr?: string;
+  trip?: {
+    id: string;
+    date_time: string;
+    status: string;
+    price_per_seat: number;
+    available_seats: number;
+    origin?: {
+      address: string;
+      main_text?: string;
+    };
+    destination?: {
+      address: string;
+      main_text?: string;
+    };
+    route?: {
+      id: string;
+      name: string;
+      origin: string;
+      destination: string;
+      distance: number;
+    };
+    driver?: {
+      first_name: string;
+      last_name?: string;
+      photo_user?: string;
+      phone_number?: string;
+      average_rating?: number;
+    };
+    vehicle?: {
+      brand: string;
+      model: string;
+      year: number;
+      plate: string;
+      color: string;
+    };
+  };
+  driver?: {
+    user_id: string;
+    names: string;
+    photo: string;
+    phone: string;
+    average_rating: number;
+  };
+  vehicle?: {
+    brand: string;
+    model: string;
+    year: number;
+    plate: string;
+    color: string;
+  };
+  passengers?: Array<{
+    user_id: string;
+    names: string;
+    phone: string;
+    seats: number;
+  }>;
 }
 
 // Buscar viajes disponibles
@@ -197,17 +260,65 @@ export const getMyBookings = async (): Promise<{ success: boolean; data?: { book
 // Obtener detalles de una reserva específica
 export const getBookingDetails = async (bookingId: number): Promise<{ success: boolean; data?: BookingDetails; error?: string }> => {
   try {
+    console.log(`🔍 [getBookingDetails] Fetching details for booking: ${bookingId}`);
+    
+    // ✅ Usar el nuevo endpoint correcto: /reservas/booking/:bookingId
     const response = await apiRequest(`/reservas/booking/${bookingId}`);
-    return {
-      success: true,
-      data: response
-    };
+    
+    console.log(`✅ [getBookingDetails] Raw response:`, response);
+    
+    // ✅ Según la guía, el backend devuelve { success: true, data: {...} }
+    if (response.success && response.data) {
+      console.log(`✅ [getBookingDetails] Success with data:`, response.data);
+      return {
+        success: true,
+        data: response.data
+      };
+    } else {
+      console.log(`❌ [getBookingDetails] Response without success or data:`, response);
+      return {
+        success: false,
+        error: 'No se encontraron datos de la reserva'
+      };
+    }
   } catch (error) {
-    console.error('Error getting booking details:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Error obteniendo detalles de la reserva'
-    };
+    console.error('❌ [getBookingDetails] Error getting booking details:', error);
+    
+    // Si falla, intentar con el endpoint de todas las reservas como fallback
+    try {
+      console.log(`🔄 [getBookingDetails] Trying fallback with my-bookings for booking: ${bookingId}`);
+      
+      const allBookingsResponse = await apiRequest('/bookings/my-bookings');
+      
+      if (allBookingsResponse && allBookingsResponse.bookings) {
+        const booking = allBookingsResponse.bookings.find((b: any) => b.id === bookingId);
+        
+        if (booking) {
+          console.log(`✅ [getBookingDetails] Found booking in my-bookings:`, booking);
+          return {
+            success: true,
+            data: booking
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Reserva no encontrada'
+          };
+        }
+      }
+      
+      return {
+        success: false,
+        error: 'No se pudieron obtener las reservas'
+      };
+    } catch (fallbackError) {
+      console.error('❌ [getBookingDetails] Fallback also failed:', fallbackError);
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error obteniendo detalles de la reserva'
+      };
+    }
   }
 };
 

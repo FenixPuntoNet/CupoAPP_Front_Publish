@@ -9,8 +9,8 @@ import {
   LoadingOverlay,
   Divider,
 } from '@mantine/core';
-import { supabase } from '@/lib/supabaseClient';
 import { notifications } from '@mantine/notifications';
+import { getTripRating, submitRating } from '@/services/ratings';
 import styles from './index.module.css';
 
 interface TripRatingProps {
@@ -40,22 +40,20 @@ export const TripRating: React.FC<TripRatingProps> = ({
       setReport('');
       setIsExisting(false);
 
-      const { data, error } = await supabase
-        .from('califications')
-        .select('value, report')
-        .eq('user_id', userId)
-        .eq('trip_id', tripId)
-        .maybeSingle();
+      const result = await getTripRating(tripId);
 
-      if (error) {
-        notifications.show({
-          color: 'red',
-          title: 'Error al cargar calificación',
-          message: 'No se pudo cargar tu experiencia previa.',
-        });
-      } else if (data) {
-        setRating(data.value);
-        setReport(data.report || '');
+      if (!result.success) {
+        // Solo mostrar error si no es un 404 (que es normal cuando no hay calificación)
+        if (!result.error?.includes('Not Found')) {
+          notifications.show({
+            color: 'red',
+            title: 'Error al cargar calificación',
+            message: result.error || 'No se pudo cargar tu experiencia previa.',
+          });
+        }
+      } else if (result.data?.rating) {
+        setRating(result.data.rating.value);
+        setReport(result.data.rating.report || '');
         setIsExisting(true);
       }
 
@@ -79,25 +77,39 @@ export const TripRating: React.FC<TripRatingProps> = ({
 
     setLoading(true);
 
-    const { error } = await supabase.from('califications').insert([
-      {
-        trip_id: tripId,
-        driver_id: driverId,
-        user_id: userId,
-        value: rating,
-        report,
-      },
-    ]);
+    // Log para debugging - información detallada
+    console.log('🚀 [TripRating] Submitting rating with data:', {
+      trip_id: tripId,
+      driver_id: driverId,
+      value: rating,
+      report: report.trim() || undefined,
+      user_id: userId,
+      driver_id_type: typeof driverId,
+      driver_id_length: driverId?.length,
+      is_driver_id_unknown: driverId === 'unknown',
+      is_driver_id_valid: driverId !== 'unknown' && driverId.length > 0
+    });
+
+    const result = await submitRating({
+      trip_id: tripId,
+      driver_id: driverId,
+      value: rating,
+      report: report.trim() || undefined,
+    });
+
+    console.log('📊 Rating submission result:', result);
 
     setLoading(false);
 
-    if (error) {
+    if (!result.success) {
+      console.error('❌ Rating submission failed:', result.error);
       notifications.show({
         color: 'red',
         title: 'Algo salió mal',
-        message: 'No pudimos guardar tu calificación. Intenta de nuevo.',
+        message: result.error || 'No pudimos guardar tu calificación. Intenta de nuevo.',
       });
     } else {
+      console.log('✅ Rating submitted successfully');
       notifications.show({
         color: 'teal',
         title: '¡Gracias por tu feedback!',

@@ -273,9 +273,9 @@ export async function sendChatMessage(chatId: number, request: SendMessageReques
 export async function getOrCreateTripChat(tripId: number): Promise<{ success: boolean; data?: CreateTripChatResponse; error?: string }> {
   try {
     console.log('💬 [getOrCreateTripChat] Getting chat for trip:', tripId);
-    console.log('💡 [getOrCreateTripChat] With the new system, chats are created automatically when trips are published');
+    console.log('💡 [getOrCreateTripChat] Using the new automatic chat system - chats are created when trips are published');
     
-    // Con el nuevo sistema, los chats se crean automáticamente, así que solo necesitamos obtenerlos
+    // Con el nuevo sistema automático, solo necesitamos obtener el chat existente
     const response = await apiRequest(`/chat/trip/${tripId}`, {
       method: 'POST'
     });
@@ -295,7 +295,7 @@ export async function getOrCreateTripChat(tripId: number): Promise<{ success: bo
     
     return { 
       success: false, 
-      error: response?.error || 'No se encontró chat para este viaje. Los chats se crean automáticamente cuando publicas viajes.' 
+      error: response?.error || 'Chat aún no disponible. Los chats se crean automáticamente cuando publicas viajes.' 
     };
   } catch (error) {
     console.error('❌ [getOrCreateTripChat] Error:', error);

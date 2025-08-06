@@ -15,7 +15,7 @@ import detailStyles from './ViewBookingDetails.module.css';
 import dayjs from 'dayjs';
 import { useNavigate, useSearch, createFileRoute } from '@tanstack/react-router';
 import { showNotification } from '@mantine/notifications';
-import { supabase } from '@/lib/supabaseClient';
+import { getBookingDetails } from '@/services/reservas';
 
 export const Route = createFileRoute('/Cupos/ViewBookingDetails')({
   component: ViewBookingDetails,
@@ -33,8 +33,15 @@ function ViewBookingDetails() {
     main_text_destination: string;
     date_time: string | null;
     driverName: string;
+    driverRating: number;
+    driverPhone: string;
     loading: boolean;
     tripStatus: string;
+    routeName: string;
+    distance: number;
+    totalPrice: number;
+    seatsReserved: number;
+    createdAt: string;
     vehicle: {
       brand: string;
       model: string;
@@ -42,13 +49,26 @@ function ViewBookingDetails() {
       plate: string;
       color: string;
     };
+    passengers: Array<{
+      user_id: string;
+      names: string;
+      phone: string;
+      seats: number;
+    }>;
   }>({
     main_text_origen: '',
     main_text_destination: '',
-    date_time: null, // ahora es string | null, así que está bien
+    date_time: null,
     driverName: '',
+    driverRating: 0,
+    driverPhone: '',
     loading: true,
     tripStatus: '',
+    routeName: '',
+    distance: 0,
+    totalPrice: 0,
+    seatsReserved: 0,
+    createdAt: '',
     vehicle: {
       brand: '',
       model: '',
@@ -56,6 +76,7 @@ function ViewBookingDetails() {
       plate: '',
       color: '',
     },
+    passengers: [],
   });
   
 
@@ -72,55 +93,115 @@ function ViewBookingDetails() {
       }
 
       try {
-        const { data: booking, error: bookingError } = await supabase
-          .from('bookings')
-          .select('trip_id')
-          .eq('id', Number(booking_id)) // ✅ se convierte a number
-          .single();
-
-        if (bookingError || !booking?.trip_id) throw new Error('Reserva no válida');
-
-        const { data: tripData, error: tripError } = await supabase
-          .from('trips')
-          .select(`
-            date_time,
-            status,
-            origin:locations!trips_origin_id_fkey(address),
-            destination:locations!trips_destination_id_fkey(address),
-            vehicle:vehicles(brand, model, year, plate, color),
-            user_id
-          `)
-          .eq('id', booking.trip_id)
-          .single();
-
-        if (tripError || !tripData) throw new Error('Viaje no encontrado');
-        if (!tripData.user_id) throw new Error('Falta user_id');
-
-        const { data: driverData } = await supabase
-          .from('user_profiles')
-          .select('first_name, last_name')
-          .eq('user_id', tripData.user_id)
-          .single();
+        console.log(`🔍 [ViewBookingDetails] Fetching details for booking: ${booking_id}`);
+        
+        const result = await getBookingDetails(Number(booking_id));
+        
+        if (!result.success || !result.data) {
+          throw new Error(result.error || 'No se pudieron cargar los detalles');
+        }
+        
+        const bookingData = result.data;
+        
+        console.log(`🔍 [ViewBookingDetails] RAW RESPONSE from backend:`, JSON.stringify(result, null, 2));
+        console.log(`🔍 [ViewBookingDetails] Processing booking data:`, bookingData);
+        console.log(`🔍 [ViewBookingDetails] Trip data:`, bookingData.trip);
+        console.log(`🔍 [ViewBookingDetails] Driver data:`, bookingData.driver);
+        console.log(`🔍 [ViewBookingDetails] Vehicle data:`, bookingData.vehicle);
+        console.log(`🔍 [ViewBookingDetails] Passengers data:`, bookingData.passengers);
+        
+        // ✅ Según el backend: el conductor debe estar en bookingData.driver con nombres concatenados
+        const driverData = bookingData.driver;
+        console.log(`🔍 [ViewBookingDetails] Driver data detailed:`, {
+          driverData,
+          exists: !!driverData,
+          names: driverData?.names,
+          first_name: (driverData as any)?.first_name,
+          last_name: (driverData as any)?.last_name,
+          average_rating: driverData?.average_rating,
+          phone: driverData?.phone,
+          phone_number: (driverData as any)?.phone_number,
+          allKeys: driverData ? Object.keys(driverData) : 'no driver data',
+          isStringEmpty: driverData?.names === '',
+          isUndefined: driverData?.names === undefined,
+          isNull: driverData?.names === null,
+          exactValue: `"${driverData?.names}"`
+        });
+        
+        // ✅ SOLUCIÓN TEMPORAL: Si el backend no encuentra el conductor, usar el user_id del trip
+        let driverName: string;
+        let driverRating: number;
+        let driverPhone: string;
+        
+        if (driverData && driverData.names && driverData.names.trim() !== '' && driverData.names !== 'Conductor no disponible') {
+          // ✅ Caso ideal: el backend encontró la información completa
+          driverName = driverData.names;
+          driverRating = driverData.average_rating || 0;
+          driverPhone = driverData.phone || (driverData as any)?.phone_number || '';
+        } else if (driverData && (driverData as any).first_name) {
+          // ✅ Fallback 1: construir desde first_name y last_name
+          driverName = `${(driverData as any).first_name} ${(driverData as any).last_name || ''}`.trim();
+          driverRating = driverData.average_rating || 0;
+          driverPhone = driverData.phone || (driverData as any)?.phone_number || '';
+        } else if ((bookingData.trip as any)?.user_id) {
+          // ✅ Fallback 2: mostrar información básica con el user_id
+          const userId = (bookingData.trip as any).user_id;
+          driverName = `Conductor`;
+          driverRating = 0;
+          driverPhone = '';
+          console.log(`⚠️ [ViewBookingDetails] Using fallback driver info for user_id: ${userId}`);
+        } else {
+          // ✅ Fallback final
+          driverName = 'Conductor';
+          driverRating = 0;
+          driverPhone = '';
+        }
+        
+        console.log(`🔍 [ViewBookingDetails] Extracted driver info:`, {
+          driverName,
+          driverRating,
+          driverPhone,
+          originalNames: driverData?.names,
+          backendFailed: driverData?.names === 'Conductor no disponible',
+          usedFallback: !driverData?.names || driverData?.names === 'Conductor no disponible',
+          tripUserId: (bookingData.trip as any)?.user_id
+        });
 
         setTripDetails({
-          main_text_origen: tripData.origin?.address || 'Origen no disponible',
-          main_text_destination: tripData.destination?.address || 'Destino no disponible',
-          date_time: tripData.date_time,
-          driverName: `${driverData?.first_name ?? ''} ${driverData?.last_name ?? ''}`,
+          // ✅ Según la guía: usar trip.origin.main_text y trip.destination.main_text
+          main_text_origen: bookingData.trip?.origin?.main_text || (bookingData.trip?.route as any)?.start_address || 'Origen no disponible',
+          main_text_destination: bookingData.trip?.destination?.main_text || (bookingData.trip?.route as any)?.end_address || 'Destino no disponible',
+          date_time: bookingData.trip?.date_time || null,
+          driverName: driverName,
+          driverRating: driverRating,
+          driverPhone: driverPhone,
           loading: false,
-          tripStatus: tripData.status || '',
+          // ✅ Usar los campos con alias de compatibilidad
+          tripStatus: bookingData.trip?.status || (bookingData as any).booking_status || (bookingData as any).status || '',
+          routeName: 'Ruta personalizada',
+          distance: bookingData.trip?.route?.distance || 0,
+          totalPrice: bookingData.total_price || 0,
+          seatsReserved: (bookingData as any).seats_reserved || (bookingData as any).seats_booked || 0,
+          createdAt: (bookingData as any).created_at || (bookingData as any).booking_date || '',
+          // ✅ Usar vehículo directamente desde bookingData.vehicle
           vehicle: {
-            brand: tripData.vehicle?.brand || 'No disponible',
-            model: tripData.vehicle?.model || 'No disponible',
-            year: tripData.vehicle?.year ?? 0,
-            plate: tripData.vehicle?.plate || 'No disponible',
-            color: tripData.vehicle?.color || 'No disponible',
+            brand: bookingData.vehicle?.brand || 'No disponible',
+            model: bookingData.vehicle?.model || 'No disponible',
+            year: bookingData.vehicle?.year || 0,
+            plate: bookingData.vehicle?.plate || 'No disponible',
+            color: bookingData.vehicle?.color || 'No disponible',
           },
+          passengers: bookingData.passengers || [],
         });
+        
+        console.log(`✅ [ViewBookingDetails] Trip details set successfully`);
+        
       } catch (err) {
+        console.error(`❌ [ViewBookingDetails] Error loading details:`, err);
+        
         showNotification({
           title: 'Error',
-          message: 'No se pudieron cargar los detalles.',
+          message: 'No se pudieron cargar los detalles de la reserva.',
           color: 'red',
         });
         navigate({ to: '/Cupos' });
@@ -135,13 +216,13 @@ function ViewBookingDetails() {
       <Card withBorder shadow="sm" radius="md" className={detailStyles.detailsCard}>
         <LoadingOverlay visible={tripDetails.loading} />
         <Stack gap="lg">
+          <div style={{height: '30px'}} />
           <Title order={2} style={{ color: '#34D399', textAlign: 'center' }}>
             Detalles de tu Reserva
           </Title>
 
           <Divider label="Información del Viaje" labelPosition="center" my="sm" />
 
-          <Group gap="md"><Text fw={600}>Conductor:</Text><Text>{tripDetails.driverName}</Text></Group>
           <Group gap="md"><Text fw={600}>Origen:</Text><Text>{tripDetails.main_text_origen}</Text></Group>
           <Group gap="md"><Text fw={600}>Destino:</Text><Text>{tripDetails.main_text_destination}</Text></Group>
           <Group gap="md">
@@ -149,10 +230,23 @@ function ViewBookingDetails() {
             <Text>{tripDetails.date_time ? dayjs(tripDetails.date_time).format('DD/MM/YYYY HH:mm') : 'No disponible'}</Text>
           </Group>
           <Group gap="md">
+            <Text fw={600}>Distancia:</Text>
+            <Text>{tripDetails.distance} km</Text>
+          </Group>
+          <Group gap="md">
             <Text fw={600}>Estado:</Text>
             <Badge color={tripDetails.tripStatus === 'active' ? 'green' : 'yellow'}>
               {tripDetails.tripStatus || 'No disponible'}
             </Badge>
+          </Group>
+
+          <Divider label="Tu Reserva" labelPosition="center" my="sm" />
+          
+          <Group gap="md"><Text fw={600}>Asientos reservados:</Text><Text>{tripDetails.seatsReserved}</Text></Group>
+          <Group gap="md"><Text fw={600}>Total pagado:</Text><Text>${tripDetails.totalPrice.toLocaleString()}</Text></Group>
+          <Group gap="md">
+            <Text fw={600}>Fecha de reserva:</Text>
+            <Text>{tripDetails.createdAt ? dayjs(tripDetails.createdAt).format('DD/MM/YYYY HH:mm') : 'No disponible'}</Text>
           </Group>
 
           <Divider label="Vehículo" labelPosition="center" my="sm" />

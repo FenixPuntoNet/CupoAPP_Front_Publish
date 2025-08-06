@@ -4,6 +4,7 @@ import { ChatList } from '@/components/Actividades/ChatList'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { getCurrentUser } from '@/services/auth'
 import { getOrCreateTripChat } from '@/services/chat'
+import { showNotification } from '@mantine/notifications'
 import styles from './index.module.css'
 
 interface Chat {
@@ -56,8 +57,16 @@ function ChatPage() {
       setUserId(result.user.id)
 
       // Si hay un trip_id específico, intentar abrir ese chat
-      if (trip_id) {
+      if (trip_id && trip_id.trim() !== '' && !isNaN(Number(trip_id))) {
+        console.log('🚗 [ChatPage] Valid trip_id received, opening chat:', trip_id);
         await openChatByTripId(Number(trip_id))
+      } else if (trip_id) {
+        console.warn('⚠️ [ChatPage] Invalid trip_id received:', trip_id);
+        showNotification({
+          title: 'Error',
+          message: 'ID de viaje inválido para acceder al chat.',
+          color: 'red',
+        });
       }
     } catch (error) {
       console.error('Error al inicializar usuario:', error)
@@ -76,9 +85,15 @@ function ChatPage() {
       if (!result.success) {
         console.error('❌ [ChatPage] Chat not available for trip:', tripId, 'Error:', result.error);
         
-        // Mostrar error al usuario pero no bloquear completamente
-        // En el nuevo sistema, el chat debería crearse automáticamente
-        console.warn('⚠️ [ChatPage] Will retry after backend initializes the chat system');
+        // Con el sistema corregido, mostrar mensaje más específico
+        showNotification({
+          title: 'Chat en proceso',
+          message: 'El chat de este viaje se está inicializando. Intenta nuevamente en unos segundos.',
+          color: 'blue',
+        });
+        
+        // Intentar cargar la lista de chats por si el chat ya existe pero no se detectó
+        console.warn('⚠️ [ChatPage] Chat not found for trip, but system should be working now');
         return
       }
 

@@ -15,11 +15,10 @@ import styles from './index.module.css';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { getMisCupos } from '@/services/cupos';
 import { TripRating } from '@/components/Actividades/TripRating';
+import { useBackendAuth } from '@/context/BackendAuthContext';
 
 
-interface CuposProps {
-  userId: string;
-}
+interface CuposProps {}
 
 type PassengerLite = {
   passenger_id: number;
@@ -37,17 +36,22 @@ type BookingConductor = {
   seats_booked: number;
   booking_qr: string;
   driver_id: string;
+  driver_name: string; // Para mostrar el nombre del conductor en la UI
   passengers: PassengerLite[];
 };
 
 
-const Cupos: React.FC<CuposProps> = ({ userId }) => {
+const Cupos: React.FC<CuposProps> = () => {
+  const { user } = useBackendAuth();
   const [bookings, setBookings] = useState<BookingConductor[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [ratingModal, setRatingModal] = useState(false);
   const [selectedTripId, setSelectedTripId] = useState<number | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+
+  // Obtener userId del contexto de autenticación
+  const userId = user?.id || '';
 
 
   useEffect(() => {
@@ -101,6 +105,54 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
             const driverData = (tripData as any).driver || {};
             const passengersData = Array.isArray(cupo.passengers) ? cupo.passengers : [];
             
+            // Log completo de la estructura de datos para debugging
+            console.log('🔍 [Cupos] Full cupo data structure for trip:', cupo.trip_id, {
+              fullCupo: cupo,
+              tripData,
+              driverData,
+              possibleDriverFields: Object.keys(driverData),
+              tripDataKeys: Object.keys(tripData),
+              // Log específico de campos relevantes
+              tripData_user_id: (tripData as any)?.user_id,
+              driverData_user_id: (driverData as any)?.user_id,
+              driverData_id: (driverData as any)?.id,
+              // Estructura JSON completa para debugging
+              fullTripDataJSON: JSON.stringify(tripData, null, 2),
+              fullDriverDataJSON: JSON.stringify(driverData, null, 2)
+            });
+            
+            // Múltiples intentos para extraer el driver_id correcto
+            // Siguiendo las instrucciones del backend: usar trip.user_id como primera opción
+            let extractedDriverId = 'unknown';
+            
+            // Opción 1: user_id desde tripData (ID del conductor desde la tabla trips) - PRIORIDAD PRINCIPAL
+            if ((tripData as any).user_id && (tripData as any).user_id !== 'unknown') {
+              extractedDriverId = (tripData as any).user_id;
+              console.log('✅ [Cupos] Found driver_id from tripData.user_id (CORRECTO):', extractedDriverId);
+            }
+            // Opción 2: user_id desde driverData (ID del conductor desde user_profiles)
+            else if ((driverData as any).user_id && (driverData as any).user_id !== 'unknown') {
+              extractedDriverId = (driverData as any).user_id;
+              console.log('✅ [Cupos] Found driver_id from driverData.user_id (BACKUP):', extractedDriverId);
+            }
+            else {
+              console.error('❌ [Cupos] CRITICAL: Could not find valid driver_id for trip:', cupo.trip_id);
+              console.error('❌ [Cupos] tripData.user_id:', (tripData as any)?.user_id);
+              console.error('❌ [Cupos] driverData.user_id:', (driverData as any)?.user_id);
+              console.error('❌ [Cupos] Full trip structure:', tripData);
+              console.error('❌ [Cupos] Full driver structure:', driverData);
+              
+              // Si no encontramos un driver_id válido, este cupo no se podrá calificar
+              extractedDriverId = 'unknown';
+            }
+            
+            // Log para debugging
+            console.log('🔍 [Cupos] Final extraction result for trip:', cupo.trip_id, {
+              extractedDriverId,
+              isValidDriverId: extractedDriverId !== 'unknown',
+              driverName: driverData.first_name ? `${driverData.first_name} ${driverData.last_name || ''}`.trim() : 'Conductor no disponible'
+            });
+            
             return {
               booking_id: cupo.id || 0,
               booking_date: cupo.booking_date || new Date().toISOString(),
@@ -110,7 +162,10 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
               user_id: userId,
               seats_booked: cupo.seats_booked || 1,
               booking_qr: cupo.booking_qr || '',
-              driver_id: driverData.first_name 
+              // Usar el driver_id extraído
+              driver_id: extractedDriverId,
+              // Para mostrar el nombre del conductor en la UI, agregamos un campo separado
+              driver_name: driverData.first_name 
                 ? `${driverData.first_name} ${driverData.last_name || ''}`.trim()
                 : 'Conductor no disponible',
               passengers: passengersData.map((passenger) => ({
@@ -254,12 +309,13 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
                 <Group gap="apart">
                   <Button
                     size="xs"
-                    onClick={() =>
+                    onClick={() => {
+                      console.log('🔍 [Cupos] Navigating to ViewBookingDetails with booking_id:', booking.booking_id);
                       navigate({
                         to: '/Cupos/ViewBookingDetails',
                         search: { booking_id: booking.booking_id.toString() },
-                      })
-                    }
+                      });
+                    }}
                     style={{
                       backgroundColor: 'transparent',
                       color: '#34D399',
@@ -301,12 +357,23 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
                   </Button>
                   <Button
                     size="xs"
-                    onClick={() =>
+                    onClick={() => {
+                      console.log('🚗 [Cupos] Navigating to Chat with trip_id:', booking.trip_id);
+                      
+                      if (!booking.trip_id) {
+                        showNotification({
+                          title: 'Error',
+                          message: 'No se encontró información del viaje para acceder al chat.',
+                          color: 'red',
+                        });
+                        return;
+                      }
+                      
                       navigate({
                         to: '/Chat',
-                        search: { trip_id: booking.trip_id ? booking.trip_id.toString() : '' }, // Pasamos trip_id al Chat
-                      })
-                    }
+                        search: { trip_id: booking.trip_id.toString() },
+                      });
+                    }}
                     style={{
                       backgroundColor: 'transparent',
                       color: '#34D399',
@@ -321,14 +388,21 @@ const Cupos: React.FC<CuposProps> = ({ userId }) => {
                     <Button
                       size="xs"
                       onClick={() => {
-                        if (booking.trip_id && booking.driver_id) {
+                        if (booking.trip_id && booking.driver_id && booking.driver_id !== 'unknown') {
                           openRatingModal(booking.trip_id, booking.driver_id);
+                        } else {
+                          showNotification({
+                            title: 'No disponible',
+                            message: 'No se puede calificar este viaje porque no se pudo identificar al conductor.',
+                            color: 'yellow',
+                          });
                         }
                       }}
                       variant="filled"
-                      color="yellow"
+                      color={booking.driver_id === 'unknown' ? 'gray' : 'yellow'}
+                      disabled={booking.driver_id === 'unknown'}
                     >
-                      Calificar viaje
+                      {booking.driver_id === 'unknown' ? 'No disponible' : 'Calificar viaje'}
                     </Button>
                   )}
                         
