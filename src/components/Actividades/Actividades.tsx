@@ -37,7 +37,7 @@ export interface Trip {
   is_active: boolean;
   user_id: string;
   date_time: string;
-  status: string;
+  status: 'active' | 'in_progress' | 'completed' | 'cancelled';
   vehicle?: {
     brand: string;
     model: string;
@@ -130,20 +130,18 @@ const Actividades: React.FC = () => {
     }
   };
 
-  const loadRecentActivities = async () => {
-    try {
-      const result = await getRecentActivities(10);
-      if (result.success && result.data) {
-        setRecentActivities(result.data.activities);
-      } else {
-        console.error('Error loading recent activities:', result.error);
+    const loadRecentActivities = async () => {
+      try {
+        const result = await getRecentActivities(10);
+        if (result.success && result.data) {
+          setRecentActivities(result.data.activities || []);
+        } else {
+          console.error('Error loading recent activities:', result.error);
+        }
+      } catch (error) {
+        console.error('Error loading recent activities:', error);
       }
-    } catch (error) {
-      console.error('Error loading recent activities:', error);
-    }
-  };
-
-  useEffect(() => {
+    };  useEffect(() => {
     const loadTrips = async () => {
       setTripsLoading(true);
       try {
@@ -169,20 +167,27 @@ const Actividades: React.FC = () => {
           destination: trip.destination,
           date: new Date(trip.date_time).toLocaleDateString(),
           time: new Date(trip.date_time).toLocaleTimeString(),
-          duration: '30 min', // TODO: Agregar duration al backend
-          distance: '15 km', // TODO: Agregar distance al backend
+          duration: '30 min', // Valor por defecto
+          distance: '15 km', // Valor por defecto
           seats: trip.seats,
           seats_reserved: trip.seats_reserved,
           pricePerSeat: trip.price_per_seat,
           price_per_seat: trip.price_per_seat,
-          description: trip.description || '',
+          description: trip.description,
           allowPets: trip.allow_pets === 'Y',
           allowSmoking: trip.allow_smoking === 'Y',
-          is_active: trip.status !== 'canceled',
+          is_active: trip.status === 'active',
           user_id: trip.user_id,
           date_time: trip.date_time,
-          status: trip.status,
-          vehicle: trip.vehicle
+          status: (['active', 'in_progress', 'completed', 'cancelled'].includes(trip.status) 
+            ? trip.status 
+            : 'active') as 'active' | 'in_progress' | 'completed' | 'cancelled',
+          vehicle: trip.vehicle ? {
+            brand: trip.vehicle.brand,
+            model: trip.vehicle.model,
+            plate: trip.vehicle.plate,
+            color: trip.vehicle.color,
+          } : undefined,
         }));
 
         setTrips(transformedTrips);
@@ -219,19 +224,19 @@ const Actividades: React.FC = () => {
         <div className={styles.summaryGrid}>
           <div className={styles.summaryCard}>
             <Text className={styles.summaryLabel}>Viajes como Conductor</Text>
-            <Text className={styles.summaryValue}>{activitySummary.driver_trips}</Text>
+            <Text className={styles.summaryValue}>{activitySummary.driver_trips || activitySummary.total_trips || 0}</Text>
           </div>
           <div className={styles.summaryCard}>
             <Text className={styles.summaryLabel}>Reservas como Pasajero</Text>
-            <Text className={styles.summaryValue}>{activitySummary.passenger_bookings}</Text>
+            <Text className={styles.summaryValue}>{activitySummary.passenger_bookings || 0}</Text>
           </div>
           <div className={styles.summaryCard}>
             <Text className={styles.summaryLabel}>Referidos Realizados</Text>
-            <Text className={styles.summaryValue}>{activitySummary.referrals_made}</Text>
+            <Text className={styles.summaryValue}>{activitySummary.referrals_made || 0}</Text>
           </div>
           <div className={styles.summaryCard}>
             <Text className={styles.summaryLabel}>UniCoins</Text>
-            <Text className={styles.summaryValue}>🪙 {activitySummary.unicoins_balance}</Text>
+            <Text className={styles.summaryValue}>🪙 {activitySummary.unicoins_balance || 0}</Text>
           </div>
         </div>
 
@@ -242,7 +247,7 @@ const Actividades: React.FC = () => {
               {recentActivities.map((activity) => (
                 <div key={activity.id} className={styles.activityItem}>
                   <div className={styles.activityInfo}>
-                    <Text className={styles.activityTitle}>{activity.title}</Text>
+                    <Text className={styles.activityTitle}>{activity.title || activity.description}</Text>
                     <Text className={styles.activityDescription}>{activity.description}</Text>
                   </div>
                   <div className={styles.activityMeta}>
@@ -252,7 +257,7 @@ const Actividades: React.FC = () => {
                       </Text>
                     )}
                     <Text className={styles.activityTime}>
-                      {new Date(activity.timestamp).toLocaleDateString()}
+                      {new Date(activity.timestamp || activity.date).toLocaleDateString()}
                     </Text>
                   </div>
                 </div>

@@ -10,7 +10,8 @@ import {
   LoadingOverlay,
   Modal,
   Alert,
-  SimpleGrid
+  SimpleGrid,
+  Badge
 } from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -214,7 +215,7 @@ const ValidarCupoComponent = () => {
     try {
       await BarcodeScanner.stopScan()
     } catch (_) {}
-    navigate({ to: '/CuposReservados', search: { tripId: undefined } })
+    navigate({ to: '/cupos-reservados' })
   }
 
   // Validar input manual
@@ -289,7 +290,7 @@ const ValidarCupoComponent = () => {
               size="md"
               radius="lg"
               leftSection={<IconX size={20} />}
-              onClick={() => navigate({ to: '/CuposReservados', search: { tripId: undefined } })}
+              onClick={() => navigate({ to: '/cupos-reservados' })}
             >
               Cerrar
             </Button>
@@ -555,7 +556,7 @@ const ValidarCupoComponent = () => {
                   leftSection={<IconCheck size={16} />}
                   onClick={() => {
                     setIsModalOpen(false)
-                    navigate({ to: '/CuposReservados', search: { tripId: undefined } })
+                    navigate({ to: '/cupos-reservados' })
                   }}
                 >
                   Ver Reservas

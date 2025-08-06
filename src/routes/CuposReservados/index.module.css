@@ -4,6 +4,8 @@
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
   padding-left: 16px;
   padding-right: 16px;
+  min-height: 100vh;
+  position: relative;
 }
 
 @media (max-width: 600px) {
@@ -38,41 +40,107 @@
   animation-duration: 15s;
 }
 
-.title {
-  font-size: 35px;
-  font-weight: 700;
-  margin-bottom: 30px;
+.headerGroup {
   position: relative;
   z-index: 1;
-  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.closeButton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  transition: all 0.3s ease !important;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(1.1);
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
   background: linear-gradient(45deg, #00ff9d, #00cc7a);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: #00ff9d;
+  margin-bottom: 0;
+}
+
+/* Summary Cards */
+.summaryCard {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(0, 255, 157, 0.15) !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.summaryCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 255, 157, 0.1);
+  border-color: rgba(0, 255, 157, 0.3);
+}
+
+/* Alerts para estado de cupos */
+.passengerCard :global(.mantine-Alert-root) {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(8px);
+}
+
+.passengerCard :global(.mantine-Alert-root[data-color="green"]) {
+  background: rgba(0, 255, 157, 0.05) !important;
+  border-color: rgba(0, 255, 157, 0.2) !important;
+}
+
+.passengerCard :global(.mantine-Alert-root[data-color="yellow"]) {
+  background: rgba(255, 193, 7, 0.05) !important;
+  border-color: rgba(255, 193, 7, 0.2) !important;
 }
 
 .passengersContainer {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
 }
 
 .passengerCard {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(0, 255, 157, 0.2);
-  border-radius: 16px;
-  padding: 20px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(0, 255, 157, 0.2) !important;
+  border-radius: 16px !important;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.passengerCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 255, 157, 0.5),
+    transparent
+  );
 }
 
 .passengerCard:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0, 255, 157, 0.1), 0 2px 4px rgba(0, 255, 157, 0.05);
+  box-shadow: 0 12px 30px rgba(0, 255, 157, 0.15);
+  border-color: rgba(0, 255, 157, 0.4);
 }
 
 .passengerHeader {
@@ -80,47 +148,57 @@
 }
 
 .passengerName {
-  font-size: 22px;
+  font-size: 18px;
   color: #00ff9d;
-  text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(0, 255, 157, 0.3);
 }
 
 .badge {
   padding: 8px 16px;
   border-radius: 10px;
   font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .passengerId {
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 20px;
+  font-size: 14px;
 }
 
 .validateButton {
-  width: 100%;
-  height: 50px;
-  border-radius: 16px;
-  background: linear-gradient(45deg, #00ff9d, #00cc7a);
-  border: none;
-  color: black;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  transition: all 0.3s ease;
+  background: linear-gradient(45deg, #00ff9d, #00cc7a) !important;
+  border: none !important;
+  color: black !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  transition: all 0.3s ease !important;
+  height: 45px !important;
+  border-radius: 12px !important;
 }
 
 .validateButton:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0, 255, 157, 0.3), 0 5px 10px rgba(0, 255, 157, 0.2);
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(0, 255, 157, 0.4) !important;
+  background: linear-gradient(45deg, #00cc7a, #00b36b) !important;
 }
 
-.noTripsText,
+.noTripsText {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+  text-align: center;
+  font-weight: 500;
+}
+
 .loadingText {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 18px;
+  font-size: 14px;
   text-align: center;
 }
 
+/* Animations */
 @keyframes bgShift {
   0% {
     transform: translate(0, 0) rotate(0deg);
@@ -130,17 +208,56 @@
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.passengerCard {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.summaryCard {
+  animation: fadeInUp 0.4s ease-out;
+}
+
 /* Media queries para responsividad */
 @media (max-width: 768px) {
-  .passengersContainer {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  .title {
+    font-size: 24px;
   }
-
+  
   .passengerName {
+    font-size: 16px;
+  }
+  
+  .summaryCard {
+    padding: 0.75rem !important;
+  }
+  
+  .passengerCard {
+    padding: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
     font-size: 20px;
   }
-
-  .title {
-    font-size: 30px;
+  
+  .headerGroup {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .closeButton {
+    align-self: flex-end;
   }
 }

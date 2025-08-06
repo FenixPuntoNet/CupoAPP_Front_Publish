@@ -49,10 +49,10 @@ const TripFilter: React.FC<TripFilterProps> = ({
         value={statusFilter}
         onChange={onStatusFilterChange}
         data={[
-          { value: 'pending', label: 'Pendiente' }, // agruparemos A y pending bajo este filtro
-          { value: 'progress', label: 'En progreso' },
-          { value: 'finished', label: 'Finalizado' },
-          { value: 'canceled', label: 'Cancelado' },
+          { value: 'active', label: 'Activo' }, // Estado inicial del viaje
+          { value: 'in_progress', label: 'En progreso' }, // Viaje iniciado por el conductor
+          { value: 'completed', label: 'Finalizado' }, // Viaje completado
+          { value: 'cancelled', label: 'Cancelado' }, // Viaje cancelado
         ]}
         clearable
         className={styles.filterSelect}

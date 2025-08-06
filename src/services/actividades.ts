@@ -1,210 +1,214 @@
 import { apiRequest } from '@/config/api';
 
-export interface ActivitySummary {
-  driver_trips: number;
-  passenger_bookings: number;
-  wallet_transactions: number;
-  total_earned: number;
-  total_spent: number;
-  referrals_made: number;
-  ratings_received: number;
-  active_chats: number;
-  unicoins_balance: number;
-}
+/**
+ * Servicio de Actividades - Funciones para gestión de viajes activos
+ * 
+ * NOTA: Las funciones principales se han migrado a @/services/viajes.ts
+ * Este archivo mantiene solo funciones auxiliares y de compatibilidad.
+ */
 
-export interface ActivitySummaryResponse {
-  summary: ActivitySummary;
-}
+// ============================================================================
+// INTERFACES Y TIPOS
+// ============================================================================
 
 export interface Activity {
-  id: string;
+  id: number;
   type: string;
-  title: string;
   description: string;
-  timestamp: string;
-  status?: string;
+  date: string;
+  status: string;
+  details?: any;
+  title?: string;
   amount?: number;
+  timestamp?: string;
 }
 
-export interface RecentActivitiesResponse {
-  activities: Activity[];
+export interface ActivitySummary {
+  total_trips: number;
+  active_trips: number;
+  completed_trips: number;
+  cancelled_trips: number;
+  total_earnings: number;
+  total_passengers: number;
+  average_rating: number;
+  driver_trips?: number;
+  passenger_bookings?: number;
+  referrals_made?: number;
+  unicoins_balance?: number;
 }
 
-export interface DriverTripStats {
-  count: number;
-  earnings: number;
-  completed: number;
-  cancelled: number;
-}
+// ============================================================================
+// FUNCIONES MIGRADAS A @/services/viajes.ts
+// ============================================================================
 
-export interface PassengerBookingStats {
-  count: number;
-  spending: number;
-  confirmed: number;
-  cancelled: number;
-}
-
-export interface WalletTransactionStats {
-  count: number;
-  total_earned: number;
-  total_spent: number;
-}
-
-export interface ActivityStats {
-  driver_trips: DriverTripStats;
-  passenger_bookings: PassengerBookingStats;
-  wallet_transactions: WalletTransactionStats;
-  net_balance: number;
-}
-
-export interface ActivityStatsResponse {
-  period_days: number;
-  stats: ActivityStats;
-}
-
-// Obtener resumen de actividades del usuario
-export async function getActivitySummary(): Promise<{ success: boolean; data?: ActivitySummaryResponse; error?: string }> {
-  try {
-    const data = await apiRequest('/actividades/summary', {
-      method: 'GET'
-    });
-
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error in getActivitySummary:', error);
-    return { 
-      success: false, 
-      error: 'Error de conexión al obtener resumen de actividades' 
-    };
-  }
-}
-
-// Obtener actividad reciente del usuario
-export async function getRecentActivities(limit: number = 20): Promise<{ success: boolean; data?: RecentActivitiesResponse; error?: string }> {
-  try {
-    const data = await apiRequest(`/actividades/recent?limit=${limit}`, {
-      method: 'GET'
-    });
-
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error in getRecentActivities:', error);
-    return { 
-      success: false, 
-      error: 'Error de conexión al obtener actividades recientes' 
-    };
-  }
-}
-
-// Obtener estadísticas de actividad por período
-export async function getActivityStats(period: number = 30): Promise<{ success: boolean; data?: ActivityStatsResponse; error?: string }> {
-  try {
-    const data = await apiRequest(`/actividades/stats?period=${period}`, {
-      method: 'GET'
-    });
-
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error in getActivityStats:', error);
-    return { 
-      success: false, 
-      error: 'Error de conexión al obtener estadísticas de actividades' 
-    };
-  }
-}
-
-// Función para obtener el resumen de cupos reservados de un viaje
+/**
+ * Obtener conteo de pasajeros de un viaje
+ * @deprecated Usar getTripPassengerCount de @/services/viajes en su lugar
+ */
 export async function getTripPassengerCount(tripId: number): Promise<{ success: boolean; data?: { total_passengers: number }; error?: string }> {
+  console.warn('⚠️ [actividades.ts] DEPRECATED: Use getTripPassengerCount from @/services/viajes instead');
+  
   try {
-    console.log(`🎫 [getTripPassengerCount] Fetching passenger count for trip ${tripId}`);
-    
-    // Intentar el endpoint actualizado con consultas simples
-    const data = await apiRequest(`/cupos/reservados?tripId=${tripId}`, {
-      method: 'GET'
-    });
-
-    console.log(`✅ [getTripPassengerCount] Backend response for trip ${tripId}:`, data);
-
-    // El endpoint actualizado retorna un summary con total_passengers
-    const totalPassengers = data?.summary?.total_passengers || 0;
-    
-    return { 
-      success: true, 
-      data: { 
-        total_passengers: totalPassengers 
-      } 
-    };
+    // Importar y usar la función del servicio de viajes
+    const { getTripPassengerCount: getPassengerCountFromViajes } = await import('@/services/viajes');
+    return await getPassengerCountFromViajes(tripId);
   } catch (error) {
-    // Log detallado para debugging
-    console.warn(`⚠️ [getTripPassengerCount] Backend error for trip ${tripId}:`, error);
-    
-    // Verificar el tipo específico de error
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    
-    // Error de permisos (403)
-    if (errorMessage.includes('permisos') || errorMessage.includes('403')) {
-      console.warn(`🔒 [getTripPassengerCount] Permission denied for trip ${tripId}`);
-      return { 
-        success: false, 
-        error: 'Sin permisos para ver los cupos de este viaje' 
-      };
-    }
-
-    // Error de autenticación (401)
-    if (errorMessage.includes('401') || errorMessage.includes('Token')) {
-      console.warn(`🔑 [getTripPassengerCount] Authentication error for trip ${tripId}`);
-      return { 
-        success: false, 
-        error: 'Sesión expirada - por favor vuelve a iniciar sesión' 
-      };
-    }
-
-    // Para otros errores, intentar endpoint de debug si está disponible
-    try {
-      console.warn(`🔧 [getTripPassengerCount] Trying debug endpoint for trip ${tripId}`);
-      const debugData = await apiRequest(`/cupos/debug/${tripId}`, {
-        method: 'GET'
-      });
-      
-      // Si el debug funciona, usar los datos básicos
-      if (debugData && debugData.basic_bookings) {
-        const passengerCount = debugData.basic_bookings.reduce((sum: number, booking: any) => 
-          sum + (booking.seats_booked || 0), 0);
-        
-        console.log(`🔧 [getTripPassengerCount] Debug endpoint successful, passenger count: ${passengerCount}`);
-        return { 
-          success: true, 
-          data: { 
-            total_passengers: passengerCount 
-          } 
-        };
-      }
-    } catch (debugError) {
-      console.warn(`� [getTripPassengerCount] Debug endpoint also failed for trip ${tripId}:`, debugError);
-    }
-
-    // Último recurso: usar endpoint de stats como fallback
-    try {
-      console.warn(`📊 [getTripPassengerCount] Trying stats fallback for trip ${tripId}`);
-      await apiRequest(`/cupos/stats`, {
-        method: 'GET'
-      });
-      
-      // Si el endpoint de stats funciona, significa que el servicio está activo
-      console.warn(`📊 [getTripPassengerCount] Stats endpoint working, using safe fallback`);
-      return { 
-        success: true, 
-        data: { 
-          total_passengers: 0 // Fallback seguro - mejor mostrar 0 que fallar
-        } 
-      };
-    } catch (fallbackError) {
-      console.error(`❌ [getTripPassengerCount] All endpoints failed for trip ${tripId}:`, fallbackError);
-      
-      return { 
-        success: false, 
-        error: 'Error al obtener información de pasajeros - servicio temporalmente no disponible' 
-      };
-    }
+    console.error(`❌ [actividades.ts] Error redirecting to viajes service:`, error);
+    return {
+      success: false,
+      error: 'Error al obtener información de pasajeros'
+    };
   }
 }
+
+// ============================================================================
+// FUNCIONES AUXILIARES
+// ============================================================================
+
+/**
+ * Obtener resumen de actividades del conductor
+ */
+export async function getActivitySummary(userId?: string): Promise<{ success: boolean; data?: { summary: ActivitySummary }; error?: string }> {
+  try {
+    const endpoint = userId ? `/actividades/summary?userId=${userId}` : '/actividades/summary';
+    const response = await apiRequest(endpoint);
+    
+    return {
+      success: true,
+      data: {
+        summary: response.summary || {
+          total_trips: 0,
+          active_trips: 0,
+          completed_trips: 0,
+          cancelled_trips: 0,
+          total_earnings: 0,
+          total_passengers: 0,
+          average_rating: 0
+        }
+      }
+    };
+  } catch (error) {
+    console.error('Error getting activity summary:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al obtener resumen de actividades'
+    };
+  }
+}
+
+/**
+ * Obtener estadísticas básicas de actividad de un conductor
+ */
+export async function getDriverActivityStats(userId?: string): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const endpoint = userId ? `/actividades/stats?userId=${userId}` : '/actividades/stats';
+    const response = await apiRequest(endpoint);
+    
+    return {
+      success: true,
+      data: response
+    };
+  } catch (error) {
+    console.error('Error getting driver activity stats:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al obtener estadísticas de actividad'
+    };
+  }
+}
+
+/**
+ * Obtener historial de actividades recientes
+ */
+export async function getRecentActivities(limit: number = 10): Promise<{ success: boolean; data?: { activities: Activity[] }; error?: string }> {
+  try {
+    const response = await apiRequest(`/actividades/recent?limit=${limit}`);
+    
+    return {
+      success: true,
+      data: {
+        activities: response.activities || []
+      }
+    };
+  } catch (error) {
+    console.error('Error getting recent activities:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al obtener actividades recientes'
+    };
+  }
+}
+
+/**
+ * Validar estado de un viaje para determinar acciones disponibles
+ */
+export function validateTripActions(tripStatus: string, seatsReserved: number = 0): {
+  canStart: boolean;
+  canFinish: boolean;
+  canCancel: boolean;
+  canEdit: boolean;
+} {
+  const status = tripStatus?.toLowerCase();
+  
+  return {
+    canStart: status === 'active',
+    canFinish: status === 'in_progress',
+    canCancel: status === 'active' && seatsReserved === 0,
+    canEdit: status === 'active'
+  };
+}
+
+/**
+ * Formatear información de viaje para mostrar en UI
+ */
+export function formatTripInfo(trip: any): {
+  statusLabel: string;
+  statusColor: string;
+  timeInfo: string;
+  passengerInfo: string;
+} {
+  const status = trip.status?.toLowerCase();
+  
+  let statusLabel = 'Desconocido';
+  let statusColor = 'gray';
+  
+  switch (status) {
+    case 'active':
+      statusLabel = 'Activo';
+      statusColor = 'blue';
+      break;
+    case 'in_progress':
+      statusLabel = 'En progreso';
+      statusColor = 'yellow';
+      break;
+    case 'completed':
+      statusLabel = 'Finalizado';
+      statusColor = 'green';
+      break;
+    case 'cancelled':
+      statusLabel = 'Cancelado';
+      statusColor = 'red';
+      break;
+  }
+  
+  const timeInfo = trip.date_time ? new Date(trip.date_time).toLocaleString('es-ES') : 'Fecha no disponible';
+  const totalSeats = Number(trip.seats || 0);
+  const reservedSeats = Number(trip.seats_reserved || 0);
+  const passengerInfo = `${reservedSeats}/${totalSeats} cupos`;
+  
+  return {
+    statusLabel,
+    statusColor,
+    timeInfo,
+    passengerInfo
+  };
+}
+
+export default {
+  getTripPassengerCount,
+  getActivitySummary,
+  getDriverActivityStats,
+  getRecentActivities,
+  validateTripActions,
+  formatTripInfo
+};

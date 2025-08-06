@@ -234,3 +234,104 @@ export const searchPublicTrips = async (
     };
   }
 };
+
+// Iniciar un viaje (para conductores) - NUEVO ENDPOINT
+export const startTrip = async (tripId: number): Promise<{ success: boolean; data?: { trip: any; message: string }; error?: string }> => {
+  try {
+    console.log(`🚀 [startTrip] Starting trip ${tripId}`);
+    
+    const response = await apiRequest(`/viajes/trip/${tripId}/start`, {
+      method: 'POST'
+    });
+    
+    console.log(`✅ [startTrip] Trip ${tripId} started successfully:`, response);
+    
+    return {
+      success: true,
+      data: response
+    };
+  } catch (error) {
+    console.error(`❌ [startTrip] Error starting trip ${tripId}:`, error);
+    
+    let errorMessage = 'Error al iniciar el viaje';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+};
+
+// Finalizar un viaje (para conductores) - NUEVO ENDPOINT
+export const finishTrip = async (tripId: number): Promise<{ success: boolean; data?: { trip: any; unfrozen_amount?: number; message: string }; error?: string }> => {
+  try {
+    console.log(`🏁 [finishTrip] Finishing trip ${tripId}`);
+    
+    const response = await apiRequest(`/viajes/trip/${tripId}/finish`, {
+      method: 'POST'
+    });
+    
+    console.log(`✅ [finishTrip] Trip ${tripId} finished successfully:`, response);
+    
+    return {
+      success: true,
+      data: response
+    };
+  } catch (error) {
+    console.error(`❌ [finishTrip] Error finishing trip ${tripId}:`, error);
+    
+    let errorMessage = 'Error al finalizar el viaje';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+};
+
+// Obtener conteo de pasajeros de un viaje - ACTUALIZADO según backend
+export const getTripPassengerCount = async (tripId: number): Promise<{ success: boolean; data?: { total_passengers: number; pending_passengers: number; validated_passengers: number; passenger_count: any }; error?: string }> => {
+  try {
+    console.log(`🎫 [getTripPassengerCount] Getting passenger count for trip ${tripId}`);
+    
+    // Usar el endpoint actualizado del backend
+    const response = await apiRequest(`/viajes/trip/${tripId}/passenger-count`);
+    
+    console.log(`✅ [getTripPassengerCount] Backend response:`, response);
+    
+    // Procesar la respuesta según la nueva estructura del backend
+    const passengerCount = response.passenger_count || {};
+    
+    const data = {
+      total_passengers: passengerCount.total_passengers || 0,
+      pending_passengers: passengerCount.pending_passengers || 0,
+      validated_passengers: passengerCount.validated_passengers || 0,
+      passenger_count: passengerCount
+    };
+    
+    console.log(`📊 [getTripPassengerCount] Processed data for trip ${tripId}:`, data);
+    
+    return {
+      success: true,
+      data
+    };
+  } catch (error) {
+    console.error(`❌ [getTripPassengerCount] Error getting passenger count for trip ${tripId}:`, error);
+    
+    let errorMessage = 'Error al obtener conteo de pasajeros';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+};

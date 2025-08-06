@@ -13,6 +13,49 @@
   overflow: hidden;
 }
 
+/* Trip card with passengers waiting */
+.tripCardWithPassengers {
+  border: 2px solid rgba(255, 167, 38, 0.6) !important;
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.2) !important;
+  background: rgba(255, 107, 53, 0.05) !important;
+}
+
+.tripCardWithPassengers::before {
+  background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 167, 38, 0.5),
+      transparent
+  ) !important;
+}
+
+/* Passenger alert indicator */
+.passengerAlert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(45deg, rgba(255, 167, 38, 0.9), rgba(255, 107, 53, 0.9));
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  font-weight: bold;
+  animation: alertPulse 2s infinite;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+@keyframes alertPulse {
+  0% {
+    background: linear-gradient(45deg, rgba(255, 167, 38, 0.9), rgba(255, 107, 53, 0.9));
+  }
+  50% {
+    background: linear-gradient(45deg, rgba(255, 193, 78, 0.95), rgba(255, 140, 90, 0.95));
+  }
+  100% {
+    background: linear-gradient(45deg, rgba(255, 167, 38, 0.9), rgba(255, 107, 53, 0.9));
+  }
+}
+
 .tripCard::before {
   content: '';
   position: absolute;
@@ -119,7 +162,46 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Action Button Styles */
+/* Cupos info section */
+.cuposStatus {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cuposInfo {
+  margin-bottom: 0.5rem;
+}
+
+.cuposLabel {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cuposCount {
+  font-size: 1.3rem;
+  margin-top: 0.2rem;
+}
+
+.validatedText {
+  margin-top: 0.3rem;
+  font-weight: 600;
+}
+
+.cuposBadge {
+  padding: 0.5rem 1rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
+.actionHint {
+  text-align: center;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
 .tripActions {
   margin-top: 1.5rem;
   display: flex;
@@ -175,6 +257,38 @@
 .tripActions button:nth-child(1):hover {
    border-color: rgba(0, 255, 157, 0.3) !important;
     box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3) !important;
+}
+
+/* Active Cupos Button when passengers are waiting */
+.cuposButtonActive {
+  background: linear-gradient(45deg, #ff9500, #ffb74d) !important;
+  color: white !important;
+  font-weight: bold !important;
+  animation: pulse 2s infinite !important;
+  box-shadow: 0 4px 16px rgba(255, 149, 0, 0.4) !important;
+  border: 2px solid rgba(255, 183, 77, 0.6) !important;
+}
+
+.cuposButtonActive:hover {
+  background: linear-gradient(45deg, #ff8f00, #ffcc80) !important;
+  box-shadow: 0 6px 20px rgba(255, 149, 0, 0.6) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* Pulse animation for active cupos button */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(255, 149, 0, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(255, 149, 0, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(255, 149, 0, 0.4);
+  }
 }
 
 
