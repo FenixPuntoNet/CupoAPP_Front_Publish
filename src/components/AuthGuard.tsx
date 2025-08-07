@@ -52,7 +52,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
       // Si está autenticado pero no tiene perfil, y está en index o login, redirigir a completar registro
       if (isAuthenticated && !hasProfile && (currentPath === '/Login' || currentPath === '/')) {
         console.log('⚠️ User is authenticated but no profile, redirecting to complete registration');
-        navigate({ to: '/CompletarRegistro' });
+        navigate({ to: '/CompletarRegistro', search: { from: '' } });
         return;
       }
       
@@ -71,15 +71,33 @@ export function AuthGuard({ children }: AuthGuardProps) {
     // Si está autenticado pero no tiene perfil completo
     if (isAuthenticated && !hasProfile && !authOnlyRoutes.includes(currentPath)) {
       console.log('⚠️ User authenticated but no profile, redirecting to complete registration');
-      navigate({ to: '/CompletarRegistro' });
+      navigate({ to: '/CompletarRegistro', search: { from: '' } });
       return;
     }
 
-    // Si está en completar registro pero ya tiene perfil, redirigir a home
+    // Si está en completar registro pero ya tiene perfil
+    // EXCEPCIÓN: Permitir acceso si viene desde el perfil para actualizar
     if (isAuthenticated && hasProfile && currentPath === '/CompletarRegistro') {
-      console.log('✅ User has profile, redirecting to home');
-      navigate({ to: '/home' });
-      return;
+      // Obtener los parámetros de búsqueda de la URL actual
+      const searchParams = new URLSearchParams(window.location.search);
+      const fromProfile = searchParams.get('from') === 'profile';
+      
+      console.log('🔍 User with profile on CompletarRegistro:', {
+        currentPath,
+        fromProfile,
+        searchParams: Object.fromEntries(searchParams.entries())
+      });
+      
+      // Solo redirigir a home si NO viene desde el perfil
+      if (!fromProfile) {
+        console.log('✅ User has profile and not updating, redirecting to home');
+        navigate({ to: '/home' });
+        return;
+      } else {
+        console.log('📝 User updating profile from /Perfil, allowing access to CompletarRegistro');
+        // Permitir el acceso para actualizar perfil
+        return;
+      }
     }
 
   }, [loading, isAuthenticated, hasProfile, currentPath, navigate]);

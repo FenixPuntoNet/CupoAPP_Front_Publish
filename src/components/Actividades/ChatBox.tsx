@@ -5,6 +5,7 @@ import { sendChatMessage } from '@/services/chat'
 import { moderateContent, getBlockedUsers } from '@/lib/contentModeration'
 import { ReportModal } from '@/components/ReportModal'
 import { BlockUserModal } from '@/components/BlockUserModal'
+import { debugMessageInfo } from '@/utils/reportDebug'
 import { IconFlag, IconUserX } from '@tabler/icons-react'
 import { Alert } from '@mantine/core'
 import styles from './ChatBox.module.css'
@@ -175,11 +176,24 @@ export function ChatBox({ chatId, currentUserId }: Props) {
   }
 
   const handleReportMessage = (messageId: number, userId: string, userName: string) => {
-    setSelectedMessageId(messageId)
-    setSelectedUserId(userId)
-    setSelectedUserName(userName)
-    setReportModalOpened(true)
-  }
+    // Validar que messageId sea un número válido
+    if (!messageId || typeof messageId !== 'number' || messageId <= 0) {
+      console.error('❌ Invalid messageId for report:', messageId);
+      setContentModerationAlert('Error: No se puede reportar este mensaje. ID inválido.');
+      setTimeout(() => setContentModerationAlert(null), 5000);
+      return;
+    }
+
+    // Debug information
+    debugMessageInfo(messageId, messages);
+
+    console.log('📝 Opening report modal for message:', { messageId, userId, userName });
+    
+    setSelectedMessageId(messageId);
+    setSelectedUserId(userId);
+    setSelectedUserName(userName);
+    setReportModalOpened(true);
+  };
 
   const handleBlockUser = (userId: string, userName: string) => {
     setSelectedUserId(userId)
@@ -245,8 +259,18 @@ export function ChatBox({ chatId, currentUserId }: Props) {
                           <div className={styles.messageActions}>
                             <button 
                               className={styles.actionButton}
-                              onClick={() => handleReportMessage(msg.id, msg.user_id!, name)}
+                              onClick={() => {
+                                // Validar que el mensaje tenga ID válido antes de reportar
+                                if (!msg.id || typeof msg.id !== 'number' || msg.id <= 0) {
+                                  console.error('❌ Cannot report message with invalid ID:', msg.id);
+                                  setContentModerationAlert('No se puede reportar este mensaje. ID inválido.');
+                                  setTimeout(() => setContentModerationAlert(null), 5000);
+                                  return;
+                                }
+                                handleReportMessage(msg.id, msg.user_id!, name);
+                              }}
                               title="Reportar mensaje"
+                              disabled={!msg.id || typeof msg.id !== 'number' || msg.id <= 0}
                             >
                               <IconFlag size={16} />
                             </button>
@@ -328,7 +352,6 @@ export function ChatBox({ chatId, currentUserId }: Props) {
           }}
           contentType="message"
           contentId={selectedMessageId}
-          reporterId={currentUserId}
           targetUserName={selectedUserName}
         />
       )}
@@ -343,7 +366,6 @@ export function ChatBox({ chatId, currentUserId }: Props) {
           }}
           targetUserId={selectedUserId}
           targetUserName={selectedUserName}
-          currentUserId={currentUserId}
         />
       )}
     </div>

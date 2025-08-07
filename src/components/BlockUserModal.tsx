@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Text, Alert, Group } from '@mantine/core';
 import { IconUserX, IconAlertTriangle, IconCheck } from '@tabler/icons-react';
-import { blockUser } from '@/lib/contentModeration';
+import { blockUser } from '@/services/moderation';
 import styles from './BlockUserModal.module.css';
 
 interface BlockUserModalProps {
@@ -9,15 +9,13 @@ interface BlockUserModalProps {
   onClose: () => void;
   targetUserId: string;
   targetUserName: string;
-  currentUserId: string;
 }
 
 export const BlockUserModal: React.FC<BlockUserModalProps> = ({
   opened,
   onClose,
   targetUserId,
-  targetUserName,
-  currentUserId
+  targetUserName
 }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -28,22 +26,26 @@ export const BlockUserModal: React.FC<BlockUserModalProps> = ({
     setError(null);
 
     try {
+      console.log('🚫 Blocking user:', targetUserId);
+      
       const result = await blockUser(
-        currentUserId,
         targetUserId,
         `Usuario bloqueado desde el chat`
       );
 
       if (result.success) {
+        console.log('✅ User blocked successfully');
         setSuccess(true);
         setTimeout(() => {
           setSuccess(false);
           onClose();
         }, 2000);
       } else {
+        console.error('❌ Failed to block user:', result.error);
         setError(result.error || 'Error al bloquear usuario');
       }
     } catch (err) {
+      console.error('❌ Unexpected error blocking user:', err);
       setError('Error inesperado al bloquear usuario');
     } finally {
       setLoading(false);

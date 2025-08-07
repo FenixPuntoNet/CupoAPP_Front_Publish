@@ -102,7 +102,7 @@ export const UserModerationModal: React.FC<UserModerationModalProps> = ({
             <Text size="sm" className="mb-2">
               {suspensionInfo.message}
             </Text>
-            {suspensionInfo.is_permanent ? (
+            {suspensionInfo.isPermanent ? (
               <Text size="sm" fw={500} className="text-red-600">
                 Esta suspensión es permanente.
               </Text>
@@ -165,7 +165,7 @@ export const UserModerationModal: React.FC<UserModerationModalProps> = ({
                         Severidad: {getSeverityLabel(warning.severity)}
                       </Badge>
                       <Text size="xs" className="text-gray-500">
-                        {new Date(warning.created_at || '').toLocaleDateString('es-ES', {
+                        {new Date(warning.createdAt || '').toLocaleDateString('es-ES', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',

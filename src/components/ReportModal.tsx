@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Button, Text, Textarea, Group, Select, Alert } from '@mantine/core';
 import { IconFlag, IconAlertTriangle, IconCheck } from '@tabler/icons-react';
-import { reportContent } from '@/lib/contentModeration';
+import { createReport } from '@/services/moderation';
+import { debugReportData, testReportsEndpoint } from '@/utils/reportDebug';
 import styles from './ReportModal.module.css';
 
 interface ReportModalProps {
@@ -9,7 +10,6 @@ interface ReportModalProps {
   onClose: () => void;
   contentType: 'message' | 'profile' | 'trip';
   contentId: number;
-  reporterId: string;
   targetUserName?: string;
 }
 
@@ -30,7 +30,6 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   onClose,
   contentType,
   contentId,
-  reporterId,
   targetUserName
 }) => {
   const [reason, setReason] = useState<string>('');
@@ -45,29 +44,58 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       return;
     }
 
+    // Validar contentId
+    if (!contentId || typeof contentId !== 'number' || contentId <= 0) {
+      console.error('❌ Invalid contentId for report:', { contentId, contentType });
+      setError('Error: El contenido que intentas reportar no es válido. Intenta nuevamente.');
+      return;
+    }
+
+    // Debug information
+    debugReportData(contentType, contentId, reason, description);
+
+    // Test endpoint connectivity first
+    console.log('🔍 Testing reports endpoint connectivity...');
+    const connectivityTest = await testReportsEndpoint();
+    if (!connectivityTest.success) {
+      console.error('❌ Reports endpoint not reachable:', connectivityTest.error);
+      setError('Error de conectividad con el servidor. Verifica tu conexión.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const result = await reportContent(
-        reporterId,
+      console.log('📝 Submitting report:', { contentType, contentId, reason, description });
+      
+      const result = await createReport({
         contentType,
         contentId,
         reason,
-        description.trim() || undefined
-      );
+        description: description.trim() || undefined
+      });
 
       if (result.success) {
+        console.log('✅ Report submitted successfully:', result.data);
         setSuccess(true);
+        
+        // Mostrar mensaje personalizado del backend si está disponible
+        if (result.data?.message) {
+          console.log('📄 Backend message:', result.data.message);
+        }
+        
         setTimeout(() => {
           setSuccess(false);
           onClose();
           resetForm();
-        }, 2000);
+        }, 3000); // Aumentar tiempo para leer el mensaje
       } else {
+        console.error('❌ Failed to submit report:', result.error);
         setError(result.error || 'Error al enviar el reporte');
       }
     } catch (err) {
+      console.error('❌ Unexpected error submitting report:', err);
       setError('Error inesperado al enviar el reporte');
     } finally {
       setLoading(false);

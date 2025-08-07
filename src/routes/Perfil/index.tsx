@@ -113,7 +113,7 @@ const ProfileView: React.FC = () => {
 
   // Nuevo: Botón de actualizar perfil
   const handleUpdateProfile = () => {
-    navigate({ to: '/CompletarRegistro' })
+    navigate({ to: '/CompletarRegistro', search: { from: 'profile' } })
   }
 
   // Nuevo orden y cambios en el menú
@@ -285,6 +285,14 @@ const ProfileView: React.FC = () => {
         if (profile) {
           // Use the user data from auth context instead of calling getUser()
           console.log('🔍 User from auth context:', user);
+          console.log('🖼️ Profile photo data:', {
+            profile_picture: profile.profile_picture,
+            photo_user: profile.photo_user
+          });
+          console.log('✅ Verification data from backend:', {
+            verification: profile.verification,
+            raw_profile: profile
+          });
           
           setUserProfile({
             id: Number(profile.id),
@@ -297,8 +305,19 @@ const ProfileView: React.FC = () => {
             identification_number: profile.identification_number || null,
             status: profile.status || 'ACTIVE',
             user_type: profile.status || 'PASSENGER',
-            Verification: profile.verification || 'SIN VERIFICAR',
-            photo_user: profile.profile_picture || '', 
+            // 🔧 PRESERVAR el valor original de verification sin sobrescribir
+            Verification: profile.verification, // NO sobrescribir con 'SIN VERIFICAR'
+            verification: profile.verification, // Mantener ambos campos para compatibilidad
+            // Usar tanto photo_user como profile_picture para compatibilidad
+            photo_user: profile.photo_user || profile.profile_picture || '', 
+            profile_picture: profile.photo_user || profile.profile_picture || ''
+          });
+          
+          console.log('👤 Final user profile set:', {
+            photo_user: profile.photo_user || profile.profile_picture || '',
+            profile_picture: profile.photo_user || profile.profile_picture || '',
+            verification: profile.verification,
+            Verification: profile.verification
           });
           
           // Set email from auth context - this ensures we display the email, not UUID
@@ -329,60 +348,74 @@ const ProfileView: React.FC = () => {
     loadUserData();
   }, [navigate, user]);
 
-  const renderUserSection = () => (
-    <div className={styles.userSection}>
-      <div className={styles.userAvatar}>
-        {userProfile?.photo_user ? (
-          <img
-            src={userProfile.photo_user}
-            alt="Foto de perfil"
-            className={styles.userPhoto}
-          />
-        ) : (
-          <User size={40} />
-        )}
-      </div>
-      <div className={styles.userInfo}>
-        <Text className={styles.userName}>
-          {userProfile?.first_name ? 
-            `${userProfile.first_name} ${userProfile.last_name || ''}`.trim() : 
-            user?.username || 'Usuario'
-          }
-        </Text>
-        <Text className={styles.userEmail}>{userEmail}</Text>
-        <div
-          className={`${styles.userType} ${
-            userProfile?.user_type === 'DRIVER' ? styles.driver : ''
-          }`}
-        >
-          <Text>
-            {userProfile?.user_type === 'DRIVER' ? (
-              <>Conductor</>
-            ) : (
-              'Pasajero'
-            )}
-          </Text>
-          {userProfile?.user_type === 'DRIVER' && (
-            <div className={styles.driverRating}>
-              {averageRating !== null ? (
-                <Rating value={averageRating} readOnly size="sm" />
-              ) : (
-                <Text c="gray" size="xs"></Text>
-              )}
-            </div>
+  const renderUserSection = () => {
+    // Debug: Log photo data
+    console.log('🖼️ Rendering user section with photo data:', {
+      userProfile: userProfile,
+      photo_user: userProfile?.photo_user,
+      profile_picture: userProfile?.profile_picture
+    });
+    
+    return (
+      <div className={styles.userSection}>
+        <div className={styles.userAvatar}>
+          {(userProfile?.photo_user || userProfile?.profile_picture) ? (
+            <img
+              src={userProfile.photo_user || userProfile.profile_picture}
+              alt="Foto de perfil"
+              className={styles.userPhoto}
+              onLoad={() => console.log('✅ Profile photo loaded successfully')}
+              onError={(e) => {
+                console.error('❌ Error loading profile photo:', e);
+                console.error('❌ Failed photo URL:', userProfile?.photo_user || userProfile?.profile_picture);
+              }}
+            />
+          ) : (
+            <User size={40} />
           )}
         </div>
+        <div className={styles.userInfo}>
+          <Text className={styles.userName}>
+            {userProfile?.first_name ? 
+              `${userProfile.first_name} ${userProfile.last_name || ''}`.trim() : 
+              user?.username || 'Usuario'
+            }
+          </Text>
+          <Text className={styles.userEmail}>{userEmail}</Text>
+          <div
+            className={`${styles.userType} ${
+              userProfile?.user_type === 'DRIVER' ? styles.driver : ''
+            }`}
+          >
+            <Text>
+              {userProfile?.user_type === 'DRIVER' ? (
+                <>Conductor</>
+              ) : (
+                'Pasajero'
+              )}
+            </Text>
+            {userProfile?.user_type === 'DRIVER' && (
+              <div className={styles.driverRating}>
+                {averageRating !== null ? (
+                  <Rating value={averageRating} readOnly size="sm" />
+                ) : (
+                  <Text c="gray" size="xs"></Text>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        <Button
+          className={styles.updateProfileBtn}
+          variant="outline"
+          size="xs"
+          onClick={handleUpdateProfile}
+        >
+          Actualizar perfil
+        </Button>
       </div>
-      <Button
-        className={styles.updateProfileBtn}
-        variant="outline"
-        size="xs"
-        onClick={handleUpdateProfile}
-      >
-        Actualizar perfil
-      </Button>
-    </div>
-  );
+    );
+  };
 
   useEffect(() => {
     const checkDocumentCompletion = async () => {
@@ -538,7 +571,7 @@ const ProfileView: React.FC = () => {
       )}
       {userProfile?.user_type === 'DRIVER' && (
         <div className={styles.vehicleRegistrationComplete}>
-          {userProfile.Verification === 'VERIFICADO' ? (
+          {userProfile.Verification === 'VERIFICADO' || userProfile.verification === 'VERIFICADO' ? (
             <>
               <Text className={styles.vehicleRegistrationText}>
                 ¡Eres conductor verificado!
@@ -550,10 +583,15 @@ const ProfileView: React.FC = () => {
           ) : (
             <div className={styles.verificationPendingBox}>
               <Text className={styles.verificationPendingText}>
-                En proceso de verificación
+                {userProfile.Verification || userProfile.verification || 'En proceso de verificación'}
               </Text>
               <Text className={styles.verificationPendingSubtitle}>
-                Aún no puedes publicar viajes
+                {(userProfile.Verification || userProfile.verification) === 'PENDIENTE' || 
+                 (userProfile.Verification || userProfile.verification) === 'SIN VERIFICAR' || 
+                 !userProfile.Verification && !userProfile.verification
+                  ? 'Aún no puedes publicar viajes'
+                  : 'Revisa el estado de tu verificación'
+                }
               </Text>
             </div>
           )}

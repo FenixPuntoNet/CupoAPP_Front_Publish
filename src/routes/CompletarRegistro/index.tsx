@@ -13,7 +13,7 @@ import {
 } from '@mantine/core';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useForm } from '@mantine/form';
-import { useNavigate, createFileRoute } from '@tanstack/react-router';
+import { useNavigate, createFileRoute, useSearch } from '@tanstack/react-router';
 import { notifications } from '@mantine/notifications';
 import { getCurrentUserProfile, updateUserProfile, completeUserProfile, uploadProfilePhoto } from '@/services/profile';
 import { useBackendAuth } from '@/context/BackendAuthContext';
@@ -40,6 +40,7 @@ const CompleteProfileView: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user } = useBackendAuth();
+  const search = useSearch({ from: '/CompletarRegistro/' }) as { from?: string };
 
   const form = useForm<ProfileFormData>({
     initialValues: {
@@ -64,6 +65,10 @@ const CompleteProfileView: React.FC = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
+        // Debug: verificar el origen de la navegación
+        console.log('🔍 Navigation search params:', search);
+        console.log('🔍 Comes from profile:', search?.from === 'profile');
+        
         // Obtener el email y nombre del usuario autenticado
         const userEmail = user?.email || '';
         const userName = user?.username || '';
@@ -87,9 +92,11 @@ const CompleteProfileView: React.FC = () => {
 
         const profile = profileResponse.data;
         setIsEditing(true);
-        setPreviewUrl(profile.profile_picture || null);
+        // 🔧 ARREGLO: Usar tanto photo_user como profile_picture para compatibilidad
+        setPreviewUrl(profile.photo_user || profile.profile_picture || null);
         
         console.log('Profile data loaded:', profile);
+        console.log('🖼️ Setting preview URL:', profile.photo_user || profile.profile_picture || null);
         
         // Combinar datos del perfil con datos de autenticación
         // Siempre usar el email del contexto de autenticación
@@ -104,7 +111,8 @@ const CompleteProfileView: React.FC = () => {
           identification_type: profile.identification_type || 'CC',
           identification_number: profile.identification_number || '',
           user_type: profile.status || 'PASSENGER',
-          photo_user: profile.profile_picture || null,
+          // 🔧 ARREGLO: Usar tanto photo_user como profile_picture para compatibilidad
+          photo_user: profile.photo_user || profile.profile_picture || null,
         });
         
         console.log('Form values set:', form.values);
@@ -266,11 +274,30 @@ const CompleteProfileView: React.FC = () => {
         color: 'green',
       });
 
-      // Si estamos editando, regresar al perfil; si no, ir según el tipo de usuario
-      if (isEditing) {
+      // Mejorar la lógica de redirección
+      // Si viene desde el perfil (search.from === 'profile') o está editando, regresar al perfil
+      // Si es un nuevo usuario, redirigir según el tipo de usuario
+      const comeFromProfile = search?.from === 'profile';
+      
+      console.log('🔄 Redirection logic:', {
+        isEditing,
+        comeFromProfile,
+        searchFrom: search?.from,
+        userType: values.user_type,
+        searchObject: search
+      });
+      
+      // PRIORIZAR: Si viene desde perfil, SIEMPRE regresar al perfil
+      if (comeFromProfile) {
+        console.log('✅ PROFILE UPDATE: Redirecting back to /Perfil');
+        navigate({ to: '/Perfil' });
+      } else if (isEditing) {
+        console.log('✅ EDITING MODE: Redirecting to /Perfil');
         navigate({ to: '/Perfil' });
       } else {
-        navigate({ to: values.user_type === 'DRIVER' ? '/RegistrarVehiculo' : '/home' });
+        const destination = values.user_type === 'DRIVER' ? '/RegistrarVehiculo' : '/home';
+        console.log('✅ NEW USER: Redirecting to:', destination);
+        navigate({ to: destination });
       }
     } catch (err: any) {
       console.error('Save error:', err);
@@ -296,9 +323,17 @@ const CompleteProfileView: React.FC = () => {
       <Paper className={styles.formWrapper}>
         <UnstyledButton
           onClick={() => {
-            if (isEditing) {
+            const comeFromProfile = search?.from === 'profile';
+            console.log('🔙 Back button clicked:', { comeFromProfile, isEditing, searchFrom: search?.from });
+            
+            if (comeFromProfile) {
+              console.log('🔙 Returning to /Perfil from profile update');
+              navigate({ to: '/Perfil' });
+            } else if (isEditing) {
+              console.log('🔙 Returning to /Perfil from editing');
               navigate({ to: '/Perfil' });
             } else {
+              console.log('🔙 Using browser back');
               window.history.back();
             }
           }}
@@ -398,4 +433,9 @@ const CompleteProfileView: React.FC = () => {
 
 export const Route = createFileRoute('/CompletarRegistro/')({
   component: CompleteProfileView,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      from: (search.from as string) || '',
+    };
+  },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   Text,
@@ -10,6 +10,7 @@ import {
   Checkbox,
   LoadingOverlay,
   Radio,
+  Select,
 } from '@mantine/core';
 import {
   UserX,
@@ -18,9 +19,14 @@ import {
   AlertTriangle,
   RotateCcw,
   CheckCircle,
-  X,
+  Shield,
 } from 'lucide-react';
-import { deactivateAccount } from '@/services/auth';
+import { 
+  checkDeactivationEligibility, 
+  deactivateAccount, 
+  deleteAccount,
+  EligibilityResponse 
+} from '@/services/accounts';
 import { useBackendAuth } from '@/context/BackendAuthContext';
 import { notifications } from '@mantine/notifications';
 import styles from './DeactivateAccountModal.module.css';
@@ -31,26 +37,38 @@ interface DeactivateAccountModalProps {
 }
 
 type DeactivationType = 'temporary' | 'permanent';
-type Step = 'choose' | 'confirmation' | 'final';
+type Step = 'eligibility' | 'choose' | 'confirmation' | 'final';
 
 export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
   opened,
   onClose,
 }) => {
-  const [step, setStep] = useState<Step>('choose');
+  const [step, setStep] = useState<Step>('eligibility');
   const [deactivationType, setDeactivationType] = useState<DeactivationType>('temporary');
   const [confirmationText, setConfirmationText] = useState('');
+  const [reason, setReason] = useState('');
   const [confirmationsChecked, setConfirmationsChecked] = useState({
     dataLoss: false,
     noRecovery: false,
     legalRetention: false,
   });
   const [loading, setLoading] = useState(false);
+  const [eligibilityData, setEligibilityData] = useState<EligibilityResponse | null>(null);
   const { signOut } = useBackendAuth();
+
+  const reasonOptions = [
+    { value: 'taking_a_break', label: 'Tomando un descanso de la app' },
+    { value: 'privacy_concerns', label: 'Preocupaciones de privacidad' },
+    { value: 'temporary_leave', label: 'Ausencia temporal' },
+    { value: 'no_longer_needed', label: 'Ya no necesito el servicio' },
+    { value: 'bad_experience', label: 'Mala experiencia con la app' },
+    { value: 'switching_apps', label: 'Cambiando a otra app' },
+    { value: 'other', label: 'Otra razón' }
+  ];
 
   const requiredConfirmationText = deactivationType === 'temporary' 
     ? 'DESACTIVAR MI CUENTA'
-    : 'ELIMINAR MI CUENTA';
+    : 'DELETE_MY_ACCOUNT';
 
   const isConfirmationComplete = 
     confirmationText === requiredConfirmationText &&
@@ -59,16 +77,62 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
       confirmationsChecked.noRecovery && confirmationsChecked.legalRetention
     ));
 
+  // Verificar elegibilidad al abrir el modal
+  useEffect(() => {
+    if (opened && step === 'eligibility') {
+      checkEligibility();
+    }
+  }, [opened, step]);
+
+  const checkEligibility = async () => {
+    setLoading(true);
+    try {
+      console.log('🔍 Checking account deactivation eligibility...');
+      
+      const result = await checkDeactivationEligibility();
+      
+      if (result.success && result.data) {
+        setEligibilityData(result.data);
+        
+        if (result.data.can_deactivate_temporary || result.data.can_delete_permanent) {
+          console.log('✅ Account can be deactivated');
+          setStep('choose');
+        } else {
+          console.log('❌ Account cannot be deactivated:', result.data.warnings);
+          // Permanece en step 'eligibility' para mostrar razones
+        }
+      } else {
+        console.error('❌ Failed to check eligibility:', result.error);
+        notifications.show({
+          title: 'Error',
+          message: result.error || 'Error al verificar elegibilidad para desactivar cuenta',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('❌ Unexpected error checking eligibility:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Error inesperado al verificar elegibilidad',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetModal = () => {
-    setStep('choose');
+    setStep('eligibility');
     setDeactivationType('temporary');
     setConfirmationText('');
+    setReason('');
     setConfirmationsChecked({
       dataLoss: false,
       noRecovery: false,
       legalRetention: false,
     });
     setLoading(false);
+    setEligibilityData(null);
   };
 
   const handleModalClose = () => {
@@ -82,39 +146,51 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
     setLoading(true);
 
     try {
-      const result = await deactivateAccount(
-        `User requested ${deactivationType} deactivation`,
-        deactivationType === 'permanent'
-      );
+      console.log(`${deactivationType === 'temporary' ? '⏸️' : '🗑️'} Processing account ${deactivationType}...`);
+      
+      const result = deactivationType === 'temporary' 
+        ? await deactivateAccount({ reason })
+        : await deleteAccount({
+            confirmation: 'DELETE_MY_ACCOUNT',
+            reason
+          });
 
       if (!result.success) {
+        console.error('❌ Failed to process account:', result.error);
         notifications.show({
           title: 'Error',
-          message: result.error || 'Error al desactivar la cuenta',
+          message: result.error || `Error al ${deactivationType === 'temporary' ? 'desactivar' : 'eliminar'} la cuenta`,
           color: 'red',
         });
         return;
       }
 
-      // Cerrar sesión del usuario
-      await signOut();
+      console.log('✅ Account processed successfully');
 
       setStep('final');
 
+      // Mostrar mensaje del servidor o mensaje por defecto
+      const successMessage = result.message || (deactivationType === 'temporary' 
+        ? 'Tu cuenta ha sido desactivada temporalmente. Puedes recuperarla cuando quieras.'
+        : 'Tu cuenta ha sido marcada para eliminación. Tienes 7 días para recuperarla si cambias de opinión.');
+
       notifications.show({
         title: deactivationType === 'temporary' ? 'Cuenta desactivada' : 'Cuenta eliminada',
-        message: result.message || (deactivationType === 'temporary' 
-          ? 'Tu cuenta ha sido desactivada temporalmente. Puedes recuperarla cuando quieras.'
-          : 'Tu cuenta ha sido eliminada. Tienes 30 días para recuperarla si cambias de opinión.'),
+        message: successMessage,
         color: 'blue',
         autoClose: 10000,
       });
 
+      // Cerrar sesión del usuario después de mostrar el mensaje
+      setTimeout(async () => {
+        await signOut();
+      }, 1000);
+
     } catch (error) {
-      console.error('Error deactivating account:', error);
+      console.error('❌ Unexpected error processing account:', error);
       notifications.show({
         title: 'Error',
-        message: 'Error inesperado al desactivar la cuenta',
+        message: 'Error inesperado al procesar la cuenta',
         color: 'red',
       });
     } finally {
@@ -122,246 +198,409 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
     }
   };
 
+  const renderEligibilityStep = () => (
+    <Stack gap="lg">
+      <Group gap="sm">
+        <Shield size={24} color="var(--mantine-color-blue-6)" />
+        <Text size="lg" fw={600}>
+          Verificando elegibilidad
+        </Text>
+      </Group>
+
+      {loading ? (
+        <Stack gap="md" align="center">
+          <div className={styles.spinner} />
+          <Text c="dimmed">
+            Verificando si tu cuenta puede ser desactivada...
+          </Text>
+        </Stack>
+      ) : eligibilityData ? (
+        <>
+          {(eligibilityData.can_deactivate_temporary || eligibilityData.can_delete_permanent) ? (
+            <Alert icon={<CheckCircle size={16} />} color="green">
+              <Text fw={500}>Tu cuenta puede ser desactivada</Text>
+              <Text size="sm" c="dimmed" mt={4}>
+                Puedes proceder con la desactivación temporal o eliminación de tu cuenta.
+              </Text>
+            </Alert>
+          ) : (
+            <>
+              <Alert icon={<AlertTriangle size={16} />} color="red">
+                <Text fw={500}>Tu cuenta no puede ser desactivada en este momento</Text>
+              </Alert>
+              
+              <Stack gap="sm">
+                <Text fw={500} size="sm">Razones:</Text>
+                {eligibilityData.warnings.map((warning, index) => (
+                  <Text key={index} size="sm" c="red" style={{ paddingLeft: '16px' }}>
+                    • {warning}
+                  </Text>
+                ))}
+              </Stack>
+
+              <Alert color="blue" variant="light">
+                <Text size="sm">
+                  Para poder desactivar tu cuenta, necesitas resolver estos problemas primero.
+                  Puedes contactar a soporte si necesitas ayuda.
+                </Text>
+              </Alert>
+            </>
+          )}
+
+          {eligibilityData.recommendations && eligibilityData.recommendations.length > 0 && (
+            <Alert color="blue" variant="light">
+              <Text fw={500} size="sm">Recomendaciones:</Text>
+              {eligibilityData.recommendations.map((rec, index) => (
+                <Text key={index} size="sm" style={{ paddingLeft: '16px' }}>
+                  • {rec}
+                </Text>
+              ))}
+            </Alert>
+          )}
+        </>
+      ) : (
+        <Alert icon={<AlertTriangle size={16} />} color="red">
+          Error al verificar elegibilidad. Por favor, inténtalo de nuevo.
+        </Alert>
+      )}
+    </Stack>
+  );
+
   const renderChooseStep = () => (
     <Stack gap="lg">
-      <div className={styles.header}>
-        <UserX size={36} className={styles.icon} />
-        <Text size="lg" fw={700} ta="center" className={styles.title}>
-          Desactivar cuenta
+      <Group gap="sm">
+        <UserX size={24} color="var(--mantine-color-red-6)" />
+        <Text size="lg" fw={600}>
+          Gestión de cuenta
         </Text>
-        <Text size="sm" c="dimmed" ta="center" className={styles.subtitle}>
-          Elige el tipo de desactivación que deseas realizar
-        </Text>
-      </div>
-
-      <Stack gap="md">
-        <Radio.Group
-          value={deactivationType}
-          onChange={(value) => setDeactivationType(value as DeactivationType)}
-        >
-          <Stack gap="sm">
-            <Radio
-              value="temporary"
-              label={
-                <Group gap="sm">
-                  <Clock size={18} />
-                  <div>
-                    <Text fw={500}>Desactivación temporal</Text>
-                    <Text size="xs" c="dimmed">
-                      Podrás recuperar tu cuenta cuando quieras
-                    </Text>
-                  </div>
-                </Group>
-              }
-            />
-            <Radio
-              value="permanent"
-              label={
-                <Group gap="sm">
-                  <Trash2 size={18} />
-                  <div>
-                    <Text fw={500}>Eliminación permanente</Text>
-                    <Text size="xs" c="dimmed">
-                      Tu cuenta será eliminada después de 30 días
-                    </Text>
-                  </div>
-                </Group>
-              }
-            />
-          </Stack>
-        </Radio.Group>
-      </Stack>
-
-      <Alert 
-        icon={<AlertTriangle size={16} />} 
-        color="yellow" 
-        variant="light"
-        title="Importante"
-      >
-        {deactivationType === 'temporary' 
-          ? 'Tu cuenta será desactivada temporalmente. Podrás reactivarla en cualquier momento usando la opción "Recuperar cuenta" en el login.'
-          : 'Tu cuenta será marcada para eliminación permanente. Tendrás 30 días para recuperarla antes de que sea eliminada definitivamente.'
-        }
-      </Alert>
-
-      <Group justify="space-between" mt="md">
-        <Button 
-          variant="subtle" 
-          onClick={handleModalClose}
-          leftSection={<X size={16} />}
-        >
-          Cancelar
-        </Button>
-        <Button 
-          color="red"
-          onClick={() => setStep('confirmation')}
-          leftSection={deactivationType === 'temporary' ? <Clock size={16} /> : <Trash2 size={16} />}
-        >
-          Continuar
-        </Button>
       </Group>
+
+      <Text c="dimmed">
+        Elige qué acción quieres realizar con tu cuenta:
+      </Text>
+
+      <Radio.Group
+        value={deactivationType}
+        onChange={(value) => setDeactivationType(value as DeactivationType)}
+      >
+        <Stack gap="md">
+          <Radio
+            value="temporary"
+            disabled={!eligibilityData?.can_deactivate_temporary}
+            label={
+              <Stack gap={4}>
+                <Group gap="xs">
+                  <Clock size={16} color="var(--mantine-color-blue-6)" />
+                  <Text fw={500}>Desactivación temporal</Text>
+                </Group>
+                <Text size="sm" c="dimmed" pl={22}>
+                  Tu cuenta se pausará pero podrás recuperarla cuando quieras.
+                  Tus datos se conservarán de forma segura.
+                </Text>
+                {!eligibilityData?.can_deactivate_temporary && (
+                  <Text size="xs" c="red" pl={22}>
+                    No disponible: {eligibilityData?.current_status === 'inactive' ? 'cuenta ya desactivada' : 'verificar estado'}
+                  </Text>
+                )}
+              </Stack>
+            }
+          />
+          
+          <Radio
+            value="permanent"
+            disabled={!eligibilityData?.can_delete_permanent}
+            label={
+              <Stack gap={4}>
+                <Group gap="xs">
+                  <Trash2 size={16} color="var(--mantine-color-red-6)" />
+                  <Text fw={500}>Eliminación permanente</Text>
+                </Group>
+                <Text size="sm" c="dimmed" pl={22}>
+                  Tu cuenta será eliminada permanentemente. Tendrás 7 días
+                  para recuperarla antes de que sea eliminada definitivamente.
+                </Text>
+                {!eligibilityData?.can_delete_permanent && (
+                  <Text size="xs" c="red" pl={22}>
+                    No disponible: verificar estado de cuenta
+                  </Text>
+                )}
+              </Stack>
+            }
+          />
+        </Stack>
+      </Radio.Group>
+
+      <Select
+        label="Razón (opcional)"
+        placeholder="Selecciona una razón"
+        data={reasonOptions}
+        value={reason}
+        onChange={(value) => setReason(value || '')}
+        clearable
+      />
+
+      <Alert icon={<AlertTriangle size={16} />} color="yellow">
+        <Text fw={500}>
+          {deactivationType === 'temporary' 
+            ? 'Desactivación temporal:'
+            : 'Eliminación permanente:'
+          }
+        </Text>
+        <Text size="sm" mt={4}>
+          {deactivationType === 'temporary' 
+            ? 'Tu cuenta será pausada pero conservada. Podrás reactivarla en cualquier momento iniciando sesión.'
+            : 'Tu cuenta será marcada para eliminación. Tendrás 7 días para recuperarla antes de que sea eliminada definitivamente.'
+          }
+        </Text>
+        
+        {eligibilityData && (eligibilityData.active_trips > 0 || eligibilityData.active_bookings > 0) && (
+          <Text size="sm" mt={8} fw={500} c="orange">
+            Esto afectará:
+            {eligibilityData.active_trips > 0 && ` ${eligibilityData.active_trips} viaje(s) activo(s)`}
+            {eligibilityData.active_trips > 0 && eligibilityData.active_bookings > 0 && ' y'}
+            {eligibilityData.active_bookings > 0 && ` ${eligibilityData.active_bookings} reserva(s) activa(s)`}
+          </Text>
+        )}
+      </Alert>
     </Stack>
   );
 
   const renderConfirmationStep = () => (
     <Stack gap="lg">
-      <div className={styles.header}>
-        <AlertTriangle size={36} className={styles.warningIcon} />
-        <Text size="lg" fw={700} ta="center" className={styles.title}>
-          Confirmar {deactivationType === 'temporary' ? 'desactivación' : 'eliminación'}
+      <Group gap="sm">
+        <AlertTriangle size={24} color="var(--mantine-color-red-6)" />
+        <Text size="lg" fw={600} c="red">
+          Confirmación requerida
         </Text>
-        <Text size="sm" c="dimmed" ta="center" className={styles.subtitle}>
-          Por favor, lee cuidadosamente y confirma tu decisión
-        </Text>
-      </div>
+      </Group>
 
-      <Alert 
-        icon={<AlertTriangle size={16} />} 
-        color="red" 
-        variant="light"
-        title="¡Atención!"
-      >
-        <Text size="sm">
+      <Alert icon={<AlertTriangle size={16} />} color="red">
+        <Text fw={500}>
           {deactivationType === 'temporary' 
-            ? 'Vas a desactivar tu cuenta temporalmente. Durante este tiempo no podrás acceder a tus datos ni usar la aplicación.'
-            : 'Vas a eliminar permanentemente tu cuenta. Después de 30 días, todos tus datos serán eliminados de forma irreversible.'
+            ? '¿Estás seguro de que quieres desactivar tu cuenta temporalmente?'
+            : '¿Estás seguro de que quieres eliminar tu cuenta permanentemente?'
           }
         </Text>
       </Alert>
 
-      <Stack gap="sm">
-        <Text size="sm" fw={500}>Confirmaciones requeridas:</Text>
-        
+      <Stack gap="md">
+        <Text fw={500}>
+          Por favor confirma que entiendes las siguientes consecuencias:
+        </Text>
+
         <Checkbox
           checked={confirmationsChecked.dataLoss}
-          onChange={(event) => 
-            setConfirmationsChecked(prev => ({ 
-              ...prev, 
-              dataLoss: event.currentTarget.checked 
+          onChange={(event) =>
+            setConfirmationsChecked((prev) => ({
+              ...prev,
+              dataLoss: event.currentTarget.checked,
             }))
           }
-          label="Entiendo que perderé acceso a mi cuenta y datos temporalmente"
+          label={
+            deactivationType === 'temporary'
+              ? 'Entiendo que mi cuenta será pausada y no podré acceder hasta que la reactive.'
+              : 'Entiendo que todos mis datos serán eliminados permanentemente después de 7 días.'
+          }
         />
 
         {deactivationType === 'permanent' && (
           <>
             <Checkbox
               checked={confirmationsChecked.noRecovery}
-              onChange={(event) => 
-                setConfirmationsChecked(prev => ({ 
-                  ...prev, 
-                  noRecovery: event.currentTarget.checked 
+              onChange={(event) =>
+                setConfirmationsChecked((prev) => ({
+                  ...prev,
+                  noRecovery: event.currentTarget.checked,
                 }))
               }
-              label="Entiendo que después de 30 días no podré recuperar mi cuenta"
+              label="Entiendo que después de 7 días no habrá forma de recuperar mi cuenta o datos."
             />
-            
+
             <Checkbox
               checked={confirmationsChecked.legalRetention}
-              onChange={(event) => 
-                setConfirmationsChecked(prev => ({ 
-                  ...prev, 
-                  legalRetention: event.currentTarget.checked 
+              onChange={(event) =>
+                setConfirmationsChecked((prev) => ({
+                  ...prev,
+                  legalRetention: event.currentTarget.checked,
                 }))
               }
-              label="Acepto que algunos datos pueden retenerse por motivos legales"
+              label="Entiendo que algunos datos pueden ser retenidos por razones legales o de seguridad."
             />
           </>
         )}
       </Stack>
 
       <Stack gap="xs">
-        <Text size="sm" fw={500}>
-          Para confirmar, escribe exactamente: 
-          <Text span c="red" fw={700}> {requiredConfirmationText}</Text>
+        <Text fw={500}>
+          Para confirmar, escribe exactamente: <code>{requiredConfirmationText}</code>
         </Text>
         <TextInput
-          placeholder={`Escribe: ${requiredConfirmationText}`}
           value={confirmationText}
           onChange={(event) => setConfirmationText(event.currentTarget.value)}
-          error={confirmationText && confirmationText !== requiredConfirmationText ? 
-            'El texto no coincide exactamente' : null}
+          placeholder={requiredConfirmationText}
+          error={
+            confirmationText && confirmationText !== requiredConfirmationText
+              ? 'El texto no coincide exactamente'
+              : null
+          }
         />
       </Stack>
-
-      <Group justify="space-between" mt="md">
-        <Button 
-          variant="subtle" 
-          onClick={() => setStep('choose')}
-          leftSection={<RotateCcw size={16} />}
-          disabled={loading}
-        >
-          Volver
-        </Button>
-        <Button 
-          color="red"
-          onClick={handleDeactivateAccount}
-          disabled={!isConfirmationComplete}
-          loading={loading}
-          leftSection={deactivationType === 'temporary' ? <UserX size={16} /> : <Trash2 size={16} />}
-        >
-          {loading ? 'Procesando...' : (deactivationType === 'temporary' ? 'Desactivar cuenta' : 'Eliminar cuenta')}
-        </Button>
-      </Group>
     </Stack>
   );
 
   const renderFinalStep = () => (
     <Stack gap="lg" align="center">
-      <CheckCircle size={64} className={styles.successIcon} />
-      <div className={styles.successContent}>
-        <Text size="lg" fw={700} ta="center" className={styles.successTitle}>
-          {deactivationType === 'temporary' ? '¡Cuenta desactivada!' : '¡Cuenta eliminada!'}
-        </Text>
-        <Text size="sm" c="dimmed" ta="center" className={styles.successText}>
-          {deactivationType === 'temporary' 
-            ? 'Tu cuenta ha sido desactivada temporalmente. Puedes recuperarla en cualquier momento desde el login.'
-            : 'Tu cuenta ha sido marcada para eliminación. Tienes 30 días para recuperarla si cambias de opinión.'
-          }
-        </Text>
+      <div className={styles.successIcon}>
+        <CheckCircle size={48} color="var(--mantine-color-green-6)" />
       </div>
-      
-      <Alert color="blue" variant="light" icon={<RotateCcw size={16} />}>
-        <Text size="sm">
-          Para recuperar tu cuenta, usa la opción "Recuperar cuenta desactivada" 
-          en la pantalla de login con tus credenciales originales.
+
+      <Text ta="center" fw={600} size="lg">
+        {deactivationType === 'temporary' 
+          ? 'Cuenta desactivada temporalmente'
+          : 'Cuenta marcada para eliminación'
+        }
+      </Text>
+
+      <Text ta="center" c="dimmed">
+        {deactivationType === 'temporary' 
+          ? 'Tu cuenta ha sido desactivada. Puedes reactivarla en cualquier momento iniciando sesión de nuevo.'
+          : 'Tu cuenta ha sido marcada para eliminación. Tienes 7 días para recuperarla si cambias de opinión.'
+        }
+      </Text>
+
+      <Alert color="blue" variant="light">
+        <Text size="sm" ta="center">
+          Serás desconectado automáticamente en unos segundos.
         </Text>
       </Alert>
-
-      <Button
-        size="md"
-        fullWidth
-        onClick={handleModalClose}
-        leftSection={<CheckCircle size={16} />}
-      >
-        Entendido
-      </Button>
     </Stack>
   );
+
+  const renderStepContent = () => {
+    switch (step) {
+      case 'eligibility':
+        return renderEligibilityStep();
+      case 'choose':
+        return renderChooseStep();
+      case 'confirmation':
+        return renderConfirmationStep();
+      case 'final':
+        return renderFinalStep();
+      default:
+        return renderEligibilityStep();
+    }
+  };
+
+  const getModalTitle = () => {
+    switch (step) {
+      case 'eligibility':
+        return 'Verificando elegibilidad';
+      case 'choose':
+        return 'Gestión de cuenta';
+      case 'confirmation':
+        return 'Confirmar acción';
+      case 'final':
+        return 'Proceso completado';
+      default:
+        return 'Gestión de cuenta';
+    }
+  };
+
+  const renderFooterButtons = () => {
+    switch (step) {
+      case 'eligibility':
+        return (
+          <Group justify="apart">
+            <Button variant="light" onClick={handleModalClose}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={checkEligibility} 
+              disabled={loading}
+              leftSection={<RotateCcw size={16} />}
+            >
+              Verificar de nuevo
+            </Button>
+          </Group>
+        );
+
+      case 'choose':
+        if (!eligibilityData?.can_deactivate_temporary && !eligibilityData?.can_delete_permanent) {
+          return (
+            <Group justify="center">
+              <Button variant="light" onClick={handleModalClose}>
+                Entendido
+              </Button>
+            </Group>
+          );
+        }
+        
+        return (
+          <Group justify="apart">
+            <Button variant="light" onClick={handleModalClose}>
+              Cancelar
+            </Button>
+            <Button onClick={() => setStep('confirmation')}>
+              Continuar
+            </Button>
+          </Group>
+        );
+
+      case 'confirmation':
+        return (
+          <Group justify="apart">
+            <Button variant="light" onClick={() => setStep('choose')}>
+              Atrás
+            </Button>
+            <Button
+              color="red"
+              onClick={handleDeactivateAccount}
+              disabled={!isConfirmationComplete || loading}
+              leftSection={deactivationType === 'temporary' ? <UserX size={16} /> : <Trash2 size={16} />}
+            >
+              {loading
+                ? 'Procesando...'
+                : deactivationType === 'temporary'
+                ? 'Desactivar cuenta'
+                : 'Eliminar cuenta'
+              }
+            </Button>
+          </Group>
+        );
+
+      case 'final':
+        return (
+          <Group justify="center">
+            <Button variant="light" onClick={handleModalClose}>
+              Cerrar
+            </Button>
+          </Group>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <Modal
       opened={opened}
-      onClose={handleModalClose}
-      title={
-        step === 'choose' ? 'Desactivar Cuenta' :
-        step === 'confirmation' ? 'Confirmar Acción' : 
-        'Proceso Completado'
-      }
+      onClose={step === 'final' ? handleModalClose : handleModalClose}
+      title={getModalTitle()}
       size="md"
-      centered
-      closeOnClickOutside={!loading}
-      closeOnEscape={!loading}
-      withCloseButton={!loading}
-      className={styles.modal}
+      closeOnClickOutside={step !== 'final'}
+      closeOnEscape={step !== 'final'}
+      withCloseButton={step !== 'final'}
     >
       <LoadingOverlay visible={loading} />
       
-      <div className={styles.content}>
-        {step === 'choose' && renderChooseStep()}
-        {step === 'confirmation' && renderConfirmationStep()}
-        {step === 'final' && renderFinalStep()}
+      <div className={styles.modalContent}>
+        {renderStepContent()}
       </div>
+
+      <Group mt="xl">
+        {renderFooterButtons()}
+      </Group>
     </Modal>
   );
 };

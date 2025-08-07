@@ -1,27 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Text, Group, Alert, ScrollArea, ActionIcon, LoadingOverlay } from '@mantine/core';
 import { IconUserX, IconTrash, IconAlertCircle } from '@tabler/icons-react';
-import { getBlockedUsers, unblockUser } from '@/lib/contentModeration';
-import { supabase } from '@/lib/supabaseClient';
+import { getBlockedUsers, unblockUser, BlockedUser } from '@/services/moderation';
 import styles from './BlockedUsersModal.module.css';
 
 interface BlockedUsersModalProps {
   opened: boolean;
   onClose: () => void;
-  currentUserId: string;
-}
-
-interface BlockedUser {
-  id: string;
-  name: string;
-  photo: string;
-  blockedAt: string;
 }
 
 export const BlockedUsersModal: React.FC<BlockedUsersModalProps> = ({
   opened,
-  onClose,
-  currentUserId
+  onClose
 }) => {
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,57 +22,26 @@ export const BlockedUsersModal: React.FC<BlockedUsersModalProps> = ({
     if (opened) {
       fetchBlockedUsers();
     }
-  }, [opened, currentUserId]);
+  }, [opened]);
 
   const fetchBlockedUsers = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Obtener IDs de usuarios bloqueados
-      const blockedIds = await getBlockedUsers(currentUserId);
+      console.log('📊 Fetching blocked users...');
+      const result = await getBlockedUsers();
       
-      if (blockedIds.length === 0) {
-        setBlockedUsers([]);
-        return;
+      if (result.success && result.data) {
+        console.log('✅ Blocked users fetched:', result.data);
+        setBlockedUsers(result.data);
+      } else {
+        console.error('❌ Failed to fetch blocked users:', result.error);
+        setError(result.error || 'Error al obtener usuarios bloqueados');
       }
-
-      // Obtener información de los usuarios bloqueados
-      const { data: profiles, error: profilesError } = await supabase
-        .from('user_profiles')
-        .select('user_id, first_name, last_name, photo_user')
-        .in('user_id', blockedIds);
-
-      if (profilesError) {
-        throw new Error(profilesError.message);
-      }
-
-      // Obtener fechas de bloqueo
-      const { data: blocks, error: blocksError } = await supabase
-        .from('user_blocks')
-        .select('blocked_id, created_at')
-        .eq('blocker_id', currentUserId)
-        .in('blocked_id', blockedIds);
-
-      if (blocksError) {
-        throw new Error(blocksError.message);
-      }
-
-      // Combinar información
-      const blockedUsersData: BlockedUser[] = profiles?.map(profile => {
-        const blockInfo = blocks?.find(block => block.blocked_id === profile.user_id);
-        return {
-          id: profile.user_id,
-          name: `${profile.first_name} ${profile.last_name}`.trim() || 'Sin nombre',
-          photo: profile.photo_user || 'https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/SinFotoPerfil.png',
-          blockedAt: blockInfo?.created_at || ''
-        };
-      }) || [];
-
-      setBlockedUsers(blockedUsersData);
     } catch (err) {
-      console.error('Error fetching blocked users:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar usuarios bloqueados');
+      console.error('❌ Unexpected error fetching blocked users:', err);
+      setError('Error inesperado al obtener usuarios bloqueados');
     } finally {
       setLoading(false);
     }
@@ -93,14 +52,19 @@ export const BlockedUsersModal: React.FC<BlockedUsersModalProps> = ({
     setError(null);
 
     try {
-      const result = await unblockUser(currentUserId, userId);
-      
+      console.log('✅ Unblocking user:', userId);
+      const result = await unblockUser(userId);
+
       if (result.success) {
+        console.log('✅ User unblocked successfully');
+        // Remover usuario de la lista local
         setBlockedUsers(prev => prev.filter(user => user.id !== userId));
       } else {
+        console.error('❌ Failed to unblock user:', result.error);
         setError(result.error || 'Error al desbloquear usuario');
       }
     } catch (err) {
+      console.error('❌ Unexpected error unblocking user:', err);
       setError('Error inesperado al desbloquear usuario');
     } finally {
       setUnblockingUserId(null);

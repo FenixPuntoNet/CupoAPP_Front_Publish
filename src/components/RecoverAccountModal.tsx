@@ -4,21 +4,19 @@ import {
   Text,
   Button,
   Stack,
-  TextInput,
   Alert,
   Card,
   Group,
   LoadingOverlay,
-  PasswordInput,
 } from '@mantine/core';
 import {
   RotateCcw,
   CheckCircle,
   UserCheck,
+  Shield,
 } from 'lucide-react';
-import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
-import { recoverAccount } from '@/services/auth';
+import { recoverAccount } from '@/services/accounts';
 import styles from './RecoverAccountModal.module.css';
 
 interface RecoverAccountModalProps {
@@ -26,36 +24,19 @@ interface RecoverAccountModalProps {
   onClose: () => void;
 }
 
-interface RecoverFormValues {
-  email: string;
-  password: string;
-}
-
-type Step = 'input' | 'success';
+type Step = 'confirm' | 'success';
 
 export const RecoverAccountModal: React.FC<RecoverAccountModalProps> = ({
   opened,
   onClose,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<Step>('input');
+  const [step, setStep] = useState<Step>('confirm');
   const [error, setError] = useState('');
 
-  const form = useForm<RecoverFormValues>({
-    initialValues: {
-      email: '',
-      password: '',
-    },
-    validate: {
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Correo electrónico inválido'),
-      password: (value) => (value.length >= 6 ? null : 'La contraseña debe tener al menos 6 caracteres'),
-    },
-  });
-
   const resetModal = () => {
-    setStep('input');
+    setStep('confirm');
     setError('');
-    form.reset();
     setLoading(false);
   };
 
@@ -64,160 +45,180 @@ export const RecoverAccountModal: React.FC<RecoverAccountModalProps> = ({
     onClose();
   };
 
-  const recoverAccountHandler = async (values: RecoverFormValues) => {
+  const handleRecover = async () => {
+    setLoading(true);
+    setError('');
+
     try {
-      setLoading(true);
-      setError('');
-
-      console.log('🔄 Iniciando recuperación de cuenta para:', values.email);
-
-      const result = await recoverAccount(values.email, values.password);
+      console.log('🔄 Attempting to recover account...');
+      
+      const result = await recoverAccount();
 
       if (!result.success) {
+        console.error('❌ Failed to recover account:', result.error);
         setError(result.error || 'Error al recuperar la cuenta');
+        notifications.show({
+          title: 'Error',
+          message: result.error || 'Error al recuperar la cuenta',
+          color: 'red',
+        });
         return;
       }
 
-      // Éxito en la recuperación
+      console.log('✅ Account recovered successfully');
+      
       setStep('success');
       
       notifications.show({
-        title: '¡Cuenta recuperada exitosamente!',
-        message: result.message || 'Tu cuenta ha sido reactivada. Ya puedes iniciar sesión.',
+        title: 'Cuenta recuperada',
+        message: result.message || 'Tu cuenta ha sido recuperada exitosamente',
         color: 'green',
-        icon: <CheckCircle size={16} />,
         autoClose: 5000,
       });
 
-      console.log('✅ Cuenta recuperada exitosamente para:', values.email);
-
     } catch (error) {
-      console.error('❌ Error en recuperación de cuenta:', error);
-      setError('Error inesperado al recuperar la cuenta. Intenta nuevamente.');
+      console.error('❌ Unexpected error recovering account:', error);
+      setError('Error inesperado al recuperar la cuenta');
+      notifications.show({
+        title: 'Error',
+        message: 'Error inesperado al recuperar la cuenta',
+        color: 'red',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const renderInputStep = () => (
-    <Stack gap="md">
-      <div className={styles.header}>
-        <RotateCcw size={36} className={styles.icon} />
-        <Text size="lg" fw={700} ta="center" className={styles.title}>
+  const renderConfirmStep = () => (
+    <Stack gap="lg">
+      <Group gap="sm">
+        <Shield size={24} color="var(--mantine-color-blue-6)" />
+        <Text size="lg" fw={600}>
           Recuperar cuenta
         </Text>
-        <Text size="sm" c="dimmed" ta="center" className={styles.subtitle}>
-          Ingresa tus credenciales para reactivar tu cuenta desactivada
+      </Group>
+
+      <Alert icon={<UserCheck size={16} />} color="blue">
+        <Text fw={500}>Se detectó una cuenta desactivada</Text>
+        <Text size="sm" c="dimmed" mt={4}>
+          Estás autenticado y tu cuenta está actualmente desactivada. 
+          Puedes recuperarla automáticamente.
         </Text>
-      </div>
+      </Alert>
+
+      <Card withBorder p="md">
+        <Stack gap="sm">
+          <Text fw={500}>¿Qué sucederá al recuperar tu cuenta?</Text>
+          <Stack gap="xs">
+            <Text size="sm" c="dimmed">• Tu cuenta será reactivada inmediatamente</Text>
+            <Text size="sm" c="dimmed">• Recuperarás acceso completo a la aplicación</Text>
+            <Text size="sm" c="dimmed">• Tus datos y configuraciones se mantendrán</Text>
+            <Text size="sm" c="dimmed">• Podrás usar todas las funciones normalmente</Text>
+          </Stack>
+        </Stack>
+      </Card>
 
       {error && (
-        <Alert color="red" title="Error" variant="light">
-          {error}
+        <Alert color="red">
+          <Text size="sm">{error}</Text>
         </Alert>
       )}
 
-      <form onSubmit={form.onSubmit(recoverAccountHandler)}>
-        <Stack gap="md">
-          <TextInput
-            label="Correo electrónico"
-            placeholder="ejemplo@correo.com"
-            size="md"
-            required
-            disabled={loading}
-            autoFocus
-            {...form.getInputProps('email')}
-          />
-
-          <PasswordInput
-            label="Contraseña"
-            placeholder="Ingresa tu contraseña"
-            size="md"
-            required
-            disabled={loading}
-            {...form.getInputProps('password')}
-          />
-
-          <Stack gap="xs" mt="md">
-            <Button
-              type="submit"
-              loading={loading}
-              size="md"
-              fullWidth
-              leftSection={<RotateCcw size={16} />}
-            >
-              {loading ? 'Recuperando cuenta...' : 'Recuperar cuenta'}
-            </Button>
-            <Button
-              variant="subtle"
-              size="md"
-              fullWidth
-              onClick={handleModalClose}
-              disabled={loading}
-            >
-              Cancelar
-            </Button>
-          </Stack>
-        </Stack>
-      </form>
-
-      <Card mt="lg" p="md" radius="md" className={styles.infoCard}>
-        <Group gap="sm" align="flex-start">
-          <UserCheck size={16} className={styles.infoIcon} />
-          <div>
-            <Text size="sm" fw={500} className={styles.infoTitle}>
-              ¿Qué es la recuperación de cuenta?
-            </Text>
-            <Text size="xs" c="dimmed" className={styles.infoText}>
-              Si tu cuenta fue desactivada temporalmente o está marcada para eliminación, 
-              puedes reactivarla utilizando tus credenciales originales.
-            </Text>
-          </div>
-        </Group>
-      </Card>
+      <Alert icon={<CheckCircle size={16} />} color="green" variant="light">
+        <Text size="sm">
+          Al hacer clic en "Recuperar cuenta", tu cuenta será reactivada automáticamente
+          usando tu sesión actual.
+        </Text>
+      </Alert>
     </Stack>
   );
 
   const renderSuccessStep = () => (
     <Stack gap="lg" align="center">
-      <CheckCircle size={64} className={styles.successIcon} />
-      <div className={styles.successContent}>
-        <Text size="lg" fw={700} ta="center" className={styles.successTitle}>
-          ¡Cuenta recuperada exitosamente!
-        </Text>
-        <Text size="sm" c="dimmed" ta="center" className={styles.successText}>
-          Tu cuenta ha sido reactivada. Ya puedes iniciar sesión normalmente.
-        </Text>
+      <div className={styles.successIcon}>
+        <CheckCircle size={48} color="var(--mantine-color-green-6)" />
       </div>
-      <Button
-        size="md"
-        fullWidth
-        onClick={handleModalClose}
-        leftSection={<CheckCircle size={16} />}
-      >
-        Continuar
-      </Button>
+
+      <Text ta="center" fw={600} size="lg">
+        ¡Cuenta recuperada exitosamente!
+      </Text>
+
+      <Text ta="center" c="dimmed">
+        Tu cuenta ha sido reactivada. Ya puedes usar todas las funciones 
+        de la aplicación normalmente.
+      </Text>
+
+      <Alert color="green" variant="light">
+        <Text size="sm" ta="center">
+          Bienvenido de vuelta. Tu cuenta está completamente funcional.
+        </Text>
+      </Alert>
     </Stack>
   );
+
+  const renderFooterButtons = () => {
+    switch (step) {
+      case 'confirm':
+        return (
+          <Group justify="apart">
+            <Button variant="light" onClick={handleModalClose}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleRecover}
+              disabled={loading}
+              leftSection={<RotateCcw size={16} />}
+            >
+              {loading ? 'Recuperando...' : 'Recuperar cuenta'}
+            </Button>
+          </Group>
+        );
+
+      case 'success':
+        return (
+          <Group justify="center">
+            <Button onClick={handleModalClose}>
+              Continuar
+            </Button>
+          </Group>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const getModalTitle = () => {
+    switch (step) {
+      case 'confirm':
+        return 'Recuperar cuenta desactivada';
+      case 'success':
+        return 'Cuenta recuperada';
+      default:
+        return 'Recuperar cuenta';
+    }
+  };
 
   return (
     <Modal
       opened={opened}
-      onClose={handleModalClose}
-      title={step === 'input' ? 'Recuperar Cuenta' : 'Éxito'}
+      onClose={step === 'success' ? handleModalClose : handleModalClose}
+      title={getModalTitle()}
       size="md"
-      centered
       closeOnClickOutside={!loading}
       closeOnEscape={!loading}
       withCloseButton={!loading}
-      className={styles.modal}
     >
       <LoadingOverlay visible={loading} />
       
-      <div className={styles.content}>
-        {step === 'input' && renderInputStep()}
+      <div className={styles.modalContent}>
+        {step === 'confirm' && renderConfirmStep()}
         {step === 'success' && renderSuccessStep()}
       </div>
+
+      <Group mt="xl">
+        {renderFooterButtons()}
+      </Group>
     </Modal>
   );
 };
