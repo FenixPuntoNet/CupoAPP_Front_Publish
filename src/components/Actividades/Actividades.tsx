@@ -37,7 +37,7 @@ export interface Trip {
   is_active: boolean;
   user_id: string;
   date_time: string;
-  status: 'active' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'active' | 'started' | 'finished' | 'canceled';
   vehicle?: {
     brand: string;
     model: string;
@@ -179,9 +179,19 @@ const Actividades: React.FC = () => {
           is_active: trip.status === 'active',
           user_id: trip.user_id,
           date_time: trip.date_time,
-          status: (['active', 'in_progress', 'completed', 'cancelled'].includes(trip.status) 
-            ? trip.status 
-            : 'active') as 'active' | 'in_progress' | 'completed' | 'cancelled',
+          status: (() => {
+            // Mapear estados del backend a estados del frontend
+            switch (trip.status) {
+              case 'in_progress': return 'started';  // Estado viejo del backend
+              case 'started': return 'started';      // Estado nuevo del backend
+              case 'completed': return 'finished';   // Estado viejo del backend 
+              case 'finished': return 'finished';    // Estado nuevo del backend
+              case 'cancelled': return 'canceled';   // Estado viejo del backend
+              case 'canceled': return 'canceled';    // Estado nuevo del backend
+              case 'active': return 'active';
+              default: return 'active';
+            }
+          })() as 'active' | 'started' | 'finished' | 'canceled',
           vehicle: trip.vehicle ? {
             brand: trip.vehicle.brand,
             model: trip.vehicle.model,

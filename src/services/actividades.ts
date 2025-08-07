@@ -152,7 +152,7 @@ export function validateTripActions(tripStatus: string, seatsReserved: number = 
   
   return {
     canStart: status === 'active',
-    canFinish: status === 'in_progress',
+    canFinish: status === 'started',
     canCancel: status === 'active' && seatsReserved === 0,
     canEdit: status === 'active'
   };
@@ -177,15 +177,15 @@ export function formatTripInfo(trip: any): {
       statusLabel = 'Activo';
       statusColor = 'blue';
       break;
-    case 'in_progress':
+    case 'started':
       statusLabel = 'En progreso';
       statusColor = 'yellow';
       break;
-    case 'completed':
+    case 'finished':
       statusLabel = 'Finalizado';
       statusColor = 'green';
       break;
-    case 'cancelled':
+    case 'canceled':
       statusLabel = 'Cancelado';
       statusColor = 'red';
       break;

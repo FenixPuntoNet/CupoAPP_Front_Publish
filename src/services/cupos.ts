@@ -325,18 +325,32 @@ export const getCuposReservados = async (tripId: number): Promise<{ success: boo
       error: errorMessage || 'Error al obtener cupos reservados'
     };
   }
-};// Validar un cupo específico (QR scan) - CORREGIDO según la guía del backend
-export const validateCupo = async (bookingId: number, qrCode: string): Promise<{ success: boolean; data?: { message: string; status: string; booking_id: number }; error?: string }> => {
+};// Validar un cupo específico (QR scan) - ACTUALIZADO según la nueva implementación del backend
+export const validateCupo = async (bookingId: number, qrCode: string): Promise<{ success: boolean; data?: { message: string; status: string; booking_id: number; commission_charged?: number; commission_percentage?: number }; error?: string }> => {
   try {
     console.log(`🔍 [validateCupo] Validating cupo for booking ${bookingId} with QR: ${qrCode}`);
     
-    // Según la guía del backend, el endpoint solo requiere qrCode en el body
+    // Endpoint actualizado con funcionalidad de wallet integrada
     const response = await apiRequest(`/cupos/validar/${bookingId}`, {
       method: 'POST',
-      body: JSON.stringify({ qrCode }) // Solo qrCode, no bookingId
+      body: JSON.stringify({ qrCode })
     });
     
     console.log(`✅ [validateCupo] Validation successful for booking ${bookingId}:`, response);
+    
+    // El backend ahora retorna información adicional sobre la comisión
+    if (response.data) {
+      return {
+        success: true,
+        data: {
+          message: response.data.message || 'Cupo validado exitosamente',
+          status: response.data.status || 'completed',
+          booking_id: response.data.booking_id || bookingId,
+          commission_charged: response.data.commission_charged,
+          commission_percentage: response.data.commission_percentage
+        }
+      };
+    }
     
     return {
       success: true,
@@ -348,6 +362,19 @@ export const validateCupo = async (bookingId: number, qrCode: string): Promise<{
     let errorMessage = 'Error al validar cupo';
     if (error instanceof Error) {
       errorMessage = error.message;
+    }
+    
+    // Manejo específico de errores según el backend
+    if (errorMessage.includes('QR inválido') || errorMessage.includes('no coincide')) {
+      errorMessage = 'El código QR no coincide con esta reserva';
+    } else if (errorMessage.includes('ya fue validado') || errorMessage.includes('ya validado')) {
+      errorMessage = 'Este cupo ya fue validado anteriormente';
+    } else if (errorMessage.includes('permisos')) {
+      errorMessage = 'No tienes permisos para validar este cupo';
+    } else if (errorMessage.includes('no encontrada')) {
+      errorMessage = 'Reserva no encontrada';
+    } else if (errorMessage.includes('saldo insuficiente')) {
+      errorMessage = 'Saldo congelado insuficiente para procesar la comisión';
     }
     
     return {

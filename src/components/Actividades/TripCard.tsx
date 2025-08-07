@@ -94,12 +94,48 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
       if (modalAction === 'start') {
         console.log(`🚀 [TripCard] Starting trip ${trip.id}`);
         
+        // SOLUCIÓN: Validación previa antes de enviar al backend
+        console.log(`🔍 [TripCard] Pre-start validation for trip ${trip.id}...`);
+        
+        // Validación 1: Verificar que el trip tiene la información mínima
+        if (!trip.id || !trip.date || !trip.time) {
+          throw new Error(`El viaje ${trip.id} no tiene información completa. Actualiza la página e intenta nuevamente.`);
+        }
+        
+        // Validación 2: Verificar que no está ya iniciado
+        if (tripStatus === 'started') {
+          throw new Error(`El viaje ${trip.id} ya está en progreso.`);
+        }
+        
+        if (tripStatus === 'finished') {
+          throw new Error(`El viaje ${trip.id} ya fue completado.`);
+        }
+        
+        if (tripStatus === 'canceled') {
+          throw new Error(`El viaje ${trip.id} está cancelado y no se puede iniciar.`);
+        }
+        
+        // Validación 3: Verificar fecha/hora (solo advertencia, no bloquear)
+        const tripDateTime = new Date(`${trip.date}T${trip.time}`);
+        const now = new Date();
+        const timeDiff = tripDateTime.getTime() - now.getTime();
+        const minutesDiff = Math.floor(timeDiff / (1000 * 60));
+        
+        if (minutesDiff > 30) {
+          console.warn(`⚠️ [TripCard] Trip ${trip.id} is ${minutesDiff} minutes in the future`);
+        } else if (minutesDiff < -60) {
+          console.warn(`⚠️ [TripCard] Trip ${trip.id} is ${Math.abs(minutesDiff)} minutes in the past`);
+        }
+        
+        console.log(`✅ [TripCard] Pre-start validation passed for trip ${trip.id}`);
+        
+        // SOLUCIÓN: Proceder con el inicio del viaje
         const result = await startTrip(trip.id);
         
         if (result.success && result.data) {
           console.log(`✅ [TripCard] Trip ${trip.id} started successfully`);
           
-          setTripStatus('in_progress');
+          setTripStatus('started');
           setResultModal({
             title: 'Viaje Iniciado',
             color: 'green',
@@ -124,7 +160,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
         if (result.success && result.data) {
           console.log(`✅ [TripCard] Trip ${trip.id} finished successfully`);
           
-          setTripStatus('completed');
+          setTripStatus('finished');
           setResultModal({
             title: 'Viaje Finalizado',
             color: 'green',
@@ -164,7 +200,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
         if (result.success) {
           console.log(`✅ [TripCard] Trip ${trip.id} canceled successfully`);
           
-          setTripStatus('cancelled');
+          setTripStatus('canceled');
           setResultModal({
             title: 'Viaje Cancelado',
             color: 'orange',
@@ -183,10 +219,34 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
     } catch (err) {
       console.error(`❌ [TripCard] Error executing action ${modalAction} for trip ${trip.id}:`, err);
       
+      // SOLUCIÓN: Mejorar el manejo de errores para mostrar mensajes más útiles
+      const error = err as Error;
+      let userFriendlyMessage = 'Ocurrió un problema inesperado.';
+      let notificationColor = 'red';
+      
+      if (error.message) {
+        // Si el mensaje ya es user-friendly (viene de nuestro servicio mejorado), usarlo directamente
+        if (error.message.includes('Posibles causas:') || 
+            error.message.includes('Por favor,') ||
+            error.message.includes('Verifica que')) {
+          userFriendlyMessage = error.message;
+          notificationColor = 'orange'; // Color menos alarmante para errores explicativos
+        } else if (error.message.includes('sesión ha expirado')) {
+          userFriendlyMessage = error.message;
+          notificationColor = 'yellow';
+        } else if (error.message.includes('no encontrado')) {
+          userFriendlyMessage = error.message;
+          notificationColor = 'orange';
+        } else {
+          userFriendlyMessage = error.message;
+        }
+      }
+      
       showNotification({
-        title: 'Error',
-        message: (err as Error).message || 'Ocurrió un problema inesperado.',
-        color: 'red',
+        title: `Error al ${modalAction === 'start' ? 'iniciar' : modalAction === 'finish' ? 'finalizar' : 'cancelar'} viaje`,
+        message: userFriendlyMessage,
+        color: notificationColor,
+        autoClose: modalAction === 'start' ? 8000 : 5000, // Más tiempo para leer mensajes de start
       });
     } finally {
       setLoading(false);
@@ -194,9 +254,9 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
     }
   }
 
-  const isProgress = tripStatus === 'in_progress'
-  const isFinished = tripStatus === 'completed' 
-  const isCanceled = tripStatus === 'cancelled'
+  const isProgress = tripStatus === 'started'
+  const isFinished = tripStatus === 'finished' 
+  const isCanceled = tripStatus === 'canceled'
   const totalSeats = Number(trip.seats || 0) + parseFloat(trip.seats_reserved as unknown as string || '0')
 
   return (
@@ -390,9 +450,9 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
       <Modal opened={modalAction !== null} onClose={handleCloseActionModal} size="lg" centered>
         <Text size="lg" fw={700} mb="md">Confirmar Acción</Text>
         <Text mb="xl">{modalAction && {
-          start: '¿Estás seguro de que deseas iniciar este viaje? Se cobrará por los cupos publicados y se devolverá lo no vendido.',
-          cancel: '¿Deseas cancelar este viaje? Se devolverá el saldo congelado a tu wallet.',
-          finish: '¿Finalizar este viaje? Marcará el viaje como completado y no se podrá revertir.'
+          start: '¿Estás seguro de que deseas iniciar este viaje? Solo cambiará el estado a "En progreso".',
+          cancel: '¿Deseas cancelar este viaje? El estado cambiará a "Cancelado".',
+          finish: '¿Finalizar este viaje? El estado cambiará a "Completado" y no se podrá revertir.'
         }[modalAction]}</Text>
         <Group justify="space-between">
           <Button variant="default" onClick={handleCloseActionModal}>Cancelar</Button>

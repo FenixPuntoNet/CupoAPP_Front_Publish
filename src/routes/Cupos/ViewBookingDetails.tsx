@@ -235,7 +235,12 @@ function ViewBookingDetails() {
           </Group>
           <Group gap="md">
             <Text fw={600}>Estado:</Text>
-            <Badge color={tripDetails.tripStatus === 'active' ? 'green' : 'yellow'}>
+            <Badge color={
+              tripDetails.tripStatus === 'active' ? 'green' : 
+              tripDetails.tripStatus === 'started' ? 'yellow' :
+              tripDetails.tripStatus === 'finished' ? 'blue' :
+              tripDetails.tripStatus === 'canceled' ? 'red' : 'gray'
+            }>
               {tripDetails.tripStatus || 'No disponible'}
             </Badge>
           </Group>

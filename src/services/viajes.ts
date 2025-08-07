@@ -192,14 +192,56 @@ export const updateTrip = async (tripId: number, updateData: TripUpdateRequest):
 // Cancelar un viaje
 export const cancelTrip = async (tripId: number): Promise<{ success: boolean; error?: string }> => {
   try {
+    console.log(`🗑️ [cancelTrip] ===== CANCELING TRIP DEBUG =====`);
+    console.log(`🗑️ [cancelTrip] Trip ID: ${tripId} (type: ${typeof tripId})`);
+    
+    // DIAGNÓSTICO PRE-CANCEL: Verificar el estado actual del viaje
+    console.log(`🔍 [cancelTrip] PASO 1: Verificando estado del viaje ${tripId}...`);
+    try {
+      const tripDetails = await diagnoseTripStatus(tripId);
+      console.log(`🔍 [cancelTrip] Trip diagnosis result:`, tripDetails);
+      
+      if (tripDetails.success && tripDetails.data) {
+        const trip = tripDetails.data;
+        console.log(`📊 [cancelTrip] Trip ${tripId} current status: "${trip.status}"`);
+        console.log(`📊 [cancelTrip] Trip ${tripId} date_time: ${trip.date_time}`);
+        console.log(`📊 [cancelTrip] Trip ${tripId} bookings:`, trip.bookings?.length || 0);
+        console.log(`📊 [cancelTrip] Trip ${tripId} owner: ${trip.user_id}`);
+        
+        // Verificar condiciones previas
+        if (trip.status === 'canceled') {
+          console.warn(`⚠️ [cancelTrip] Trip ${tripId} is already canceled`);
+        }
+        
+        // Verificar si tiene reservas confirmadas
+        const confirmedBookings = trip.bookings?.filter((b: any) => b.booking_status === 'confirmed') || [];
+        if (confirmedBookings.length > 0) {
+          console.warn(`⚠️ [cancelTrip] Trip ${tripId} has ${confirmedBookings.length} confirmed bookings`);
+        }
+      } else {
+        console.error(`❌ [cancelTrip] Could not diagnose trip ${tripId}:`, tripDetails.error);
+      }
+    } catch (diagError) {
+      console.error(`❌ [cancelTrip] Diagnosis failed for trip ${tripId}:`, diagError);
+    }
+    
+    console.log(`🗑️ [cancelTrip] PASO 2: Enviando request para cancelar viaje ${tripId}...`);
+    
     await apiRequest(`/viajes/trip/${tripId}`, {
       method: 'DELETE'
     });
+    
+    console.log(`✅ [cancelTrip] Trip ${tripId} canceled successfully`);
+    
     return {
       success: true
     };
   } catch (error) {
-    console.error('Error canceling trip:', error);
+    console.error(`❌ [cancelTrip] ===== ERROR DETAILS =====`);
+    console.error(`❌ [cancelTrip] Trip ID: ${tripId}`);
+    console.error(`❌ [cancelTrip] Error:`, error);
+    console.error(`❌ [cancelTrip] ===== END ERROR =====`);
+    
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error cancelando viaje'
@@ -235,13 +277,123 @@ export const searchPublicTrips = async (
   }
 };
 
-// Iniciar un viaje (para conductores) - NUEVO ENDPOINT
+// Función de diagnóstico para verificar el estado de un viaje
+export const diagnoseTripStatus = async (tripId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  try {
+    console.log(`🔍 [diagnoseTripStatus] Checking trip ${tripId} status`);
+    
+    const response = await apiRequest(`/viajes/trip/${tripId}`);
+    
+    console.log(`🔍 [diagnoseTripStatus] Trip ${tripId} details:`, response);
+    
+    return {
+      success: true,
+      data: response
+    };
+  } catch (error) {
+    console.error(`❌ [diagnoseTripStatus] Error checking trip ${tripId}:`, error);
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al verificar estado del viaje'
+    };
+  }
+};
+
+// NUEVA función para verificar la salud del backend
+export const verifyBackendConnection = async (): Promise<{ success: boolean; data?: any; error?: string }> => {
+  try {
+    console.log(`🔗 [verifyBackendConnection] Testing backend connectivity...`);
+    
+    // Intentar obtener la lista de mis viajes como test de conectividad
+    const response = await apiRequest('/viajes/my-trips');
+    
+    console.log(`✅ [verifyBackendConnection] Backend is reachable, trips response:`, response);
+    
+    return {
+      success: true,
+      data: {
+        backend_status: 'connected',
+        trips_count: response.trips?.length || 0,
+        response_sample: response
+      }
+    };
+  } catch (error) {
+    console.error(`❌ [verifyBackendConnection] Backend connection failed:`, error);
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error de conectividad con backend'
+    };
+  }
+};
+
+// NUEVA función para testing directo del endpoint problemático
+export const testTripStartEndpoint = async (tripId: number): Promise<{ success: boolean; data?: any; error?: string }> => {
+  try {
+    console.log(`🧪 [testTripStartEndpoint] Testing endpoint for trip ${tripId}...`);
+    
+    // Primero verificar conectividad general
+    const backendTest = await verifyBackendConnection();
+    console.log(`🔗 [testTripStartEndpoint] Backend connectivity test:`, backendTest);
+    
+    // Luego verificar el trip específico
+    const tripTest = await diagnoseTripStatus(tripId);
+    console.log(`🔍 [testTripStartEndpoint] Trip diagnosis:`, tripTest);
+    
+    // Probar endpoint de debug si existe
+    try {
+      const debugResponse = await apiRequest(`/viajes/trip/${tripId}/debug`);
+      console.log(`🐛 [testTripStartEndpoint] Debug endpoint response:`, debugResponse);
+    } catch (debugError) {
+      console.log(`ℹ️ [testTripStartEndpoint] Debug endpoint not available:`, debugError);
+    }
+    
+    return {
+      success: true,
+      data: {
+        backend_connectivity: backendTest,
+        trip_diagnosis: tripTest
+      }
+    };
+  } catch (error) {
+    console.error(`❌ [testTripStartEndpoint] Test failed:`, error);
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error en test del endpoint'
+    };
+  }
+};
+
+// Iniciar un viaje (para conductores) - SOLUCIÓN DEFINITIVA
 export const startTrip = async (tripId: number): Promise<{ success: boolean; data?: { trip: any; message: string }; error?: string }> => {
   try {
-    console.log(`🚀 [startTrip] Starting trip ${tripId}`);
+    console.log(`🚀 [startTrip] ===== STARTING TRIP ${tripId} =====`);
     
+    // Verificar que tenemos un tripId válido
+    if (!tripId || isNaN(tripId)) {
+      throw new Error(`ID de viaje inválido: ${tripId}`);
+    }
+    
+    // SOLUCIÓN: Verificar token de autenticación antes de hacer request
+    const { getAuthToken } = await import('@/config/api');
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No se encontró token de autenticación. Por favor, inicia sesión nuevamente.');
+    }
+    
+    console.log(`🔑 [startTrip] Using auth token: ${token.substring(0, 20)}...`);
+    
+    // SOLUCIÓN: Request con manejo robusto de errores
     const response = await apiRequest(`/viajes/trip/${tripId}/start`, {
-      method: 'POST'
+      method: 'POST',
+      body: JSON.stringify({
+        // Incluir información adicional que el backend podría necesitar
+        trip_id: tripId,
+        action: 'start',
+        timestamp: new Date().toISOString()
+      })
     });
     
     console.log(`✅ [startTrip] Trip ${tripId} started successfully:`, response);
@@ -254,8 +406,30 @@ export const startTrip = async (tripId: number): Promise<{ success: boolean; dat
     console.error(`❌ [startTrip] Error starting trip ${tripId}:`, error);
     
     let errorMessage = 'Error al iniciar el viaje';
+    
     if (error instanceof Error) {
-      errorMessage = error.message;
+      const originalMessage = error.message;
+      
+      // SOLUCIÓN: Mapear errores específicos a mensajes user-friendly
+      if (originalMessage.includes('Error al iniciar el viaje')) {
+        // Error 500 del backend - probablemente problema de base de datos o lógica
+        errorMessage = `El viaje ${tripId} no se puede iniciar en este momento. Posibles causas:
+• El viaje ya fue iniciado por otro conductor
+• El viaje no está en estado activo
+• Hay un problema temporal en el servidor
+        
+Por favor, verifica el estado del viaje e intenta nuevamente.`;
+      } else if (originalMessage.includes('401') || originalMessage.includes('Token')) {
+        errorMessage = 'Tu sesión ha expirado. Por favor, cierra e inicia sesión nuevamente.';
+      } else if (originalMessage.includes('403') || originalMessage.includes('permisos')) {
+        errorMessage = `No tienes permisos para iniciar el viaje ${tripId}. Verifica que seas el conductor asignado.`;
+      } else if (originalMessage.includes('404') || originalMessage.includes('no encontrado')) {
+        errorMessage = `El viaje ${tripId} no fue encontrado o ya no existe.`;
+      } else if (originalMessage.includes('400')) {
+        errorMessage = `Datos inválidos para iniciar el viaje ${tripId}. Verifica la información del viaje.`;
+      } else {
+        errorMessage = `Error inesperado al iniciar viaje ${tripId}: ${originalMessage}`;
+      }
     }
     
     return {
@@ -265,13 +439,14 @@ export const startTrip = async (tripId: number): Promise<{ success: boolean; dat
   }
 };
 
-// Finalizar un viaje (para conductores) - NUEVO ENDPOINT
+// Finalizar un viaje (para conductores) - ACTUALIZADO según la nueva implementación del backend
 export const finishTrip = async (tripId: number): Promise<{ success: boolean; data?: { trip: any; unfrozen_amount?: number; message: string }; error?: string }> => {
   try {
     console.log(`🏁 [finishTrip] Finishing trip ${tripId}`);
     
     const response = await apiRequest(`/viajes/trip/${tripId}/finish`, {
-      method: 'POST'
+      method: 'POST',
+      body: JSON.stringify({})  // Enviar objeto vacío para consistencia
     });
     
     console.log(`✅ [finishTrip] Trip ${tripId} finished successfully:`, response);
@@ -286,6 +461,15 @@ export const finishTrip = async (tripId: number): Promise<{ success: boolean; da
     let errorMessage = 'Error al finalizar el viaje';
     if (error instanceof Error) {
       errorMessage = error.message;
+    }
+    
+    // Manejo específico de errores según el backend simplificado
+    if (errorMessage.includes('no encontrado')) {
+      errorMessage = 'Viaje no encontrado';
+    } else if (errorMessage.includes('permisos')) {
+      errorMessage = 'No tienes permisos para finalizar este viaje';
+    } else if (errorMessage.includes('status')) {
+      errorMessage = 'El viaje no está en progreso o ya ha sido finalizado';
     }
     
     return {

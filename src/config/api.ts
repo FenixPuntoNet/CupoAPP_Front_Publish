@@ -45,7 +45,10 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
   // Log detallado para TODAS las requests para debugging
   console.log(`🔄 [API] Request to ${endpoint}`);
   console.log(`🔑 [API] Using auth token: ${token ? 'yes' : 'no'}`);
-  console.log(`📝 [API] Request headers:`, headers);
+  console.log(`� [API] Token preview: ${token ? token.substring(0, 20) + '...' : 'null'}`);
+  console.log(`�📝 [API] Request headers:`, headers);
+  console.log(`📝 [API] Request method:`, options.method || 'GET');
+  console.log(`📝 [API] Request body:`, options.body || 'none');
 
   // Crear opciones de fetch (mantenemos credentials: 'include' como fallback)
   const fetchOptions = {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Container,
   Paper,
@@ -90,9 +90,15 @@ const ValidarCupoComponent = () => {
           setIsModalOpen(true)
           setScanResult(qrData)
           
+          // Mensaje mejorado que incluye información de comisión si está disponible
+          let notificationMessage = 'El cupo ha sido validado correctamente';
+          if (result.data.commission_charged && result.data.commission_percentage) {
+            notificationMessage += `. Comisión: ${result.data.commission_percentage}% ($${result.data.commission_charged.toLocaleString()})`;
+          }
+          
           showNotification({
             title: '¡Validación exitosa!',
-            message: 'El cupo ha sido validado correctamente',
+            message: notificationMessage,
             color: 'green',
           });
         } else {
@@ -110,6 +116,8 @@ const ValidarCupoComponent = () => {
             errorMessage = 'No tienes permisos para validar este cupo';
           } else if (result.error?.includes('no encontrada')) {
             errorMessage = 'Reserva no encontrada';
+          } else if (result.error?.includes('saldo insuficiente')) {
+            errorMessage = 'Saldo congelado insuficiente para procesar la comisión';
           } else if (result.error) {
             errorMessage = result.error;
           }
