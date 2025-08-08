@@ -5,9 +5,7 @@ import {
   Button,
   Stack,
   Group,
-  Alert,
   TextInput,
-  Checkbox,
   LoadingOverlay,
   Radio,
   Select,
@@ -47,11 +45,6 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
   const [deactivationType, setDeactivationType] = useState<DeactivationType>('temporary');
   const [confirmationText, setConfirmationText] = useState('');
   const [reason, setReason] = useState('');
-  const [confirmationsChecked, setConfirmationsChecked] = useState({
-    dataLoss: false,
-    noRecovery: false,
-    legalRetention: false,
-  });
   const [loading, setLoading] = useState(false);
   const [eligibilityData, setEligibilityData] = useState<EligibilityResponse | null>(null);
   const { signOut } = useBackendAuth();
@@ -71,11 +64,7 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
     : 'DELETE_MY_ACCOUNT';
 
   const isConfirmationComplete = 
-    confirmationText === requiredConfirmationText &&
-    confirmationsChecked.dataLoss &&
-    (deactivationType === 'temporary' || (
-      confirmationsChecked.noRecovery && confirmationsChecked.legalRetention
-    ));
+    confirmationText === requiredConfirmationText;
 
   // Verificar elegibilidad al abrir el modal
   useEffect(() => {
@@ -91,21 +80,27 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
       
       const result = await checkDeactivationEligibility();
       
+      console.log('🔍 Raw eligibility result:', result);
+      
       if (result.success && result.data) {
+        console.log('🔍 Eligibility data received:', result.data);
         setEligibilityData(result.data);
         
-        if (result.data.can_deactivate_temporary || result.data.can_delete_permanent) {
-          console.log('✅ Account can be deactivated');
-          setStep('choose');
-        } else {
-          console.log('❌ Account cannot be deactivated:', result.data.warnings);
-          // Permanece en step 'eligibility' para mostrar razones
-        }
+        console.log('🔍 can_deactivate_temporary:', result.data.can_deactivate_temporary);
+        console.log('🔍 can_delete_permanent:', result.data.can_delete_permanent);
+        console.log('🔍 current_status:', result.data.current_status);
+        console.log('🔍 warnings:', result.data.warnings);
+        console.log('🔍 recommendations:', result.data.recommendations);
+        
+        // Simplificado: si el backend responde exitosamente, siempre permitir continuar
+        // Solo mostrar warnings informativos si existen
+        console.log('✅ Eligibility check successful, proceeding to choose step');
+        setStep('choose');
       } else {
         console.error('❌ Failed to check eligibility:', result.error);
         notifications.show({
-          title: 'Error',
-          message: result.error || 'Error al verificar elegibilidad para desactivar cuenta',
+          title: 'Error de Conectividad',
+          message: result.error || 'Error al verificar elegibilidad para desactivar cuenta. Verifica tu conexión.',
           color: 'red',
         });
       }
@@ -126,11 +121,6 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
     setDeactivationType('temporary');
     setConfirmationText('');
     setReason('');
-    setConfirmationsChecked({
-      dataLoss: false,
-      noRecovery: false,
-      legalRetention: false,
-    });
     setLoading(false);
     setEligibilityData(null);
   };
@@ -199,136 +189,254 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
   };
 
   const renderEligibilityStep = () => (
-    <Stack gap="lg">
-      <Group gap="sm">
-        <Shield size={24} color="var(--mantine-color-blue-6)" />
-        <Text size="lg" fw={600}>
+    <Stack gap="md">
+      <div style={{ 
+        textAlign: 'center', 
+        marginBottom: '16px',
+        padding: '16px',
+        backgroundColor: '#1a1a1a',
+        borderRadius: '12px',
+        border: '1px solid #333'
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          borderRadius: '50%',
+          backgroundColor: '#2563eb',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 12px'
+        }}>
+          <Shield size={24} color="#ffffff" />
+        </div>
+        <Text size="lg" fw={600} style={{ color: '#ffffff', marginBottom: '8px' }}>
           Verificando elegibilidad
         </Text>
-      </Group>
+        <Text size="sm" style={{ color: '#a1a1aa' }}>
+          Revisando el estado de tu cuenta
+        </Text>
+      </div>
 
       {loading ? (
-        <Stack gap="md" align="center">
-          <div className={styles.spinner} />
-          <Text c="dimmed">
-            Verificando si tu cuenta puede ser desactivada...
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '32px',
+          backgroundColor: '#1a1a1a',
+          borderRadius: '12px',
+          border: '1px solid #333'
+        }}>
+          <div className={styles.spinner} style={{ margin: '0 auto 12px' }} />
+          <Text size="sm" style={{ color: '#a1a1aa' }}>
+            Verificando tu cuenta...
           </Text>
-        </Stack>
+        </div>
       ) : eligibilityData ? (
         <>
-          {(eligibilityData.can_deactivate_temporary || eligibilityData.can_delete_permanent) ? (
-            <Alert icon={<CheckCircle size={16} />} color="green">
-              <Text fw={500}>Tu cuenta puede ser desactivada</Text>
-              <Text size="sm" c="dimmed" mt={4}>
-                Puedes proceder con la desactivación temporal o eliminación de tu cuenta.
+          <div style={{ 
+            backgroundColor: '#0f2419',
+            border: '2px solid #16a34a',
+            borderRadius: '12px',
+            padding: '20px',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: '#16a34a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 12px'
+            }}>
+              <CheckCircle size={20} color="#ffffff" />
+            </div>
+            <Text fw={600} size="sm" style={{ color: '#ffffff', marginBottom: '8px' }}>
+              Tu cuenta puede ser gestionada
+            </Text>
+            <Text size="xs" style={{ color: '#86efac' }}>
+              Puedes proceder con la gestión de tu cuenta
+            </Text>
+          </div>
+
+          {eligibilityData.warnings && eligibilityData.warnings.length > 0 && (
+            <div style={{ 
+              backgroundColor: '#1e3a8a',
+              border: '2px solid #3b82f6',
+              borderRadius: '12px',
+              padding: '16px'
+            }}>
+              <Text fw={500} size="sm" style={{ color: '#ffffff', marginBottom: '8px' }}>
+                📋 Información importante:
               </Text>
-            </Alert>
-          ) : (
-            <>
-              <Alert icon={<AlertTriangle size={16} />} color="red">
-                <Text fw={500}>Tu cuenta no puede ser desactivada en este momento</Text>
-              </Alert>
-              
-              <Stack gap="sm">
-                <Text fw={500} size="sm">Razones:</Text>
-                {eligibilityData.warnings.map((warning, index) => (
-                  <Text key={index} size="sm" c="red" style={{ paddingLeft: '16px' }}>
-                    • {warning}
-                  </Text>
-                ))}
-              </Stack>
-
-              <Alert color="blue" variant="light">
-                <Text size="sm">
-                  Para poder desactivar tu cuenta, necesitas resolver estos problemas primero.
-                  Puedes contactar a soporte si necesitas ayuda.
-                </Text>
-              </Alert>
-            </>
-          )}
-
-          {eligibilityData.recommendations && eligibilityData.recommendations.length > 0 && (
-            <Alert color="blue" variant="light">
-              <Text fw={500} size="sm">Recomendaciones:</Text>
-              {eligibilityData.recommendations.map((rec, index) => (
-                <Text key={index} size="sm" style={{ paddingLeft: '16px' }}>
-                  • {rec}
+              {eligibilityData.warnings.slice(0, 2).map((warning, index) => (
+                <Text key={index} size="xs" style={{ 
+                  color: '#93c5fd', 
+                  paddingLeft: '8px', 
+                  marginBottom: '4px',
+                  lineHeight: '1.4'
+                }}>
+                  • {warning}
                 </Text>
               ))}
-            </Alert>
+            </div>
           )}
         </>
       ) : (
-        <Alert icon={<AlertTriangle size={16} />} color="red">
-          Error al verificar elegibilidad. Por favor, inténtalo de nuevo.
-        </Alert>
+        <div style={{ 
+          backgroundColor: '#7f1d1d',
+          border: '2px solid #dc2626',
+          borderRadius: '12px',
+          padding: '20px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            backgroundColor: '#dc2626',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 12px'
+          }}>
+            <AlertTriangle size={20} color="#ffffff" />
+          </div>
+          <Text size="sm" style={{ color: '#ffffff', marginBottom: '8px' }}>
+            Error al verificar elegibilidad
+          </Text>
+          <Text size="xs" style={{ color: '#fca5a5' }}>
+            Intenta de nuevo en unos momentos
+          </Text>
+        </div>
       )}
     </Stack>
   );
 
   const renderChooseStep = () => (
-    <Stack gap="lg">
-      <Group gap="sm">
-        <UserX size={24} color="var(--mantine-color-red-6)" />
-        <Text size="lg" fw={600}>
+    <Stack gap="md">
+      <div style={{ 
+        textAlign: 'center', 
+        marginBottom: '16px',
+        padding: '16px',
+        backgroundColor: '#1a1a1a',
+        borderRadius: '12px',
+        border: '1px solid #333'
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          borderRadius: '50%',
+          backgroundColor: '#dc2626',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 12px'
+        }}>
+          <UserX size={24} color="#ffffff" />
+        </div>
+        <Text size="lg" fw={600} style={{ color: '#ffffff', marginBottom: '8px' }}>
           Gestión de cuenta
         </Text>
-      </Group>
+        <Text size="sm" style={{ color: '#a1a1aa' }}>
+          Selecciona la acción que deseas realizar
+        </Text>
+      </div>
 
-      <Text c="dimmed">
-        Elige qué acción quieres realizar con tu cuenta:
-      </Text>
-
-      <Radio.Group
-        value={deactivationType}
-        onChange={(value) => setDeactivationType(value as DeactivationType)}
-      >
-        <Stack gap="md">
-          <Radio
-            value="temporary"
-            disabled={!eligibilityData?.can_deactivate_temporary}
-            label={
-              <Stack gap={4}>
-                <Group gap="xs">
-                  <Clock size={16} color="var(--mantine-color-blue-6)" />
-                  <Text fw={500}>Desactivación temporal</Text>
-                </Group>
-                <Text size="sm" c="dimmed" pl={22}>
-                  Tu cuenta se pausará pero podrás recuperarla cuando quieras.
-                  Tus datos se conservarán de forma segura.
-                </Text>
-                {!eligibilityData?.can_deactivate_temporary && (
-                  <Text size="xs" c="red" pl={22}>
-                    No disponible: {eligibilityData?.current_status === 'inactive' ? 'cuenta ya desactivada' : 'verificar estado'}
-                  </Text>
-                )}
-              </Stack>
-            }
-          />
-          
-          <Radio
-            value="permanent"
-            disabled={!eligibilityData?.can_delete_permanent}
-            label={
-              <Stack gap={4}>
-                <Group gap="xs">
-                  <Trash2 size={16} color="var(--mantine-color-red-6)" />
-                  <Text fw={500}>Eliminación permanente</Text>
-                </Group>
-                <Text size="sm" c="dimmed" pl={22}>
-                  Tu cuenta será eliminada permanentemente. Tendrás 7 días
-                  para recuperarla antes de que sea eliminada definitivamente.
-                </Text>
-                {!eligibilityData?.can_delete_permanent && (
-                  <Text size="xs" c="red" pl={22}>
-                    No disponible: verificar estado de cuenta
-                  </Text>
-                )}
-              </Stack>
-            }
-          />
-        </Stack>
-      </Radio.Group>
+      <div style={{ 
+        backgroundColor: '#1a1a1a',
+        border: '1px solid #333',
+        borderRadius: '12px',
+        padding: '16px'
+      }}>
+        <Radio.Group
+          value={deactivationType}
+          onChange={(value) => setDeactivationType(value as DeactivationType)}
+        >
+          <Stack gap="md">
+            <div 
+              style={{ 
+                padding: '16px',
+                borderRadius: '8px',
+                border: deactivationType === 'temporary' 
+                  ? '2px solid #3b82f6' 
+                  : '1px solid #404040',
+                backgroundColor: deactivationType === 'temporary' 
+                  ? '#1e40af' 
+                  : '#262626',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setDeactivationType('temporary')}
+            >
+              <Radio
+                value="temporary"
+                label={
+                  <div style={{ marginLeft: '12px' }}>
+                    <Group gap="xs" wrap="nowrap">
+                      <Clock size={18} color={deactivationType === 'temporary' ? '#93c5fd' : '#71717a'} />
+                      <div>
+                        <Text fw={600} size="sm" style={{ 
+                          color: deactivationType === 'temporary' ? '#ffffff' : '#d4d4d8' 
+                        }}>
+                          Desactivación temporal
+                        </Text>
+                        <Text size="xs" style={{ 
+                          color: deactivationType === 'temporary' ? '#93c5fd' : '#71717a',
+                          marginTop: '4px'
+                        }}>
+                          Pausa tu cuenta - recuperable cuando quieras
+                        </Text>
+                      </div>
+                    </Group>
+                  </div>
+                }
+              />
+            </div>
+            
+            <div 
+              style={{ 
+                padding: '16px',
+                borderRadius: '8px',
+                border: deactivationType === 'permanent' 
+                  ? '2px solid #dc2626' 
+                  : '1px solid #404040',
+                backgroundColor: deactivationType === 'permanent' 
+                  ? '#7f1d1d' 
+                  : '#262626',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setDeactivationType('permanent')}
+            >
+              <Radio
+                value="permanent"
+                label={
+                  <div style={{ marginLeft: '12px' }}>
+                    <Group gap="xs" wrap="nowrap">
+                      <Trash2 size={18} color={deactivationType === 'permanent' ? '#fca5a5' : '#71717a'} />
+                      <div>
+                        <Text fw={600} size="sm" style={{ 
+                          color: deactivationType === 'permanent' ? '#ffffff' : '#d4d4d8' 
+                        }}>
+                          Eliminación permanente
+                        </Text>
+                        <Text size="xs" style={{ 
+                          color: deactivationType === 'permanent' ? '#fca5a5' : '#71717a',
+                          marginTop: '4px'
+                        }}>
+                          Elimina tu cuenta - 7 días para recuperar
+                        </Text>
+                      </div>
+                    </Group>
+                  </div>
+                }
+              />
+            </div>
+          </Stack>
+        </Radio.Group>
+      </div>
 
       <Select
         label="Razón (opcional)"
@@ -337,143 +445,213 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
         value={reason}
         onChange={(value) => setReason(value || '')}
         clearable
+        size="sm"
+        styles={{
+          label: {
+            color: '#ffffff',
+            fontWeight: 500
+          },
+          input: {
+            borderRadius: '8px',
+            backgroundColor: '#262626',
+            border: '1px solid #404040',
+            color: '#ffffff'
+          },
+          dropdown: {
+            backgroundColor: '#262626',
+            border: '1px solid #404040'
+          },
+          option: {
+            color: '#ffffff',
+            backgroundColor: '#262626',
+            '&:hover': {
+              backgroundColor: '#374151'
+            }
+          }
+        }}
       />
 
-      <Alert icon={<AlertTriangle size={16} />} color="yellow">
-        <Text fw={500}>
-          {deactivationType === 'temporary' 
-            ? 'Desactivación temporal:'
-            : 'Eliminación permanente:'
-          }
-        </Text>
-        <Text size="sm" mt={4}>
-          {deactivationType === 'temporary' 
-            ? 'Tu cuenta será pausada pero conservada. Podrás reactivarla en cualquier momento iniciando sesión.'
-            : 'Tu cuenta será marcada para eliminación. Tendrás 7 días para recuperarla antes de que sea eliminada definitivamente.'
-          }
-        </Text>
-        
-        {eligibilityData && (eligibilityData.active_trips > 0 || eligibilityData.active_bookings > 0) && (
-          <Text size="sm" mt={8} fw={500} c="orange">
-            Esto afectará:
-            {eligibilityData.active_trips > 0 && ` ${eligibilityData.active_trips} viaje(s) activo(s)`}
-            {eligibilityData.active_trips > 0 && eligibilityData.active_bookings > 0 && ' y'}
-            {eligibilityData.active_bookings > 0 && ` ${eligibilityData.active_bookings} reserva(s) activa(s)`}
+      {eligibilityData && (eligibilityData.active_trips > 0 || eligibilityData.active_bookings > 0) && (
+        <div style={{ 
+          backgroundColor: '#a16207',
+          border: '2px solid #ca8a04',
+          borderRadius: '12px',
+          padding: '16px'
+        }}>
+          <Text size="sm" fw={500} style={{ color: '#ffffff', marginBottom: '8px' }}>
+            📋 Esto afectará tus actividades:
           </Text>
-        )}
-      </Alert>
+          <div style={{ paddingLeft: '8px' }}>
+            {eligibilityData.active_trips > 0 && (
+              <Text size="xs" style={{ color: '#fde047', marginBottom: '4px' }}>
+                • {eligibilityData.active_trips} viaje(s) activo(s) serán cancelados
+              </Text>
+            )}
+            {eligibilityData.active_bookings > 0 && (
+              <Text size="xs" style={{ color: '#fde047' }}>
+                • {eligibilityData.active_bookings} reserva(s) activa(s) serán canceladas
+              </Text>
+            )}
+          </div>
+        </div>
+      )}
     </Stack>
   );
 
   const renderConfirmationStep = () => (
-    <Stack gap="lg">
-      <Group gap="sm">
-        <AlertTriangle size={24} color="var(--mantine-color-red-6)" />
-        <Text size="lg" fw={600} c="red">
-          Confirmación requerida
+    <Stack gap="xs">
+      <div style={{ 
+        textAlign: 'center', 
+        marginBottom: '8px',
+        padding: '12px',
+        backgroundColor: '#1a1a1a',
+        borderRadius: '8px',
+        border: '1px solid #333'
+      }}>
+        <div style={{
+          width: '32px',
+          height: '32px',
+          borderRadius: '50%',
+          backgroundColor: '#dc2626',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 8px'
+        }}>
+          <AlertTriangle size={16} color="#ffffff" />
+        </div>
+        <Text size="sm" fw={600} style={{ color: '#ffffff', marginBottom: '4px' }}>
+          Confirmación final
         </Text>
-      </Group>
-
-      <Alert icon={<AlertTriangle size={16} />} color="red">
-        <Text fw={500}>
-          {deactivationType === 'temporary' 
-            ? '¿Estás seguro de que quieres desactivar tu cuenta temporalmente?'
-            : '¿Estás seguro de que quieres eliminar tu cuenta permanentemente?'
-          }
+        <Text size="xs" style={{ color: '#a1a1aa' }}>
+          {deactivationType === 'temporary' ? 'Desactivar temporalmente' : 'Eliminar permanentemente'}
         </Text>
-      </Alert>
+      </div>
 
-      <Stack gap="md">
-        <Text fw={500}>
-          Por favor confirma que entiendes las siguientes consecuencias:
+      <div style={{ 
+        backgroundColor: '#7f1d1d',
+        border: '2px solid #dc2626',
+        borderRadius: '8px',
+        padding: '12px'
+      }}>
+        <Text fw={500} size="xs" style={{ color: '#ffffff', marginBottom: '8px' }}>
+          ⚠️ {deactivationType === 'temporary' ? 'Pausará' : 'Eliminará'} tu cuenta
         </Text>
+        
+        <Stack gap={4}>
+          <Text size="xs" style={{ color: '#ffffff', lineHeight: '1.2' }}>
+            • {deactivationType === 'temporary'
+              ? 'Cuenta pausada hasta reactivar'
+              : 'Eliminación permanente'
+            }
+          </Text>
 
-        <Checkbox
-          checked={confirmationsChecked.dataLoss}
-          onChange={(event) =>
-            setConfirmationsChecked((prev) => ({
-              ...prev,
-              dataLoss: event.currentTarget.checked,
-            }))
-          }
-          label={
-            deactivationType === 'temporary'
-              ? 'Entiendo que mi cuenta será pausada y no podré acceder hasta que la reactive.'
-              : 'Entiendo que todos mis datos serán eliminados permanentemente después de 7 días.'
-          }
-        />
+          {deactivationType === 'permanent' && (
+            <>
+              <Text size="xs" style={{ color: '#ffffff', lineHeight: '1.2' }}>
+                • 7 días para recuperar
+              </Text>
 
-        {deactivationType === 'permanent' && (
-          <>
-            <Checkbox
-              checked={confirmationsChecked.noRecovery}
-              onChange={(event) =>
-                setConfirmationsChecked((prev) => ({
-                  ...prev,
-                  noRecovery: event.currentTarget.checked,
-                }))
-              }
-              label="Entiendo que después de 7 días no habrá forma de recuperar mi cuenta o datos."
-            />
+              <Text size="xs" style={{ color: '#ffffff', lineHeight: '1.2' }}>
+                • Datos legales se mantienen
+              </Text>
+            </>
+          )}
+        </Stack>
+      </div>
 
-            <Checkbox
-              checked={confirmationsChecked.legalRetention}
-              onChange={(event) =>
-                setConfirmationsChecked((prev) => ({
-                  ...prev,
-                  legalRetention: event.currentTarget.checked,
-                }))
-              }
-              label="Entiendo que algunos datos pueden ser retenidos por razones legales o de seguridad."
-            />
-          </>
-        )}
-      </Stack>
-
-      <Stack gap="xs">
-        <Text fw={500}>
-          Para confirmar, escribe exactamente: <code>{requiredConfirmationText}</code>
+      <div style={{ 
+        backgroundColor: '#1a1a1a',
+        border: '1px solid #333',
+        borderRadius: '8px',
+        padding: '12px'
+      }}>
+        <Text fw={500} size="xs" style={{ color: '#ffffff', marginBottom: '8px', textAlign: 'center' }}>
+          Escribe exactamente:
         </Text>
+        <div style={{ 
+          backgroundColor: '#262626',
+          border: '1px solid #404040',
+          padding: '8px', 
+          borderRadius: '6px',
+          textAlign: 'center',
+          marginBottom: '8px'
+        }}>
+          <code style={{ 
+            fontSize: '12px', 
+            fontWeight: 600, 
+            color: '#16a34a',
+            fontFamily: 'Monaco, Menlo, monospace'
+          }}>
+            {requiredConfirmationText}
+          </code>
+        </div>
         <TextInput
           value={confirmationText}
           onChange={(event) => setConfirmationText(event.currentTarget.value)}
-          placeholder={requiredConfirmationText}
+          placeholder={`Escribe: ${requiredConfirmationText}`}
+          size="xs"
+          styles={{
+            input: {
+              textAlign: 'center',
+              fontFamily: 'Monaco, Menlo, monospace',
+              fontWeight: 600,
+              backgroundColor: '#262626',
+              border: '1px solid #404040',
+              color: '#ffffff',
+              borderRadius: '6px',
+              fontSize: '12px',
+              padding: '6px'
+            }
+          }}
           error={
             confirmationText && confirmationText !== requiredConfirmationText
-              ? 'El texto no coincide exactamente'
+              ? 'No coincide'
               : null
           }
         />
-      </Stack>
+      </div>
     </Stack>
   );
 
   const renderFinalStep = () => (
-    <Stack gap="lg" align="center">
-      <div className={styles.successIcon}>
-        <CheckCircle size={48} color="var(--mantine-color-green-6)" />
+    <div style={{ textAlign: 'center', padding: '20px' }}>
+      <div style={{ 
+        backgroundColor: '#16a34a',
+        borderRadius: '50%',
+        width: '72px',
+        height: '72px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto 20px',
+        boxShadow: '0 0 20px rgba(22, 163, 74, 0.3)'
+      }}>
+        <CheckCircle size={36} color="#ffffff" />
       </div>
 
-      <Text ta="center" fw={600} size="lg">
+      <Text fw={600} size="lg" style={{ color: '#ffffff', marginBottom: '12px' }}>
+        {deactivationType === 'temporary' ? '✅ Cuenta desactivada' : '🗑️ Cuenta eliminada'}
+      </Text>
+      
+      <Text size="sm" style={{ color: '#a1a1aa', marginBottom: '20px', lineHeight: '1.5' }}>
         {deactivationType === 'temporary' 
-          ? 'Cuenta desactivada temporalmente'
-          : 'Cuenta marcada para eliminación'
+          ? 'Tu cuenta está pausada. Puedes reactivarla iniciando sesión nuevamente.'
+          : 'Tu cuenta será eliminada. Tienes 7 días para recuperarla si cambias de opinión.'
         }
       </Text>
 
-      <Text ta="center" c="dimmed">
-        {deactivationType === 'temporary' 
-          ? 'Tu cuenta ha sido desactivada. Puedes reactivarla en cualquier momento iniciando sesión de nuevo.'
-          : 'Tu cuenta ha sido marcada para eliminación. Tienes 7 días para recuperarla si cambias de opinión.'
-        }
-      </Text>
-
-      <Alert color="blue" variant="light">
-        <Text size="sm" ta="center">
-          Serás desconectado automáticamente en unos segundos.
+      <div style={{ 
+        backgroundColor: '#1e40af',
+        border: '2px solid #3b82f6',
+        borderRadius: '12px',
+        padding: '16px'
+      }}>
+        <Text size="xs" style={{ color: '#93c5fd' }}>
+          🔄 Serás desconectado automáticamente en unos segundos
         </Text>
-      </Alert>
-    </Stack>
+      </div>
+    </div>
   );
 
   const renderStepContent = () => {
@@ -507,62 +685,102 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
   };
 
   const renderFooterButtons = () => {
+    const buttonStyles = {
+      borderRadius: '6px',
+      fontWeight: 500,
+      padding: '6px 12px',
+      fontSize: '12px'
+    };
+
+    const cancelButtonStyles = {
+      ...buttonStyles,
+      backgroundColor: 'transparent',
+      border: '1px solid #404040',
+      color: '#ffffff'
+    };
+
+    const primaryButtonStyles = {
+      ...buttonStyles,
+      backgroundColor: '#3b82f6',
+      border: 'none',
+      color: '#ffffff'
+    };
+
+    const dangerButtonStyles = {
+      ...buttonStyles,
+      backgroundColor: '#dc2626',
+      border: 'none',
+      color: '#ffffff'
+    };
+
     switch (step) {
       case 'eligibility':
         return (
-          <Group justify="apart">
-            <Button variant="light" onClick={handleModalClose}>
+          <Group justify="apart" style={{ marginTop: '8px' }}>
+            <Button 
+              variant="light" 
+              onClick={handleModalClose}
+              style={cancelButtonStyles}
+              size="xs"
+            >
               Cancelar
             </Button>
             <Button 
               onClick={checkEligibility} 
               disabled={loading}
-              leftSection={<RotateCcw size={16} />}
+              leftSection={<RotateCcw size={12} />}
+              style={primaryButtonStyles}
+              size="xs"
             >
-              Verificar de nuevo
+              Verificar
             </Button>
           </Group>
         );
 
       case 'choose':
-        if (!eligibilityData?.can_deactivate_temporary && !eligibilityData?.can_delete_permanent) {
-          return (
-            <Group justify="center">
-              <Button variant="light" onClick={handleModalClose}>
-                Entendido
-              </Button>
-            </Group>
-          );
-        }
-        
         return (
-          <Group justify="apart">
-            <Button variant="light" onClick={handleModalClose}>
+          <Group justify="apart" style={{ marginTop: '8px' }}>
+            <Button 
+              variant="light" 
+              onClick={handleModalClose}
+              style={cancelButtonStyles}
+              size="xs"
+            >
               Cancelar
             </Button>
-            <Button onClick={() => setStep('confirmation')}>
-              Continuar
+            <Button 
+              onClick={() => setStep('confirmation')}
+              style={primaryButtonStyles}
+              size="xs"
+            >
+              Continuar →
             </Button>
           </Group>
         );
 
       case 'confirmation':
         return (
-          <Group justify="apart">
-            <Button variant="light" onClick={() => setStep('choose')}>
-              Atrás
+          <Group justify="apart" style={{ marginTop: '8px' }}>
+            <Button 
+              variant="light" 
+              onClick={() => setStep('choose')}
+              style={cancelButtonStyles}
+              size="xs"
+            >
+              ← Atrás
             </Button>
             <Button
-              color="red"
               onClick={handleDeactivateAccount}
               disabled={!isConfirmationComplete || loading}
-              leftSection={deactivationType === 'temporary' ? <UserX size={16} /> : <Trash2 size={16} />}
+              leftSection={deactivationType === 'temporary' ? <UserX size={12} /> : <Trash2 size={12} />}
+              style={dangerButtonStyles}
+              size="xs"
             >
               {loading
                 ? 'Procesando...'
                 : deactivationType === 'temporary'
-                ? 'Desactivar cuenta'
-                : 'Eliminar cuenta'
+                ? 'Desactivar'
+                : 'Eliminar'
               }
             </Button>
           </Group>
@@ -570,8 +788,13 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
 
       case 'final':
         return (
-          <Group justify="center">
-            <Button variant="light" onClick={handleModalClose}>
+          <Group justify="center" style={{ marginTop: '8px' }}>
+            <Button 
+              variant="light" 
+              onClick={handleModalClose}
+              style={primaryButtonStyles}
+              size="xs"
+            >
               Cerrar
             </Button>
           </Group>
@@ -587,18 +810,48 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
       opened={opened}
       onClose={step === 'final' ? handleModalClose : handleModalClose}
       title={getModalTitle()}
-      size="md"
+      size="xs"
       closeOnClickOutside={step !== 'final'}
       closeOnEscape={step !== 'final'}
       withCloseButton={step !== 'final'}
+      padding="sm"
+      styles={{
+        content: {
+          backgroundColor: '#0a0a0a',
+          border: '1px solid #333',
+          borderRadius: '12px'
+        },
+        header: {
+          backgroundColor: '#0a0a0a',
+          borderBottom: '1px solid #333',
+          color: '#ffffff',
+          padding: '8px 12px'
+        },
+        title: {
+          color: '#ffffff',
+          fontWeight: 600,
+          fontSize: '14px'
+        },
+        close: {
+          color: '#ffffff',
+          '&:hover': {
+            backgroundColor: '#262626'
+          }
+        },
+        body: {
+          backgroundColor: '#0a0a0a',
+          color: '#ffffff',
+          padding: '8px 12px'
+        }
+      }}
     >
       <LoadingOverlay visible={loading} />
       
-      <div className={styles.modalContent}>
+      <div style={{ color: '#ffffff' }}>
         {renderStepContent()}
       </div>
 
-      <Group mt="xl">
+      <Group mt="xs">
         {renderFooterButtons()}
       </Group>
     </Modal>

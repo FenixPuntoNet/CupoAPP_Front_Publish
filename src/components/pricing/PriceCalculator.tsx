@@ -25,7 +25,7 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
 
     setCalculating(true);
     try {
-      const result = await calculateTotalPrice(distance, isUrban);
+      const result = await calculateTotalPrice(distance);
       setCalculatedPrice(result);
       onPriceCalculated?.(result.basePrice, result.fee, result.totalPrice);
     } catch (error) {

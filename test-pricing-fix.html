@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Pricing Fix - CupoApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Test Pricing Fix - CupoApp</h1>
+        <p>Esta página te permite probar si el fix de precios interurbanos está funcionando correctamente.</p>
+        
+        <div class="test-section">
+            <h3>📋 Tests de Precios</h3>
+            <button onclick="testUrbanPrice()">Test Precio Urbano (1 km)</button>
+            <button onclick="testInterurbanPrice()">Test Precio Interurbano (475 km)</button>
+            <button onclick="testAssumptions()">Test Assumptions Backend</button>
+            <button onclick="forceUpdateAssumptions()">🔧 Forzar Update Assumptions</button>
+            <div id="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Test Manual</h3>
+            <input type="number" id="manualDistance" placeholder="Distancia en km" value="35">
+            <button onclick="testManualDistance()">Calcular Precio</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Configuración Esperada</h3>
+            <ul>
+                <li><strong>Urbano (≤30 km):</strong> 2000 COP/km</li>
+                <li><strong>Interurbano (>30 km):</strong> 3000 COP/km</li>
+                <li><strong>Ejemplo 1 km:</strong> 1 × 2000 ÷ 4 = 500 COP por asiento</li>
+                <li><strong>Ejemplo 475 km:</strong> 475 × 3000 ÷ 4 = 356,250 COP por asiento</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5174';
+        
+        function addResult(message, isError = false, isSuccess = false) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${isError ? 'error' : ''} ${isSuccess ? 'success' : ''}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        async function testAssumptions() {
+            try {
+                addResult('🔍 Obteniendo assumptions del backend...');
+                const response = await apiRequest('/config/assumptions');
+                
+                if (response.assumptions) {
+                    const assumptions = response.assumptions;
+                    addResult(`✅ Assumptions obtenidas: Urbano=${assumptions.urban_price_per_km}, Interurbano=${assumptions.interurban_price_per_km}`, false, true);
+                    
+                    // Verificar valores correctos
+                    if (assumptions.urban_price_per_km === 2000 && assumptions.interurban_price_per_km === 3000) {
+                        addResult('🎉 ¡Assumptions tienen los valores correctos!', false, true);
+                    } else {
+                        addResult('⚠️ Assumptions tienen valores incorrectos. Se necesita actualizar.', true);
+                    }
+                } else {
+                    addResult('❌ No se encontraron assumptions', true);
+                }
+            } catch (error) {
+                addResult(`❌ Error obteniendo assumptions: ${error.message}`, true);
+            }
+        }
+
+        async function forceUpdateAssumptions() {
+            try {
+                addResult('🔧 Forzando actualización de assumptions...');
+                
+                const correctAssumptions = {
+                    urban_price_per_km: 2000,
+                    interurban_price_per_km: 3000,
+                    fee_percentage: 10,
+                    price_limit_percentage: 20,
+                    alert_threshold_percentage: 30
+                };
+                
+                const response = await apiRequest('/config/assumptions', {
+                    method: 'POST',
+                    body: JSON.stringify(correctAssumptions)
+                });
+                
+                if (response.success) {
+                    addResult('✅ Assumptions actualizadas correctamente!', false, true);
+                    // Verificar inmediatamente
+                    await testAssumptions();
+                } else {
+                    addResult('❌ Error actualizando assumptions', true);
+                }
+            } catch (error) {
+                addResult(`❌ Error forzando update: ${error.message}`, true);
+            }
+        }
+
+        async function testPrice(distance, expectedType) {
+            try {
+                addResult(`💰 Calculando precio para ${distance} km (esperado: ${expectedType})...`);
+                
+                const response = await apiRequest('/config/calculate-price', {
+                    method: 'POST',
+                    body: JSON.stringify({ distance: `${distance} km` })
+                });
+                
+                const isUrban = distance <= 30;
+                const expectedPrice = isUrban ? 2000 : 3000;
+                const expectedTotal = distance * expectedPrice;
+                const expectedPerSeat = Math.round(expectedTotal / 4);
+                
+                addResult(`📊 Resultado: ${distance} km -> ${response.is_urban ? 'Urbano' : 'Interurbano'} -> ${response.price_per_km} COP/km -> Total: ${response.total_trip_price} -> Por asiento: ${response.suggested_price_per_seat}`, false, true);
+                
+                // Verificar si es correcto
+                if (response.is_urban === isUrban && response.price_per_km === expectedPrice) {
+                    addResult(`🎉 ¡CORRECTO! Clasificación y precio por km son correctos`, false, true);
+                } else {
+                    addResult(`❌ INCORRECTO: Esperado ${isUrban ? 'urbano' : 'interurbano'} a ${expectedPrice} COP/km`, true);
+                }
+                
+            } catch (error) {
+                addResult(`❌ Error calculando precio para ${distance} km: ${error.message}`, true);
+            }
+        }
+
+        async function testUrbanPrice() {
+            await testPrice(1, 'urbano');
+        }
+
+        async function testInterurbanPrice() {
+            await testPrice(475, 'interurbano');
+        }
+
+        async function testManualDistance() {
+            const distance = document.getElementById('manualDistance').value;
+            if (distance && distance > 0) {
+                const expectedType = distance <= 30 ? 'urbano' : 'interurbano';
+                await testPrice(parseFloat(distance), expectedType);
+            } else {
+                addResult('❌ Por favor ingresa una distancia válida', true);
+            }
+        }
+
+        // Auto-test al cargar la página
+        window.onload = function() {
+            addResult('🚀 Página de test cargada. Haz clic en los botones para probar.');
+        };
+    </script>
+</body>
+</html>

@@ -15,7 +15,8 @@ import { Rating } from '@mantine/core';
 import { IconArrowUpRight, IconArrowDownLeft, IconCheck, IconCircleCheck, IconCalendar, IconList, IconX, IconAlertCircle } from '@tabler/icons-react';
 // Servicios del backend
 import { useMaps } from '@/hooks/useMaps';
-import { searchTrips, getAssumptions, type TripSearchResult } from '@/services/trips';
+import { searchTrips, type TripSearchResult } from '@/services/trips';
+import { getAssumptions, ensureAssumptionsExist } from '@/services/config';
 import type { PlaceSuggestion } from '@/services/googleMaps';
 
 interface SearchFormData {
@@ -70,15 +71,35 @@ const ReservarView = () => {
                 console.log('🔧 Loading assumptions...');
                 const data = await getAssumptions();
                 console.log('✅ Assumptions loaded:', data);
-                setAssumptions(data);
+                
+                if (data) {
+                    setAssumptions(data);
+                } else {
+                    console.warn('⚠️ No assumptions found, trying to create defaults...');
+                    // Intentar crear assumptions por defecto
+                    const defaultData = await ensureAssumptionsExist();
+                    if (defaultData) {
+                        setAssumptions(defaultData);
+                    } else {
+                        // Solo como último recurso usar valores hardcodeados
+                        console.error('❌ Could not create or load assumptions, using hardcoded values');
+                        setAssumptions({
+                            urban_price_per_km: 2000,
+                            interurban_price_per_km: 3000, // Precio correcto para interurbano
+                            price_limit_percentage: 20,
+                            alert_threshold_percentage: 30,
+                            fee_percentage: 10
+                        });
+                    }
+                }
             } catch (error) {
                 console.error('❌ Error loading assumptions:', error);
                 // Usar valores por defecto si falla
                 setAssumptions({
                     urban_price_per_km: 2000,
-                    interurban_price_per_km: 1500,
-                    price_limit_percentage: 100,
-                    alert_threshold_percentage: 50,
+                    interurban_price_per_km: 3000, // Precio correcto para interurbano
+                    price_limit_percentage: 20,
+                    alert_threshold_percentage: 30,
                     fee_percentage: 10
                 });
             }

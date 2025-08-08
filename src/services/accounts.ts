@@ -40,21 +40,50 @@ export interface EligibilityResponse {
 export const checkDeactivationEligibility = async (): Promise<{ success: boolean; data?: EligibilityResponse; error?: string }> => {
   try {
     console.log('🔍 Checking deactivation eligibility...');
+    console.log('🔍 Making request to: /account-management/can-deactivate');
     
     const response = await apiRequest('/account-management/can-deactivate', {
       method: 'GET'
     });
 
-    console.log('✅ Eligibility check completed:', response);
+    console.log('✅ Eligibility check response received:', response);
+    
+    // El backend siempre permite las acciones, solo da información
     return { 
       success: true, 
       data: response 
     };
   } catch (error) {
-    console.error('❌ Failed to check eligibility:', error);
+    console.error('❌ Failed to check eligibility - detailed error:', error);
+    
+    if (error instanceof Error) {
+      console.error('❌ Error constructor:', error.constructor.name);
+      
+      if (error.message.includes('404') || error.message.includes('Not Found')) {
+        return {
+          success: false,
+          error: 'El servicio de gestión de cuentas no está disponible. Contacta soporte.'
+        };
+      }
+      
+      if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        return {
+          success: false,
+          error: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+        };
+      }
+      
+      if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+        return {
+          success: false,
+          error: 'Error temporal del servidor. Intenta de nuevo en unos minutos.'
+        };
+      }
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error al verificar elegibilidad'
+      error: 'Error de conexión. Verifica tu internet e intenta nuevamente.'
     };
   }
 };
@@ -75,13 +104,37 @@ export const deactivateAccount = async (data: DeactivateAccountRequest): Promise
     console.log('✅ Account deactivated successfully:', response);
     return { 
       success: true, 
-      message: response.message 
+      message: response.message || 'Cuenta desactivada exitosamente'
     };
   } catch (error) {
     console.error('❌ Failed to deactivate account:', error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes('401')) {
+        return {
+          success: false,
+          error: 'Tu sesión ha expirado. Inicia sesión e intenta nuevamente.'
+        };
+      }
+      
+      if (error.message.includes('404')) {
+        return {
+          success: false,
+          error: 'Servicio no disponible. Contacta soporte.'
+        };
+      }
+      
+      if (error.message.includes('500')) {
+        return {
+          success: false,
+          error: 'Error temporal del servidor. Intenta de nuevo en unos minutos.'
+        };
+      }
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error al desactivar cuenta'
+      error: 'Error de conexión. Verifica tu internet e intenta nuevamente.'
     };
   }
 };
@@ -102,13 +155,37 @@ export const deleteAccount = async (data: DeleteAccountRequest): Promise<{ succe
     console.log('✅ Account deletion initiated:', response);
     return { 
       success: true, 
-      message: response.message 
+      message: response.message || 'Cuenta eliminada exitosamente'
     };
   } catch (error) {
     console.error('❌ Failed to delete account:', error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes('401')) {
+        return {
+          success: false,
+          error: 'Tu sesión ha expirado. Inicia sesión e intenta nuevamente.'
+        };
+      }
+      
+      if (error.message.includes('404')) {
+        return {
+          success: false,
+          error: 'Servicio no disponible. Contacta soporte.'
+        };
+      }
+      
+      if (error.message.includes('500')) {
+        return {
+          success: false,
+          error: 'Error temporal del servidor. Intenta de nuevo en unos minutos.'
+        };
+      }
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error al eliminar cuenta'
+      error: 'Error de conexión. Verifica tu internet e intenta nuevamente.'
     };
   }
 };

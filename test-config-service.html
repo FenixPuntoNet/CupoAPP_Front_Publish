@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Config Service - Price Calculations</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .result { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #28a745; }
+        .error { background: #ffebee; border-left: 4px solid #f44336; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .input-group { margin: 10px 0; }
+        input[type="text"], input[type="number"] { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; width: 150px; }
+        .calculation-details { font-family: monospace; font-size: 12px; color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Test Config Service - Price Calculations</h1>
+        <p>Prueba la funcionalidad de cálculo de precios del servicio de configuración</p>
+        
+        <div class="test-section">
+            <h3>🔧 Test Manual de Distancias</h3>
+            <div class="input-group">
+                <label>Distancia:</label>
+                <input type="text" id="manualDistance" placeholder="ej: 25 km" value="25 km">
+                <button onclick="testManualDistance()">Calcular Precio</button>
+            </div>
+            <div id="manualResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🚗 Tests Automáticos de Casos Comunes</h3>
+            <button onclick="runAllTests()">Ejecutar Todos los Tests</button>
+            <div id="autoResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Comparación Urbano vs Interurbano</h3>
+            <button onclick="runComparisonTest()">Comparar Precios</button>
+            <div id="comparisonResults"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api'; // Ajusta según tu backend
+        
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            element.appendChild(div);
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0
+            }).format(price);
+        }
+
+        async function calculatePrice(distance) {
+            try {
+                const response = await fetch(`${API_BASE}/config/calculate-price`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ distance })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                return { success: true, data };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testManualDistance() {
+            const distance = document.getElementById('manualDistance').value;
+            const resultDiv = document.getElementById('manualResult');
+            resultDiv.innerHTML = '';
+
+            log('manualResult', `🔍 Calculando precio para: ${distance}...`);
+
+            const result = await calculatePrice(distance);
+
+            if (result.success) {
+                const data = result.data;
+                const details = `
+                    <div class="calculation-details">
+                        <strong>📏 Distancia:</strong> ${data.distance_km} km<br>
+                        <strong>🏘️ Tipo:</strong> ${data.is_urban ? 'Urbano' : 'Interurbano'}<br>
+                        <strong>💰 Precio por km:</strong> ${formatPrice(data.price_per_km)}<br>
+                        <strong>🚗 Precio total del viaje:</strong> ${formatPrice(data.total_trip_price)}<br>
+                        <strong>🪑 Precio sugerido por asiento:</strong> ${formatPrice(data.suggested_price_per_seat)}<br>
+                        <strong>📊 Rango permitido:</strong> ${formatPrice(data.price_range.min)} - ${formatPrice(data.price_range.max)}<br>
+                        <strong>🧮 Fórmula:</strong> ${data.calculation_details.formula}
+                    </div>
+                `;
+                log('manualResult', `✅ Cálculo exitoso:${details}`, 'success');
+            } else {
+                log('manualResult', `❌ Error: ${result.error}`, 'error');
+            }
+        }
+
+        async function runAllTests() {
+            const testCases = [
+                { distance: '5 km', expected_type: 'urbano' },
+                { distance: '15 km', expected_type: 'urbano' },
+                { distance: '25 km', expected_type: 'urbano' },
+                { distance: '30 km', expected_type: 'urbano' },
+                { distance: '35 km', expected_type: 'interurbano' },
+                { distance: '50 km', expected_type: 'interurbano' },
+                { distance: '100 km', expected_type: 'interurbano' },
+                { distance: '200 km', expected_type: 'interurbano' }
+            ];
+
+            const resultDiv = document.getElementById('autoResults');
+            resultDiv.innerHTML = '';
+
+            log('autoResults', '🚀 Iniciando tests automáticos...');
+
+            for (const testCase of testCases) {
+                log('autoResults', `🔍 Probando ${testCase.distance}...`);
+                
+                const result = await calculatePrice(testCase.distance);
+                
+                if (result.success) {
+                    const data = result.data;
+                    const actualType = data.is_urban ? 'urbano' : 'interurbano';
+                    const typeMatch = actualType === testCase.expected_type;
+                    
+                    const message = `
+                        <strong>${testCase.distance}</strong>: 
+                        ${formatPrice(data.suggested_price_per_seat)}/asiento 
+                        (${actualType}) 
+                        ${typeMatch ? '✅' : '❌ Esperado: ' + testCase.expected_type}
+                    `;
+                    
+                    log('autoResults', message, typeMatch ? 'success' : 'error');
+                } else {
+                    log('autoResults', `❌ Error con ${testCase.distance}: ${result.error}`, 'error');
+                }
+                
+                // Pequeña pausa entre requests
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            log('autoResults', '🏁 Tests automáticos completados', 'success');
+        }
+
+        async function runComparisonTest() {
+            const resultDiv = document.getElementById('comparisonResults');
+            resultDiv.innerHTML = '';
+
+            log('comparisonResults', '📊 Ejecutando comparación urbano vs interurbano...');
+
+            // Test casos límite
+            const urbanTest = await calculatePrice('30 km');
+            const interurbanTest = await calculatePrice('31 km');
+
+            if (urbanTest.success && interurbanTest.success) {
+                const urbanData = urbanTest.data;
+                const interurbanData = interurbanTest.data;
+
+                const comparison = `
+                    <table border="1" style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 8px;">Aspecto</th>
+                            <th style="padding: 8px;">30 km (Urbano)</th>
+                            <th style="padding: 8px;">31 km (Interurbano)</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;"><strong>Precio por km</strong></td>
+                            <td style="padding: 8px;">${formatPrice(urbanData.price_per_km)}</td>
+                            <td style="padding: 8px;">${formatPrice(interurbanData.price_per_km)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;"><strong>Precio total</strong></td>
+                            <td style="padding: 8px;">${formatPrice(urbanData.total_trip_price)}</td>
+                            <td style="padding: 8px;">${formatPrice(interurbanData.total_trip_price)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;"><strong>Por asiento</strong></td>
+                            <td style="padding: 8px;">${formatPrice(urbanData.suggested_price_per_seat)}</td>
+                            <td style="padding: 8px;">${formatPrice(interurbanData.suggested_price_per_seat)}</td>
+                        </tr>
+                    </table>
+                `;
+
+                log('comparisonResults', `✅ Comparación completada:${comparison}`, 'success');
+
+                const difference = interurbanData.price_per_km - urbanData.price_per_km;
+                log('comparisonResults', `💡 Diferencia de precio por km: ${formatPrice(difference)}`, 'warning');
+            } else {
+                log('comparisonResults', '❌ Error al ejecutar comparación', 'error');
+            }
+        }
+
+        // Auto-ejecutar un test básico al cargar
+        window.onload = function() {
+            setTimeout(() => {
+                log('manualResult', '🔄 Ejecutando test inicial con 25 km...');
+                testManualDistance();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

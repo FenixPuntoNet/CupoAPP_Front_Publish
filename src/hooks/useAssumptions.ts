@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
   getAssumptions,
-  calculateTripPrice,
+  calculateTripPriceViaBackend,
   calculateFee,
-  calculateTotalPrice,
   getCurrentPricing
 } from '../services/config';
 
@@ -20,9 +19,9 @@ interface UseAssumptionsReturn {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
-  calculateTripPrice: (distanceKm: number, isUrban?: boolean) => Promise<number>;
+  calculateTripPrice: (distanceKm: number) => Promise<number>;
   calculateFee: (tripPrice: number) => Promise<number>;
-  calculateTotalPrice: (distanceKm: number, isUrban?: boolean) => Promise<{
+  calculateTotalPrice: (distanceKm: number) => Promise<{
     basePrice: number;
     fee: number;
     totalPrice: number;
@@ -48,9 +47,17 @@ export const useAssumptions = (): UseAssumptionsReturn => {
     }
   };
 
-  const calculateTripPriceWrapper = async (distanceKm: number, isUrban: boolean = true): Promise<number> => {
+  const calculateTripPriceWrapper = async (distanceKm: number): Promise<number> => {
     try {
-      return await calculateTripPrice(distanceKm, isUrban);
+      console.log('🔥 [HOOK] DELEGANDO cálculo al backend para:', distanceKm, 'km');
+      
+      // SOLO delegar al backend - NO hacer cálculos aquí
+      const result = await calculateTripPriceViaBackend(distanceKm);
+      if (result) {
+        console.log('✅ [HOOK] Precio recibido del backend:', result.total_trip_price);
+        return result.total_trip_price;
+      }
+      throw new Error('No se pudo calcular el precio via backend');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al calcular precio');
       throw err;
@@ -66,9 +73,29 @@ export const useAssumptions = (): UseAssumptionsReturn => {
     }
   };
 
-  const calculateTotalPriceWrapper = async (distanceKm: number, isUrban: boolean = true) => {
+  const calculateTotalPriceWrapper = async (distanceKm: number) => {
     try {
-      return await calculateTotalPrice(distanceKm, isUrban);
+      console.log('🔥 [HOOK] DELEGANDO cálculo total al backend para:', distanceKm, 'km');
+      
+      // SOLO delegar al backend - NO hacer cálculos aquí  
+      const result = await calculateTripPriceViaBackend(distanceKm);
+      if (result) {
+        const basePrice = result.total_trip_price;
+        const fee = await calculateFee(basePrice);
+        
+        console.log('✅ [HOOK] Precio total calculado:', {
+          basePrice,
+          fee,
+          totalPrice: basePrice + fee
+        });
+        
+        return {
+          basePrice,
+          fee,
+          totalPrice: basePrice + fee
+        };
+      }
+      throw new Error('No se pudo calcular el precio total via backend');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al calcular precio total');
       throw err;

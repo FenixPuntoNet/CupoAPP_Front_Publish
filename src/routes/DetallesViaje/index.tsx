@@ -44,6 +44,10 @@ import { publishTrip } from '@/services/viajes';
 import { checkAndFreezeBalance, getCurrentWallet } from '@/services/wallet';
 import { getUserVehicles } from '@/services/vehicles';
 import { useAssumptions } from '../../hooks/useAssumptions';
+import { 
+    calculateTripPriceViaBackend as calculatePriceViaBackend, 
+    type PriceCalculationResult 
+} from '../../services/config';
 
 interface FormattedNumberInputProps extends Omit<NumberInputProps, 'onChange'> {
     onChange: (value: number) => void;
@@ -365,8 +369,8 @@ const DetallesViajeView = () => {
     const [vehicles, setVehicles] = useState<any[]>([]);
     const [vehicleId, setVehicleId] = useState<string | null>(null);
 
-    // Hook para assumptions
-    const { assumptions, loading: assumptionsLoading, calculateTripPrice } = useAssumptions();
+    // Hook para assumptions (solo para mostrar en UI si es necesario)
+    const { assumptions, loading: assumptionsLoading } = useAssumptions();
 
 
     // Cálculo de garantía dinámica según assumptions
@@ -427,12 +431,13 @@ const DetallesViajeView = () => {
         }
     }, [navigate]);
 
-    // useEffect para recalcular precio cuando cambian los datos del viaje o assumptions
+    // useEffect para recalcular precio SOLO cuando cambian los datos del viaje
     useEffect(() => {
-        if (tripData.selectedRoute?.distance && !assumptionsLoading && assumptions) {
+        if (tripData.selectedRoute?.distance) {
+            console.log('🔄 [DETALLES] Trip data changed, recalculating via backend...');
             calculateSuggestedPrice();
         }
-    }, [tripData.selectedRoute, assumptionsLoading, assumptions]);
+    }, [tripData.selectedRoute]);
       
 
     // useEffect para cargar los porcentajes de configuración desde assumptions
@@ -575,24 +580,49 @@ const DetallesViajeView = () => {
         }
     };
 
-    // Calcular precio sugerido por cupo (siempre dividido entre 4 cupos estándar)
+    // Calcular precio usando EXCLUSIVAMENTE el backend
     const calculateSuggestedPrice = async () => {
-        if (!tripData.selectedRoute?.distance || !assumptions) return;
+        if (!tripData.selectedRoute?.distance) return;
+        
         try {
             setLoading(true);
-            const distanceMatch = tripData.selectedRoute.distance.match(/(\d+\.?\d*)/);
-            const distanceKm = distanceMatch ? parseFloat(distanceMatch[1]) : 0;
-            if (distanceKm > 0) {
-                const isUrban = distanceKm <= 30;
-                // Calcular precio total del viaje
-                const totalTripPrice = await calculateTripPrice(distanceKm, isUrban);
-                // Dividir siempre entre 4 cupos para obtener precio estándar por cupo
-                const suggestedPricePerSeat = Math.round(totalTripPrice / 4);
+            
+            console.log('� [DETALLES] Calling BACKEND for price calculation:', tripData.selectedRoute.distance);
+            
+            // Usar EXCLUSIVAMENTE el backend con assumptions
+            const backendResult: PriceCalculationResult | null = await calculatePriceViaBackend(tripData.selectedRoute.distance);
+            
+            if (backendResult) {
+                console.log('🎉 [DETALLES] Backend result received:', {
+                    distance_km: backendResult.distance_km,
+                    is_urban: backendResult.is_urban,
+                    price_per_km: backendResult.price_per_km,
+                    total_trip_price: backendResult.total_trip_price,
+                    suggested_price_per_seat: backendResult.suggested_price_per_seat
+                });
+                
+                // Usar DIRECTAMENTE los valores del backend
+                const suggestedPricePerSeat = backendResult.suggested_price_per_seat;
+                
+                console.log('💰 [DETALLES] Setting suggested price from backend:', suggestedPricePerSeat);
                 setSuggestedPrice(suggestedPricePerSeat);
+                
+                // Si no hay precio establecido, usar el del backend
                 if (pricePerSeat === 0) {
                     setPricePerSeat(suggestedPricePerSeat);
                 }
+                
+                // Validar rango usando el precio del backend
                 validatePriceRange(pricePerSeat || suggestedPricePerSeat, suggestedPricePerSeat);
+                
+                console.log('✅ [DETALLES] Price configuration completed');
+            } else {
+                console.error('❌ [DETALLES] No result from backend calculation');
+                // Fallback: establecer un precio mínimo
+                setSuggestedPrice(5000);
+                if (pricePerSeat === 0) {
+                    setPricePerSeat(5000);
+                }
             }
         } catch (error) {
             console.error('Error calculating suggested price:', error);
