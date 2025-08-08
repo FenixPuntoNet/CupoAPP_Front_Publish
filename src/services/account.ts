@@ -70,9 +70,9 @@ export const getUserCard = async (): Promise<UserCardResponse> => {
         id: response.data.id,
         user_id: response.data.user_id,
         card_number: response.data.card_code, // Mapear card_code a card_number
-        level: 'BRONZE', // Default level
+        level: response.data.card_type || 'BRONZE', // Usar card_type del backend
         unicoins: response.data.unicoins,
-        experience_points: 0,
+        experience_points: response.data.card_level || 1, // Usar card_level del backend
         streak_days: 0,
         created_at: response.data.created_at,
         updated_at: response.data.created_at

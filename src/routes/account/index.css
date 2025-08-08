@@ -13,8 +13,8 @@
   color: #fff;
   border-radius: 1.3rem;
   padding: 2.2rem 2rem 1.7rem 2rem;
-  box-shadow: 0 16px 32px rgba(59, 210, 137, 0.18), 0 2px 16px #0a755755;
-  max-width: 340px; /* antes 420px */
+  box-shadow: 0 8px 16px rgba(59, 210, 137, 0.15);
+  max-width: 340px;
   width: 100%;
   position: relative;
   overflow: visible;
@@ -22,11 +22,14 @@
   transition: transform 0.3s cubic-bezier(.4,2,.3,1), box-shadow 0.2s;
   border: none;
   z-index: 2;
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 .card-uni-wallet:hover,
 .bank-card-front:hover {
   transform: scale(1.04) rotate(-1deg);
-  box-shadow: 0 24px 48px #3bd28944, 0 2px 16px #0a755755;
+  box-shadow: 0 12px 24px rgba(59, 210, 137, 0.2);
 }
 .bank-card-chip {
   width: 48px;
@@ -36,7 +39,6 @@
   position: absolute;
   top: 22px;
   left: 22px;
-  box-shadow: 0 2px 8px #ffd70044;
   border: 1.5px solid #fffbe7;
 }
 .bank-card-logo {
@@ -44,19 +46,9 @@
   top: 18px;
   right: 22px;
   z-index: 2;
-  filter: drop-shadow(0 2px 8px #fff8);
 }
 .bank-card-glow {
-  position: absolute;
-  bottom: -30px;
-  right: -40px;
-  width: 180px;
-  height: 80px;
-  background: radial-gradient(circle at 60% 60%, #ffd70033 0%, #3bd28900 80%);
-  z-index: 1;
-  pointer-events: none;
-  border-radius: 50%;
-  filter: blur(2px);
+  display: none;
 }
 .card-uni-wallet-row {
   display: flex;
@@ -77,7 +69,6 @@
   letter-spacing: 1px;
   font-weight: 900;
   line-height: 1.1;
-  text-shadow: 0 2px 8px #0a755755;
 }
 .wallet-label {
   color: #fff;
@@ -109,7 +100,6 @@
   color: #ffd700;
   letter-spacing: 1px;
   font-weight: 800;
-  text-shadow: 0 2px 8px #ffd70033;
 }
 .unicoin-label {
   color: #ffd700;
@@ -140,7 +130,6 @@
   letter-spacing: 2px;
   margin-top: 0.5rem;
   opacity: 0.85;
-  text-shadow: 0 2px 8px #0a755755;
 }
 
 /* --- TARJETA REVERSO (BACK) --- */
@@ -149,7 +138,7 @@
 }
 .card-profile,
 .bank-card-back {
-  max-width: 340px; /* antes 420px */
+  max-width: 340px;
   width: 100%;
   background: linear-gradient(120deg, #f7f7fa 0%, #e3e6ec 100%);
   border-radius: 1.3rem;
@@ -160,6 +149,9 @@
   margin-bottom: 0.75rem;
   position: relative;
   z-index: 2;
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 .bank-card-stripe {
   width: 100%;
@@ -213,7 +205,6 @@
   width: 100%;
   max-width: 350px;
   height: 270px;
-  perspective: 1600px;
   margin-bottom: 1.5rem;
   position: relative;
 }
@@ -222,7 +213,6 @@
   height: 100%;
   position: relative;
   transition: transform 0.7s cubic-bezier(.4,2,.3,1);
-  transform-style: preserve-3d;
 }
 .bank-card-3d .bank-card-3d-front,
 .bank-card-3d .bank-card-3d-back {
@@ -231,37 +221,40 @@
   height: 100%;
   top: 0; left: 0;
   backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: transform;
 }
 .bank-card-3d .bank-card-3d-front {
   z-index: 2;
+  transform: translateZ(0);
 }
 .bank-card-3d .bank-card-3d-back {
-  transform: rotateY(180deg);
-  z-index: 3;
+  transform: translateZ(0) rotateY(180deg);
+  z-index: 1;
 }
 .bank-card-3d.show-back .bank-card-3d-inner {
   transform: rotateY(180deg);
+  transform-style: preserve-3d;
 }
 
 /* --- ESPACIO DE REFERIDOS Y RACHAS --- */
 .referrals-streaks-space {
   width: 100%;
   max-width: 900px;
-  /* Fondo transparente */
-  background: transparent;
-  border-radius: 1.1rem;
-  padding: 1.2rem 0.2rem 1.2rem 0.2rem;
-  margin-bottom: 1.2rem;
-  box-shadow: none;
-  border: none;
-  color: #23233b;
+  background: rgba(35, 36, 58, 0.95);
+  border-radius: 1rem;
+  padding: 0.7rem 0.3rem;
+  margin-bottom: 1.1rem;
+  box-shadow: 0 4px 20px rgba(59, 210, 137, 0.15);
+  border: 1.5px solid rgba(59, 210, 137, 0.2);
   display: flex;
   flex-direction: row;
-  gap: 1.2rem;
-  justify-content: stretch;
+  gap: 1.1rem;
+  justify-content: center;
   align-items: flex-start;
   position: relative;
   overflow: visible;
+  transition: background 0.3s, box-shadow 0.3s;
 }
 
 .referrals-streaks-header {
@@ -275,6 +268,9 @@
   flex: 1 1 0;
   min-width: 0;
   max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
 }
 
 /* Mejorar el ancho de los bloques internos */
@@ -282,20 +278,33 @@
 .streak-line {
   width: 100%;
   box-sizing: border-box;
+  background: rgba(25, 28, 34, 0.9);
+  border-radius: 0.7rem;
+  box-shadow: 0 2px 12px rgba(59, 210, 137, 0.15);
+  padding: 0.8rem 0.8rem;
+  margin-bottom: 0.5rem;
+  border: 1.5px solid rgba(59, 210, 137, 0.3);
+  transition: box-shadow 0.18s, border 0.18s, transform 0.18s;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.5s;
+  cursor: pointer;
 }
 
-/* --- MOBILE --- */
-@media (max-width: 900px) {
-  .referrals-streaks-space {
-    flex-direction: column;
-    gap: 0.7rem;
-    max-width: 95vw;
-    padding: 0.7rem 0.1rem 0.7rem 0.1rem;
-  }
-  .referrals-streaks-header {
-    flex-direction: column;
-    gap: 0.7rem;
-  }
+.referral-section-title,
+.streak-section-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 @media (max-width: 600px) {
   .account-container {
@@ -342,83 +351,14 @@
   }
 }
 
-/* --- ESPACIO DE REFERIDOS Y RACHAS MEJORADO Y DINÁMICO --- */
-.referrals-streaks-space {
-  width: 100%;
-  max-width: 900px;
-  background: rgba(30, 32, 50, 0.85);
-  border-radius: 1rem;
-  padding: 0.7rem 0.3rem;
-  margin-bottom: 1.1rem;
-  box-shadow: 0 2px 16px #3bd28922;
-  border: 1.5px solid #23243a33;
-  display: flex;
-  flex-direction: row;
-  gap: 1.1rem;
-  justify-content: center;
-  align-items: flex-start;
-  position: relative;
-  overflow: visible;
-  backdrop-filter: blur(4px);
-  transition: background 0.3s, box-shadow 0.3s;
-}
-
-.referrals-streaks-header {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  gap: 1.1rem;
-}
-
-.referrals-streaks-header > * {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.referral-section-title,
-.streak-section-title {
-  font-size: 1.08rem;
-  font-weight: 900;
-  margin-bottom: 0.2rem;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: transparent;
-  border-radius: 0.5rem;
-  padding: 0.3rem 0.5rem;
-  color: #fff;
-}
-
 .referral-section-title svg,
 .streak-section-title svg {
-  filter: drop-shadow(0 1px 4px #23243a99);
-}
-
-.referral-meta-box,
-.streak-line {
-  width: 100%;
-  box-sizing: border-box;
-  background: #23243a;
-  border-radius: 0.7rem;
-  box-shadow: 0 1px 8px #3bd28922;
-  padding: 0.7rem 0.7rem;
-  margin-bottom: 0.5rem;
-  border: 1.5px solid #23243a55;
-  transition: box-shadow 0.18s, border 0.18s, transform 0.18s;
-  position: relative;
-  overflow: hidden;
-  animation: fadeInUp 0.5s;
-  cursor: pointer;
+  filter: none;
 }
 
 .referral-meta-box:hover,
 .streak-line:hover {
-  box-shadow: 0 6px 18px #3bd28944;
+  box-shadow: 0 6px 20px rgba(59, 210, 137, 0.3);
   border: 1.5px solid #3bd289;
   transform: translateY(-2px) scale(1.01);
 }
@@ -430,9 +370,10 @@
   border-radius: 0.5rem;
   padding: 0.15rem 0.6rem;
   letter-spacing: 0.5px;
-  background: #191c22;
+  background: rgba(25, 28, 34, 0.95);
   color: #ffd700;
-  border: none;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
 .referral-meta-box .mantine-Progress-root,
@@ -482,14 +423,18 @@
 .streak-name,
 .streak-progress-label,
 .referral-meta-box .mantine-Text-root {
-  color: #fff !important;
-  text-shadow: 0 1px 4px #23243a88;
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  font-weight: 600;
 }
 
 .streak-progress-label span {
   color: #ffd700 !important;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
+/* --- MOBILE --- */
 @media (max-width: 900px) {
   .referrals-streaks-space {
     flex-direction: column;
@@ -501,6 +446,87 @@
     flex-direction: column;
     gap: 0.5rem;
   }
+}
+
+.referral-meta-box,
+.streak-line {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(25, 28, 34, 0.9);
+  border-radius: 0.7rem;
+  box-shadow: 0 2px 12px rgba(59, 210, 137, 0.15);
+  padding: 0.8rem 0.8rem;
+  margin-bottom: 0.5rem;
+  border: 1.5px solid rgba(59, 210, 137, 0.3);
+  transition: box-shadow 0.18s, border 0.18s, transform 0.18s;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.5s;
+  cursor: pointer;
+}
+
+.referral-meta-box:hover,
+.streak-line:hover {
+  box-shadow: 0 6px 20px rgba(59, 210, 137, 0.3);
+  border: 1.5px solid #3bd289;
+  transform: translateY(-2px) scale(1.01);
+}
+
+.referral-meta-box .mantine-Badge-root,
+.streak-line .mantine-Badge-root {
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  padding: 0.15rem 0.6rem;
+  letter-spacing: 0.5px;
+  background: rgba(25, 28, 34, 0.95);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.referral-meta-box .mantine-Progress-root,
+.streak-line .mantine-Progress-root {
+  margin-bottom: 0.15rem;
+  margin-top: 0.15rem;
+  height: 8px;
+  border-radius: 6px;
+  background: #191c22;
+  box-shadow: 0 1px 4px #3bd28911;
+}
+
+.referral-meta-box .mantine-Button-root,
+.streak-line .mantine-Button-root {
+  border-radius: 0.6rem;
+  font-weight: 800;
+  font-size: 0.97rem;
+  margin-top: 0.1rem;
+  margin-bottom: 0.1rem;
+  box-shadow: 0 1px 6px #3bd28922;
+  transition: background 0.18s, color 0.18s;
+  background: #3bd289;
+  color: #191c22;
+}
+
+.referral-meta-box .mantine-Button-root[disabled],
+.streak-line .mantine-Button-root[disabled] {
+  background: #23243a !important;
+  color: #fff !important;
+  opacity: 0.7;
+}
+
+.referral-meta-box .mantine-Button-root:active,
+.streak-line .mantine-Button-root:active {
+  transform: scale(0.97);
+}
+
+.referral-meta-box .meta-help,
+.streak-line .meta-help {
+  font-size: 0.92rem;
+  color: #ffd700;
+  margin-top: 0.3rem;
+  text-align: center;
+  font-weight: 600;
 }
 
 @media (max-width: 600px) {

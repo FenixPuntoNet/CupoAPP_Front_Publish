@@ -1,0 +1,191 @@
+/* Modal Root */
+.modalRoot {
+  z-index: 2000;
+}
+
+.modalContent {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  border: 1px solid rgba(0, 255, 157, 0.2);
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.7),
+    0 10px 40px rgba(0, 255, 157, 0.1);
+}
+
+.modalHeader {
+  background: linear-gradient(90deg, rgba(0, 255, 157, 0.1) 0%, rgba(0, 255, 157, 0.05) 100%);
+  border-bottom: 1px solid rgba(0, 255, 157, 0.3);
+  border-radius: 20px 20px 0 0;
+  padding: 1.5rem;
+}
+
+.modalBody {
+  padding: 1.5rem;
+}
+
+/* Success Icon */
+.successIcon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #00ff9d 0%, #00e6b2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0a0a0a;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0, 255, 157, 0.3);
+}
+
+/* Cards */
+.successCard {
+  background: linear-gradient(135deg, rgba(0, 255, 157, 0.05) 0%, rgba(0, 255, 157, 0.02) 100%);
+  border: 1px solid rgba(0, 255, 157, 0.2);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.tripCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.tripCard:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(0, 255, 157, 0.2);
+}
+
+.paymentCard {
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.05) 0%, rgba(255, 165, 0, 0.02) 100%);
+  border: 1px solid rgba(255, 165, 0, 0.2);
+  border-radius: 16px;
+}
+
+/* Driver Avatar */
+.driverAvatar {
+  border: 2px solid #00ff9d;
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
+}
+
+/* Payment Methods */
+.paymentMethods {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.paymentMethod {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-width: 80px;
+}
+
+.paymentMethod:hover {
+  background: rgba(0, 255, 157, 0.05);
+  transform: translateY(-2px);
+}
+
+.paymentMethod svg {
+  color: #00ff9d;
+  margin-bottom: 0.5rem;
+}
+
+.paymentNote {
+  background: rgba(255, 165, 0, 0.05);
+  border: 1px solid rgba(255, 165, 0, 0.2);
+  border-radius: 8px;
+}
+
+/* Buttons */
+.cancelButton {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+}
+
+.cancelButton:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: white !important;
+}
+
+.confirmButton {
+  background: linear-gradient(135deg, #00ff9d 0%, #00e6b2 100%) !important;
+  color: #0a0a0a !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 16px rgba(0, 255, 157, 0.3) !important;
+}
+
+.confirmButton:hover {
+  background: linear-gradient(135deg, #00e6b2 0%, #00ff9d 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0, 255, 157, 0.4) !important;
+}
+
+.confirmButton:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.optionButton {
+  background: transparent !important;
+  border: 1px solid rgba(0, 255, 157, 0.3) !important;
+  color: #00ff9d !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+}
+
+.optionButton:hover {
+  background: rgba(0, 255, 157, 0.1) !important;
+  border-color: #00ff9d !important;
+  transform: translateY(-2px) !important;
+}
+
+.homeButton {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+}
+
+.homeButton:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modalHeader {
+    padding: 1rem;
+  }
+
+  .modalBody {
+    padding: 1rem;
+  }
+
+  .paymentMethods {
+    padding: 0.5rem;
+  }
+
+  .paymentMethod {
+    padding: 0.75rem;
+    min-width: 60px;
+  }
+}

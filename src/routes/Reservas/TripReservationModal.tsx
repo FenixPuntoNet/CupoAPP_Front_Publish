@@ -18,9 +18,10 @@ import { getCurrentUser } from '@/services/auth';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 import { useNavigate } from '@tanstack/react-router';
-
+import ReservationSuccessModal from '@/components/ReservationSuccessModal';
 
 import type { Trip } from '@/types/Trip';
+import type { TripSearchResult } from '@/services/trips';
 
 
 
@@ -39,6 +40,9 @@ interface TripReservationModalProps {
 export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip, isOpen, onClose }) => {
     const [passengersCount, setPassengersCount] = React.useState(1);
     const [passengers, setPassengers] = React.useState<Passenger[]>([]);
+    const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+    const [isConfirming, setIsConfirming] = React.useState(false);
+    const [bookingResult, setBookingResult] = React.useState<any>(null);
     const navigate = useNavigate();
 
 
@@ -55,7 +59,19 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                 return;
             }
 
-            // Preparar datos de pasajeros
+            // Solo mostrar el modal de confirmación, NO crear la reserva aún
+            setShowSuccessModal(true);
+
+        } catch (error) {
+            console.error('Error al procesar la solicitud:', error);
+        }
+    };
+
+    const handleConfirmSuccess = async () => {
+        setIsConfirming(true);
+        
+        try {
+            // AQUÍ es donde realmente creamos la reserva
             const passengerData = passengers.map(passenger => ({
                 fullName: passenger.fullName,
                 identificationNumber: passenger.identificationNumber
@@ -70,20 +86,56 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
             if (result.success && result.data) {
                 console.log('Reserva creada exitosamente:', result.data);
                 
-                // Redirigir al ticket
-                navigate({
-                    to: '/Cupos/ViewTicket',
-                    search: { booking_id: result.data.booking.id.toString() }
-                });
+                // Guardar el resultado para mostrar las opciones
+                setBookingResult(result.data);
                 
-                onClose();
+                // Pequeño delay para mostrar confirmación
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                setIsConfirming(false);
+                // NO cerramos el modal aquí, dejamos que el usuario elija qué hacer
+                
             } else {
                 console.error('Error al crear reserva:', result.error);
+                setIsConfirming(false);
+                // Aquí podrías mostrar un mensaje de error
             }
 
         } catch (error) {
             console.error('Error al procesar la reserva:', error);
+            setIsConfirming(false);
         }
+    };
+
+    const handleCloseSuccess = () => {
+        setShowSuccessModal(false);
+        onClose();
+        // Redirigir al home o reservar
+        navigate({ to: '/reservar' });
+    };
+
+    // Convertir Trip a TripSearchResult para el modal de éxito
+    const tripForSuccessModal: TripSearchResult = {
+        id: trip.id.toString(),
+        origin: trip.origin.address,
+        destination: trip.destination.address,
+        dateTime: trip.dateTime,
+        pricePerSeat: trip.pricePerSeat,
+        seats: trip.seats,
+        allowPets: false,
+        allowSmoking: false,
+        selectedRoute: trip.selectedRoute || { duration: 'N/A', distance: 'N/A' },
+        driverName: trip.driverName || 'No disponible',
+        photo: trip.photo || '',
+        vehicle: {
+            brand: trip.vehicle?.brand || '',
+            model: trip.vehicle?.model || '',
+            plate: trip.vehicle?.plate || '',
+            color: trip.vehicle?.color || '',
+            photo_url: trip.vehicle?.photo_url || '',
+            year: trip.vehicle?.year?.toString() || ''
+        },
+        rating: undefined
     };
 
     // Inicializar pasajeros cuando cambie la cantidad
@@ -103,14 +155,15 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
     };
 
     return (
-        <Modal
-            opened={isOpen}
-            onClose={onClose}
-            title="Reservar Viaje"
-            size="lg"
-            centered
-            closeOnClickOutside={false}
-        >
+        <>
+            <Modal
+                opened={isOpen}
+                onClose={onClose}
+                title="Reservar Viaje"
+                size="lg"
+                centered
+                closeOnClickOutside={false}
+            >
                 <Stack gap="xl">
                     <Center>
                         <Card className={styles.tripSummary} shadow="sm" withBorder>
@@ -268,7 +321,22 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                         Confirmar Reserva
                     </Button>
                 </Stack>
-        </Modal>
+            </Modal>
+            
+            {/* Modal de éxito */}
+            {showSuccessModal && (
+                <ReservationSuccessModal
+                    isOpen={showSuccessModal}
+                    onClose={handleCloseSuccess}
+                    trip={tripForSuccessModal}
+                    passengers={passengersCount}
+                    totalPrice={trip.pricePerSeat * passengersCount}
+                    onConfirm={handleConfirmSuccess}
+                    isConfirming={isConfirming}
+                    bookingResult={bookingResult}
+                />
+            )}
+        </>
     );
 };
 

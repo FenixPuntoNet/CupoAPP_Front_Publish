@@ -13,6 +13,7 @@ import type { Trip } from '@/types/Trip';
 import { Modal } from '@mantine/core';
 import { Rating } from '@mantine/core';
 import { IconArrowUpRight, IconArrowDownLeft, IconCheck, IconCircleCheck, IconCalendar, IconList, IconX, IconAlertCircle } from '@tabler/icons-react';
+import InteractiveMap from '@/components/InteractiveMap';
 // Servicios del backend
 import { useMaps } from '@/hooks/useMaps';
 import { searchTrips, type TripSearchResult } from '@/services/trips';
@@ -835,6 +836,7 @@ const ReservarView = () => {
                                         });
                                         setShowRouteModal(true);
                                       }}
+                                      leftSection={<Navigation size={14} />}
                                     >
                                       Ver ruta
                                     </Button>
@@ -968,79 +970,29 @@ const ReservarView = () => {
                 <Modal
                   opened={showRouteModal}
                   onClose={() => setShowRouteModal(false)}
-                  title={
-                    <div className={styles.routeMapModalHeader}>
-                      <h3 className={styles.routeMapModalTitle}>
-                        🗺️ Ruta del viaje
-                      </h3>
-                      <button
-                        className={styles.closeButton}
-                        onClick={() => setShowRouteModal(false)}
-                        aria-label="Cerrar modal"
-                        type="button"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  }
-                  classNames={{
-                    root: styles.routeMapModal,
-                  }}
-                  size="xl"
-                  yOffset="calc(env(safe-area-inset-top, 0px) + 40px)"
+                  withCloseButton={false}
+                  size="calc(100vw - 3rem)"
+                  radius="xl"
                   overlayProps={{
                     color: '#000',
-                    opacity: 0.85,
-                    blur: 6,
+                    opacity: 0.8,
+                    blur: 4,
                   }}
-                  withCloseButton={false}
+                  centered
+                  styles={{
+                    body: { padding: 0 },
+                    content: { 
+                      background: 'transparent',
+                      boxShadow: 'none'
+                    }
+                  }}
                 >
-                    <div className={styles.mapContainer}>
-                      <div 
-                        style={{ 
-                          width: '100%', 
-                          height: '100%',
-                          borderRadius: '8px',
-                          overflow: 'hidden',
-                          position: 'relative'
-                        }}
-                      >
-                        {/* Mapa embedido de Google Maps */}
-                        <iframe
-                          width="100%"
-                          height="100%"
-                          style={{ border: 0, borderRadius: '8px' }}
-                          loading="lazy"
-                          allowFullScreen
-                          referrerPolicy="no-referrer-when-downgrade"
-                          src={`https://www.google.com/maps/embed/v1/directions?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&origin=${encodeURIComponent(selectedRouteInfo.origin)}&destination=${encodeURIComponent(selectedRouteInfo.destination)}&mode=driving&language=es&region=CO&zoom=12`}
-                          title="Ruta del viaje"
-                        />
-                        
-                        {/* Información de la ruta sobrepuesta */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '10px',
-                          left: '10px',
-                          background: 'rgba(0, 0, 0, 0.8)',
-                          color: 'white',
-                          padding: '12px',
-                          borderRadius: '8px',
-                          fontSize: '14px',
-                          maxWidth: '300px',
-                          backdropFilter: 'blur(4px)'
-                        }}>
-                          <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>📍 Ruta del Viaje</div>
-                          <div style={{ marginBottom: '4px' }}>
-                            <strong>Origen:</strong> {selectedRouteInfo.origin}
-                          </div>
-                          <div>
-                            <strong>Destino:</strong> {selectedRouteInfo.destination}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Modal>
+                    <InteractiveMap
+                      origin={selectedRouteInfo.origin}
+                      destination={selectedRouteInfo.destination}
+                      onClose={() => setShowRouteModal(false)}
+                    />
+                </Modal>
                 )}
 
             </Container>

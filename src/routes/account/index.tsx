@@ -168,7 +168,7 @@ function AccountView() {
             card_code: cardData.card_number, // Usar card_number del response
             unicoins: cardData.unicoins,
             card_type: cardData.level || 'BRONZE', // Usar level del response como card_type
-            card_level: cardData.experience_points > 1000 ? 2 : 1,
+            card_level: cardData.experience_points || 1, // Usar experience_points del response como card_level
             created_at: cardData.created_at,
           });
         } else {
@@ -400,15 +400,15 @@ function AccountView() {
     return (
       <Card
         className="card-uni-wallet bank-card-front"
-        shadow="lg"
         radius="md"
-        withBorder
         onClick={() => setShowCardBack(true)}
         style={{
           cursor: 'pointer',
           transition: 'transform 0.3s cubic-bezier(.4,2,.3,1), box-shadow 0.2s',
           position: 'relative',
           overflow: 'visible',
+          border: 'none',
+          boxShadow: 'none',
         }}
       >
         <div className="bank-card-chip" />
@@ -490,13 +490,11 @@ function AccountView() {
       <div className="bank-card-back-outer">
         <Card
           className="card-profile bank-card-back"
-          shadow="lg"
           radius="md"
-          withBorder
           style={{
             margin: 0,
-            boxShadow: '0 8px 32px #0a755733',
             border: 'none',
+            boxShadow: 'none',
             maxWidth: '100%',
             position: 'relative',
             overflow: 'visible',
@@ -610,7 +608,7 @@ function AccountView() {
             </div>
           </div>
         </div>
-        <div style={{height: '40px'}} />
+        <div style={{height: '60px'}} />
         {/* Espacio de referidos y rachas */}
         <div className="referrals-streaks-space">
           <div className="referrals-streaks-header">

@@ -13,6 +13,7 @@ interface ReservationSuccessModalProps {
   totalPrice: number;
   onConfirm: () => void;
   isConfirming?: boolean;
+  bookingResult?: any; // Agregar para saber si ya se confirmó
 }
 
 const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
@@ -22,11 +23,25 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
   passengers,
   totalPrice,
   onConfirm,
-  isConfirming = false
+  isConfirming = false,
+  bookingResult
 }) => {
   const handleConfirm = async () => {
     await onConfirm();
-    // El onConfirm debería manejar la navegación al home
+  };
+
+  const handleViewTicket = () => {
+    if (bookingResult?.booking?.id) {
+      window.location.href = `/Cupos/ViewTicket?booking_id=${bookingResult.booking.id}`;
+    }
+  };
+
+  const handleGoToActivities = () => {
+    window.location.href = '/Cupos';
+  };
+
+  const handleGoToHome = () => {
+    window.location.href = '/';
   };
 
   return (
@@ -39,7 +54,7 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
             <IconCheck size={24} />
           </div>
           <Text size="xl" fw={700} c="green">
-            ¡Reserva Exitosa!
+            {bookingResult ? '¡Reserva Confirmada!' : '¿Confirmar Reserva?'}
           </Text>
         </Group>
       }
@@ -64,12 +79,28 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
       <Stack gap="lg">
         {/* Mensaje de éxito */}
         <Card className={styles.successCard} p="lg" radius="md">
-          <Text size="lg" ta="center" fw={600} c="green" mb="sm">
-            🎉 Tu reserva ha sido procesada exitosamente
-          </Text>
-          <Text size="sm" ta="center" c="dimmed">
-            Ya puedes coordinar los detalles del viaje con el conductor
-          </Text>
+          {bookingResult ? (
+            <>
+              <Text size="lg" ta="center" fw={600} c="green" mb="sm">
+                🎉 Tu reserva ha sido procesada exitosamente
+              </Text>
+              <Text size="sm" ta="center" c="dimmed">
+                Código de reserva: #{bookingResult.booking?.id}
+              </Text>
+              <Text size="sm" ta="center" c="dimmed">
+                Ya puedes coordinar los detalles del viaje con el conductor
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text size="lg" ta="center" fw={600} c="blue" mb="sm">
+                📋 Confirma los detalles de tu reserva
+              </Text>
+              <Text size="sm" ta="center" c="dimmed">
+                Revisa la información y confirma para proceder con la reserva
+              </Text>
+            </>
+          )}
         </Card>
 
         {/* Detalles del viaje */}
@@ -135,71 +166,144 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
           </Group>
         </Card>
 
-        {/* Instrucciones de pago */}
-        <Card className={styles.paymentCard} p="lg" radius="md">
-          <Group mb="md">
-            <IconCash size={24} color="orange" />
-            <Text fw={600} size="lg" c="orange">
-              Instrucciones de Pago
-            </Text>
-          </Group>
-
-          <Stack gap="md">
-            <Text size="sm" c="dimmed" ta="center">
-              El pago se realiza directamente al conductor al momento del viaje
-            </Text>
-
-            <div className={styles.paymentMethods}>
-              <Group justify="center" gap="lg">
-                <div className={styles.paymentMethod}>
-                  <IconCash size={32} />
-                  <Text size="xs" ta="center" mt="xs">Efectivo</Text>
-                </div>
-                <div className={styles.paymentMethod}>
-                  <IconCreditCard size={32} />
-                  <Text size="xs" ta="center" mt="xs">Transferencia</Text>
-                </div>
-                <div className={styles.paymentMethod}>
-                  <IconPhone size={32} />
-                  <Text size="xs" ta="center" mt="xs">Nequi/Daviplata</Text>
-                </div>
-              </Group>
-            </div>
-
-            <Card className={styles.paymentNote} p="md" radius="sm">
-              <Text size="sm" fw={500} mb="xs" c="orange">
-                💡 Importante:
+        {/* Instrucciones de pago - ANTES de confirmar para informar al usuario */}
+        {!bookingResult && (
+          <Card className={styles.paymentCard} p="lg" radius="md">
+            <Group mb="md">
+              <IconCash size={24} color="orange" />
+              <Text fw={600} size="lg" c="orange">
+                Instrucciones de Pago
               </Text>
-              <Text size="xs" c="dimmed">
-                • Coordina el método de pago con el conductor antes del viaje<br/>
-                • Ten el dinero exacto o confirma si acepta transferencias<br/>
-                • El conductor definirá sus métodos de pago preferidos
+            </Group>
+
+            <Stack gap="md">
+              <Text size="sm" c="dimmed" ta="center">
+                El pago se realiza directamente al conductor al momento del viaje
               </Text>
-            </Card>
-          </Stack>
-        </Card>
+
+              <div className={styles.paymentMethods}>
+                <Group justify="center" gap="lg">
+                  <div className={styles.paymentMethod}>
+                    <IconCash size={32} />
+                    <Text size="xs" ta="center" mt="xs">Efectivo</Text>
+                  </div>
+                  <div className={styles.paymentMethod}>
+                    <IconCreditCard size={32} />
+                    <Text size="xs" ta="center" mt="xs">Transferencia</Text>
+                  </div>
+                  <div className={styles.paymentMethod}>
+                    <IconPhone size={32} />
+                    <Text size="xs" ta="center" mt="xs">Nequi/Daviplata</Text>
+                  </div>
+                </Group>
+              </div>
+
+              <Card className={styles.paymentNote} p="md" radius="sm">
+                <Text size="sm" fw={500} mb="xs" c="orange">
+                  💡 Importante:
+                </Text>
+                <Text size="xs" c="dimmed">
+                  • Coordina el método de pago con el conductor antes del viaje<br/>
+                  • Ten el dinero exacto o confirma si acepta transferencias<br/>
+                  • El conductor definirá sus métodos de pago preferidos
+                </Text>
+              </Card>
+            </Stack>
+          </Card>
+        )}
+
+        {/* Mensaje de próximos pasos después de confirmar */}
+        {bookingResult && (
+          <Card className={styles.successCard} p="lg" radius="md">
+            <Group mb="md">
+              <IconCheck size={24} color="green" />
+              <Text fw={600} size="lg" c="green">
+                Próximos Pasos
+              </Text>
+            </Group>
+
+            <Stack gap="sm">
+              <Text size="sm" c="dimmed" ta="left">
+                ✅ Tu reserva está confirmada
+              </Text>
+              <Text size="sm" c="dimmed" ta="left">
+                📱 Recuerda coordinar con el conductor antes del viaje
+              </Text>
+              <Text size="sm" c="dimmed" ta="left">
+                💰 El pago se realiza directamente al conductor
+              </Text>
+              <Text size="sm" c="dimmed" ta="left">
+                🎫 Guarda tu ticket para el día del viaje
+              </Text>
+            </Stack>
+          </Card>
+        )}
 
         {/* Botones de acción */}
-        <Group justify="space-between" mt="lg">
-          <Button
-            variant="outline"
-            size="md"
-            onClick={onClose}
-            disabled={isConfirming}
-            className={styles.cancelButton}
-          >
-            Cancelar
-          </Button>
-          
-          <Button
-            size="md"
-            onClick={handleConfirm}
-            loading={isConfirming}
-            className={styles.confirmButton}
-          >
-            {isConfirming ? 'Confirmando...' : 'Confirmar Reserva'}
-          </Button>
-        </Group>
+        {bookingResult ? (
+          /* Opciones después de confirmar la reserva */
+          <Stack gap="md" mt="lg">
+            <Text size="md" ta="center" fw={600} c="green">
+              ¿Qué te gustaría hacer ahora?
+            </Text>
+            
+            <Group justify="space-between" gap="sm">
+              <Button
+                variant="outline"
+                size="md"
+                onClick={handleViewTicket}
+                className={styles.optionButton}
+                leftSection={<IconCheck size={18} />}
+                style={{ flex: 1 }}
+              >
+                Ver Ticket
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="md"
+                onClick={handleGoToActivities}
+                className={styles.optionButton}
+                leftSection={<IconCalendar size={18} />}
+                style={{ flex: 1 }}
+              >
+                Mis Actividades
+              </Button>
+            </Group>
+
+            <Button
+              variant="subtle"
+              size="md"
+              onClick={handleGoToHome}
+              className={styles.homeButton}
+              fullWidth
+            >
+              Ir al Inicio
+            </Button>
+          </Stack>
+        ) : (
+          /* Botones antes de confirmar la reserva */
+          <Group justify="space-between" mt="lg">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={onClose}
+              disabled={isConfirming}
+              className={styles.cancelButton}
+            >
+              Cancelar
+            </Button>
+            
+            <Button
+              size="md"
+              onClick={handleConfirm}
+              loading={isConfirming}
+              className={styles.confirmButton}
+            >
+              {isConfirming ? 'Procesando...' : 'Confirmar Reserva'}
+            </Button>
+          </Group>
+        )}
 
         <Text size="xs" ta="center" c="dimmed" mt="sm">
           Al confirmar aceptas los términos y condiciones del servicio
