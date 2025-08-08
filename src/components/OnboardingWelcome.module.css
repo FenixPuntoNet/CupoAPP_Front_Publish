@@ -1,0 +1,276 @@
+/* OnboardingWelcome.module.css */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  background-image: radial-gradient(circle at 50% 0%, rgba(0, 255, 157, 0.1) 0%, transparent 50%);
+  color: white;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  max-width: 100% !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.content {
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Header Section */
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  border-radius: 20px;
+  background: rgba(0, 255, 157, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(0, 255, 157, 0.2);
+}
+
+.logo img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.welcomeTitle {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(45deg, #00ff9d, #00cc7a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.welcomeSubtitle {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+/* Progress Section */
+.progressSection {
+  margin-bottom: 32px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 255, 157, 0.1);
+}
+
+.progressLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #00ff9d;
+  margin-bottom: 12px;
+}
+
+.progressBar {
+  margin-bottom: 8px;
+}
+
+.progressBar .mantine-Progress-bar {
+  background: linear-gradient(90deg, #00ff9d, #00cc7a) !important;
+  transition: width 0.5s ease !important;
+}
+
+.progressBar .mantine-Progress-root {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.progressText {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+/* Steps Container */
+.stepsContainer {
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stepCard {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer;
+}
+
+.stepCard:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(0, 255, 157, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+.activeStep {
+  background: rgba(0, 255, 157, 0.1) !important;
+  border-color: #00ff9d !important;
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+}
+
+.completedStep {
+  background: rgba(0, 255, 157, 0.15) !important;
+  border-color: #00cc7a !important;
+}
+
+.stepIconContainer {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 255, 157, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stepIcon {
+  width: 24px;
+  height: 24px;
+  color: #00ff9d;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.stepDescription {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+.completedIcon {
+  width: 20px;
+  height: 20px;
+  color: #00ff9d;
+  flex-shrink: 0;
+}
+
+/* Action Buttons */
+.actionButtons {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.primaryButton {
+  height: 56px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(45deg, #00ff9d, #00cc7a) !important;
+  border: none !important;
+  color: black !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 157, 0.4);
+}
+
+.skipButton {
+  height: 48px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  transition: all 0.3s ease !important;
+}
+
+.skipButton:hover {
+  color: white !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Motivation Section */
+.motivation {
+  text-align: center;
+  padding: 16px;
+  background: rgba(0, 255, 157, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 157, 0.1);
+}
+
+.motivationText {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .welcomeTitle {
+    font-size: 24px;
+  }
+  
+  .stepCard {
+    padding: 12px !important;
+  }
+  
+  .stepIconContainer {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .stepIcon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .primaryButton {
+    height: 52px !important;
+    font-size: 15px !important;
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stepCard {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+.stepCard:nth-child(1) { animation-delay: 0.1s; }
+.stepCard:nth-child(2) { animation-delay: 0.2s; }
+.stepCard:nth-child(3) { animation-delay: 0.3s; }
+.stepCard:nth-child(4) { animation-delay: 0.4s; }

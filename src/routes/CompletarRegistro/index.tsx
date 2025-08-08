@@ -10,6 +10,7 @@ import {
   Text,
   LoadingOverlay,
   Image,
+  Modal,
 } from '@mantine/core';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useForm } from '@mantine/form';
@@ -17,6 +18,7 @@ import { useNavigate, createFileRoute, useSearch } from '@tanstack/react-router'
 import { notifications } from '@mantine/notifications';
 import { getCurrentUserProfile, updateUserProfile, completeUserProfile, uploadProfilePhoto } from '@/services/profile';
 import { useBackendAuth } from '@/context/BackendAuthContext';
+import { OnboardingWelcome } from '@/components/OnboardingWelcome';
 import styles from './index.module.css';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
@@ -38,8 +40,9 @@ const CompleteProfileView: React.FC = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const navigate = useNavigate();
-  const { user } = useBackendAuth();
+  const { user, isNewUser, markUserAsExperienced, refreshUser } = useBackendAuth();
   const search = useSearch({ from: '/CompletarRegistro/' }) as { from?: string };
 
   const form = useForm<ProfileFormData>({
@@ -65,41 +68,66 @@ const CompleteProfileView: React.FC = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        // Debug: verificar el origen de la navegación
-        console.log('🔍 Navigation search params:', search);
-        console.log('🔍 Comes from profile:', search?.from === 'profile');
+        // Debug: verificar el origen de la navegación y estado de usuario
+        console.log('🔍 CompletarRegistro Navigation context:', {
+          searchParams: search,
+          fromOnboarding: search?.from === 'onboarding',
+          isNewUser,
+          user: user ? { email: user.email, username: user.username } : null,
+          localStorage_isNewUser: localStorage.getItem('is_new_user'),
+          localStorage_userExperienced: localStorage.getItem('user_experienced')
+        });
+        
+        // ✅ DETECCIÓN DE NUEVO USUARIO SIMPLIFICADA
+        const isFromNewRegistration = localStorage.getItem('is_new_user') === 'true';
+        const notExperienced = !localStorage.getItem('user_experienced');
+        const fromOnboardingParam = search?.from === 'onboarding';
+        
+        console.log('🔍 Onboarding detection status:', {
+          isFromNewRegistration,
+          notExperienced,
+          fromOnboardingParam,
+          isNewUserContext: isNewUser,
+          userExists: !!user
+        });
+
+        // Mostrar onboarding si es un usuario recién registrado
+        if (isFromNewRegistration && notExperienced) {
+          console.log('🎯 NEW USER DETECTED: Showing onboarding welcome');
+          setShowOnboarding(true);
+        }
         
         // Obtener el email y nombre del usuario autenticado
         const userEmail = user?.email || '';
         const userName = user?.username || '';
         
-        console.log('Auth context user:', { userEmail, userName });
+        console.log('👤 Auth context user data:', { userEmail, userName });
         
         // Usar el backend service para obtener el perfil
         const profileResponse = await getCurrentUserProfile();
         
         if (!profileResponse.success || !profileResponse.data) {
           // Si no hay perfil, crear uno nuevo con los datos del usuario autenticado
+          console.log('📝 No existing profile found, creating new with auth data');
           form.setValues({
             ...form.values,
             email: userEmail,
-            first_name: userName,
+            first_name: userName || '',
           });
-          console.log('No profile found, using auth data:', { userEmail, userName });
           setInitialLoading(false);
           return;
         }
 
         const profile = profileResponse.data;
         setIsEditing(true);
+        
         // 🔧 ARREGLO: Usar tanto photo_user como profile_picture para compatibilidad
         setPreviewUrl(profile.photo_user || profile.profile_picture || null);
         
-        console.log('Profile data loaded:', profile);
+        console.log('📋 Profile data loaded:', profile);
         console.log('🖼️ Setting preview URL:', profile.photo_user || profile.profile_picture || null);
         
         // Combinar datos del perfil con datos de autenticación
-        // Siempre usar el email del contexto de autenticación
         form.setValues({
           id: Number(profile.id),
           email: userEmail, // Siempre usar el email del usuario autenticado
@@ -115,17 +143,50 @@ const CompleteProfileView: React.FC = () => {
           photo_user: profile.photo_user || profile.profile_picture || null,
         });
         
-        console.log('Form values set:', form.values);
+        console.log('✅ Form values populated:', form.values);
       } catch (err) {
-        console.error('Error loading profile:', err);
+        console.error('❌ Error loading profile:', err);
       } finally {
         setInitialLoading(false);
       }
     };
 
-    loadProfile();
+    // Solo cargar si tenemos datos del usuario
+    if (user) {
+      loadProfile();
+    } else {
+      console.log('⏳ Waiting for user data from auth context...');
+      setInitialLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, isNewUser, search?.from]);
+
+  // ✅ EFECTO ADICIONAL PARA DEBUG DEL MODAL
+  useEffect(() => {
+    console.log('🔍 Modal state changed:', {
+      showOnboarding,
+      isNewUser,
+      searchFrom: search?.from,
+      localStorage_isNewUser: localStorage.getItem('is_new_user'),
+      localStorage_userExperienced: localStorage.getItem('user_experienced')
+    });
+    
+    if (showOnboarding) {
+      console.log('🎯 ONBOARDING MODAL IS NOW OPEN!');
+      
+      // Añadir notificación temporal para ver si el modal se está abriendo
+      setTimeout(() => {
+        console.log('🔍 Checking if modal is visible in DOM...');
+        const modalElement = document.querySelector('[data-mantine-modal]');
+        console.log('🔍 Modal element found:', !!modalElement);
+        if (modalElement) {
+          console.log('✅ Modal is in DOM!');
+        } else {
+          console.log('❌ Modal NOT found in DOM');
+        }
+      }, 500);
+    }
+  }, [showOnboarding, isNewUser, search?.from]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -268,35 +329,63 @@ const CompleteProfileView: React.FC = () => {
         throw new Error(updateResponse.error || 'Error al guardar el perfil');
       }
 
+      // Determinar el contexto de la acción
+      const comeFromProfile = search?.from === 'profile';
+      const comeFromOnboarding = search?.from === 'onboarding';
+      const wasNewUser = isNewUser || comeFromOnboarding;
+
       notifications.show({
-        title: 'Perfil guardado',
-        message: 'Tu perfil ha sido actualizado exitosamente',
+        title: '🎉 ¡Perfil completado!',
+        message: wasNewUser ? 'Bienvenido a Cupo. Tu perfil está listo.' : 'Tu perfil ha sido actualizado exitosamente',
         color: 'green',
       });
 
-      // Mejorar la lógica de redirección
-      // Si viene desde el perfil (search.from === 'profile') o está editando, regresar al perfil
-      // Si es un nuevo usuario, redirigir según el tipo de usuario
-      const comeFromProfile = search?.from === 'profile';
+      // ✅ ACTUALIZAR CONTEXTO: Refrescar los datos del usuario para actualizar hasProfile
+      console.log('🔄 Refreshing user context after profile completion...');
+      try {
+        await refreshUser(true); // Forzar refresh para actualizar hasProfile
+        console.log('✅ User context refreshed successfully');
+      } catch (refreshError) {
+        console.error('⚠️ Could not refresh user context:', refreshError);
+        // No es crítico, continuar con la redirección
+      }
       
-      console.log('🔄 Redirection logic:', {
+      console.log('🔄 Profile completion context:', {
         isEditing,
         comeFromProfile,
+        comeFromOnboarding,
+        isNewUser,
+        wasNewUser,
         searchFrom: search?.from,
         userType: values.user_type,
         searchObject: search
       });
-      
-      // PRIORIZAR: Si viene desde perfil, SIEMPRE regresar al perfil
+
+      // ✅ LÓGICA DE REDIRECCIÓN MEJORADA
       if (comeFromProfile) {
+        // Caso 1: Usuario editando perfil desde la sección de perfil
         console.log('✅ PROFILE UPDATE: Redirecting back to /Perfil');
         navigate({ to: '/Perfil' });
+      } else if (wasNewUser) {
+        // Caso 2: Nuevo usuario completando perfil (con o sin onboarding)
+        // ✅ MARCAR COMO EXPERIMENTADO ANTES DE REDIRIGIR
+        markUserAsExperienced();
+        console.log('🎯 New user completed profile, marking as experienced');
+        
+        // Añadir un pequeño delay para asegurar que el contexto se actualice
+        setTimeout(() => {
+          const destination = values.user_type === 'DRIVER' ? '/RegistrarVehiculo' : '/home';
+          console.log('✅ NEW USER JOURNEY COMPLETE: Redirecting to:', destination);
+          navigate({ to: destination });
+        }, 100);
       } else if (isEditing) {
+        // Caso 3: Usuario editando perfil existente
         console.log('✅ EDITING MODE: Redirecting to /Perfil');
         navigate({ to: '/Perfil' });
       } else {
+        // Caso 4: Fallback para otros casos
         const destination = values.user_type === 'DRIVER' ? '/RegistrarVehiculo' : '/home';
-        console.log('✅ NEW USER: Redirecting to:', destination);
+        console.log('✅ GENERAL CASE: Redirecting to:', destination);
         navigate({ to: destination });
       }
     } catch (err: any) {
@@ -427,6 +516,51 @@ const CompleteProfileView: React.FC = () => {
           </Button>
         </form>
       </Paper>
+
+      {/* Modal de Onboarding para nuevos usuarios */}
+      <Modal
+        opened={showOnboarding}
+        onClose={() => {
+          console.log('🚀 Onboarding modal closed by user');
+          setShowOnboarding(false);
+          // No marcar como experimentado aquí - solo cerrar el modal
+          // Se marcará cuando complete el perfil
+        }}
+        size="xl"
+        centered
+        withCloseButton={false}
+        trapFocus
+        lockScroll
+        closeOnClickOutside={false}
+        closeOnEscape={true}
+        style={{
+          background: 'transparent',
+        }}
+        styles={{
+          content: {
+            backgroundColor: 'rgba(0, 0, 0, 0.95)',
+            border: '2px solid #00ff9d',
+            borderRadius: '16px',
+          },
+          overlay: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          }
+        }}
+      >
+        <OnboardingWelcome 
+          onContinue={() => {
+            console.log('🚀 Onboarding continue button clicked - closing modal');
+            setShowOnboarding(false);
+            // Enfocar en el primer campo del formulario
+            setTimeout(() => {
+              const firstInput = document.querySelector('input[name="first_name"]') as HTMLInputElement;
+              if (firstInput) {
+                firstInput.focus();
+              }
+            }, 300);
+          }}
+        />
+      </Modal>
     </Container>
   );
 };

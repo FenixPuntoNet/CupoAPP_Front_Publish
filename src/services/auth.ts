@@ -11,6 +11,8 @@ export interface SignupRequest {
   full_name: string;
   terms_accepted: boolean;
   email_subscribed: boolean;
+  verification_terms?: string;
+  suscriptions?: string;
 }
 
 export interface AuthResponse {
@@ -71,16 +73,58 @@ export const loginUser = async (credentials: LoginRequest): Promise<AuthResponse
 // Registro usando el backend
 export const registerUser = async (userData: SignupRequest): Promise<AuthResponse> => {
   try {
+    console.log('🚀 Starting registration process...');
+    
     const response = await apiRequest('/auth/signup', {
       method: 'POST',
       body: JSON.stringify(userData)
     });
 
     if (response.success) {
-      return {
-        success: true,
-        message: response.message || 'Usuario registrado exitosamente'
-      };
+      console.log('✅ Registration successful, now attempting auto-login...');
+      
+      // ✅ AUTO-LOGIN: Después del registro exitoso, automáticamente hacer login
+      try {
+        console.log('🔄 Performing auto-login with credentials...');
+        
+        // Hacer login directo con las credenciales
+        const loginResponse = await apiRequest('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: userData.email,
+            password: userData.password
+          })
+        });
+
+        if (loginResponse.success && loginResponse.access_token && loginResponse.user) {
+          console.log('✅ Auto-login successful');
+          
+          // Guardar el token automáticamente (ya se hace en apiRequest)
+          // El token ya se guardó en apiRequest para /auth/login
+          
+          return {
+            success: true,
+            user: loginResponse.user,
+            token: loginResponse.access_token,
+            access_token: loginResponse.access_token,
+            message: 'Usuario registrado y logueado exitosamente'
+          };
+        } else {
+          console.warn('⚠️ Auto-login response invalid:', loginResponse);
+          // Si falla el auto-login, al menos el registro fue exitoso
+          return {
+            success: true,
+            message: response.message || 'Usuario registrado exitosamente. Por favor, inicia sesión manualmente.'
+          };
+        }
+      } catch (loginError) {
+        console.error('❌ Auto-login failed after registration:', loginError);
+        // Si falla el auto-login, al menos el registro fue exitoso
+        return {
+          success: true,
+          message: response.message || 'Usuario registrado exitosamente. Por favor, inicia sesión manualmente.'
+        };
+      }
     }
 
     return {
@@ -88,7 +132,7 @@ export const registerUser = async (userData: SignupRequest): Promise<AuthRespons
       error: response.error || 'Error en el registro'
     };
   } catch (error) {
-    console.error('Register error:', error);
+    console.error('❌ Registration error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error de conexión'

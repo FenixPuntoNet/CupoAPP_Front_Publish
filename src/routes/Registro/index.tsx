@@ -16,6 +16,8 @@ import { useForm } from "@mantine/form";
 import styles from "./index.module.css";
 import { TermsModal } from "@/components/TermsModal";
 import { registerUser, type SignupRequest } from "@/services/auth";
+import { saveTermsAndConditions } from "@/services/terms";
+import { useBackendAuth } from "@/context/BackendAuthContext";
 
 interface RegisterFormValues {
   nombre: string;
@@ -36,6 +38,7 @@ const RegisterView: React.FC = () => {
   });
 
   const navigate = useNavigate();
+  const { refreshUser } = useBackendAuth();
 
 
   const form = useForm<RegisterFormValues>({
@@ -70,23 +73,75 @@ const RegisterView: React.FC = () => {
         password: values.password,
         full_name: values.nombre,
         terms_accepted: acceptTerms,
-        email_subscribed: subscribeEmails
+        email_subscribed: subscribeEmails,
+        verification_terms: acceptTerms ? 'aceptado' : 'rechazado',
+        suscriptions: subscribeEmails ? 'aceptado' : 'rechazado'
       };
 
-      // Registrar usuario usando el backend
+      // ✅ AUTO-LOGIN: Registrar usuario (que ahora incluye auto-login)
+      console.log('🚀 Starting registration with auto-login...');
       const result = await registerUser(userData);
   
       if (!result.success) {
         setError(result.error || 'Error al registrar usuario');
         return;
       }
+
+      // ✅ REGISTRO + LOGIN EXITOSO
+      console.log('✅ Registration and auto-login successful:', result);
+      
+      // Verificar si el resultado incluye datos de usuario (auto-login exitoso)
+      const hasUserData = result.user && result.token;
+      
+      if (hasUserData) {
+        console.log('🎯 User data received from auto-login, refreshing context...');
+        
+        // Actualizar el contexto de autenticación con los nuevos datos
+        try {
+          await refreshUser(true); // Forzar refresh después del auto-login
+          console.log('✅ Auth context refreshed after registration');
+        } catch (refreshError) {
+          console.error('⚠️ Error refreshing auth context:', refreshError);
+          // Continuar aunque falle el refresh - el usuario ya está logueado
+        }
+      }
   
-      // Registro exitoso - mostrar mensaje y redirigir al login
-      console.log('Registration successful:', result.message);
-      navigate({ to: "/Login" });
+      // Guardar términos y condiciones por separado
+      console.log('📝 Saving terms and conditions...');
+      try {
+        await saveTermsAndConditions({
+          verification_terms: acceptTerms ? 'aceptado' : 'rechazado',
+          suscriptions: subscribeEmails ? 'aceptado' : 'rechazado'
+        });
+        console.log('✅ Terms and conditions saved successfully');
+      } catch (termsError) {
+        console.error('⚠️ Error saving terms and conditions:', termsError);
+        // No bloquear el registro si falla el guardado de términos
+      }
+
+      // Marcar que es un usuario nuevo para activar onboarding
+      localStorage.setItem('is_new_user', 'true');
+      console.log('🎯 User marked as new for onboarding');
+  
+      // ✅ FLUJO MEJORADO: Redirigir según el resultado del auto-login
+      if (hasUserData) {
+        // Usuario logueado automáticamente - ir directo a completar perfil con onboarding
+        console.log('🎯 Auto-login successful, redirecting to complete profile with onboarding');
+        navigate({ 
+          to: "/CompletarRegistro", 
+          search: { from: 'onboarding' } 
+        });
+      } else {
+        // Auto-login falló - ir al login tradicional
+        console.log('⚠️ Auto-login failed, redirecting to login');
+        navigate({ 
+          to: "/Login", 
+          search: { newUser: 'true', message: 'registro-exitoso' } 
+        });
+      }
   
     } catch (error) {
-      console.error("Error durante el registro:", error);
+      console.error("❌ Error durante el registro:", error);
       setError("Error inesperado durante el registro. Intenta nuevamente.");
     } finally {
       setLoading(false);

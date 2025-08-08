@@ -13,9 +13,11 @@ interface BackendAuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   hasProfile: boolean;
+  isNewUser: boolean;
   signIn: (email: string, password: string) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: (forceRefresh?: boolean) => Promise<void>;
+  markUserAsExperienced: () => void;
 }
 
 const BackendAuthContext = createContext<BackendAuthContextType | undefined>(undefined);
@@ -24,13 +26,27 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [user, setUser] = useState<BackendUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
-  const refreshUser = async (): Promise<void> => {
+  const refreshUser = async (forceRefresh = false): Promise<void> => {
+    // Evitar múltiples llamadas simultáneas (pero permitir force refresh)
+    if (isInitialized && !forceRefresh) {
+      console.log('⏭️ Already initialized, skipping refresh (use forceRefresh=true to override)');
+      return;
+    }
+
     try {
-      console.log('🔄 Refreshing user data...');
-      console.log('🍪 Current cookies before /auth/me request:', document.cookie);
+      console.log('🔄 Refreshing user data...' + (forceRefresh ? ' (forced)' : ''));
       
-      const response = await apiRequest('/auth/me');
+      // Timeout para evitar que se quede colgado
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: Request took too long')), 10000)
+      );
+      
+      const apiPromise = apiRequest('/auth/me');
+      
+      const response = await Promise.race([apiPromise, timeoutPromise]);
       console.log('🔄 API response received:', response);
       
       if (response && response.id) {
@@ -45,15 +61,6 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         
         // El backend ya incluye el perfil en la respuesta
         console.log('🔍 Profile data for validation:', response.profile);
-        console.log('🔍 Profile fields check:', {
-          hasProfile: !!response.profile,
-          hasFirstName: !!(response.profile?.first_name),
-          hasIdNumber: !!(response.profile?.identification_number),
-          hasPhoneNumber: !!(response.profile?.phone_number),
-          firstNameValue: response.profile?.first_name,
-          idNumberValue: response.profile?.identification_number,
-          phoneNumberValue: response.profile?.phone_number
-        });
         
         const hasCompleteProfile = !!(response.profile && 
           response.profile.first_name && 
@@ -62,33 +69,63 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         
         setHasProfile(hasCompleteProfile);
         
-        console.log('✅ Auth refreshed - User:', user, 'HasProfile:', hasCompleteProfile, 'Profile:', response.profile);
+        // Detectar nuevo usuario: tiene cuenta pero no perfil completo Y viene de registro
+        const isFromRegistration = localStorage.getItem('is_new_user') === 'true';
+        const isFirstTime = response.user && !hasCompleteProfile && isFromRegistration;
+        setIsNewUser(!!isFirstTime);
+        
+        console.log('🔍 New user detection:', {
+          hasUser: !!response.user,
+          hasCompleteProfile,
+          isFromRegistration,
+          isFirstTime: !!isFirstTime
+        });
+        
+        console.log('✅ Auth refreshed - User:', user, 'HasProfile:', hasCompleteProfile, 'IsNewUser:', !!isFirstTime);
       } else {
         console.log('❌ No user data in response, clearing state');
         // Si no hay usuario, limpiar el estado
         setUser(null);
         setHasProfile(false);
+        setIsNewUser(false);
       }
     } catch (error) {
-      // Error 401 es normal cuando no hay sesión, pero debemos hacer log
-      // para diagnosticar problemas específicos después del login
-      if (error instanceof Error && error.message.includes('401')) {
-        console.log('❌ No authenticated session found (401)');
-        console.log('🍪 Cookies during 401 error:', document.cookie);
-        console.log('⚠️ This could be a cookie timing issue or cross-origin cookie problem');
+      // Error 401 es normal cuando no hay sesión
+      if (error instanceof Error && (error.message.includes('401') || error.message.includes('Timeout'))) {
+        console.log('❌ No authenticated session found or timeout - Session expired or invalid');
+        // Limpiar estado local cuando la sesión es inválida
+        setUser(null);
+        setHasProfile(false);
+        setIsNewUser(false);
+        
+        // Remover token inválido solo si no es timeout
+        if (!error.message.includes('Timeout')) {
+          const { removeAuthToken } = await import('@/config/api');
+          removeAuthToken();
+        }
+        
+        // Si el usuario estaba logueado, significa que la sesión expiró
+        // El AuthGuard se encargará de redirigir al login
       } else {
         console.error('❌ Auth refresh failed:', error);
+        setUser(null);
+        setHasProfile(false);
+        setIsNewUser(false);
       }
-      setUser(null);
-      setHasProfile(false);
     } finally {
       setLoading(false);
+      if (forceRefresh || !isInitialized) {
+        setIsInitialized(true);
+      }
     }
   };
 
-  // Inicializar usuario al cargar
+  // Inicializar usuario al cargar - SOLO UNA VEZ
   useEffect(() => {
-    refreshUser();
+    if (!isInitialized) {
+      console.log('🚀 Initializing auth context...');
+      refreshUser();
+    }
   }, []);
 
   const signIn = async (email: string, password: string): Promise<AuthResponse> => {
@@ -103,12 +140,20 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         // Si el login es exitoso y tenemos datos de usuario, actualizar el estado directamente
         if (response.user) {
           setUser(response.user);
-          console.log('� User set directly from login response:', response.user);
+          console.log('👤 User set directly from login response:', response.user);
+          
+          // Marcar como nuevo usuario si viene de registro
+          const isFromRegistration = localStorage.getItem('is_new_user') === 'true';
+          if (isFromRegistration) {
+            setIsNewUser(true);
+            console.log('🎯 New user detected from registration');
+          }
           
           // Inmediatamente intentar obtener datos completos del usuario
           console.log('🔄 Getting complete user data...');
           try {
-            await refreshUser();
+            // Forzar refresh para obtener datos completos
+            await refreshUser(true);
             console.log('✅ User data refreshed after login');
           } catch (refreshError) {
             // Si falla el refresh, al menos ya tenemos el usuario básico
@@ -137,13 +182,27 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       setLoading(true);
       await logoutUser();
       setUser(null);
+      setHasProfile(false);
+      setIsNewUser(false);
+      setIsInitialized(false); // Resetear inicialización
     } catch (error) {
       console.error('Sign out error:', error);
       // Limpiar usuario local aunque falle la request
       setUser(null);
+      setHasProfile(false);
+      setIsNewUser(false);
+      setIsInitialized(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Marcar usuario como experimentado (ya completó onboarding)
+  const markUserAsExperienced = () => {
+    localStorage.setItem('user_experienced', 'true');
+    localStorage.removeItem('is_new_user'); // Limpiar flag de nuevo usuario
+    setIsNewUser(false);
+    console.log('👍 User marked as experienced');
   };
 
   const value: BackendAuthContextType = {
@@ -151,9 +210,11 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     loading,
     isAuthenticated: !!user,
     hasProfile,
+    isNewUser,
     signIn,
     signOut,
     refreshUser,
+    markUserAsExperienced,
   };
 
   return (

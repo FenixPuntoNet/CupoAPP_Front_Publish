@@ -21,10 +21,6 @@ export const removeAuthToken = (): void => {
   console.log('🔒 Auth token removed from localStorage');
 };
 
-// Variable para tracking de retries por problemas de autenticación
-let authRetries = 0;
-const MAX_AUTH_RETRIES = 3;
-
 // Función helper para hacer requests a la API
 export const apiRequest = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -45,12 +41,12 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
   // Log detallado para TODAS las requests para debugging
   console.log(`🔄 [API] Request to ${endpoint}`);
   console.log(`🔑 [API] Using auth token: ${token ? 'yes' : 'no'}`);
-  console.log(`� [API] Token preview: ${token ? token.substring(0, 20) + '...' : 'null'}`);
-  console.log(`�📝 [API] Request headers:`, headers);
+  console.log(`🎫 [API] Token preview: ${token ? token.substring(0, 20) + '...' : 'null'}`);
+  console.log(`📝 [API] Request headers:`, headers);
   console.log(`📝 [API] Request method:`, options.method || 'GET');
   console.log(`📝 [API] Request body:`, options.body || 'none');
 
-  // Crear opciones de fetch (mantenemos credentials: 'include' como fallback)
+  // Crear opciones de fetch
   const fetchOptions = {
     ...options,
     headers,
@@ -87,28 +83,9 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
       
       // Si es un error 401, limpiar el token (excepto en login/signup)
       if (response.status === 401 && !isPublicEndpoint) {
-        console.log('⚠️ [API] Authentication error (401), token might be invalid');
-        
-        // Limpiar el token inválido inmediatamente
+        console.log('⚠️ [API] Authentication error (401), token invalid - clearing token');
         removeAuthToken();
-        
-        // Para /auth/me intentamos nuevamente si tenemos retries disponibles
-        if (endpoint === '/auth/me' && authRetries < MAX_AUTH_RETRIES) {
-          authRetries++;
-          console.log(`⚠️ [API] Auth failed (${authRetries}/${MAX_AUTH_RETRIES}), retrying after delay...`);
-          
-          // Esperar un poco más en cada intento
-          await new Promise(resolve => setTimeout(resolve, 1000 * authRetries));
-          
-          console.log(`🔄 [API] Retrying ${endpoint} request...`);
-          console.log(`🔑 [API] Auth token for retry: ${getAuthToken() ? 'present' : 'missing'}`);
-          
-          // Intentar nuevamente
-          return apiRequest(endpoint, options);
-        }
       }
-      
-      authRetries = 0; // Reset retries for other requests
       
       // Log detallado para errores de cualquier request
       console.log(`❌ [API] ${endpoint} failed with status: ${response.status}`);
@@ -116,8 +93,6 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
       
       throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
     }
-
-    authRetries = 0; // Reset retries on success
     
     // Intentar parsear la respuesta como JSON
     try {
