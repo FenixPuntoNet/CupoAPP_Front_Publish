@@ -1,4 +1,4 @@
-import  { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link, createFileRoute } from '@tanstack/react-router';
 import {
     Container,
@@ -12,19 +12,22 @@ import {
     Collapse
 } from '@mantine/core';
 import { ArrowLeft, MapPin, AlertCircle } from 'lucide-react';
-import { GoogleMap,  } from '@react-google-maps/api';
-import {
-    tripStore,
+import { GoogleMap } from '@react-google-maps/api';
+import { 
+    tripStore, 
     type TripLocation,
     type TripStopover,
-    type StopData
+    type StopData 
 } from '../../types/PublicarViaje/TripDataManagement';
 import { 
     createLocationForStopover, 
     convertTripLocationToLocationData,
-    searchLocationsForStopovers
+    searchLocationsForStopovers,
+    savePendingStopover
 } from '../../services/paradas';
 import styles from './index.module.css';
+
+// ==================== INTERFACES LOCALES ====================
 
 interface StopLocation extends TripLocation {
     distance: string;
@@ -464,69 +467,110 @@ function ParadasView() {
     
 
     const handleConfirm = async () => {
-        setIsLoading(true)
-      try {
-          // Crear las ubicaciones en el backend si son necesarias
-          const selectedStopoversPromises = Array.from(selectedStops).map(async (stopId, index) => {
-              const stop = allStops.find((s) => s.placeId === stopId);
-              if(!stop) return null;
-              
-              // Obtener detalles completos de la parada
-              const stopDetails = await getStopDetails(stopId);
-              if (!stopDetails) return null;
-
-              try {
-                // Crear o verificar la ubicación en el backend
-                const locationData = convertTripLocationToLocationData({
-                  mainText: stopDetails.mainText,
-                  address: stopDetails.address,
-                  coords: stopDetails.coords,
-                  secondaryText: stopDetails.secondaryText,
-                  placeId: stopDetails.placeId,
+        setIsLoading(true);
+        
+        try {
+            // Si no hay paradas seleccionadas, continuar sin paradas
+            if (selectedStops.size === 0) {
+                tripStore.updateData({
+                    stopovers: [],
+                    currentStep: 'details',
                 });
+                navigate({ to: '/DetallesViaje' });
+                return;
+            }
 
-                const locationResult = await createLocationForStopover(locationData);
-                
-                if (locationResult.success) {
-                  // Actualizar el stopDetails con el ID de la ubicación creada/encontrada
-                  return {
-                    location: {
-                      ...stopDetails,
-                      location_id: locationResult.location.id,
-                    },
-                    order: index,
-                  } as TripStopover;
-                } else {
-                  console.error('Error creating location for stopover:', locationResult);
-                  return null;
+            console.log('🚀 Procesando paradas seleccionadas con sistema trip_id NULL...');
+
+            // Crear las ubicaciones en el backend y guardar como pendientes
+            const selectedStopoversPromises = Array.from(selectedStops).map(async (stopId, index) => {
+                const stop = allStops.find((s) => s.placeId === stopId);
+                if (!stop) return null;
+
+                // Obtener detalles completos de la parada
+                const stopDetails = await getStopDetails(stopId);
+                if (!stopDetails) return null;
+
+                try {
+                    // 1. Crear o verificar la ubicación en el backend
+                    const locationData = convertTripLocationToLocationData({
+                        mainText: stopDetails.mainText,
+                        address: stopDetails.address,
+                        coords: stopDetails.coords,
+                        secondaryText: stopDetails.secondaryText,
+                        placeId: stopDetails.placeId,
+                    });
+
+                    const locationResult = await createLocationForStopover(locationData);
+                    
+                    if (locationResult.success) {
+                        // 2. Guardar parada como pendiente (trip_id = NULL)
+                        const pendingResult = await savePendingStopover({
+                            location_id: locationResult.location.id,
+                            order: index + 1,
+                            estimated_time: undefined, // Se puede agregar en el futuro
+                            location_data: locationResult.location
+                        });
+
+                        if (pendingResult.success) {
+                            console.log(`✅ Parada ${index + 1} guardada como pendiente:`, stopDetails.mainText);
+                            
+                            // Retornar datos para el tripStore local
+                            return {
+                                location: {
+                                    ...stopDetails,
+                                    location_id: locationResult.location.id,
+                                },
+                                order: index + 1,
+                            } as TripStopover;
+                        } else {
+                            console.error('Error guardando parada pendiente:', pendingResult.error);
+                            // Continuar con datos locales si falla
+                            return {
+                                location: stopDetails,
+                                order: index + 1,
+                            } as TripStopover;
+                        }
+                    } else {
+                        console.error('Error creating location for stopover:', locationResult);
+                        // Si falla el backend, continuar con los datos locales
+                        return {
+                            location: stopDetails,
+                            order: index + 1,
+                        } as TripStopover;
+                    }
+                } catch (error) {
+                    console.error('Error processing stopover:', error);
+                    // Fallback a datos locales
+                    return {
+                        location: stopDetails,
+                        order: index + 1,
+                    } as TripStopover;
                 }
-              } catch (error) {
-                console.error('Error creating location in backend:', error);
-                // Si falla el backend, continúa con los datos locales
-                return {
-                  location: stopDetails,
-                  order: index,
-                } as TripStopover;
-              }
-         });
+            });
 
-           const selectedStopovers = (await Promise.all(selectedStopoversPromises)).filter(Boolean) as TripStopover[];
+            const selectedStopovers = (await Promise.all(selectedStopoversPromises)).filter(Boolean) as TripStopover[];
 
+            console.log(`✅ ${selectedStopovers.length} paradas procesadas exitosamente (trip_id = NULL)`);
+
+            // Actualizar tripStore local y continuar
             tripStore.updateData({
                 stopovers: selectedStopovers,
-              currentStep: 'details',
+                currentStep: 'details',
             });
 
             navigate({ to: '/DetallesViaje' });
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? `Error al confirmar las paradas: ${error.message}`
-            : "Error al confirmar las paradas"
-        );
-      } finally {
-          setIsLoading(false);
-      }
+            
+        } catch (error) {
+            console.error('❌ Error confirmando paradas:', error);
+            setError(
+                error instanceof Error
+                    ? `Error al confirmar las paradas: ${error.message}`
+                    : "Error al confirmar las paradas"
+            );
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

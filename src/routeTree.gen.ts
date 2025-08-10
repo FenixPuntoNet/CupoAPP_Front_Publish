@@ -18,6 +18,7 @@ import { Route as ChangeIndexRouteImport } from './routes/change/index'
 import { Route as AyudaIndexRouteImport } from './routes/ayuda/index'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
 import { Route as WalletIndexRouteImport } from './routes/Wallet/index'
+import { Route as SafePointsIndexRouteImport } from './routes/SafePoints/index'
 import { Route as ReservasIndexRouteImport } from './routes/Reservas/index'
 import { Route as RegistroIndexRouteImport } from './routes/Registro/index'
 import { Route as RegistrarVehiculoIndexRouteImport } from './routes/RegistrarVehiculo/index'
@@ -36,6 +37,7 @@ import { Route as CompletarRegistroIndexRouteImport } from './routes/CompletarRe
 import { Route as ChatIndexRouteImport } from './routes/Chat/index'
 import { Route as ActividadesIndexRouteImport } from './routes/Actividades/index'
 import { Route as ReservasTripReservationModalRouteImport } from './routes/Reservas/TripReservationModal'
+import { Route as RegistrarVehiculoSoat_fixedRouteImport } from './routes/RegistrarVehiculo/Soat_fixed'
 import { Route as RegistrarVehiculoSoatRouteImport } from './routes/RegistrarVehiculo/Soat'
 import { Route as RegistrarVehiculoPropertyCardRouteImport } from './routes/RegistrarVehiculo/PropertyCard'
 import { Route as RegistrarVehiculoLicenseRouteImport } from './routes/RegistrarVehiculo/License'
@@ -88,6 +90,11 @@ const AccountIndexRoute = AccountIndexRouteImport.update({
 const WalletIndexRoute = WalletIndexRouteImport.update({
   id: '/Wallet/',
   path: '/Wallet/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SafePointsIndexRoute = SafePointsIndexRouteImport.update({
+  id: '/SafePoints/',
+  path: '/SafePoints/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReservasIndexRoute = ReservasIndexRouteImport.update({
@@ -181,6 +188,12 @@ const ReservasTripReservationModalRoute =
     path: '/Reservas/TripReservationModal',
     getParentRoute: () => rootRouteImport,
   } as any)
+const RegistrarVehiculoSoat_fixedRoute =
+  RegistrarVehiculoSoat_fixedRouteImport.update({
+    id: '/RegistrarVehiculo/Soat_fixed',
+    path: '/RegistrarVehiculo/Soat_fixed',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const RegistrarVehiculoSoatRoute = RegistrarVehiculoSoatRouteImport.update({
   id: '/RegistrarVehiculo/Soat',
   path: '/RegistrarVehiculo/Soat',
@@ -256,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/RegistrarVehiculo/License': typeof RegistrarVehiculoLicenseRoute
   '/RegistrarVehiculo/PropertyCard': typeof RegistrarVehiculoPropertyCardRoute
   '/RegistrarVehiculo/Soat': typeof RegistrarVehiculoSoatRoute
+  '/RegistrarVehiculo/Soat_fixed': typeof RegistrarVehiculoSoat_fixedRoute
   '/Reservas/TripReservationModal': typeof ReservasTripReservationModalRoute
   '/Actividades': typeof ActividadesIndexRoute
   '/Chat': typeof ChatIndexRoute
@@ -274,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/RegistrarVehiculo': typeof RegistrarVehiculoIndexRoute
   '/Registro': typeof RegistroIndexRoute
   '/Reservas': typeof ReservasIndexRoute
+  '/SafePoints': typeof SafePointsIndexRoute
   '/Wallet': typeof WalletIndexRoute
   '/account': typeof AccountIndexRoute
   '/ayuda': typeof AyudaIndexRoute
@@ -295,6 +310,7 @@ export interface FileRoutesByTo {
   '/RegistrarVehiculo/License': typeof RegistrarVehiculoLicenseRoute
   '/RegistrarVehiculo/PropertyCard': typeof RegistrarVehiculoPropertyCardRoute
   '/RegistrarVehiculo/Soat': typeof RegistrarVehiculoSoatRoute
+  '/RegistrarVehiculo/Soat_fixed': typeof RegistrarVehiculoSoat_fixedRoute
   '/Reservas/TripReservationModal': typeof ReservasTripReservationModalRoute
   '/Actividades': typeof ActividadesIndexRoute
   '/Chat': typeof ChatIndexRoute
@@ -313,6 +329,7 @@ export interface FileRoutesByTo {
   '/RegistrarVehiculo': typeof RegistrarVehiculoIndexRoute
   '/Registro': typeof RegistroIndexRoute
   '/Reservas': typeof ReservasIndexRoute
+  '/SafePoints': typeof SafePointsIndexRoute
   '/Wallet': typeof WalletIndexRoute
   '/account': typeof AccountIndexRoute
   '/ayuda': typeof AyudaIndexRoute
@@ -335,6 +352,7 @@ export interface FileRoutesById {
   '/RegistrarVehiculo/License': typeof RegistrarVehiculoLicenseRoute
   '/RegistrarVehiculo/PropertyCard': typeof RegistrarVehiculoPropertyCardRoute
   '/RegistrarVehiculo/Soat': typeof RegistrarVehiculoSoatRoute
+  '/RegistrarVehiculo/Soat_fixed': typeof RegistrarVehiculoSoat_fixedRoute
   '/Reservas/TripReservationModal': typeof ReservasTripReservationModalRoute
   '/Actividades/': typeof ActividadesIndexRoute
   '/Chat/': typeof ChatIndexRoute
@@ -353,6 +371,7 @@ export interface FileRoutesById {
   '/RegistrarVehiculo/': typeof RegistrarVehiculoIndexRoute
   '/Registro/': typeof RegistroIndexRoute
   '/Reservas/': typeof ReservasIndexRoute
+  '/SafePoints/': typeof SafePointsIndexRoute
   '/Wallet/': typeof WalletIndexRoute
   '/account/': typeof AccountIndexRoute
   '/ayuda/': typeof AyudaIndexRoute
@@ -376,6 +395,7 @@ export interface FileRouteTypes {
     | '/RegistrarVehiculo/License'
     | '/RegistrarVehiculo/PropertyCard'
     | '/RegistrarVehiculo/Soat'
+    | '/RegistrarVehiculo/Soat_fixed'
     | '/Reservas/TripReservationModal'
     | '/Actividades'
     | '/Chat'
@@ -394,6 +414,7 @@ export interface FileRouteTypes {
     | '/RegistrarVehiculo'
     | '/Registro'
     | '/Reservas'
+    | '/SafePoints'
     | '/Wallet'
     | '/account'
     | '/ayuda'
@@ -415,6 +436,7 @@ export interface FileRouteTypes {
     | '/RegistrarVehiculo/License'
     | '/RegistrarVehiculo/PropertyCard'
     | '/RegistrarVehiculo/Soat'
+    | '/RegistrarVehiculo/Soat_fixed'
     | '/Reservas/TripReservationModal'
     | '/Actividades'
     | '/Chat'
@@ -433,6 +455,7 @@ export interface FileRouteTypes {
     | '/RegistrarVehiculo'
     | '/Registro'
     | '/Reservas'
+    | '/SafePoints'
     | '/Wallet'
     | '/account'
     | '/ayuda'
@@ -454,6 +477,7 @@ export interface FileRouteTypes {
     | '/RegistrarVehiculo/License'
     | '/RegistrarVehiculo/PropertyCard'
     | '/RegistrarVehiculo/Soat'
+    | '/RegistrarVehiculo/Soat_fixed'
     | '/Reservas/TripReservationModal'
     | '/Actividades/'
     | '/Chat/'
@@ -472,6 +496,7 @@ export interface FileRouteTypes {
     | '/RegistrarVehiculo/'
     | '/Registro/'
     | '/Reservas/'
+    | '/SafePoints/'
     | '/Wallet/'
     | '/account/'
     | '/ayuda/'
@@ -494,6 +519,7 @@ export interface RootRouteChildren {
   RegistrarVehiculoLicenseRoute: typeof RegistrarVehiculoLicenseRoute
   RegistrarVehiculoPropertyCardRoute: typeof RegistrarVehiculoPropertyCardRoute
   RegistrarVehiculoSoatRoute: typeof RegistrarVehiculoSoatRoute
+  RegistrarVehiculoSoat_fixedRoute: typeof RegistrarVehiculoSoat_fixedRoute
   ReservasTripReservationModalRoute: typeof ReservasTripReservationModalRoute
   ActividadesIndexRoute: typeof ActividadesIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
@@ -512,6 +538,7 @@ export interface RootRouteChildren {
   RegistrarVehiculoIndexRoute: typeof RegistrarVehiculoIndexRoute
   RegistroIndexRoute: typeof RegistroIndexRoute
   ReservasIndexRoute: typeof ReservasIndexRoute
+  SafePointsIndexRoute: typeof SafePointsIndexRoute
   WalletIndexRoute: typeof WalletIndexRoute
   AccountIndexRoute: typeof AccountIndexRoute
   AyudaIndexRoute: typeof AyudaIndexRoute
@@ -578,6 +605,13 @@ declare module '@tanstack/react-router' {
       path: '/Wallet'
       fullPath: '/Wallet'
       preLoaderRoute: typeof WalletIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/SafePoints/': {
+      id: '/SafePoints/'
+      path: '/SafePoints'
+      fullPath: '/SafePoints'
+      preLoaderRoute: typeof SafePointsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/Reservas/': {
@@ -706,6 +740,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReservasTripReservationModalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/RegistrarVehiculo/Soat_fixed': {
+      id: '/RegistrarVehiculo/Soat_fixed'
+      path: '/RegistrarVehiculo/Soat_fixed'
+      fullPath: '/RegistrarVehiculo/Soat_fixed'
+      preLoaderRoute: typeof RegistrarVehiculoSoat_fixedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/RegistrarVehiculo/Soat': {
       id: '/RegistrarVehiculo/Soat'
       path: '/RegistrarVehiculo/Soat'
@@ -799,6 +840,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegistrarVehiculoLicenseRoute: RegistrarVehiculoLicenseRoute,
   RegistrarVehiculoPropertyCardRoute: RegistrarVehiculoPropertyCardRoute,
   RegistrarVehiculoSoatRoute: RegistrarVehiculoSoatRoute,
+  RegistrarVehiculoSoat_fixedRoute: RegistrarVehiculoSoat_fixedRoute,
   ReservasTripReservationModalRoute: ReservasTripReservationModalRoute,
   ActividadesIndexRoute: ActividadesIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
@@ -817,6 +859,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegistrarVehiculoIndexRoute: RegistrarVehiculoIndexRoute,
   RegistroIndexRoute: RegistroIndexRoute,
   ReservasIndexRoute: ReservasIndexRoute,
+  SafePointsIndexRoute: SafePointsIndexRoute,
   WalletIndexRoute: WalletIndexRoute,
   AccountIndexRoute: AccountIndexRoute,
   AyudaIndexRoute: AyudaIndexRoute,

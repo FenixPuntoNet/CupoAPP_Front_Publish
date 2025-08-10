@@ -1,0 +1,59 @@
+.container {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.filtersCard {
+  border: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+}
+
+.safePointCard {
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.safePointCard:hover {
+  border-color: #495057;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.safePointCard.selected {
+  border-color: #339af0;
+  background-color: #e7f5ff;
+  box-shadow: 0 2px 8px rgba(51, 154, 240, 0.2);
+}
+
+.safePointName {
+  color: #333;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.emptyCard {
+  border: 1px dashed #dee2e6;
+  background-color: #f8f9fa;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    max-height: 400px;
+  }
+  
+  .safePointCard {
+    padding: 8px !important;
+  }
+  
+  .safePointName {
+    font-size: 12px;
+  }
+}

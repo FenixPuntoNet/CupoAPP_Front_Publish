@@ -8,7 +8,8 @@ import PassengerSelector from '../../components/ui/home/PassengerSelector';
 import dayjs from 'dayjs';
 import { getFromLocalStorage, saveToLocalStorage } from '../../types/PublicarViaje/localStorageHelper';
 import styles from './reservar.module.css';
-import { TripReservationModal } from '../Reservas/TripReservationModal';
+import { TripSafePointsInfo } from '@/components/TripSafePointsInfo';
+import { TripReservationModal } from '@/routes/Reservas/TripReservationModal';
 import type { Trip } from '@/types/Trip';
 import { Modal } from '@mantine/core';
 import { Rating } from '@mantine/core';
@@ -865,6 +866,14 @@ const ReservarView = () => {
                                           </Text>
                                       </div>
                                   </div>
+                                  
+                                  {/* SafePoints del viaje */}
+                                  <TripSafePointsInfo 
+                                    tripId={trip.id} 
+                                    compact={true}
+                                    origin={trip.origin}
+                                    destination={trip.destination}
+                                  />
                                   
                                   {/* Botón de reservar */}
                                   <Button

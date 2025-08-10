@@ -1,6 +1,7 @@
 import { apiRequest } from '../config/api';
 
-// Interfaces para las paradas
+// ==================== INTERFACES ====================
+
 interface StopoverLocation {
   id: number;
   main_text: string;
@@ -13,7 +14,7 @@ interface StopoverLocation {
 
 interface Stopover {
   id: number;
-  trip_id: number;
+  trip_id: number | null; // Permite NULL para borradores
   location_id: number;
   order: number;
   estimated_time?: string | null;
@@ -22,7 +23,7 @@ interface Stopover {
 }
 
 interface CreateStopoverData {
-  trip_id: number;
+  trip_id: number | null; // Permite NULL para borradores
   location_id: number;
   order: number;
   estimated_time?: string;
@@ -162,6 +163,169 @@ export async function searchLocationsForStopovers(params?: {
   return apiRequest(url, {
     method: 'GET',
   });
+}
+
+// ==================== FUNCIONES PARA TRIP_ID NULL SYSTEM ====================
+
+/**
+ * Obtener paradas pendientes (sin trip_id) - Backend implementado
+ */
+export async function getPendingStopovers(): Promise<{
+  success: boolean;
+  pending_stopovers: any[];
+  count: number;
+  error?: string;
+}> {
+  try {
+    console.log('📋 Getting pending stopovers from backend...');
+    
+    const result = await apiRequest('/paradas/pending-stopovers', {
+      method: 'GET',
+    });
+
+    console.log('✅ Pending stopovers loaded from backend:', {
+      count: result.count,
+      status: 'backend_integration_active'
+    });
+
+    return result;
+  } catch (error) {
+    console.error('❌ Error getting pending stopovers from backend:', error);
+    
+    // Fallback temporal con localStorage en caso de error del backend
+    console.log('🔄 Falling back to localStorage...');
+    const stored = localStorage.getItem('pendingStopovers');
+    const pendingStopovers = stored ? JSON.parse(stored) : [];
+    
+    return {
+      success: true,
+      pending_stopovers: pendingStopovers,
+      count: pendingStopovers.length,
+      error: 'Backend error, using localStorage fallback'
+    };
+  }
+}
+
+/**
+ * Guardar parada en estado pendiente (sin trip_id) - Backend implementado
+ */
+export async function savePendingStopover(stopoverData: {
+  location_id: number;
+  order: number;
+  estimated_time?: string;
+  location_data: StopoverLocation;
+}): Promise<{
+  success: boolean;
+  message: string;
+  error?: string;
+}> {
+  try {
+    console.log('💾 Saving pending stopover to backend:', stopoverData);
+    
+    // Llamar al endpoint del backend
+    const result = await apiRequest('/paradas/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        trip_id: null, // Parada pendiente
+        location_id: stopoverData.location_id,
+        order: stopoverData.order,
+        estimated_time: stopoverData.estimated_time
+      }),
+    });
+    
+    console.log('✅ Pending stopover saved to backend');
+    
+    return {
+      success: true,
+      message: result.message || 'Parada guardada como borrador en el backend'
+    };
+  } catch (error) {
+    console.error('❌ Error saving pending stopover to backend:', error);
+    
+    // Fallback a localStorage en caso de error
+    console.log('🔄 Falling back to localStorage...');
+    const stored = localStorage.getItem('pendingStopovers');
+    const existing = stored ? JSON.parse(stored) : [];
+    
+    const newStopover = {
+      id: Date.now(),
+      trip_id: null,
+      ...stopoverData,
+      created_at: new Date().toISOString()
+    };
+    
+    existing.push(newStopover);
+    localStorage.setItem('pendingStopovers', JSON.stringify(existing));
+    
+    return {
+      success: true,
+      message: 'Parada guardada en localStorage (fallback)',
+      error: error instanceof Error ? error.message : 'Error del backend'
+    };
+  }
+}
+
+/**
+ * Actualizar trip_id en paradas pendientes - Backend implementado
+ */
+export async function updatePendingStopoversTripId(
+  stopoverIds: number[],
+  tripId: number
+): Promise<{
+  success: boolean;
+  updated_count: number;
+  message: string;
+  error?: string;
+}> {
+  try {
+    console.log('🔄 MIGRATION: Updating pending stopovers trip_id (backend):', { 
+      stopoverIds, 
+      tripId 
+    });
+    
+    const result = await apiRequest('/paradas/update-stopovers-trip-id', {
+      method: 'POST',
+      body: JSON.stringify({
+        stopover_ids: stopoverIds,
+        trip_id: tripId
+      }),
+    });
+    
+    console.log('✅ Pending stopovers migrated in backend successfully');
+    
+    // Limpiar localStorage ya que ahora están en el backend
+    localStorage.removeItem('pendingStopovers');
+    
+    return {
+      success: true,
+      updated_count: result.updated_count || stopoverIds.length,
+      message: result.message || `${stopoverIds.length} paradas migradas exitosamente`
+    };
+  } catch (error) {
+    console.error('❌ Error updating pending stopovers trip_id in backend:', error);
+    
+    // Fallback: limpiar localStorage aunque falle el backend
+    localStorage.removeItem('pendingStopovers');
+    
+    return {
+      success: false,
+      updated_count: 0,
+      message: 'Error migrando paradas en el backend',
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+}
+
+/**
+ * Limpiar paradas pendientes
+ */
+export async function clearPendingStopovers(): Promise<void> {
+  try {
+    localStorage.removeItem('pendingStopovers');
+    console.log('🧹 Pending stopovers cleared from localStorage');
+  } catch (error) {
+    console.error('❌ Error clearing pending stopovers:', error);
+  }
 }
 
 // ==================== UTILIDADES PARA INTEGRACIÓN ====================

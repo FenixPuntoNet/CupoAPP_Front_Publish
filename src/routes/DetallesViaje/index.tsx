@@ -343,6 +343,7 @@ function FormattedNumberInput({
 }
 
 import { useRef } from 'react';
+import { migrateAllPendingDataToTrip } from '@/services/backend-integration';
 
 const DetallesViajeView = () => {
     const navigate = useNavigate();
@@ -562,7 +563,50 @@ const DetallesViajeView = () => {
                 throw new Error(result.error || 'Error al publicar el viaje');
             }
 
-            console.log('Viaje publicado exitosamente:', result.data);
+            console.log('✅ Viaje publicado exitosamente:', result.data);
+
+            // 🚀 MIGRACIÓN AUTOMÁTICA: Migrar SafePoints y paradas pendientes
+            if (result.data?.trip_id) {
+                console.log('🔄 Iniciando migración automática de datos pendientes...');
+                
+                try {
+                    const migrationResult = await migrateAllPendingDataToTrip(result.data.trip_id);
+                    
+                    if (migrationResult.success) {
+                        console.log('🎉 MIGRACIÓN COMPLETADA:', {
+                            safepoints_migrated: migrationResult.migrations.safepoints.updated_count,
+                            stopovers_migrated: migrationResult.migrations.stopovers.updated_count,
+                            total_migrated: migrationResult.total_updated
+                        });
+                        
+                        if (migrationResult.total_updated > 0) {
+                            notifications.show({
+                                title: '🎉 Datos migrados exitosamente',
+                                message: `Se migraron ${migrationResult.total_updated} elementos (SafePoints y paradas) al viaje publicado`,
+                                color: 'green',
+                                autoClose: 5000
+                            });
+                        }
+                    } else {
+                        console.warn('⚠️ MIGRACIÓN PARCIAL:', migrationResult.error);
+                        notifications.show({
+                            title: '⚠️ Migración parcial',
+                            message: 'Algunos datos no se pudieron migrar automáticamente',
+                            color: 'orange',
+                            autoClose: 4000
+                        });
+                    }
+                } catch (migrationError) {
+                    console.error('❌ ERROR EN MIGRACIÓN:', migrationError);
+                    // No fallar el proceso completo por error de migración
+                    notifications.show({
+                        title: 'Viaje publicado',
+                        message: 'El viaje se publicó correctamente, pero algunos datos adicionales podrían no haberse migrado',
+                        color: 'blue',
+                        autoClose: 4000
+                    });
+                }
+            }
 
             setShowPreviewModal(false);
             setShowSuccessModal(true);

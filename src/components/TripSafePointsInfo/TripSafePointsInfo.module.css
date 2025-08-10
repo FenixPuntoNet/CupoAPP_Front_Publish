@@ -1,0 +1,142 @@
+/* TripSafePointsInfo Component Styles */
+.safePointsContainer {
+  border: 1px solid var(--mantine-color-blue-2);
+  background: linear-gradient(135deg, var(--mantine-color-blue-0) 0%, var(--mantine-color-gray-0) 100%);
+  border-radius: 12px;
+  margin: 8px 0;
+  transition: all 0.3s ease;
+}
+
+.safePointsContainer:hover {
+  border-color: var(--mantine-color-blue-4);
+  box-shadow: 0 2px 8px rgba(34, 139, 34, 0.1);
+}
+
+.safePointCard {
+  background: var(--mantine-color-white);
+  border: 1px solid var(--mantine-color-gray-2);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.safePointCard:hover {
+  border-color: var(--mantine-color-blue-3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.safePointIcon {
+  flex-shrink: 0;
+}
+
+.loadingCard {
+  background: var(--mantine-color-gray-0);
+  border: 1px dashed var(--mantine-color-gray-3);
+  opacity: 0.7;
+}
+
+.errorCard {
+  background: var(--mantine-color-red-0);
+  border: 1px solid var(--mantine-color-red-2);
+  opacity: 0.8;
+}
+
+.emptyCard {
+  background: var(--mantine-color-gray-0);
+  border: 1px dashed var(--mantine-color-gray-4);
+  opacity: 0.6;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.safePointCard {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .safePointCard {
+    padding: 8px;
+  }
+  
+  .safePointsContainer {
+    margin: 6px 0;
+    border-radius: 8px;
+  }
+}
+
+/* Badge customizations */
+.safePointCard .mantine-Badge-root {
+  font-size: 10px;
+  height: 18px;
+  min-height: 18px;
+}
+
+/* Scroll area customizations */
+.safePointsContainer .mantine-ScrollArea-scrollbar {
+  background: var(--mantine-color-gray-1);
+}
+
+.safePointsContainer .mantine-ScrollArea-thumb {
+  background: var(--mantine-color-blue-4);
+}
+
+/* Enhanced visual hierarchy */
+.safePointCard .mantine-Text-root[data-variant="sm"] {
+  font-weight: 500;
+  color: var(--mantine-color-dark-7);
+}
+
+.safePointCard .mantine-Text-root[data-variant="xs"] {
+  color: var(--mantine-color-gray-6);
+}
+
+/* Special styling for verified SafePoints */
+.safePointCard:has(.mantine-Badge-root[data-color="green"]) {
+  border-left: 3px solid var(--mantine-color-green-5);
+}
+
+/* Special styling for high-rated SafePoints */
+.safePointCard:has(.mantine-Badge-root[data-color="yellow"]) {
+  position: relative;
+}
+
+.safePointCard:has(.mantine-Badge-root[data-color="yellow"])::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  background: var(--mantine-color-yellow-5);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+  }
+}

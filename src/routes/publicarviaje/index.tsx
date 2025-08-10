@@ -39,6 +39,7 @@ import {
 import { calculateSuggestedPrice } from '@/services/config';
 import { publishTrip } from '@/services/viajes';
 import { getMyVehicle } from '@/services/vehicles';
+import { useTripDraft } from '@/hooks/useTripDraft';
 import styles from './index.module.css';
 import { notifications } from '@mantine/notifications';
 import { getCurrentUser } from '@/services/auth';
@@ -70,6 +71,14 @@ function ReservarView(){
   const { selectedAddress = '', selectedDestination = '' } = useSearch({ from: '/publicarviaje/' });
   const { isLoaded, loadError } = useMaps();
   
+  // Hook para manejar borradores
+  const { 
+    hasDraft,
+    safePointSelections,
+    stopovers,
+    clearTripDraft
+  } = useTripDraft();
+  
   // Estados base
   const [showRouteMap, setShowRouteMap] = useState(false);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
@@ -95,73 +104,60 @@ useEffect(() => {
   const validateUserAccess = async () => {
     try {
       const user = await getCurrentUser();
-
+      
       if (!user.success || !user.user) {
+        console.log('❌ Usuario no autenticado, redirigiendo...');
         navigate({ to: '/Login' });
         return;
       }
 
+      console.log('✅ Usuario autenticado:', user.user.id);
+      
+      // Validar que exista el perfil del usuario
       const profile = await getCurrentUserProfile();
-
       if (!profile.success || !profile.data) {
-        console.error('Error cargando perfil:', profile.error);
-        return;
-      }
-
-      const isDriver = profile.data.status === 'DRIVER';
-      const isVerified = profile.data.verification === 'VERIFICADO';
-
-      if (!isDriver || !isVerified) {
-        notifications.show({
-          title: 'Acceso restringido',
-          message: 'Debes registrar tu vehículo y estar verificado para publicar un viaje.',
-          color: 'yellow'
-        });
-
-        navigate({ to: '/RegistrarVehiculo' });
-        return;
-      }
-
-      // Validar también el estado del vehículo
-      const vehicleCheck = await getMyVehicle();
-      if (!vehicleCheck.success || !vehicleCheck.vehicle) {
         setModalInfo({
           type: 'warning',
-          title: '🚗 Vehículo requerido',
-          message: 'Necesitas registrar un vehículo para publicar viajes.',
-          actionText: 'Registrar Vehículo',
-          actionLink: '/RegistrarVehiculo',
+          title: '⚠️ Perfil incompleto',
+          message: 'Necesitas completar tu perfil antes de publicar viajes.',
+          actionText: 'Completar Perfil',
+          actionLink: '/perfil',
           details: [
-            'Para publicar viajes necesitas tener un vehículo registrado',
-            'El proceso de registro es rápido y solo se hace una vez',
-            'También necesitarás subir los documentos del vehículo'
+            'Para publicar viajes necesitas tener un perfil completo',
+            'Esto incluye foto, información personal y documentos',
+            'Es un requisito de seguridad para todos los conductores'
           ]
         });
         setShowInfoModal(true);
         return;
       }
 
-      const vehicleStatus = vehicleCheck.vehicle.status || 'pendiente';
-      if (vehicleStatus !== 'activo') {
+      console.log('✅ Perfil del usuario verificado');
+      
+      // Validar que haya seleccionado origen y destino
+      const tripData = tripStore.getStoredData();
+      if (!tripData?.origin || !tripData?.destination) {
         setModalInfo({
-          type: 'info',
-          title: '⏳ Vehículo en proceso',
-          message: `Tu vehículo está en estado: ${vehicleStatus}`,
-          actionText: 'Ver Estado',
-          actionLink: '/RegistrarVehiculo',
+          type: 'error',
+          title: '📍 Ubicaciones faltantes',
+          message: 'Debes seleccionar origen y destino antes de publicar.',
+          actionText: 'Seleccionar Ubicaciones',
+          actionLink: '/ubicaciones',
           details: [
-            vehicleStatus === 'pendiente' ? 'Tu vehículo está siendo verificado por nuestro equipo' :
-            vehicleStatus === 'rechazado' ? 'Los documentos de tu vehículo no fueron aprobados' :
-            'Tu vehículo no está disponible para publicar viajes',
-            'Puedes preparar tu viaje, pero no podrás publicarlo hasta que esté activo',
-            'Te notificaremos cuando cambie el estado'
+            'El origen y destino son obligatorios para publicar un viaje',
+            'Estas ubicaciones se mostrarán a los pasajeros',
+            'Puedes cambiarlas en cualquier momento antes de publicar'
           ]
         });
         setShowInfoModal(true);
+        return;
       }
 
+      console.log('✅ Datos de viaje verificados:', tripData);
+
     } catch (error) {
-      console.error('Error validando perfil:', error);
+      console.error('Error validando acceso:', error);
+      setError('Error validando datos del usuario');
     }
   };
 
@@ -472,7 +468,7 @@ useEffect(() => {
         }
 
         navigate({ 
-          to: '/Paradas',
+          to: '/SafePoints',
           search: {
             routeId: selectedRoute.index.toString()
           }
@@ -493,7 +489,7 @@ useEffect(() => {
         });
 
         navigate({ 
-          to: '/Paradas',
+          to: '/SafePoints',
           search: {
             routeId: selectedRoute.index.toString()
           }
@@ -665,18 +661,43 @@ useEffect(() => {
       notifications.hide('publishing-trip');
       
       if (result.success) {
+        // Limpiar notificación de migración
+        notifications.hide('migration-notification');
+        
+        // Mostrar información detallada del éxito incluyendo migración
+        const details = [
+          `ID del viaje: #${result.data?.trip_id}`,
+          `Garantía congelada: $${result.data?.frozen_amount?.toLocaleString()} COP`,
+          'Los pasajeros ya pueden ver y reservar tu viaje',
+          'Te notificaremos cuando alguien haga una reserva'
+        ];
+        
+        // Agregar información de migración si hubo datos guardados
+        if (hasDraft && (safePointSelections.length > 0 || stopovers.length > 0)) {
+          details.splice(2, 0, 
+            `✅ ${safePointSelections.length} SafePoints migrados correctamente`,
+            `✅ ${stopovers.length} paradas migradas correctamente`
+          );
+        }
+        
         setModalInfo({
           type: 'success',
           title: '🎉 ¡Viaje publicado exitosamente!',
           message: `Tu viaje ha sido publicado y está disponible para reservas.`,
-          details: [
-            `ID del viaje: #${result.data?.trip_id}`,
-            `Garantía congelada: $${result.data?.frozen_amount?.toLocaleString()} COP`,
-            'Los pasajeros ya pueden ver y reservar tu viaje',
-            'Te notificaremos cuando alguien haga una reserva'
-          ]
+          details
         });
         setShowInfoModal(true);
+        
+        // Limpiar borrador después de publicación exitosa
+        if (hasDraft) {
+          try {
+            await clearTripDraft();
+            console.log('✅ Borrador limpiado después de publicación exitosa');
+          } catch (cleanupError) {
+            console.warn('⚠️ Error limpiando borrador (no crítico):', cleanupError);
+          }
+        }
+        
         return result;
       } else {
         throw new Error(result.error || 'Error al publicar viaje');
@@ -684,6 +705,7 @@ useEffect(() => {
     } catch (error) {
       setIsLoading(false);
       notifications.hide('publishing-trip');
+      notifications.hide('migration-notification');
       
       console.error('Error publishing trip:', error);
       
@@ -791,7 +813,7 @@ useEffect(() => {
       setShowInfoModal(true);
       return null;
     }
-  }, [prepareTripData]);
+  }, [prepareTripData, hasDraft, safePointSelections.length, stopovers.length, clearTripDraft]);
 
   // Hacer la función disponible globalmente para otras páginas del flujo
   (window as any).handlePublishTrip = handlePublishTrip;
@@ -847,7 +869,7 @@ useEffect(() => {
         </Link>
         <Title order={4} className={styles.headerTitle}>Publicar viaje</Title>
       </div>
-
+      
       <Container size="sm" className={styles.content}>
          <div className={styles.heroSection}>
           <div className={styles.heroTextContainer}>

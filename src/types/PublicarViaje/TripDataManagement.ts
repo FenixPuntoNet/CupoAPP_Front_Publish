@@ -48,6 +48,8 @@ export interface Coordinates {
   }
   
   export interface TripData {
+    id?: string;
+    driverId?: string;
     origin: TripLocation | null;
     destination: TripLocation | null;
     routes: TripRoute[] | null;
@@ -60,11 +62,11 @@ export interface Coordinates {
     description?: string;
     allowPets?: boolean;
     allowSmoking?: boolean;
+    allowPassengerSafePoints?: boolean;
+    selectedSafePointIds?: number[]; // IDs de SafePoints seleccionados para registrar más tarde
     status?: 'active' | 'inactive';
     createdAt?: string;
-  }
-  
-  
+  }  
   // Configuraciones del mapa y renderizado de rutas
   export const mapOptions: google.maps.MapOptions = {
     styles: [
