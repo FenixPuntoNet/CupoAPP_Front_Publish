@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { type TripLocation } from '../types/PublicarViaje/TripDataManagement';
+import { addSafePointToDraft as addSafePointToDraftService } from '../services/trip-drafts';
 
 // ==================== INTERFACES ====================
 
@@ -57,21 +58,16 @@ export function useTripDraft() {
       setLoading(true);
       setError(null);
 
-      // Por ahora, simular la carga desde localStorage para desarrollo
-      // En producción esto vendría del backend
-      const savedDraft = localStorage.getItem('tripDraft');
-      if (savedDraft) {
-        const parsedDraft = JSON.parse(savedDraft);
-        setDraft(parsedDraft);
-        setSafePointSelections(parsedDraft.draft_safepoint_selections || []);
-        setStopovers(parsedDraft.draft_stopovers || []);
-        
-        console.log('✅ Draft loaded from localStorage:', parsedDraft);
-      } else {
-        setDraft(null);
-        setSafePointSelections([]);
-        setStopovers([]);
-      }
+      console.log('📋 [HOOK] Loading draft from BACKEND ONLY (NO localStorage)...');
+
+      // ✅ SOLO BACKEND - NO localStorage
+      // Los datos se cargan desde la base de datos cuando se necesiten
+      // Por ahora inicializamos vacío para evitar localStorage
+      setDraft(null);
+      setSafePointSelections([]);
+      setStopovers([]);
+      
+      console.log('✅ [HOOK] Draft initialized (backend-only mode)');
 
     } catch (err) {
       console.error('❌ Error loading draft:', err);
@@ -90,6 +86,8 @@ export function useTripDraft() {
       setLoading(true);
       setError(null);
 
+      console.log('📝 [HOOK] Creating/updating draft (BACKEND ONLY):', { origin, destination });
+
       const draftData: TripDraft = {
         id: Date.now(), // ID temporal para desarrollo
         user_id: 'current_user', // En producción vendría del contexto de autenticación
@@ -101,11 +99,10 @@ export function useTripDraft() {
         updated_at: new Date().toISOString()
       };
 
-      // Guardar en localStorage para desarrollo
-      localStorage.setItem('tripDraft', JSON.stringify(draftData));
+      // ✅ SOLO BACKEND - NO localStorage
       setDraft(draftData);
 
-      console.log('✅ Draft created/updated:', draftData);
+      console.log('✅ [HOOK] Draft created/updated in memory only (no localStorage):', draftData);
       return { success: true, draft: draftData };
 
     } catch (err) {
@@ -120,13 +117,14 @@ export function useTripDraft() {
   // Limpiar borrador
   const clearTripDraft = useCallback(async () => {
     try {
-      localStorage.removeItem('tripDraft');
+      console.log('🧹 [HOOK] Clearing draft (memory only, no localStorage)');
+      
       setDraft(null);
       setSafePointSelections([]);
       setStopovers([]);
       setError(null);
       
-      console.log('✅ Draft cleared');
+      console.log('✅ [HOOK] Draft cleared from memory');
       return { success: true };
 
     } catch (err) {
@@ -143,6 +141,22 @@ export function useTripDraft() {
     route_order: number;
   }) => {
     try {
+      // ✅ SOLO BACKEND: Llamar al servicio del backend
+      console.log('📝 [HOOK] Adding SafePoint ONLY to backend (NO localStorage):', data);
+      
+      const backendResult = await addSafePointToDraftService({
+        safepoint_id: data.safepoint_id,
+        selection_type: data.selection_type,
+        route_order: data.route_order
+      });
+
+      if (!backendResult.success) {
+        throw new Error(backendResult.error || 'Error guardando en backend');
+      }
+
+      console.log('✅ [HOOK] SafePoint saved to BACKEND ONLY - NO localStorage used');
+
+      // Solo actualizar el estado local para la UI (NO localStorage)
       const newSelection: SafePointSelection = {
         id: Date.now(),
         safepoint_id: data.safepoint_id,
@@ -154,22 +168,25 @@ export function useTripDraft() {
       const updatedSelections = [...safePointSelections, newSelection];
       setSafePointSelections(updatedSelections);
 
-      // Actualizar draft en localStorage
+      // ✅ SOLO actualizar draft en memoria (NO localStorage)
       if (draft) {
         const updatedDraft = {
           ...draft,
           draft_safepoint_selections: updatedSelections,
           updated_at: new Date().toISOString()
         };
-        localStorage.setItem('tripDraft', JSON.stringify(updatedDraft));
         setDraft(updatedDraft);
       }
 
-      console.log('✅ SafePoint added to draft:', newSelection);
-      return { success: true, selection: newSelection };
+      console.log('✅ [HOOK] SafePoint added ONLY to backend + memory (NO localStorage):', newSelection);
+      return { 
+        success: true, 
+        selection: newSelection,
+        backend_interaction: backendResult.selection 
+      };
 
     } catch (err) {
-      console.error('❌ Error adding SafePoint to draft:', err);
+      console.error('❌ [HOOK] Error adding SafePoint to draft:', err);
       return { success: false, error: err instanceof Error ? err.message : 'Error agregando SafePoint' };
     }
   }, [draft, safePointSelections]);
@@ -182,6 +199,8 @@ export function useTripDraft() {
     location?: any;
   }) => {
     try {
+      console.log('📝 [HOOK] Adding stopover ONLY to memory (NO localStorage):', data);
+      
       const newStopover: DraftStopover = {
         id: Date.now(),
         location_id: data.location_id,
@@ -194,18 +213,17 @@ export function useTripDraft() {
       const updatedStopovers = [...stopovers, newStopover];
       setStopovers(updatedStopovers);
 
-      // Actualizar draft en localStorage
+      // ✅ SOLO actualizar draft en memoria (NO localStorage)
       if (draft) {
         const updatedDraft = {
           ...draft,
           draft_stopovers: updatedStopovers,
           updated_at: new Date().toISOString()
         };
-        localStorage.setItem('tripDraft', JSON.stringify(updatedDraft));
         setDraft(updatedDraft);
       }
 
-      console.log('✅ Stopover added to draft:', newStopover);
+      console.log('✅ [HOOK] Stopover added to memory only (NO localStorage):', newStopover);
       return { success: true, stopover: newStopover };
 
     } catch (err) {

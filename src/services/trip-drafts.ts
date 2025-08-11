@@ -26,23 +26,33 @@ export async function addSafePointToDraft(data: SafePointDraftData): Promise<{
   error?: string;
 }> {
   try {
-    console.log('📝 Adding SafePoint to draft:', data);
+    console.log('📝 [TRIP-DRAFTS] Adding SafePoint to draft with backend call:', data);
     
-    // El backend espera estos campos específicos según el error
+    // ✅ ESTRUCTURA CORRECTA para safepoint_interactions table
     const requestBody = {
       safepoint_id: data.safepoint_id,
-      trip_id: null, // NULL para borrador
-      interaction_type: data.selection_type, // El backend espera 'interaction_type', no 'selection_type'
+      trip_id: null, // NULL para borrador - se actualizará cuando se publique el viaje
+      interaction_type: data.selection_type, // pickup_selection | dropoff_selection
       interaction_data: {
-        // El backend requiere interaction_data como objeto
+        // Datos específicos de la interacción en JSONB
         route_order: data.route_order,
         notes: data.notes || '',
+        selection_type: data.selection_type,
         is_draft_interaction: true,
-        selection_type: data.selection_type // Incluir también en interaction_data por compatibilidad
-      }
+        timestamp: new Date().toISOString(),
+        user_context: 'conductor_draft',
+        draft_metadata: {
+          frontend_version: '2025_updated',
+          selection_flow: 'conductor_safepoint_draft'
+        }
+      },
+      // Campos adicionales requeridos por la tabla
+      negotiation_round: 1,
+      parent_interaction_id: null,
+      response_deadline: null
     };
 
-    console.log('📡 Sending request body:', requestBody);
+    console.log('📡 [TRIP-DRAFTS] Sending to /safepoints/interact:', requestBody);
     
     const response = await apiRequest('/safepoints/interact', {
       method: 'POST',
@@ -50,17 +60,24 @@ export async function addSafePointToDraft(data: SafePointDraftData): Promise<{
     });
 
     if (!response.success) {
+      console.error('❌ [TRIP-DRAFTS] Backend error:', response.error);
       throw new Error(response.error || 'Error agregando SafePoint al borrador');
     }
 
-    console.log('✅ SafePoint added to draft successfully');
+    console.log('✅ [TRIP-DRAFTS] SafePoint saved to safepoint_interactions table:', {
+      interaction_id: response.interaction?.id,
+      safepoint_id: data.safepoint_id,
+      interaction_type: data.selection_type,
+      trip_id: null
+    });
+
     return {
       success: true,
       selection: response.interaction
     };
 
   } catch (error) {
-    console.error('❌ Error adding SafePoint to draft:', error);
+    console.error('❌ [TRIP-DRAFTS] Error calling backend:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error desconocido'

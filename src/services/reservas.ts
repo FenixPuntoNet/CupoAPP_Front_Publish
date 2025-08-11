@@ -243,7 +243,8 @@ export const bookTrip = async (
 // Obtener mis reservas como pasajero
 export const getMyBookings = async (): Promise<{ success: boolean; data?: { bookings: MyBooking[] }; error?: string }> => {
   try {
-    const response = await apiRequest('/reservas/my-bookings');
+    // ✅ ENDPOINT CORREGIDO SEGÚN LA GUÍA DEL BACKEND
+    const response = await apiRequest('/reservas/user-bookings');
     return {
       success: true,
       data: response
@@ -374,6 +375,470 @@ export const getBookingStats = async (): Promise<{ success: boolean; data?: any;
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error obteniendo estadísticas'
+    };
+  }
+};
+
+// =====================================================
+// FUNCIONES DE SAFEPOINTS PARA RESERVAS - BACKEND CORREGIDO
+// =====================================================
+
+export interface SafePoint {
+  id: number;
+  name: string;
+  category: string;
+  category_display_name?: string;
+  icon_name?: string;
+  color_hex?: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  city?: string;
+  features?: any;
+  rating_average?: number;
+  usage_count?: number;
+}
+
+export interface SafePointOption extends SafePoint {
+  is_preferred: boolean;
+  preference_level: 'preferred' | 'available';
+  is_currently_selected: boolean;
+  interaction_id: number;
+  interaction_type: string;
+  created_at: string;
+}
+
+// Obtener SafePoints disponibles para un booking (endpoint principal corregido)
+export const getBookingAvailableSafePoints = async (bookingId: number): Promise<{
+  success: boolean;
+  booking_id: number;
+  trip_id: number;
+  available_safepoints: {
+    pickup_options: SafePointOption[];
+    dropoff_options: SafePointOption[];
+    pickup_count: number;
+    dropoff_count: number;
+    has_preferred_pickup: boolean;
+    has_preferred_dropoff: boolean;
+  };
+  current_selections: any[];
+  error?: string;
+}> => {
+  console.log(`🔍 [BACKEND CORREGIDO] Obteniendo SafePoints disponibles para booking: ${bookingId}`);
+  
+  try {
+    // Usar el endpoint principal corregido del backend
+    const response = await apiRequest(`/api/booking/${bookingId}/available-safepoints`);
+    
+    console.log(`✅ [BACKEND CORREGIDO] SafePoints obtenidos exitosamente:`, {
+      booking_id: response.booking_id,
+      trip_id: response.trip_id,
+      pickup_count: response.available_safepoints?.pickup_count || 0,
+      dropoff_count: response.available_safepoints?.dropoff_count || 0,
+      total_options: (response.available_safepoints?.pickup_count || 0) + (response.available_safepoints?.dropoff_count || 0)
+    });
+
+    return {
+      success: true,
+      booking_id: response.booking_id,
+      trip_id: response.trip_id,
+      available_safepoints: response.available_safepoints || {
+        pickup_options: [],
+        dropoff_options: [],
+        pickup_count: 0,
+        dropoff_count: 0,
+        has_preferred_pickup: false,
+        has_preferred_dropoff: false
+      },
+      current_selections: response.current_selections || []
+    };
+  } catch (error) {
+    console.error(`❌ [BACKEND CORREGIDO] Error obteniendo SafePoints para booking ${bookingId}:`, error);
+    return {
+      success: false,
+      booking_id: bookingId,
+      trip_id: 0,
+      available_safepoints: {
+        pickup_options: [],
+        dropoff_options: [],
+        pickup_count: 0,
+        dropoff_count: 0,
+        has_preferred_pickup: false,
+        has_preferred_dropoff: false
+      },
+      current_selections: [],
+      error: error instanceof Error ? error.message : 'Error obteniendo SafePoints disponibles'
+    };
+  }
+};
+
+// Obtener SafePoints cercanos a un booking específico (fallback)
+export const getNearbySafePointsForBooking = async (bookingId: number, params?: {
+  radius_km?: number;
+  category?: string;
+  limit?: number;
+}): Promise<{
+  success: boolean;
+  booking_id: number;
+  trip_id: number;
+  nearby_safepoints: SafePoint[];
+  route_info: {
+    origin: { address: string; latitude: number; longitude: number };
+    destination: { address: string; latitude: number; longitude: number };
+  };
+  search_params: {
+    radius_km: number;
+    category: string;
+    limit: number;
+  };
+  count: number;
+  error?: string;
+}> => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params?.radius_km) queryParams.append('radius_km', params.radius_km.toString());
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const response = await apiRequest(`/reservas/booking/${bookingId}/nearby-safepoints?${queryParams.toString()}`);
+    return {
+      success: true,
+      ...response
+    };
+  } catch (error) {
+    console.error('Error getting nearby safepoints for booking:', error);
+    return {
+      success: false,
+      booking_id: bookingId,
+      trip_id: 0,
+      nearby_safepoints: [],
+      route_info: {
+        origin: { address: '', latitude: 0, longitude: 0 },
+        destination: { address: '', latitude: 0, longitude: 0 }
+      },
+      search_params: {
+        radius_km: params?.radius_km || 15,
+        category: params?.category || 'all',
+        limit: params?.limit || 6
+      },
+      count: 0,
+      error: error instanceof Error ? error.message : 'Error obteniendo SafePoints cercanos'
+    };
+  }
+};
+
+// Proponer SafePoint para un viaje específico (por parte del pasajero)
+export const proposeSafePointForBooking = async (bookingId: number, params: {
+  safepoint_id: number;
+  interaction_type: 'pickup_selection' | 'dropoff_selection';
+  preference_level: 'preferred' | 'alternative' | 'flexible';
+  notes?: string;
+  estimated_time?: string;
+}): Promise<{
+  success: boolean;
+  message: string;
+  proposal: {
+    interaction_id: number;
+    safepoint: SafePoint;
+    interaction_type: string;
+    preference_level: string;
+    status: string;
+    proposed_at: string;
+  };
+  error?: string;
+}> => {
+  try {
+    const response = await apiRequest(`/reservas/booking/${bookingId}/propose-safepoint`, {
+      method: 'POST',
+      body: JSON.stringify(params)
+    });
+    return {
+      success: true,
+      ...response
+    };
+  } catch (error) {
+    console.error('Error proposing safepoint for booking:', error);
+    return {
+      success: false,
+      message: 'Error proponiendo SafePoint',
+      proposal: {
+        interaction_id: 0,
+        safepoint: {
+          id: 0,
+          name: '',
+          category: '',
+          latitude: 0,
+          longitude: 0,
+          address: ''
+        },
+        interaction_type: params.interaction_type,
+        preference_level: params.preference_level,
+        status: 'error',
+        proposed_at: new Date().toISOString()
+      },
+      error: error instanceof Error ? error.message : 'Error proponiendo SafePoint'
+    };
+  }
+};
+
+// Obtener propuestas de SafePoints del pasajero para una reserva
+export const getMySafePointProposals = async (bookingId: number): Promise<{
+  success: boolean;
+  booking_id: number;
+  trip_id: number;
+  proposals: Array<{
+    interaction_id: number;
+    safepoint: SafePoint;
+    interaction_type: string;
+    preference_level: string;
+    status: string;
+    notes?: string;
+    estimated_time?: string;
+    proposed_at: string;
+  }>;
+  count: number;
+  error?: string;
+}> => {
+  try {
+    const response = await apiRequest(`/reservas/booking/${bookingId}/my-safepoint-proposals`);
+    return {
+      success: true,
+      ...response
+    };
+  } catch (error) {
+    console.error('Error getting my safepoint proposals:', error);
+    return {
+      success: false,
+      booking_id: bookingId,
+      trip_id: 0,
+      proposals: [],
+      count: 0,
+      error: error instanceof Error ? error.message : 'Error obteniendo propuestas'
+    };
+  }
+};
+
+// Cancelar propuesta de SafePoint
+export const cancelSafePointProposal = async (bookingId: number, proposalId: number): Promise<{
+  success: boolean;
+  message: string;
+  error?: string;
+}> => {
+  try {
+    const response = await apiRequest(`/reservas/booking/${bookingId}/proposal/${proposalId}`, {
+      method: 'DELETE'
+    });
+    return {
+      success: true,
+      message: response.message || 'Propuesta cancelada correctamente'
+    };
+  } catch (error) {
+    console.error('Error canceling safepoint proposal:', error);
+    return {
+      success: false,
+      message: 'Error cancelando propuesta',
+      error: error instanceof Error ? error.message : 'Error cancelando propuesta'
+    };
+  }
+};
+
+// Función de debugging sin autenticación (para desarrollo)
+export const debugTripSafePoints = async (tripId: number): Promise<{
+  success: boolean;
+  debug_info?: any;
+  error?: string;
+}> => {
+  console.log(`🔧 [DEBUG] Verificando SafePoints para trip: ${tripId}`);
+  
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://cupo-backend.fly.dev'}/reservas/debug/trip/${tripId}/safepoints/noauth`);
+    const data = await response.json();
+    
+    const interactionCount = data.debug_info?.safepoint_interactions?.all_interactions?.count || 0;
+    
+    console.log(`🔧 [DEBUG] Resultado:`, {
+      trip_id: tripId,
+      interactions_found: interactionCount,
+      data_exists: interactionCount > 0,
+      backend_status: response.ok ? 'OK' : 'ERROR'
+    });
+    
+    return {
+      success: response.ok,
+      debug_info: data.debug_info,
+      error: !response.ok ? 'Error en debug endpoint' : undefined
+    };
+  } catch (error) {
+    console.error(`❌ [DEBUG] Error en debug endpoint:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error en debug'
+    };
+  }
+};
+
+// =====================================================
+// NUEVAS FUNCIONES PARA SELECCIÓN DE SAFEPOINTS - BACKEND ENDPOINTS
+// =====================================================
+
+export interface SafePointSelection {
+  booking_id: number;
+  safepoint_id: number;
+  selection_type: 'pickup' | 'dropoff';
+  passenger_notes?: string;
+  estimated_arrival_time?: string;
+}
+
+export interface SafePointSelectionResult {
+  success: boolean;
+  message: string;
+  selection?: any;
+  error?: string;
+}
+
+// Seleccionar SafePoint para un booking
+export const selectSafePointForBooking = async (
+  bookingId: number,
+  selectionData: SafePointSelection
+): Promise<SafePointSelectionResult> => {
+  console.log(`🎯 [SELECTION] Seleccionando SafePoint para booking ${bookingId}:`, selectionData);
+  
+  try {
+    const response = await apiRequest(`/api/booking/${bookingId}/select-safepoint`, {
+      method: 'POST',
+      body: JSON.stringify(selectionData)
+    });
+    
+    console.log(`✅ [SELECTION] SafePoint seleccionado exitosamente:`, response);
+    
+    return {
+      success: true,
+      message: response.message || 'SafePoint seleccionado exitosamente',
+      selection: response.selection
+    };
+  } catch (error) {
+    console.error(`❌ [SELECTION] Error seleccionando SafePoint:`, error);
+    return {
+      success: false,
+      message: 'Error seleccionando SafePoint',
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+};
+
+// Obtener selecciones actuales del usuario para un booking
+export const getMyBookingSelections = async (bookingId: number): Promise<{
+  success: boolean;
+  booking_id: number;
+  selections: {
+    pickup: any | null;
+    dropoff: any | null;
+    has_pickup: boolean;
+    has_dropoff: boolean;
+    all_selected: boolean;
+  };
+  error?: string;
+}> => {
+  console.log(`🔍 [SELECTIONS] Obteniendo selecciones para booking: ${bookingId}`);
+  
+  try {
+    const response = await apiRequest(`/api/booking/${bookingId}/my-selections`);
+    
+    console.log(`✅ [SELECTIONS] Selecciones obtenidas:`, {
+      booking_id: response.booking_id,
+      has_pickup: response.selections?.has_pickup || false,
+      has_dropoff: response.selections?.has_dropoff || false,
+      all_selected: response.selections?.all_selected || false
+    });
+    
+    return {
+      success: true,
+      booking_id: response.booking_id,
+      selections: response.selections || {
+        pickup: null,
+        dropoff: null,
+        has_pickup: false,
+        has_dropoff: false,
+        all_selected: false
+      }
+    };
+  } catch (error) {
+    console.error(`❌ [SELECTIONS] Error obteniendo selecciones:`, error);
+    return {
+      success: false,
+      booking_id: bookingId,
+      selections: {
+        pickup: null,
+        dropoff: null,
+        has_pickup: false,
+        has_dropoff: false,
+        all_selected: false
+      },
+      error: error instanceof Error ? error.message : 'Error obteniendo selecciones'
+    };
+  }
+};
+
+// Actualizar selección existente
+export const updateSafePointSelection = async (
+  bookingId: number,
+  selectionId: number,
+  updateData: {
+    safepoint_id?: number;
+    passenger_notes?: string;
+    estimated_arrival_time?: string;
+    status?: 'selected' | 'confirmed' | 'cancelled';
+  }
+): Promise<SafePointSelectionResult> => {
+  console.log(`📝 [UPDATE] Actualizando selección ${selectionId} para booking ${bookingId}:`, updateData);
+  
+  try {
+    const response = await apiRequest(`/api/booking/${bookingId}/selection/${selectionId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData)
+    });
+    
+    console.log(`✅ [UPDATE] Selección actualizada exitosamente:`, response);
+    
+    return {
+      success: true,
+      message: response.message || 'Selección actualizada exitosamente',
+      selection: response.selection
+    };
+  } catch (error) {
+    console.error(`❌ [UPDATE] Error actualizando selección:`, error);
+    return {
+      success: false,
+      message: 'Error actualizando selección',
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+};
+
+// Eliminar selección
+export const deleteSafePointSelection = async (
+  bookingId: number,
+  selectionId: number
+): Promise<SafePointSelectionResult> => {
+  console.log(`🗑️ [DELETE] Eliminando selección ${selectionId} para booking ${bookingId}`);
+  
+  try {
+    const response = await apiRequest(`/api/booking/${bookingId}/selection/${selectionId}`, {
+      method: 'DELETE'
+    });
+    
+    console.log(`✅ [DELETE] Selección eliminada exitosamente:`, response);
+    
+    return {
+      success: true,
+      message: response.message || 'Selección eliminada exitosamente'
+    };
+  } catch (error) {
+    console.error(`❌ [DELETE] Error eliminando selección:`, error);
+    return {
+      success: false,
+      message: 'Error eliminando selección',
+      error: error instanceof Error ? error.message : 'Error desconocido'
     };
   }
 };

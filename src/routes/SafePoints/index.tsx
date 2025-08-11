@@ -41,9 +41,6 @@ import {
     type SafePointCategory,
     type SafePointProposalRequest
 } from '../../services/safepoints';
-import {
-    addSafePointToDraft
-} from '../../services/trip-drafts';
 import { useTripDraft } from '../../hooks/useTripDraft';
 import SafePointMarker from '../../components/SafePoints/SafePointMarker';
 import styles from './index.module.css';
@@ -98,7 +95,8 @@ function SafePointsView() {
     // Hook para manejar borradores
     const { 
         draft, 
-        createOrUpdateTripDraft
+        createOrUpdateTripDraft,
+        addSafePointToDraft
     } = useTripDraft();
     
     // Estados para el journey mejorado

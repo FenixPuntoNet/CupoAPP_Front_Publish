@@ -1,0 +1,51 @@
+/* SafePointSelection Styles */
+.container {
+  max-width: 100%;
+}
+
+.selectionCard {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.selectionCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.preferredCard {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+  border-color: rgba(255, 193, 7, 0.3) !important;
+}
+
+.regularCard {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.safepointInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.loadingState {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyState {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionButton {
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+}

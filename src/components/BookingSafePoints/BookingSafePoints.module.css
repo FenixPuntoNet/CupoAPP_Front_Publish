@@ -1,0 +1,37 @@
+/* BookingSafePoints Component Styles */
+.safePointCard {
+  transition: all 0.2s ease;
+  border: 1px solid var(--mantine-color-gray-3);
+}
+
+.safePointCard:hover {
+  border-color: var(--mantine-color-blue-4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.proposalCard {
+  border-left: 4px solid var(--mantine-color-orange-4);
+  background: var(--mantine-color-orange-0);
+}
+
+.proposalCard[data-status="accepted"] {
+  border-left-color: var(--mantine-color-green-5);
+  background: var(--mantine-color-green-0);
+}
+
+.proposalCard[data-status="rejected"] {
+  border-left-color: var(--mantine-color-red-5);
+  background: var(--mantine-color-red-0);
+}
+
+.proposalCard[data-status="counter_proposed"] {
+  border-left-color: var(--mantine-color-blue-5);
+  background: var(--mantine-color-blue-0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .safePointCard {
+    padding: 8px;
+  }
+}

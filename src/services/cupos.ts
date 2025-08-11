@@ -401,14 +401,14 @@ export const getCuposStats = async (): Promise<{ success: boolean; data?: CupoSt
   }
 };
 
-// Obtener mis cupos comprados (como pasajero) - Usar endpoint de bookings recomendado
+// Obtener mis cupos comprados (como pasajero) - ENDPOINT CORREGIDO SEGÚN GUÍA DEL BACKEND
 export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos: CupoWithDetails[] }; error?: string }> => {
   try {
-    console.log(`🎫 [getMisCupos] Fetching user's purchased cupos using /bookings/my-bookings`);
+    console.log(`🎫 [getMisCupos] Fetching user's purchased cupos using CORRECTED ENDPOINT /reservas/user-bookings`);
     
-    // Usar directamente el endpoint recomendado por el backend para ratings
-    const response = await apiRequest('/bookings/my-bookings');
-    console.log(`✅ [getMisCupos] /bookings/my-bookings response:`, response);
+    // ✅ USAR ENDPOINT CORREGIDO SEGÚN LA GUÍA DEL BACKEND
+    const response = await apiRequest('/reservas/user-bookings');
+    console.log(`✅ [getMisCupos] /reservas/user-bookings response:`, response);
     
     // Validar que la respuesta tenga la estructura esperada
     if (!response || typeof response !== 'object') {
@@ -416,7 +416,7 @@ export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos:
       throw new Error('Respuesta inválida del servidor');
     }
 
-    // El endpoint /bookings/my-bookings retorna { bookings: [...] }
+    // El endpoint /reservas/user-bookings retorna { bookings: [...] } - CORREGIDO
     let cupos = [];
     if (Array.isArray(response.bookings)) {
       // Mapear bookings a formato cupos, asegurando que tenemos driver_id correcto

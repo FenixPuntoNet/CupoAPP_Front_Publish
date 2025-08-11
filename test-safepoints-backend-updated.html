@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Test SafePoints Backend Actualizado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .test-failed {
+            border-left-color: #f44336;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .error {
+            color: #f44336;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .warning {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test SafePoints - Backend Actualizado 2025</h1>
+    <p><strong>Objetivo:</strong> Verificar que los endpoints del backend funcionen con la estructura actualizada</p>
+
+    <!-- Test 1: SafePoints Interaction -->
+    <div class="test-section" id="test1">
+        <h3>📍 Test 1: SafePoints Interaction (Conductor)</h3>
+        <p><strong>Endpoint:</strong> POST /safepoints/interact</p>
+        <p><strong>Backend esperado:</strong> interaction_type + interaction_data</p>
+        <button onclick="testSafePointInteraction()">🚀 Test Interaction</button>
+        <div class="log" id="log1"></div>
+    </div>
+
+    <!-- Test 2: Nearby SafePoints para Booking -->
+    <div class="test-section" id="test2">
+        <h3>🗺️ Test 2: Nearby SafePoints (Pasajero)</h3>
+        <p><strong>Endpoint:</strong> GET /reservas/booking/:bookingId/nearby-safepoints</p>
+        <p><strong>Backend esperado:</strong> nearby_safepoints + route_info</p>
+        <input type="number" id="bookingId" placeholder="Booking ID" value="1">
+        <button onclick="testNearbyBookingSafePoints()">🚀 Test Nearby</button>
+        <div class="log" id="log2"></div>
+    </div>
+
+    <!-- Test 3: Propose SafePoint para Booking -->
+    <div class="test-section" id="test3">
+        <h3>💭 Test 3: Propose SafePoint (Pasajero)</h3>
+        <p><strong>Endpoint:</strong> POST /reservas/booking/:bookingId/propose-safepoint</p>
+        <p><strong>Backend esperado:</strong> interaction_type + preference_level</p>
+        <input type="number" id="proposalBookingId" placeholder="Booking ID" value="1">
+        <input type="number" id="proposalSafePointId" placeholder="SafePoint ID" value="1">
+        <button onclick="testProposeSafePoint()">🚀 Test Proposal</button>
+        <div class="log" id="log3"></div>
+    </div>
+
+    <!-- Test 4: Get My Proposals -->
+    <div class="test-section" id="test4">
+        <h3>📝 Test 4: Get My Proposals (Pasajero)</h3>
+        <p><strong>Endpoint:</strong> GET /reservas/booking/:bookingId/my-safepoint-proposals</p>
+        <p><strong>Backend esperado:</strong> proposals array</p>
+        <input type="number" id="myProposalsBookingId" placeholder="Booking ID" value="1">
+        <button onclick="testMyProposals()">🚀 Test My Proposals</button>
+        <div class="log" id="log4"></div>
+    </div>
+
+    <!-- Test 5: Search SafePoints -->
+    <div class="test-section" id="test5">
+        <h3>🔍 Test 5: Search SafePoints</h3>
+        <p><strong>Endpoint:</strong> POST /safepoints/search</p>
+        <p><strong>Backend esperado:</strong> latitude + longitude + radius_km</p>
+        <button onclick="testSearchSafePoints()">🚀 Test Search</button>
+        <div class="log" id="log5"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://cupo-backend.fly.dev';
+        let authToken = null;
+
+        // Helper function para hacer requests
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE_URL}${endpoint}`;
+            
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {}),
+                ...options.headers
+            };
+
+            const fetchOptions = {
+                ...options,
+                headers,
+                credentials: 'include'
+            };
+
+            console.log(`🔄 Request to ${endpoint}:`, fetchOptions);
+            
+            const response = await fetch(url, fetchOptions);
+            const data = await response.json();
+            
+            return {
+                success: response.ok,
+                status: response.status,
+                data: data,
+                error: response.ok ? null : data.error || `HTTP ${response.status}`
+            };
+        }
+
+        function log(testId, message) {
+            const logElement = document.getElementById(testId);
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog(testId) {
+            document.getElementById(testId).innerHTML = '';
+        }
+
+        function markTestStatus(testId, success) {
+            const testElement = document.getElementById(testId);
+            if (success) {
+                testElement.classList.remove('test-failed');
+            } else {
+                testElement.classList.add('test-failed');
+            }
+        }
+
+        // Test 1: SafePoints Interaction
+        async function testSafePointInteraction() {
+            clearLog('log1');
+            log('log1', '🚀 TESTING: SafePoints Interaction...');
+            
+            try {
+                const requestBody = {
+                    safepoint_id: 1,
+                    trip_id: null, // NULL para borrador
+                    interaction_type: 'pickup_selection', // Campo principal
+                    interaction_data: {
+                        route_order: 1,
+                        notes: 'Test desde frontend actualizado',
+                        selection_type: 'pickup_selection',
+                        is_draft_interaction: true,
+                        timestamp: new Date().toISOString(),
+                        user_context: 'conductor_selection',
+                        test_mode: true
+                    }
+                };
+                
+                log('log1', `📡 BACKEND UPDATED: Sending with correct structure:`);
+                log('log1', JSON.stringify(requestBody, null, 2));
+                
+                const result = await apiRequest('/safepoints/interact', {
+                    method: 'POST',
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (result.success) {
+                    log('log1', `✅ SUCCESS: SafePoint interaction saved!`);
+                    log('log1', `📋 Response: ${JSON.stringify(result.data, null, 2)}`);
+                    markTestStatus('test1', true);
+                } else {
+                    log('log1', `❌ FAILED: ${result.error}`);
+                    log('log1', `📋 Status: ${result.status}`);
+                    log('log1', `📋 Data: ${JSON.stringify(result.data, null, 2)}`);
+                    markTestStatus('test1', false);
+                }
+            } catch (error) {
+                log('log1', `❌ ERROR: ${error.message}`);
+                markTestStatus('test1', false);
+            }
+        }
+
+        // Test 2: Nearby SafePoints para Booking
+        async function testNearbyBookingSafePoints() {
+            clearLog('log2');
+            const bookingId = document.getElementById('bookingId').value;
+            log('log2', `🚀 TESTING: Nearby SafePoints for booking ${bookingId}...`);
+            
+            try {
+                const result = await apiRequest(`/reservas/booking/${bookingId}/nearby-safepoints?radius_km=5&limit=10`, {
+                    method: 'GET'
+                });
+                
+                if (result.success) {
+                    log('log2', `✅ SUCCESS: Nearby SafePoints found!`);
+                    log('log2', `📍 Count: ${result.data.count || 0}`);
+                    log('log2', `🗺️ Route info: ${result.data.route_info ? 'Yes' : 'No'}`);
+                    log('log2', `📋 SafePoints: ${result.data.nearby_safepoints?.length || 0}`);
+                    markTestStatus('test2', true);
+                } else {
+                    log('log2', `❌ FAILED: ${result.error}`);
+                    log('log2', `📋 Status: ${result.status}`);
+                    markTestStatus('test2', false);
+                }
+            } catch (error) {
+                log('log2', `❌ ERROR: ${error.message}`);
+                markTestStatus('test2', false);
+            }
+        }
+
+        // Test 3: Propose SafePoint
+        async function testProposeSafePoint() {
+            clearLog('log3');
+            const bookingId = document.getElementById('proposalBookingId').value;
+            const safepointId = document.getElementById('proposalSafePointId').value;
+            log('log3', `🚀 TESTING: Propose SafePoint for booking ${bookingId}...`);
+            
+            try {
+                const requestBody = {
+                    safepoint_id: parseInt(safepointId),
+                    interaction_type: 'pickup_selection',
+                    preference_level: 'preferred',
+                    notes: 'Test proposal desde frontend actualizado',
+                    estimated_time: '10:30'
+                };
+                
+                log('log3', `📡 BACKEND UPDATED: Sending proposal:`);
+                log('log3', JSON.stringify(requestBody, null, 2));
+                
+                const result = await apiRequest(`/reservas/booking/${bookingId}/propose-safepoint`, {
+                    method: 'POST',
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (result.success) {
+                    log('log3', `✅ SUCCESS: SafePoint proposal sent!`);
+                    log('log3', `📋 Proposal ID: ${result.data.proposal?.interaction_id || 'N/A'}`);
+                    log('log3', `📋 Status: ${result.data.proposal?.status || 'N/A'}`);
+                    markTestStatus('test3', true);
+                } else {
+                    log('log3', `❌ FAILED: ${result.error}`);
+                    log('log3', `📋 Status: ${result.status}`);
+                    markTestStatus('test3', false);
+                }
+            } catch (error) {
+                log('log3', `❌ ERROR: ${error.message}`);
+                markTestStatus('test3', false);
+            }
+        }
+
+        // Test 4: Get My Proposals
+        async function testMyProposals() {
+            clearLog('log4');
+            const bookingId = document.getElementById('myProposalsBookingId').value;
+            log('log4', `🚀 TESTING: Get my proposals for booking ${bookingId}...`);
+            
+            try {
+                const result = await apiRequest(`/reservas/booking/${bookingId}/my-safepoint-proposals`, {
+                    method: 'GET'
+                });
+                
+                if (result.success) {
+                    log('log4', `✅ SUCCESS: My proposals retrieved!`);
+                    log('log4', `📋 Count: ${result.data.proposals?.length || 0}`);
+                    log('log4', `📋 Booking ID: ${result.data.booking_id || 'N/A'}`);
+                    log('log4', `📋 Trip ID: ${result.data.trip_id || 'N/A'}`);
+                    markTestStatus('test4', true);
+                } else {
+                    log('log4', `❌ FAILED: ${result.error}`);
+                    log('log4', `📋 Status: ${result.status}`);
+                    markTestStatus('test4', false);
+                }
+            } catch (error) {
+                log('log4', `❌ ERROR: ${error.message}`);
+                markTestStatus('test4', false);
+            }
+        }
+
+        // Test 5: Search SafePoints
+        async function testSearchSafePoints() {
+            clearLog('log5');
+            log('log5', `🚀 TESTING: Search SafePoints...`);
+            
+            try {
+                const requestBody = {
+                    latitude: 4.6097, // Bogotá
+                    longitude: -74.0817,
+                    radius_km: 5,
+                    limit: 10
+                };
+                
+                log('log5', `📡 BACKEND: Searching SafePoints:`);
+                log('log5', JSON.stringify(requestBody, null, 2));
+                
+                const result = await apiRequest('/safepoints/search', {
+                    method: 'POST',
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (result.success) {
+                    log('log5', `✅ SUCCESS: SafePoints found!`);
+                    log('log5', `📍 Count: ${result.data.count || 0}`);
+                    log('log5', `📋 SafePoints: ${result.data.safepoints?.length || 0}`);
+                    markTestStatus('test5', true);
+                } else {
+                    log('log5', `❌ FAILED: ${result.error}`);
+                    log('log5', `📋 Status: ${result.status}`);
+                    markTestStatus('test5', false);
+                }
+            } catch (error) {
+                log('log5', `❌ ERROR: ${error.message}`);
+                markTestStatus('test5', false);
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            log('log1', '🔧 Ready to test SafePoints interaction...');
+            log('log2', '🔧 Ready to test nearby SafePoints...');
+            log('log3', '🔧 Ready to test SafePoint proposals...');
+            log('log4', '🔧 Ready to test my proposals...');
+            log('log5', '🔧 Ready to test SafePoints search...');
+        };
+    </script>
+</body>
+</html>

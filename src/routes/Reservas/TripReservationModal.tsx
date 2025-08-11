@@ -15,6 +15,7 @@ import {
 import { Clock, Navigation, User } from 'lucide-react';
 import { bookTrip } from '@/services/reservas';
 import { getCurrentUser } from '@/services/auth';
+import { CompactSafePoints } from '@/components/TripSafePointsInfo/CompactSafePoints';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 import { useNavigate } from '@tanstack/react-router';
@@ -44,7 +45,6 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
     const [isConfirming, setIsConfirming] = React.useState(false);
     const [bookingResult, setBookingResult] = React.useState<any>(null);
     const navigate = useNavigate();
-
 
     const handleConfirmReservation = async () => {
         try {
@@ -259,6 +259,22 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                             </div>
                           </Group>
                         </Card>
+
+                    {/* ✅ SAFEPOINTS USANDO COMPONENTE CORREGIDO QUE FUNCIONA */}
+                    <Card className={styles.safePointsCard} shadow="sm" withBorder>
+                        <Group gap="xs" align="center" mb="sm">
+                            <div className={styles.safePointsIcon}>📍</div>
+                            <div>
+                                <Text className={styles.safePointsTitle} size="sm" fw={600}>SafePoints - Puntos Seguros</Text>
+                                <Text className={styles.safePointsSubtitle} size="xs" c="dimmed">Recogida y descenso</Text>
+                            </div>
+                        </Group>
+                        
+                        {/* Usar el componente CompactSafePoints que YA FUNCIONA CORRECTAMENTE */}
+                        <CompactSafePoints tripId={trip.id.toString()} />
+                    </Card>
+
+                    {/* Campos de pasajeros */}
                     <NumberInput
                         label="Número de asientos"
                         description="Selecciona cuántos asientos deseas reservar"

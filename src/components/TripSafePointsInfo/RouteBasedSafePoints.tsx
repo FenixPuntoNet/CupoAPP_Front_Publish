@@ -115,7 +115,7 @@ export function RouteBasedSafePoints({ origin, destination, tripId }: RouteBased
       </Group>
 
       <Text size="xs" c="dimmed" mb="sm">
-        El conductor puede seleccionar puntos específicos de esta lista para recogida y dejada
+        El conductor puede seleccionar puntos específicos de esta lista para recogida y descenso
       </Text>
 
       {!showDetails ? (

@@ -211,7 +211,7 @@ export function TripSafePointsInfo({ tripId, compact = false, origin, destinatio
               SafePoints no configurados
             </Text>
             <Text size="xs" c="dimmed">
-              Este conductor aún no ha seleccionado puntos específicos de recogida y dejada. 
+              Este conductor aún no ha seleccionado puntos específicos de recogida y descenso. 
               Los SafePoints son lugares seguros y convenientes donde puedes abordar o bajar del vehículo.
             </Text>
           </Box>
@@ -226,7 +226,7 @@ export function TripSafePointsInfo({ tripId, compact = false, origin, destinatio
         <Group gap="xs">
           <MapPin size={16} color="var(--mantine-color-blue-6)" />
           <Text size="sm" fw={600}>
-            Puntos de Recogida y Dejada
+            Puntos de Recogida y Descenso
           </Text>
           <Badge size="xs" variant="light" color="blue">
             {(safePoints.pickup_points.length + safePoints.dropoff_points.length)} puntos
@@ -270,7 +270,7 @@ export function TripSafePointsInfo({ tripId, compact = false, origin, destinatio
               <Group gap="xs" mb="xs">
                 <Clock size={14} />
                 <Text size="xs" fw={500} c="green">
-                  Puntos de Dejada ({safePoints.dropoff_points.length})
+                  Puntos de Descenso ({safePoints.dropoff_points.length})
                 </Text>
               </Group>
               

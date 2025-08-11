@@ -31,7 +31,7 @@ export function SafePointIntegration({ trip, onSafePointsSelected }: SafePointIn
         onClick={() => setSafePointModalOpen(true)}
         fullWidth
       >
-        Seleccionar Puntos de Recogida y Dejada
+        Seleccionar Puntos de Recogida y Descenso
       </Button>
 
       <SafePointSelector

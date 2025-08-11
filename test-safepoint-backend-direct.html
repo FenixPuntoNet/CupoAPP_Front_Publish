@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥 TEST DIRECTO: SafePoint Backend</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { background: #dc2626; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background: #dcfce7; border-color: #16a34a; }
+        .error { background: #fef2f2; border-color: #dc2626; }
+        .warning { background: #fefce8; border-color: #ca8a04; }
+        .info { background: #eff6ff; border-color: #2563eb; }
+        .code { background: #f4f4f4; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; margin: 10px 0; font-size: 12px; }
+        .log-item { margin: 5px 0; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 11px; }
+        .log-success { background: #dcfce7; }
+        .log-error { background: #fef2f2; }
+        .log-info { background: #eff6ff; }
+        .log-warning { background: #fefce8; }
+        button { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #1d4ed8; }
+        .btn-danger { background: #dc2626; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-success { background: #16a34a; }
+        .btn-success:hover { background: #15803d; }
+        input, textarea { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 TEST DIRECTO: SafePoint Backend - SUBIR A TABLA</h1>
+            <p><strong>OBJETIVO:</strong> Verificar que los SafePoints se guarden en safepoint_interactions</p>
+        </div>
+
+        <div class="section info">
+            <h3>🎯 PROBLEMA IDENTIFICADO</h3>
+            <div class="code">❌ PROBLEMA: Frontend selecciona SafePoints pero NO se guardan en BD
+✅ SOLUCIÓN: Usar endpoint /safepoints/interact para guardar en tabla
+🔧 STATUS: Hook ya configurado, verificando backend</div>
+        </div>
+
+        <div class="section">
+            <h3>🔑 STEP 1: Verificar Token</h3>
+            <button onclick="checkToken()" class="btn-success">🔍 Verificar Token</button>
+            <div id="token-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>📡 STEP 2: Test Backend Directo</h3>
+            <button onclick="testBackendDirect()" class="btn-success">🧪 Test /safepoints/interact</button>
+            <div id="backend-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔄 STEP 3: Test Frontend Service</h3>
+            <button onclick="testFrontendService()" class="btn-success">🧪 Test addSafePointToDraft</button>
+            <div id="frontend-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>✅ STEP 4: Verificar Guardado</h3>
+            <button onclick="verifyPendingInteractions()" class="btn-success">📋 Ver Pending Interactions</button>
+            <div id="verify-result"></div>
+        </div>
+
+        <div class="section warning">
+            <h3>📊 LOGS EN TIEMPO REAL</h3>
+            <div id="logs-container" style="max-height: 400px; overflow-y: auto; background: #1f2937; color: #f9fafb; padding: 10px; border-radius: 4px;"></div>
+            <button onclick="clearLogs()" class="btn-danger">🗑️ Limpiar Logs</button>
+        </div>
+
+        <div class="section">
+            <h3>🛠️ ESTRUCTURA DE REQUEST</h3>
+            <div class="code">{
+  "safepoint_id": 1,
+  "interaction_type": "pickup_selection",
+  "trip_id": null,
+  "interaction_data": {
+    "route_order": 1,
+    "is_draft_interaction": true,
+    "timestamp": "2025-08-10T...",
+    "user_context": "conductor_draft"
+  }
+}</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://cupo-backend.fly.dev';
+        
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const logContainer = document.getElementById('logs-container');
+            
+            const logClass = `log-${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            
+            const logElement = document.createElement('div');
+            logElement.className = `log-item ${logClass}`;
+            logElement.textContent = logMessage;
+            
+            if (container) {
+                container.appendChild(logElement);
+            }
+            
+            // Add to main log
+            const mainLogElement = document.createElement('div');
+            mainLogElement.style.color = type === 'error' ? '#f87171' : type === 'success' ? '#4ade80' : type === 'warning' ? '#fbbf24' : '#60a5fa';
+            mainLogElement.textContent = logMessage;
+            logContainer.appendChild(mainLogElement);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs-container').innerHTML = '';
+            document.querySelectorAll('.log-item').forEach(item => item.remove());
+        }
+
+        function getAuthToken() {
+            return localStorage.getItem('auth_token');
+        }
+
+        async function checkToken() {
+            try {
+                log('token-result', '🔍 Verificando token de autenticación...', 'info');
+                
+                const token = getAuthToken();
+                if (!token) {
+                    log('token-result', '❌ NO hay token guardado en localStorage', 'error');
+                    log('token-result', '💡 Intenta hacer login primero', 'warning');
+                    return;
+                }
+
+                log('token-result', `✅ Token encontrado: ${token.substring(0, 30)}...`, 'success');
+                
+                // Test token con endpoint simple
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    log('token-result', '✅ Token VÁLIDO - Backend responde correctamente', 'success');
+                } else {
+                    log('token-result', `❌ Token INVÁLIDO - Status: ${response.status}`, 'error');
+                    const errorText = await response.text();
+                    log('token-result', `Error details: ${errorText}`, 'error');
+                }
+
+            } catch (error) {
+                log('token-result', `❌ Error verificando token: ${error.message}`, 'error');
+            }
+        }
+
+        async function testBackendDirect() {
+            try {
+                log('backend-result', '🧪 TESTING: Backend directo /safepoints/interact', 'info');
+                
+                const token = getAuthToken();
+                if (!token) {
+                    log('backend-result', '❌ NECESITAS TOKEN - Ejecuta Step 1 primero', 'error');
+                    return;
+                }
+
+                const testData = {
+                    safepoint_id: 1,
+                    interaction_type: 'pickup_selection',
+                    trip_id: null,
+                    interaction_data: {
+                        route_order: 1,
+                        notes: '',
+                        selection_type: 'pickup_selection',
+                        is_draft_interaction: true,
+                        timestamp: new Date().toISOString(),
+                        user_context: 'conductor_draft_test',
+                        draft_metadata: {
+                            frontend_version: '2025_updated',
+                            selection_flow: 'conductor_safepoint_draft'
+                        }
+                    }
+                };
+
+                log('backend-result', `📤 Enviando: ${JSON.stringify(testData, null, 2)}`, 'info');
+
+                const response = await fetch(`${API_BASE}/safepoints/interact`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const responseText = await response.text();
+                log('backend-result', `📥 Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+                log('backend-result', `📥 Response Body: ${responseText}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    log('backend-result', '🎉 ¡ÉXITO! SafePoint guardado en BD', 'success');
+                    
+                    try {
+                        const data = JSON.parse(responseText);
+                        if (data.interaction) {
+                            log('backend-result', `✅ Interaction ID: ${data.interaction.id}`, 'success');
+                            log('backend-result', `✅ Status: ${data.interaction.status}`, 'success');
+                        }
+                    } catch (e) {
+                        log('backend-result', '✅ Respuesta exitosa (no JSON)', 'success');
+                    }
+                } else {
+                    log('backend-result', `❌ ERROR ${response.status}: ${responseText}`, 'error');
+                    
+                    if (response.status === 401) {
+                        log('backend-result', '🔑 Token expirado - necesitas hacer login', 'warning');
+                    } else if (response.status === 500) {
+                        log('backend-result', '🔧 Error del servidor - posible problema de constraint', 'error');
+                    }
+                }
+
+            } catch (error) {
+                log('backend-result', `❌ Error de conexión: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFrontendService() {
+            try {
+                log('frontend-result', '🧪 TESTING: Frontend service addSafePointToDraft', 'info');
+                
+                // Simular llamada al service del frontend (usando mismo código que trip-drafts.ts)
+                const token = getAuthToken();
+                if (!token) {
+                    log('frontend-result', '❌ NECESITAS TOKEN - Ejecuta Step 1 primero', 'error');
+                    return;
+                }
+
+                const testData = {
+                    safepoint_id: 2,
+                    selection_type: 'dropoff_selection',
+                    route_order: 2
+                };
+
+                log('frontend-result', `📝 Frontend service test data: ${JSON.stringify(testData)}`, 'info');
+
+                // Estructura EXACTA del service trip-drafts.ts
+                const requestBody = {
+                    safepoint_id: testData.safepoint_id,
+                    trip_id: null,
+                    interaction_type: testData.selection_type,
+                    interaction_data: {
+                        route_order: testData.route_order,
+                        notes: '',
+                        selection_type: testData.selection_type,
+                        is_draft_interaction: true,
+                        timestamp: new Date().toISOString(),
+                        user_context: 'conductor_draft',
+                        draft_metadata: {
+                            frontend_version: '2025_updated',
+                            selection_flow: 'conductor_safepoint_draft'
+                        }
+                    }
+                };
+
+                log('frontend-result', `📡 Enviando con estructura del service: ${JSON.stringify(requestBody, null, 2)}`, 'info');
+
+                const response = await fetch(`${API_BASE}/safepoints/interact`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const responseText = await response.text();
+                log('frontend-result', `📥 Frontend service response: ${response.status} - ${responseText}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    log('frontend-result', '🎉 ¡FRONTEND SERVICE FUNCIONANDO!', 'success');
+                } else {
+                    log('frontend-result', `❌ Frontend service falló: ${responseText}`, 'error');
+                }
+
+            } catch (error) {
+                log('frontend-result', `❌ Error en frontend service: ${error.message}`, 'error');
+            }
+        }
+
+        async function verifyPendingInteractions() {
+            try {
+                log('verify-result', '📋 VERIFICANDO: Pending interactions en BD', 'info');
+                
+                const token = getAuthToken();
+                if (!token) {
+                    log('verify-result', '❌ NECESITAS TOKEN - Ejecuta Step 1 primero', 'error');
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE}/safepoints/pending-interactions`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const responseText = await response.text();
+                log('verify-result', `📥 Pending interactions response: ${response.status}`, response.ok ? 'success' : 'error');
+
+                if (response.ok) {
+                    try {
+                        const data = JSON.parse(responseText);
+                        const count = data.count || 0;
+                        
+                        log('verify-result', `📊 RESULTADO: ${count} interactions pendientes`, count > 0 ? 'success' : 'warning');
+                        
+                        if (count > 0) {
+                            log('verify-result', '🎉 ¡ÉXITO! Hay SafePoints guardados en BD', 'success');
+                            log('verify-result', `📋 Pending interactions: ${JSON.stringify(data.pending_interactions, null, 2)}`, 'info');
+                        } else {
+                            log('verify-result', '⚠️ NO hay SafePoints pendientes en BD', 'warning');
+                            log('verify-result', '💡 Ejecuta Step 2 o 3 para guardar algunos', 'warning');
+                        }
+                    } catch (e) {
+                        log('verify-result', `✅ Response OK pero no JSON: ${responseText}`, 'success');
+                    }
+                } else {
+                    log('verify-result', `❌ Error verificando pending: ${responseText}`, 'error');
+                }
+
+            } catch (error) {
+                log('verify-result', `❌ Error verificando: ${error.message}`, 'error');
+            }
+        }
+
+        // Ejecutar verificación inicial
+        document.addEventListener('DOMContentLoaded', () => {
+            log('logs-container', '🚀 TEST TOOL INICIADO', 'info');
+            log('logs-container', '🎯 OBJETIVO: Verificar guardado de SafePoints en BD', 'warning');
+            log('logs-container', '📋 SIGUE LOS STEPS EN ORDEN: 1 → 2 → 3 → 4', 'info');
+        });
+    </script>
+</body>
+</html>

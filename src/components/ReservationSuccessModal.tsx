@@ -3,6 +3,7 @@ import { Modal, Text, Button, Group, Card, Avatar, Badge, Stack, Divider } from 
 import { IconCheck, IconCash, IconCreditCard, IconPhone, IconCar, IconCalendar, IconMapPin, IconUsers } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import type { TripSearchResult } from '@/services/trips';
+import BookingSafePointSelector from '@/components/BookingSafePointSelector/BookingSafePointSelector';
 import styles from './ReservationSuccessModal.module.css';
 
 interface ReservationSuccessModalProps {
@@ -26,6 +27,10 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
   isConfirming = false,
   bookingResult
 }) => {
+  const handleSafePointSelectionChange = (hasSelections: boolean) => {
+    console.log('SafePoint selections changed:', hasSelections);
+  };
+
   const handleConfirm = async () => {
     await onConfirm();
   };
@@ -165,6 +170,14 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
             </Text>
           </Group>
         </Card>
+
+        {/* ✅ SELECTOR DE SAFEPOINTS USANDO BACKEND ENDPOINTS */}
+        {bookingResult && (
+          <BookingSafePointSelector
+            bookingId={bookingResult.booking.id}
+            onSelectionChange={handleSafePointSelectionChange}
+          />
+        )}
 
         {/* Instrucciones de pago - ANTES de confirmar para informar al usuario */}
         {!bookingResult && (

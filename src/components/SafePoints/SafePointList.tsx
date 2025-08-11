@@ -25,7 +25,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import type { SafePoint, SafePointCategory } from '@/services/safepoints';
-import { getSafePointIcon, getSafePointColor } from '@/services/safepoints';
+import { getSafePointIcon, getSafePointColor } from '@/services/booking-safepoints';
 import styles from './SafePointList.module.css';
 
 interface SafePointListProps {

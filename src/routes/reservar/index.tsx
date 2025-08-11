@@ -3,13 +3,12 @@ import { useState, useRef, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Box, TextInput, Button, Title, Card, Text, Container, Badge, Group } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
-import { Calendar, User, Car, MapPin, Clock, Navigation } from 'lucide-react';
+import { Calendar, User, Car, MapPin, Navigation } from 'lucide-react';
 import PassengerSelector from '../../components/ui/home/PassengerSelector';
 import dayjs from 'dayjs';
 import { getFromLocalStorage, saveToLocalStorage } from '../../types/PublicarViaje/localStorageHelper';
 import styles from './reservar.module.css';
-import { TripSafePointsInfo } from '@/components/TripSafePointsInfo';
-import { TripReservationModal } from '@/routes/Reservas/TripReservationModal';
+import { TripReservationModal } from '../Reservas/TripReservationModal';
 import type { Trip } from '@/types/Trip';
 import { Modal } from '@mantine/core';
 import { Rating } from '@mantine/core';
@@ -20,6 +19,8 @@ import { useMaps } from '@/hooks/useMaps';
 import { searchTrips, type TripSearchResult } from '@/services/trips';
 import { getAssumptions, ensureAssumptionsExist } from '@/services/config';
 import type { PlaceSuggestion } from '@/services/googleMaps';
+import { CompactSafePoints } from '@/components/TripSafePointsInfo/CompactSafePoints';
+import { DriverModal } from '@/components/DriverModal';
 
 interface SearchFormData {
     origin: string;
@@ -31,6 +32,8 @@ interface SearchFormData {
 const ReservarView = () => {
     const [showRouteModal, setShowRouteModal] = useState(false);
     const [selectedRouteInfo, setSelectedRouteInfo] = useState<{ origin: string; destination: string } | null>(null);
+    const [showDriverModal, setShowDriverModal] = useState(false);
+    const [selectedDriver, setSelectedDriver] = useState<TripSearchResult | null>(null);
     const navigate = useNavigate();
     const { searchPlaces, getDetails } = useMaps();
     
@@ -682,7 +685,7 @@ const ReservarView = () => {
                     )}
 
                     {searchResults.length > 0 ? (
-                        <div className={styles.resultsList}>
+                        <div className={styles.tripsGrid}>
                             {searchResults.map((trip) => {
                               // Obtener tipo de coincidencia
                               const matchInfo = getTripMatchType(trip);
@@ -732,10 +735,10 @@ const ReservarView = () => {
                                 );
                               }
                                 return (
-                                <Card key={trip.id} className={styles.resultCard} shadow="md" radius="lg" p="lg">
-                                  {/* Header con fecha, precio y tipo de coincidencia */}
-                                  <div className={styles.headerSection}>
-                                    <div className={styles.dateAndPrice}>
+                                <Card key={trip.id} className={styles.tripCard} shadow="md" radius="lg" p="md">
+                                  {/* Header con fecha, precio y badge de coincidencia en una sola línea */}
+                                  <Group justify="space-between" align="center" mb="sm">
+                                    <Group align="center" gap="sm">
                                       <Text fw={600} size="md" className={styles.dateText}>
                                         {new Date(trip.dateTime).toLocaleString('es-ES', {
                                           day: '2-digit',
@@ -746,19 +749,28 @@ const ReservarView = () => {
                                           hour12: true,
                                         })}
                                       </Text>
-                                      {priceBadge}
-                                    </div>
-                                    {/* Badge de tipo de coincidencia */}
-                                    <div style={{ marginTop: 4 }}>
+                                      {/* Badge de tipo de coincidencia al lado izquierdo */}
                                       {matchInfo.badge}
-                                    </div>
-                                  </div>
+                                    </Group>
+                                    {/* Precio a la derecha */}
+                                    {priceBadge}
+                                  </Group>
                                   
-                                  {/* Mensaje de estado de precio */}
-                                  {priceStatusMsg}
+                                  {/* Mensaje de estado de precio - más compacto */}
+                                  {priceStatusMsg && (
+                                    <div style={{ marginBottom: '0.5rem' }}>
+                                      {priceStatusMsg}
+                                    </div>
+                                  )}
                                   
                                   {/* Información del conductor */}
-                                  <div className={styles.driverSection}>
+                                  <div className={styles.driverSection}
+                                    onClick={() => {
+                                      setSelectedDriver(trip);
+                                      setShowDriverModal(true);
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                  >
                                     <img
                                       src={trip.photo}
                                       alt="Foto del conductor"
@@ -780,7 +792,7 @@ const ReservarView = () => {
                                     </div>
                                   </div>
                                   
-                                  {/* Ruta de origen a destino */}
+                                  {/* Ruta de origen a destino con flecha bonita */}
                                   <div className={styles.tripRoute}
                                     onClick={() => {
                                       setSelectedRouteInfo({
@@ -804,19 +816,22 @@ const ReservarView = () => {
                                   >
                                     <div className={styles.routePoint}>
                                       <div className={styles.iconWrapper}>
-                                        <MapPin size={20} className={`${styles.routeIcon} ${styles.originIcon}`} />
+                                        <MapPin size={20} className={styles.originIcon} />
                                       </div>
                                       <div className={styles.routeDetails}>
                                         <Text fw={600} className={styles.routeLabel}>Origen</Text>
                                         <Text fw={500} className={styles.routeAddress}>{trip.origin}</Text>
                                       </div>
                                     </div>
+                                    
+                                    {/* Flecha bonita que conecta origen y destino */}
                                     <div className={styles.routeLineWrapper}>
                                       <div className={styles.routeLine}></div>
                                     </div>
+                                    
                                     <div className={styles.routePoint}>
                                       <div className={styles.iconWrapper}>
-                                        <MapPin size={20} className={`${styles.routeIcon} ${styles.destinationIcon}`} />
+                                        <MapPin size={20} className={styles.destinationIcon} />
                                       </div>
                                       <div className={styles.routeDetails}>
                                         <Text fw={600} className={styles.routeLabel}>Destino</Text>
@@ -825,55 +840,74 @@ const ReservarView = () => {
                                     </div>
                                   </div>
 
-                                  <div className={styles.routeViewButtonWrapper}>
-                                    <Button
-                                      variant="outline"
-                                      size="xs"
-                                      className={styles.routeViewButton}
-                                      onClick={() => {
-                                        setSelectedRouteInfo({
-                                          origin: trip.origin,
-                                          destination: trip.destination,
-                                        });
-                                        setShowRouteModal(true);
-                                      }}
-                                      leftSection={<Navigation size={14} />}
-                                    >
-                                      Ver ruta
-                                    </Button>
-                                  </div>
+                             
                                   
-                                  
+                                  {/* SafePoints con título compacto */}
+                                  <Card className={styles.safepointsCard} shadow="sm" radius="md" p="sm" mb="xs">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                                      <MapPin size={14} style={{ color: '#22c55e' }} />
+                                      <Text size="xs" fw={600} c="dimmed" style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                        Puntos de encuentro
+                                      </Text>
+                                    </div>
+                                    <CompactSafePoints tripId={trip.id.toString()} />
+                                  </Card>
 
-                                   {/* Información adicional */}
-                                  <div className={styles.additionalInfo}>
-                                      <div className={styles.infoItem}>
-                                          <Clock size={16} className={styles.infoIcon} />
-                                          <Text fw={500} size="sm" className={styles.infoText}>
-                                              {trip.selectedRoute.duration} - Tiempo de Viaje
+                                  {/* Cupos disponibles - diseño oscuro y elegante */}
+                                  <Card className={styles.availabilityCard} shadow="sm" radius="md" p="md" mb="sm" 
+                                        style={{ 
+                                          backgroundColor: trip.seats > 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                                          border: trip.seats > 0 ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
+                                          transition: 'all 0.2s ease'
+                                        }}>
+                                    <Group justify="space-between" align="center">
+                                      <Group align="center" gap="sm">
+                                        <div style={{ 
+                                          padding: '8px', 
+                                          borderRadius: '50%', 
+                                          backgroundColor: trip.seats > 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                          border: trip.seats > 0 ? '2px solid #22c55e' : '2px solid #ef4444',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center'
+                                        }}>
+                                          <User size={18} style={{ color: trip.seats > 0 ? '#22c55e' : '#ef4444' }} />
+                                        </div>
+                                        <div>
+                                          <Text fw={600} size="sm" style={{ color: trip.seats > 0 ? '#22c55e' : '#ef4444' }}>
+                                            {trip.seats > 0 ? 'Disponible' : 'Sin cupos'}
                                           </Text>
-                                      </div>
-                                      <div className={styles.infoItem}>
-                                          <Navigation size={16} className={styles.infoIcon} />
-                                          <Text fw={500} size="sm" className={styles.infoText}>
-                                              {trip.selectedRoute.distance} - Distancia de Viaje
+                                          <Text size="xs" c="dimmed" style={{ marginTop: '2px' }}>
+                                            {trip.seats > 0 
+                                              ? `${trip.seats} ${trip.seats === 1 ? 'cupo disponible' : 'cupos disponibles'}`
+                                              : 'No hay espacios libres'
+                                            }
                                           </Text>
-                                      </div>
-                                      <div className={styles.infoItem}>
-                                          <User size={16} className={styles.infoIcon} />
-                                          <Text fw={500} size="sm" className={styles.infoText}>
-                                        {(trip.seats ?? 0).toString()} - Cupos disponibles
-                                          </Text>
-                                      </div>
-                                  </div>
-                                  
-                                  {/* SafePoints del viaje */}
-                                  <TripSafePointsInfo 
-                                    tripId={trip.id} 
-                                    compact={true}
-                                    origin={trip.origin}
-                                    destination={trip.destination}
-                                  />
+                                        </div>
+                                      </Group>
+                                      
+                                      {/* Badge visual con el número */}
+                                      <Badge 
+                                        size="lg" 
+                                        radius="xl" 
+                                        variant="light"
+                                        style={{ 
+                                          fontSize: '1rem', 
+                                          fontWeight: 700,
+                                          minWidth: '40px',
+                                          height: '40px',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          backgroundColor: trip.seats > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                          color: trip.seats > 0 ? '#22c55e' : '#ef4444',
+                                          border: trip.seats > 0 ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(239, 68, 68, 0.4)'
+                                        }}
+                                      >
+                                        {trip.seats}
+                                      </Badge>
+                                    </Group>
+                                  </Card>
                                   
                                   {/* Botón de reservar */}
                                   <Button
@@ -1002,6 +1036,20 @@ const ReservarView = () => {
                       onClose={() => setShowRouteModal(false)}
                     />
                 </Modal>
+                )}
+
+                {selectedDriver && (
+                <DriverModal
+                  opened={showDriverModal}
+                  onClose={() => setShowDriverModal(false)}
+                  driverName={selectedDriver.driverName || 'Conductor'}
+                  photo={selectedDriver.photo}
+                  rating={selectedDriver.rating || 0}
+                  vehicle={selectedDriver.vehicle}
+                  license={selectedDriver.license}
+                  propertyCard={selectedDriver.propertyCard}
+                  soat={selectedDriver.soat}
+                />
                 )}
 
             </Container>

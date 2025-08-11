@@ -3,7 +3,7 @@ import { Marker, InfoWindow } from '@react-google-maps/api';
 import { Card, Text, Badge, Group, Button, Stack } from '@mantine/core';
 import { MapPin, Star, Shield, Users } from 'lucide-react';
 import type { SafePoint } from '@/services/safepoints';
-import { getSafePointIcon, getSafePointColor } from '@/services/safepoints';
+import { getSafePointIcon, getSafePointColor } from '@/services/booking-safepoints';
 import styles from './SafePointMarker.module.css';
 
 interface SafePointMarkerProps {

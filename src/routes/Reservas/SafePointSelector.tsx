@@ -140,7 +140,7 @@ export const SafePointSelector: React.FC<SafePointSelectorProps> = ({
     }));
     
     notifications.show({
-      title: `Punto de ${type === 'pickup' ? 'recogida' : 'dejada'} seleccionado`,
+      title: `Punto de ${type === 'pickup' ? 'recogida' : 'descenso'} seleccionado`,
       message: `${safepoint.name} - ${formatSafePointCategory(safepoint.category)}`,
       color: 'green',
       autoClose: 3000,
@@ -199,7 +199,7 @@ export const SafePointSelector: React.FC<SafePointSelectorProps> = ({
     if (!selectedSafePoints.pickup || !selectedSafePoints.dropoff) {
       notifications.show({
         title: 'Selección incompleta',
-        message: 'Por favor, selecciona tanto el punto de recogida como el de dejada.',
+        message: 'Por favor, selecciona tanto el punto de recogida como el de descenso.',
         color: 'orange',
         autoClose: 4000,
       });
@@ -357,7 +357,7 @@ export const SafePointSelector: React.FC<SafePointSelectorProps> = ({
               onClick={() => setSelectionType('dropoff')}
               leftSection={<Navigation size={16} />}
             >
-              Punto de Dejada
+              Punto de Descenso
             </Button>
           </Group>
 
@@ -406,7 +406,7 @@ export const SafePointSelector: React.FC<SafePointSelectorProps> = ({
               <Paper withBorder p="xl" radius="md" style={{ textAlign: 'center' }}>
                 <MapPin size={32} color="#9ca3af" style={{ margin: '0 auto' }} />
                 <Text size="sm" c="dimmed" mt="sm">
-                  No hay SafePoints disponibles en esta categoría para {selectionType === 'pickup' ? 'recogida' : 'dejada'}
+                  No hay SafePoints disponibles en esta categoría para {selectionType === 'pickup' ? 'recogida' : 'descenso'}
                 </Text>
                 {activeTab === 'nearby' && (
                   <Text size="xs" c="dimmed" mt="xs">
@@ -430,7 +430,7 @@ export const SafePointSelector: React.FC<SafePointSelectorProps> = ({
                 )}
                 {selectedSafePoints.dropoff && (
                   <Group gap="sm">
-                    <Badge color="red" size="sm">Dejada</Badge>
+                    <Badge color="red" size="sm">Descenso</Badge>
                     <Text size="sm">{selectedSafePoints.dropoff.name}</Text>
                   </Group>
                 )}
