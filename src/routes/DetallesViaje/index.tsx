@@ -343,7 +343,7 @@ function FormattedNumberInput({
 }
 
 import { useRef } from 'react';
-import { migrateAllPendingDataToTrip } from '@/services/backend-integration';
+import { migrateAllPendingDataToTrip, cleanupOldPendingData } from '@/services/backend-integration';
 
 const DetallesViajeView = () => {
     const navigate = useNavigate();
@@ -570,40 +570,60 @@ const DetallesViajeView = () => {
                 console.log('🔄 Iniciando migración automática de datos pendientes...');
                 
                 try {
+                    // 1. MIGRACIÓN INTELIGENTE con filtro temporal
                     const migrationResult = await migrateAllPendingDataToTrip(result.data.trip_id);
                     
+                    // 2. LIMPIEZA AUTOMÁTICA de datos antiguos (en background)
+                    cleanupOldPendingData().catch(error => {
+                        console.warn('⚠️ Background cleanup had issues:', error);
+                    });
+                    
+                    // Con el backend corregido, siempre será success=true
                     if (migrationResult.success) {
                         console.log('🎉 MIGRACIÓN COMPLETADA:', {
                             safepoints_migrated: migrationResult.migrations.safepoints.updated_count,
                             stopovers_migrated: migrationResult.migrations.stopovers.updated_count,
-                            total_migrated: migrationResult.total_updated
+                            total_migrated: migrationResult.total_updated,
+                            message: migrationResult.message
                         });
                         
                         if (migrationResult.total_updated > 0) {
                             notifications.show({
-                                title: '🎉 Datos migrados exitosamente',
-                                message: `Se migraron ${migrationResult.total_updated} elementos (SafePoints y paradas) al viaje publicado`,
+                                title: '🎉 Viaje publicado y datos migrados',
+                                message: `${migrationResult.total_updated} elementos recientes migrados exitosamente`,
                                 color: 'green',
                                 autoClose: 5000
                             });
+                        } else {
+                            notifications.show({
+                                title: '✅ Viaje publicado exitosamente',
+                                message: 'Tu viaje está activo y disponible para reservas',
+                                color: 'green',
+                                autoClose: 4000
+                            });
                         }
-                    } else {
-                        console.warn('⚠️ MIGRACIÓN PARCIAL:', migrationResult.error);
-                        notifications.show({
-                            title: '⚠️ Migración parcial',
-                            message: 'Algunos datos no se pudieron migrar automáticamente',
-                            color: 'orange',
-                            autoClose: 4000
-                        });
+                        
+                        // Verificar si hubo advertencias (errores no críticos)
+                        if (migrationResult.error) {
+                            console.warn('⚠️ ADVERTENCIAS EN MIGRACIÓN:', migrationResult.error);
+                            
+                            notifications.show({
+                                title: 'ℹ️ Información adicional',
+                                message: 'Algunos servicios auxiliares tuvieron problemas menores',
+                                color: 'blue',
+                                autoClose: 3000
+                            });
+                        }
                     }
                 } catch (migrationError) {
                     console.error('❌ ERROR EN MIGRACIÓN:', migrationError);
-                    // No fallar el proceso completo por error de migración
+                    
+                    // La migración falló, pero el viaje ya se creó exitosamente
                     notifications.show({
-                        title: 'Viaje publicado',
-                        message: 'El viaje se publicó correctamente, pero algunos datos adicionales podrían no haberse migrado',
-                        color: 'blue',
-                        autoClose: 4000
+                        title: '✅ Viaje creado exitosamente',
+                        message: 'Tu viaje está activo. Algunos datos auxiliares se migrarán automáticamente',
+                        color: 'green',
+                        autoClose: 5000
                     });
                 }
             }

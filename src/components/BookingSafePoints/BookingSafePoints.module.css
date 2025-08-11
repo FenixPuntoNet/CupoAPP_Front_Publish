@@ -1,4 +1,91 @@
-/* BookingSafePoints Component Styles */
+/* Modal Root */
+.modal {
+  z-index: 2000;
+}
+
+/* Cards */
+.explanationCard {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+}
+
+.selectedCard {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+}
+
+.optionCard {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.optionCard:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.optionCard:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* SafePoint Icon */
+.safepointIcon {
+  width: 40px;
+  height: 40px;
+  background: rgba(59, 130, 246, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Buttons */
+.skipButton {
+  background: transparent !important;
+  border: 1px solid #6c757d !important;
+  color: #6c757d !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.skipButton:hover {
+  background: #6c757d !important;
+  color: white !important;
+}
+
+.completeButton {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.3) !important;
+}
+
+.completeButton:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4) !important;
+}
+
+.completeButton:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* BookingSafePoints Component Styles - LEGACY */
 .safePointCard {
   transition: all 0.2s ease;
   border: 1px solid var(--mantine-color-gray-3);
@@ -33,5 +120,15 @@
 @media (max-width: 768px) {
   .safePointCard {
     padding: 8px;
+  }
+  
+  .optionCard {
+    padding: 0.75rem;
+  }
+
+  .safepointIcon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
   }
 }

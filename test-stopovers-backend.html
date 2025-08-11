@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Backend Stopovers Migration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .logs { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Backend Stopovers Migration</h1>
+        
+        <div class="section info">
+            <h3>📊 Estado de la Prueba</h3>
+            <p>Esta página prueba si el endpoint <code>/paradas/update-stopovers-trip-id</code> está funcionando correctamente en el backend.</p>
+            <p><strong>Backend URL:</strong> <span id="backendUrl">Detectando...</span></p>
+            <p><strong>Estado:</strong> <span id="status">Iniciando...</span></p>
+        </div>
+
+        <div class="section">
+            <h3>🔧 Acciones de Prueba</h3>
+            <button onclick="testBackendConnection()">🔗 Probar Conexión Backend</button>
+            <button onclick="testGetPendingStopovers()">📋 Obtener Stopovers Pendientes</button>
+            <button onclick="testUpdateStopoversTripId()">🔄 Probar Migración de Stopovers</button>
+            <button onclick="testAuthEndpoint()">🔐 Probar Autenticación</button>
+            <button onclick="clearLogs()">🧹 Limpiar Logs</button>
+        </div>
+
+        <div class="section">
+            <h3>📝 Logs de Prueba</h3>
+            <div id="logs" class="logs"></div>
+        </div>
+
+        <div class="section">
+            <h3>📈 Resultados</h3>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del backend
+        const BACKEND_URL = 'http://localhost:5000/api'; // Ajustar según tu configuración
+        
+        // Función para logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.style.margin = '5px 0';
+            logEntry.style.padding = '5px';
+            logEntry.style.borderRadius = '3px';
+            
+            switch(type) {
+                case 'success':
+                    logEntry.style.backgroundColor = '#d4edda';
+                    logEntry.style.color = '#155724';
+                    break;
+                case 'error':
+                    logEntry.style.backgroundColor = '#f8d7da';
+                    logEntry.style.color = '#721c24';
+                    break;
+                case 'warning':
+                    logEntry.style.backgroundColor = '#fff3cd';
+                    logEntry.style.color = '#856404';
+                    break;
+                default:
+                    logEntry.style.backgroundColor = '#e9ecef';
+                    logEntry.style.color = '#495057';
+            }
+            
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function updateStatus(status, type = 'info') {
+            const statusSpan = document.getElementById('status');
+            statusSpan.textContent = status;
+            statusSpan.className = type;
+        }
+
+        // Función helper para hacer requests al backend
+        async function makeBackendRequest(endpoint, options = {}) {
+            const url = `${BACKEND_URL}${endpoint}`;
+            
+            // Token de prueba - necesitarás uno válido para pruebas reales
+            const token = localStorage.getItem('auth_token') || 'TEST_TOKEN';
+            
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+
+            const finalOptions = { ...defaultOptions, ...options };
+            
+            log(`🔄 Haciendo request a: ${url}`, 'info');
+            log(`📝 Opciones: ${JSON.stringify(finalOptions, null, 2)}`, 'info');
+            
+            try {
+                const response = await fetch(url, finalOptions);
+                const data = await response.json();
+                
+                log(`✅ Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+                log(`📄 Response Data: ${JSON.stringify(data, null, 2)}`, response.ok ? 'success' : 'error');
+                
+                return { success: response.ok, status: response.status, data };
+            } catch (error) {
+                log(`❌ Request Error: ${error.message}`, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Test de conexión al backend
+        async function testBackendConnection() {
+            log('🔗 Probando conexión al backend...', 'info');
+            updateStatus('Probando conexión...', 'info');
+            
+            try {
+                const result = await makeBackendRequest('/health', { method: 'GET' });
+                
+                if (result.success) {
+                    log('✅ Conexión al backend exitosa', 'success');
+                    updateStatus('Backend conectado', 'success');
+                } else {
+                    log(`❌ Error de conexión: ${result.status}`, 'error');
+                    updateStatus('Error de conexión', 'error');
+                }
+            } catch (error) {
+                log(`❌ Error de conexión: ${error.message}`, 'error');
+                updateStatus('Error de conexión', 'error');
+            }
+        }
+
+        // Test para obtener stopovers pendientes
+        async function testGetPendingStopovers() {
+            log('📋 Probando obtener stopovers pendientes...', 'info');
+            updateStatus('Obteniendo stopovers...', 'info');
+            
+            const result = await makeBackendRequest('/paradas/pending-stopovers', { method: 'GET' });
+            
+            if (result.success) {
+                log('✅ Stopovers pendientes obtenidos correctamente', 'success');
+                updateStatus('Stopovers obtenidos', 'success');
+                
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = `
+                    <div class="section success">
+                        <h4>📋 Stopovers Pendientes Encontrados</h4>
+                        <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                log(`❌ Error obteniendo stopovers: ${result.error || result.status}`, 'error');
+                updateStatus('Error obteniendo stopovers', 'error');
+            }
+        }
+
+        // Test para migrar stopovers
+        async function testUpdateStopoversTripId() {
+            log('🔄 Probando migración de stopovers...', 'info');
+            updateStatus('Probando migración...', 'info');
+            
+            // Datos de prueba
+            const testData = {
+                stopover_ids: [1, 2, 3], // IDs de prueba
+                trip_id: 999 // Trip ID de prueba
+            };
+            
+            const result = await makeBackendRequest('/paradas/update-stopovers-trip-id', {
+                method: 'POST',
+                body: JSON.stringify(testData)
+            });
+            
+            if (result.success) {
+                log('✅ Migración de stopovers exitosa', 'success');
+                updateStatus('Migración exitosa', 'success');
+                
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = `
+                    <div class="section success">
+                        <h4>✅ Migración de Stopovers Exitosa</h4>
+                        <p><strong>Stopovers migrados:</strong> ${result.data.updated_count || 0}</p>
+                        <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                    </div>
+                `;
+            } else {
+                log(`❌ Error en migración: ${result.error || result.status}`, 'error');
+                updateStatus('Error en migración', 'error');
+                
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = `
+                    <div class="section error">
+                        <h4>❌ Error en Migración de Stopovers</h4>
+                        <p><strong>Status:</strong> ${result.status}</p>
+                        <p><strong>Error:</strong> ${result.error || 'Error desconocido'}</p>
+                        <pre>${JSON.stringify(result.data || {}, null, 2)}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        // Test de autenticación
+        async function testAuthEndpoint() {
+            log('🔐 Probando autenticación...', 'info');
+            updateStatus('Probando auth...', 'info');
+            
+            const result = await makeBackendRequest('/auth/verify', { method: 'GET' });
+            
+            if (result.success) {
+                log('✅ Autenticación válida', 'success');
+                updateStatus('Auth válido', 'success');
+            } else {
+                log(`⚠️ Problema de autenticación: ${result.status}`, 'warning');
+                updateStatus('Auth issue', 'warning');
+                
+                if (result.status === 401) {
+                    log('💡 Necesitas un token válido para las pruebas completas', 'warning');
+                }
+            }
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('backendUrl').textContent = BACKEND_URL;
+            log('🚀 Test de Backend Stopovers iniciado', 'info');
+            updateStatus('Listo para probar', 'info');
+            
+            // Auto-test de conexión
+            setTimeout(testBackendConnection, 1000);
+        });
+    </script>
+</body>
+</html>

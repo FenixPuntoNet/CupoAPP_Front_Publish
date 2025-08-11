@@ -224,8 +224,19 @@ export async function updatePendingInteractionsTripId(
     console.log('🔄 MIGRATION: Updating pending SafePoint interactions trip_id:', { 
       interactionIds, 
       tripId,
+      ids_count: interactionIds.length,
       migration_type: 'NULL_to_REAL_TRIP_ID'
     });
+
+    // Si no hay interacciones para actualizar, retornar éxito
+    if (!interactionIds || interactionIds.length === 0) {
+      console.log('✅ MIGRATION: No pending SafePoint interactions to update');
+      return {
+        success: true,
+        updated_count: 0,
+        message: 'No hay interacciones pendientes para actualizar'
+      };
+    }
     
     const response = await apiRequest('/safepoints/update-trip-id', {
       method: 'POST',
@@ -235,25 +246,44 @@ export async function updatePendingInteractionsTripId(
       })
     });
 
-    if (!response.success) {
-      throw new Error(response.error || 'Error actualizando trip_id en interacciones');
+    // El backend puede retornar directamente el resultado sin 'success' field
+    // Verificar si la respuesta tiene la estructura esperada
+    const isSuccessful = response.success !== false && (response.updated_count !== undefined || response.message);
+    
+    if (!isSuccessful) {
+      const errorMsg = response.error || response.message || 'Error actualizando trip_id en interacciones';
+      throw new Error(errorMsg);
     }
 
     console.log('✅ MIGRATION COMPLETED: SafePoint interactions updated:', {
-      updated_count: response.updated_count,
+      updated_count: response.updated_count || 0,
       trip_id: tripId,
+      backend_response: response,
       backend_status: 'migration_successful'
     });
 
     return {
       success: true,
-      updated_count: response.updated_count,
-      message: response.message || `${response.updated_count} interacciones actualizadas exitosamente`
+      updated_count: response.updated_count || 0,
+      message: response.message || `${response.updated_count || 0} interacciones actualizadas exitosamente`
     };
   } catch (error) {
     console.error('❌ MIGRATION ERROR: Error updating SafePoint interactions trip_id:', error);
+    
+    // Si el error es un problema de backend (500), intentar continuar con el proceso
+    if (error instanceof Error && error.message.includes('Error actualizando interacciones')) {
+      console.log('⚠️ MIGRATION WARNING: Backend returned 500, but continuing migration process...');
+      return {
+        success: false,
+        updated_count: 0,
+        error: error.message,
+        message: 'Error en backend, pero el proceso puede continuar'
+      };
+    }
+    
     return {
       success: false,
+      updated_count: 0,
       error: error instanceof Error ? error.message : 'Error desconocido'
     };
   }
