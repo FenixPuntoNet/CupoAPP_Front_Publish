@@ -16,6 +16,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { getMisCupos } from '@/services/cupos';
 import { TripRating } from '@/components/Actividades/TripRating';
 import { useBackendAuth } from '@/context/BackendAuthContext';
+import UserSafePointsDisplay from '@/components/Cupos/UserSafePointsDisplay';
 
 
 interface CuposProps {}
@@ -332,6 +333,10 @@ const Cupos: React.FC<CuposProps> = () => {
                   <Text fw={600} style={{ color: '#ddd' }}>Precio Total:</Text>
                   <Text style={{ color: '#fff' }}>${booking.total_price.toLocaleString()}</Text>
                 </Group>
+
+                {/* Componente de SafePoints del usuario */}
+                <UserSafePointsDisplay bookingId={booking.booking_id} />
+
                 <Group gap="apart">
                   <Button
                     size="xs"
