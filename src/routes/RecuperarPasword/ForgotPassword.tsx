@@ -4,33 +4,34 @@ import {
   TextInput,
   Button,
   Text,
-  Notification,
   Stack,
   Paper,
   LoadingOverlay
 } from '@mantine/core';
 import { forgotPassword } from '@/services/auth';
+import { useErrorHandling } from '@/hooks/useErrorHandling';
 import styles from './RecuperarPassword.module.css';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { handleBackendError, showSuccess } = useErrorHandling();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSent(false);
 
     const result = await forgotPassword(email);
 
     if (result.success) {
-      setSent(true);
+      showSuccess(
+        'Correo enviado',
+        'Revisa tu bandeja de entrada o carpeta de spam para continuar.',
+        { autoClose: 8000 }
+      );
     } else {
-      setError(result.error || 'Error enviando enlace de recuperación');
+      handleBackendError(result.error || 'Error enviando enlace de recuperación', { autoClose: 6000 });
     }
     setLoading(false);
   };
@@ -50,9 +51,6 @@ const ForgotPassword = () => {
               required
             />
             <Button type="submit" fullWidth>Enviar código</Button>
-
-            {sent && <Notification color="green" title="Correo enviado">Revisa tu bandeja de entrada o spam.</Notification>}
-            {error && <Notification color="red" title="Error">{error}</Notification>}
 
             <Button variant="subtle" fullWidth onClick={() => navigate({ to: '/Login' })}>
               Volver al inicio de sesión

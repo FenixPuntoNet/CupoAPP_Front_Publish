@@ -15,6 +15,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "@mantine/form";
 import { RecoverAccountModal } from "@/components/RecoverAccountModal";
 import { useBackendAuth } from "@/context/BackendAuthContext";
+import { useErrorHandling } from "@/hooks/useErrorHandling";
 import styles from "./index.module.css";
 
 interface LoginFormValues {
@@ -25,10 +26,10 @@ interface LoginFormValues {
 const LoginView: React.FC = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [recoverModalOpened, setRecoverModalOpened] = useState(false);
   const navigate = useNavigate();
   const { signIn } = useBackendAuth();
+  const { handleValidationError, handleBackendError, showSuccess } = useErrorHandling();
 
   const form = useForm<LoginFormValues>({
     initialValues: {
@@ -36,15 +37,20 @@ const LoginView: React.FC = () => {
       password: "",
     },
     validate: {
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : "Correo electrónico inválido"),
-      password: (value) => (value.length < 6 ? "La contraseña debe tener al menos 6 caracteres" : null),
+      email: (value) => {
+        const validationError = handleValidationError('email', value);
+        return validationError ? validationError.message : null;
+      },
+      password: (value) => {
+        const validationError = handleValidationError('password', value);
+        return validationError ? validationError.message : null;
+      },
     }
   });
 
   const handleLogin = async (values: LoginFormValues) => {
     try {
       setLoading(true);
-      setError("");
       
       console.log('🔍 Login button clicked');
 
@@ -52,27 +58,47 @@ const LoginView: React.FC = () => {
       console.log('🔄 Login result:', result);
 
       if (!result.success) {
-        const errorMessage = result.error === 'Invalid login credentials'
-          ? 'Credenciales inválidas'
-          : result.error || 'Error al iniciar sesión';
-        
-        console.log('❌ Login failed:', errorMessage);
-        setError(errorMessage);
+        console.log('❌ Login failed:', result.error);
+        handleBackendError(result.error || 'Error al iniciar sesión', {
+          id: 'login-error',
+          autoClose: 6000
+        });
         return;
       }
 
       // Verificar si se recibió un token de autenticación
       if (result.token) {
         console.log('🔑 Login successful with auth token - AuthGuard will handle navigation');
+        showSuccess(
+          'Inicio de sesión exitoso',
+          'Bienvenido de vuelta. Serás redirigido automáticamente.',
+          { 
+            id: 'login-success',
+            autoClose: 2000 
+          }
+        );
       } else {
         console.log('⚠️ Login successful but no auth token received');
+        showSuccess(
+          'Inicio de sesión exitoso',
+          'Has iniciado sesión correctamente.',
+          { 
+            id: 'login-success',
+            autoClose: 2000 
+          }
+        );
       }
       
       // No navegar manualmente - dejar que el AuthGuard detecte el cambio de estado
 
     } catch (error) {
       console.error('❌ Login error:', error);
-      setError('Error inesperado al iniciar sesión');
+      
+      // Usar el hook para manejar el error
+      handleBackendError(error, {
+        id: 'login-error',
+        autoClose: 6000
+      });
     } finally {
       setLoading(false);
     }
@@ -138,12 +164,6 @@ const LoginView: React.FC = () => {
             }
           />
         </Box>
-
-        {error && (
-          <Text color="red" size="sm" className={styles.errorMessage}>
-            {error}
-          </Text>
-        )}
 
         <Button
           loading={loading}

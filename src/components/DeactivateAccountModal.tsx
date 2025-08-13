@@ -189,31 +189,31 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
   };
 
   const renderEligibilityStep = () => (
-    <Stack gap="md">
+    <Stack gap="xs">
       <div style={{ 
         textAlign: 'center', 
-        marginBottom: '16px',
-        padding: '16px',
+        marginBottom: '8px',
+        padding: '12px',
         backgroundColor: '#1a1a1a',
-        borderRadius: '12px',
+        borderRadius: '8px',
         border: '1px solid #333'
       }}>
         <div style={{
-          width: '48px',
-          height: '48px',
+          width: '36px',
+          height: '36px',
           borderRadius: '50%',
           backgroundColor: '#2563eb',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '0 auto 12px'
+          margin: '0 auto 8px'
         }}>
-          <Shield size={24} color="#ffffff" />
+          <Shield size={20} color="#ffffff" />
         </div>
-        <Text size="lg" fw={600} style={{ color: '#ffffff', marginBottom: '8px' }}>
+        <Text size="sm" fw={600} style={{ color: '#ffffff', marginBottom: '4px' }}>
           Verificando elegibilidad
         </Text>
-        <Text size="sm" style={{ color: '#a1a1aa' }}>
+        <Text size="xs" style={{ color: '#a1a1aa' }}>
           Revisando el estado de tu cuenta
         </Text>
       </div>
@@ -221,13 +221,13 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
       {loading ? (
         <div style={{ 
           textAlign: 'center', 
-          padding: '32px',
+          padding: '20px',
           backgroundColor: '#1a1a1a',
-          borderRadius: '12px',
+          borderRadius: '8px',
           border: '1px solid #333'
         }}>
-          <div className={styles.spinner} style={{ margin: '0 auto 12px' }} />
-          <Text size="sm" style={{ color: '#a1a1aa' }}>
+          <div className={styles.spinner} style={{ margin: '0 auto 8px' }} />
+          <Text size="xs" style={{ color: '#a1a1aa' }}>
             Verificando tu cuenta...
           </Text>
         </div>
@@ -236,23 +236,23 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
           <div style={{ 
             backgroundColor: '#0f2419',
             border: '2px solid #16a34a',
-            borderRadius: '12px',
-            padding: '20px',
+            borderRadius: '8px',
+            padding: '12px',
             textAlign: 'center'
           }}>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '32px',
+              height: '32px',
               borderRadius: '50%',
               backgroundColor: '#16a34a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 12px'
+              margin: '0 auto 8px'
             }}>
-              <CheckCircle size={20} color="#ffffff" />
+              <CheckCircle size={16} color="#ffffff" />
             </div>
-            <Text fw={600} size="sm" style={{ color: '#ffffff', marginBottom: '8px' }}>
+            <Text fw={600} size="xs" style={{ color: '#ffffff', marginBottom: '4px' }}>
               Tu cuenta puede ser gestionada
             </Text>
             <Text size="xs" style={{ color: '#86efac' }}>
@@ -264,18 +264,18 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
             <div style={{ 
               backgroundColor: '#1e3a8a',
               border: '2px solid #3b82f6',
-              borderRadius: '12px',
-              padding: '16px'
+              borderRadius: '8px',
+              padding: '12px'
             }}>
-              <Text fw={500} size="sm" style={{ color: '#ffffff', marginBottom: '8px' }}>
+              <Text fw={500} size="xs" style={{ color: '#ffffff', marginBottom: '6px' }}>
                 📋 Información importante:
               </Text>
               {eligibilityData.warnings.slice(0, 2).map((warning, index) => (
                 <Text key={index} size="xs" style={{ 
                   color: '#93c5fd', 
-                  paddingLeft: '8px', 
-                  marginBottom: '4px',
-                  lineHeight: '1.4'
+                  paddingLeft: '6px', 
+                  marginBottom: '2px',
+                  lineHeight: '1.3'
                 }}>
                   • {warning}
                 </Text>
@@ -287,23 +287,23 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
         <div style={{ 
           backgroundColor: '#7f1d1d',
           border: '2px solid #dc2626',
-          borderRadius: '12px',
-          padding: '20px',
+          borderRadius: '8px',
+          padding: '12px',
           textAlign: 'center'
         }}>
           <div style={{
-            width: '40px',
-            height: '40px',
+            width: '32px',
+            height: '32px',
             borderRadius: '50%',
             backgroundColor: '#dc2626',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 12px'
+            margin: '0 auto 8px'
           }}>
-            <AlertTriangle size={20} color="#ffffff" />
+            <AlertTriangle size={16} color="#ffffff" />
           </div>
-          <Text size="sm" style={{ color: '#ffffff', marginBottom: '8px' }}>
+          <Text size="xs" style={{ color: '#ffffff', marginBottom: '4px' }}>
             Error al verificar elegibilidad
           </Text>
           <Text size="xs" style={{ color: '#fca5a5' }}>
@@ -315,31 +315,31 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
   );
 
   const renderChooseStep = () => (
-    <Stack gap="md">
+    <Stack gap="xs">
       <div style={{ 
         textAlign: 'center', 
-        marginBottom: '16px',
-        padding: '16px',
+        marginBottom: '8px',
+        padding: '12px',
         backgroundColor: '#1a1a1a',
-        borderRadius: '12px',
+        borderRadius: '8px',
         border: '1px solid #333'
       }}>
         <div style={{
-          width: '48px',
-          height: '48px',
+          width: '36px',
+          height: '36px',
           borderRadius: '50%',
           backgroundColor: '#dc2626',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '0 auto 12px'
+          margin: '0 auto 8px'
         }}>
-          <UserX size={24} color="#ffffff" />
+          <UserX size={20} color="#ffffff" />
         </div>
-        <Text size="lg" fw={600} style={{ color: '#ffffff', marginBottom: '8px' }}>
+        <Text size="sm" fw={600} style={{ color: '#ffffff', marginBottom: '4px' }}>
           Gestión de cuenta
         </Text>
-        <Text size="sm" style={{ color: '#a1a1aa' }}>
+        <Text size="xs" style={{ color: '#a1a1aa' }}>
           Selecciona la acción que deseas realizar
         </Text>
       </div>
@@ -347,18 +347,18 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
       <div style={{ 
         backgroundColor: '#1a1a1a',
         border: '1px solid #333',
-        borderRadius: '12px',
-        padding: '16px'
+        borderRadius: '8px',
+        padding: '12px'
       }}>
         <Radio.Group
           value={deactivationType}
           onChange={(value) => setDeactivationType(value as DeactivationType)}
         >
-          <Stack gap="md">
+          <Stack gap="xs">
             <div 
               style={{ 
-                padding: '16px',
-                borderRadius: '8px',
+                padding: '10px',
+                borderRadius: '6px',
                 border: deactivationType === 'temporary' 
                   ? '2px solid #3b82f6' 
                   : '1px solid #404040',
@@ -373,18 +373,18 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
               <Radio
                 value="temporary"
                 label={
-                  <div style={{ marginLeft: '12px' }}>
+                  <div style={{ marginLeft: '8px' }}>
                     <Group gap="xs" wrap="nowrap">
-                      <Clock size={18} color={deactivationType === 'temporary' ? '#93c5fd' : '#71717a'} />
+                      <Clock size={16} color={deactivationType === 'temporary' ? '#93c5fd' : '#71717a'} />
                       <div>
-                        <Text fw={600} size="sm" style={{ 
+                        <Text fw={600} size="xs" style={{ 
                           color: deactivationType === 'temporary' ? '#ffffff' : '#d4d4d8' 
                         }}>
                           Desactivación temporal
                         </Text>
                         <Text size="xs" style={{ 
                           color: deactivationType === 'temporary' ? '#93c5fd' : '#71717a',
-                          marginTop: '4px'
+                          marginTop: '2px'
                         }}>
                           Pausa tu cuenta - recuperable cuando quieras
                         </Text>
@@ -397,8 +397,8 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
             
             <div 
               style={{ 
-                padding: '16px',
-                borderRadius: '8px',
+                padding: '10px',
+                borderRadius: '6px',
                 border: deactivationType === 'permanent' 
                   ? '2px solid #dc2626' 
                   : '1px solid #404040',
@@ -413,18 +413,18 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
               <Radio
                 value="permanent"
                 label={
-                  <div style={{ marginLeft: '12px' }}>
+                  <div style={{ marginLeft: '8px' }}>
                     <Group gap="xs" wrap="nowrap">
-                      <Trash2 size={18} color={deactivationType === 'permanent' ? '#fca5a5' : '#71717a'} />
+                      <Trash2 size={16} color={deactivationType === 'permanent' ? '#fca5a5' : '#71717a'} />
                       <div>
-                        <Text fw={600} size="sm" style={{ 
+                        <Text fw={600} size="xs" style={{ 
                           color: deactivationType === 'permanent' ? '#ffffff' : '#d4d4d8' 
                         }}>
                           Eliminación permanente
                         </Text>
                         <Text size="xs" style={{ 
                           color: deactivationType === 'permanent' ? '#fca5a5' : '#71717a',
-                          marginTop: '4px'
+                          marginTop: '2px'
                         }}>
                           Elimina tu cuenta - 7 días para recuperar
                         </Text>
@@ -445,17 +445,19 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
         value={reason}
         onChange={(value) => setReason(value || '')}
         clearable
-        size="sm"
+        size="xs"
         styles={{
           label: {
             color: '#ffffff',
-            fontWeight: 500
+            fontWeight: 500,
+            fontSize: '0.8rem'
           },
           input: {
-            borderRadius: '8px',
+            borderRadius: '6px',
             backgroundColor: '#262626',
             border: '1px solid #404040',
-            color: '#ffffff'
+            color: '#ffffff',
+            padding: '0.5rem'
           },
           dropdown: {
             backgroundColor: '#262626',
@@ -464,6 +466,7 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
           option: {
             color: '#ffffff',
             backgroundColor: '#262626',
+            fontSize: '0.8rem',
             '&:hover': {
               backgroundColor: '#374151'
             }
@@ -475,15 +478,15 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
         <div style={{ 
           backgroundColor: '#a16207',
           border: '2px solid #ca8a04',
-          borderRadius: '12px',
-          padding: '16px'
+          borderRadius: '8px',
+          padding: '12px'
         }}>
-          <Text size="sm" fw={500} style={{ color: '#ffffff', marginBottom: '8px' }}>
+          <Text size="xs" fw={500} style={{ color: '#ffffff', marginBottom: '6px' }}>
             📋 Esto afectará tus actividades:
           </Text>
-          <div style={{ paddingLeft: '8px' }}>
+          <div style={{ paddingLeft: '6px' }}>
             {eligibilityData.active_trips > 0 && (
-              <Text size="xs" style={{ color: '#fde047', marginBottom: '4px' }}>
+              <Text size="xs" style={{ color: '#fde047', marginBottom: '2px' }}>
                 • {eligibilityData.active_trips} viaje(s) activo(s) serán cancelados
               </Text>
             )}
@@ -814,23 +817,23 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
       closeOnClickOutside={step !== 'final'}
       closeOnEscape={step !== 'final'}
       withCloseButton={step !== 'final'}
-      padding="sm"
+      padding="xs"
       styles={{
         content: {
           backgroundColor: '#0a0a0a',
           border: '1px solid #333',
-          borderRadius: '12px'
+          borderRadius: '8px'
         },
         header: {
           backgroundColor: '#0a0a0a',
           borderBottom: '1px solid #333',
           color: '#ffffff',
-          padding: '8px 12px'
+          padding: '6px 10px'
         },
         title: {
           color: '#ffffff',
           fontWeight: 600,
-          fontSize: '14px'
+          fontSize: '0.9rem'
         },
         close: {
           color: '#ffffff',
@@ -841,7 +844,7 @@ export const DeactivateAccountModal: React.FC<DeactivateAccountModalProps> = ({
         body: {
           backgroundColor: '#0a0a0a',
           color: '#ffffff',
-          padding: '8px 12px'
+          padding: '6px 10px'
         }
       }}
     >

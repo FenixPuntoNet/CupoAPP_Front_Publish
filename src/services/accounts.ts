@@ -6,7 +6,8 @@ export interface DeactivateAccountRequest {
 }
 
 export interface RecoverAccountRequest {
-  // Ya no necesita email/password, usa el token JWT
+  email: string;
+  password: string;
 }
 
 export interface DeleteAccountRequest {
@@ -191,26 +192,51 @@ export const deleteAccount = async (data: DeleteAccountRequest): Promise<{ succe
 };
 
 // Recuperar cuenta desactivada
-export const recoverAccount = async (): Promise<{ success: boolean; error?: string; message?: string; user?: any }> => {
+export const recoverAccount = async (data: RecoverAccountRequest): Promise<{ success: boolean; error?: string | any; message?: string; user?: any }> => {
   try {
-    console.log('♻️ Recovering deactivated account...');
+    console.log('♻️ Recovering deactivated account for:', data.email);
     
-    const response = await apiRequest('/account-management/recover', {
+    const response = await apiRequest('/auth/recover-account', {
       method: 'POST',
-      body: JSON.stringify({})
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password
+      })
     });
 
     console.log('✅ Account recovered successfully:', response);
     return { 
       success: true, 
-      message: response.message,
+      message: response.message || 'Cuenta reactivada exitosamente',
       user: response.user 
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Failed to recover account:', error);
+    
+    // Manejo específico de errores del backend
+    if (error instanceof Error) {
+      // Verificar si el error tiene propiedades adicionales del backend (preservadas por apiRequest)
+      if ((error as any).current_status || (error as any).recoverable_statuses) {
+        return {
+          success: false,
+          error: {
+            error: error.message,
+            current_status: (error as any).current_status,
+            recoverable_statuses: (error as any).recoverable_statuses,
+            contact_support: true
+          }
+        };
+      }
+      
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error al recuperar cuenta'
+      error: 'Error inesperado al recuperar cuenta'
     };
   }
 };

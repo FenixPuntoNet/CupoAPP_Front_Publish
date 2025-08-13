@@ -1,0 +1,128 @@
+.errorNotification {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.successNotification {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.infoNotification {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.notificationRoot {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.3s ease !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
+.notificationRoot:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25) !important;
+}
+
+.notificationTitle {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  color: #ffffff !important;
+  letter-spacing: -0.2px !important;
+}
+
+.notificationIcon {
+  font-size: 16px !important;
+  line-height: 1 !important;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.3)) !important;
+}
+
+.notificationTitleText {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  color: #ffffff !important;
+}
+
+.notificationMessage {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  margin-top: 4px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.1px !important;
+}
+
+.notificationCloseButton {
+  color: rgba(255, 255, 255, 0.7) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  width: 24px !important;
+  height: 24px !important;
+  transition: all 0.2s ease !important;
+}
+
+.notificationCloseButton:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Animaciones */
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Estados específicos para cada tipo de notificación */
+.errorNotification .notificationIcon {
+  animation: pulse 1.5s ease-in-out infinite;
+  color: #ff6b6b;
+}
+
+.successNotification .notificationIcon {
+  animation: pulse 1.5s ease-in-out infinite;
+  color: #33d9b2;
+}
+
+.infoNotification .notificationIcon {
+  animation: pulse 1.5s ease-in-out infinite;
+  color: #4a90e2;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notificationRoot {
+    margin: 0 10px !important;
+    border-radius: 10px !important;
+  }
+  
+  .notificationTitle {
+    font-size: 13px !important;
+  }
+  
+  .notificationMessage {
+    font-size: 12px !important;
+  }
+  
+  .notificationIcon {
+    font-size: 14px !important;
+  }
+}

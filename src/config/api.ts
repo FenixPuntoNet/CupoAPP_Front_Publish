@@ -91,6 +91,16 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
       console.log(`❌ [API] ${endpoint} failed with status: ${response.status}`);
       console.log(`❌ [API] Error data:`, errorData);
       
+      // Para errores estructurados (como 403 con información adicional), crear un error más rico
+      if (errorData && typeof errorData === 'object') {
+        const error = new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
+        // Agregar propiedades adicionales al error si existen
+        if (errorData.current_status) (error as any).current_status = errorData.current_status;
+        if (errorData.recoverable_statuses) (error as any).recoverable_statuses = errorData.recoverable_statuses;
+        if (errorData.contact_support !== undefined) (error as any).contact_support = errorData.contact_support;
+        throw error;
+      }
+      
       throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
     }
     
