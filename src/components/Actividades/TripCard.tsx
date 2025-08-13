@@ -15,10 +15,12 @@ import {
   Bell,
   Flag,
   MessageSquare,
+  MapPin,
 } from 'lucide-react'
 import { showNotification } from '@mantine/notifications'
 import styles from './SrylesComponents/TripCard.module.css'
 import type { Trip } from './Actividades'
+import PassengerSafePointsModal from './PassengerSafePointsModal'
 
 import { useNavigate } from '@tanstack/react-router'
 
@@ -37,6 +39,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
   const [loading, setLoading] = useState(false)
   const [modalAction, setModalAction] = useState<'start' | 'cancel' | 'finish' | null>(null)
   const [resultModal, setResultModal] = useState<null | { title: string, cobro?: number, devolucion?: number, color: string, message: string }>(null);
+  const [showSafePointsModal, setShowSafePointsModal] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -435,15 +438,28 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
         )}
 
         {!isCanceled && (
-          <Button
-            size="sm"
-            variant="outline"
-            color="gray"
-            onClick={() => navigate({ to: '/Chat', search: { trip_id: trip.id.toString() } })}
-            leftSection={<MessageSquare size={14} />}
-          >
-            Ir al Chat
-          </Button>
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              color="blue"
+              onClick={() => setShowSafePointsModal(true)}
+              leftSection={<MapPin size={14} />}
+              disabled={passengerCount === 0}
+            >
+              Ver Puntos de Recogida
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              color="gray"
+              onClick={() => navigate({ to: '/Chat', search: { trip_id: trip.id.toString() } })}
+              leftSection={<MessageSquare size={14} />}
+            >
+              Ir al Chat
+            </Button>
+          </>
         )}
       </Group>
 
@@ -477,6 +493,15 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
           <Button mt="xl" color={resultModal?.color} onClick={() => setResultModal(null)} fullWidth>Aceptar</Button>
         </div>
       </Modal>
+
+      {/* Modal de SafePoints de Pasajeros */}
+      <PassengerSafePointsModal
+        isOpen={showSafePointsModal}
+        onClose={() => setShowSafePointsModal(false)}
+        tripId={trip.id}
+        tripOrigin={trip.origin.address}
+        tripDestination={trip.destination.address}
+      />
     </div>
   )
 }
