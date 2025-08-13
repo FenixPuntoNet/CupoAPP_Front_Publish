@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import {
   SafePoint,
-  getTripSafePointsWithBookingId,
+  getTripSafePoints,
   getSafePointCategoryIcon
 } from '@/services/booking-safepoints';
 
@@ -41,9 +41,9 @@ export function CompactSafePoints({ tripId }: CompactSafePointsProps) {
   const loadTripSafePoints = async () => {
     try {
       setLoading(true);
-      console.log(`🔍 [BACKEND CORREGIDO] Cargando SafePoints para trip: ${tripId}`);
+      console.log(`🔍 [ENFOQUE CORRECTO] Cargando SafePoints para trip: ${tripId} (sin booking)`);
       
-      const response = await getTripSafePointsWithBookingId(parseInt(tripId));
+      const response = await getTripSafePoints(parseInt(tripId));
       
       if (response.success) {
         const tripSafePoints = {
@@ -53,17 +53,17 @@ export function CompactSafePoints({ tripId }: CompactSafePointsProps) {
         
         setSafePoints(tripSafePoints);
         
-        console.log(`✅ [BACKEND CORREGIDO] SafePoints cargados:`, {
+        console.log(`✅ [ENFOQUE CORRECTO] SafePoints cargados:`, {
           pickup_count: tripSafePoints.pickup_points.length,
           dropoff_count: tripSafePoints.dropoff_points.length,
           total: tripSafePoints.pickup_points.length + tripSafePoints.dropoff_points.length
         });
       } else {
-        console.warn(`⚠️ [BACKEND CORREGIDO] No se pudieron cargar SafePoints:`, response.error);
+        console.warn(`⚠️ [ENFOQUE CORRECTO] No se pudieron cargar SafePoints:`, response.error);
         setSafePoints({ pickup_points: [], dropoff_points: [] });
       }
     } catch (err) {
-      console.error('❌ [BACKEND CORREGIDO] Error loading SafePoints:', err);
+      console.error('❌ [ENFOQUE CORRECTO] Error loading SafePoints:', err);
       setSafePoints({ pickup_points: [], dropoff_points: [] });
     } finally {
       setLoading(false);

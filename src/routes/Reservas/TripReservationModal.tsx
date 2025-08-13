@@ -14,8 +14,9 @@ import {
 } from '@mantine/core';
 import { Clock, Navigation, User } from 'lucide-react';
 import { bookTrip } from '@/services/reservas';
+import { createBookingWithSafePoints } from '@/services/booking-safepoints';
 import { getCurrentUser } from '@/services/auth';
-import { CompactSafePoints } from '@/components/TripSafePointsInfo/CompactSafePoints';
+import TripSafePointSelector from '@/components/TripSafePointSelector/TripSafePointSelector';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 import { useNavigate } from '@tanstack/react-router';
@@ -44,7 +45,69 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
     const [showSuccessModal, setShowSuccessModal] = React.useState(false);
     const [isConfirming, setIsConfirming] = React.useState(false);
     const [bookingResult, setBookingResult] = React.useState<any>(null);
+    const [showSafePointSelector, setShowSafePointSelector] = React.useState(false);
     const navigate = useNavigate();
+
+    const handleSafePointsComplete = async (selectedPickupId?: number, selectedDropoffId?: number) => {
+        console.log('🎯 SafePoints seleccionados, creando reserva final:', { selectedPickupId, selectedDropoffId });
+        
+        setIsConfirming(true);
+        
+        try {
+            const passengerData = passengers.map(passenger => ({
+                fullName: passenger.fullName,
+                identificationNumber: passenger.identificationNumber
+            }));
+
+            let result;
+
+            // Si se seleccionaron SafePoints, crear reserva CON SafePoints
+            if (selectedPickupId || selectedDropoffId) {
+                console.log('🎫 Creando reserva CON SafePoints seleccionados');
+                result = await createBookingWithSafePoints(
+                    Number(trip.id),
+                    passengersCount,
+                    selectedPickupId,
+                    selectedDropoffId,
+                    passengerData
+                );
+            } else {
+                console.log('🎫 Creando reserva SIN SafePoints (método tradicional)');
+                result = await bookTrip(
+                    Number(trip.id),
+                    passengerData,
+                    passengersCount
+                );
+            }
+            
+            if (result.success) {
+                const bookingData = (result as any).booking || (result as any).data;
+                
+                if (bookingData) {
+                    console.log('✅ Reserva final creada:', bookingData);
+                    
+                    // Actualizar el resultado del booking
+                    setBookingResult(bookingData);
+                    setIsConfirming(false);
+                    
+                    // Cerrar el selector de SafePoints
+                    setShowSafePointSelector(false);
+                    
+                    // Mostrar el modal de éxito final
+                    setShowSuccessModal(true);
+                } else {
+                    throw new Error('No se recibieron datos de la reserva');
+                }
+            } else {
+                throw new Error((result as any).error || 'Error creando reserva');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error creando reserva final:', error);
+            setIsConfirming(false);
+            alert('Error creando la reserva. Por favor intenta nuevamente.');
+        }
+    };
 
     const handleConfirmReservation = async () => {
         try {
@@ -68,43 +131,11 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
     };
 
     const handleConfirmSuccess = async () => {
-        setIsConfirming(true);
+        // Solo mostrar el modal de confirmación, NO crear la reserva aún
+        setShowSuccessModal(false);
         
-        try {
-            // AQUÍ es donde realmente creamos la reserva
-            const passengerData = passengers.map(passenger => ({
-                fullName: passenger.fullName,
-                identificationNumber: passenger.identificationNumber
-            }));
-
-            const result = await bookTrip(
-                Number(trip.id),
-                passengerData,
-                passengersCount
-            );
-
-            if (result.success && result.data) {
-                console.log('Reserva creada exitosamente:', result.data);
-                
-                // Guardar el resultado para mostrar las opciones
-                setBookingResult(result.data);
-                
-                // Pequeño delay para mostrar confirmación
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                setIsConfirming(false);
-                // NO cerramos el modal aquí, dejamos que el usuario elija qué hacer
-                
-            } else {
-                console.error('Error al crear reserva:', result.error);
-                setIsConfirming(false);
-                // Aquí podrías mostrar un mensaje de error
-            }
-
-        } catch (error) {
-            console.error('Error al procesar la reserva:', error);
-            setIsConfirming(false);
-        }
+        // Ir directamente al selector de SafePoints
+        setShowSafePointSelector(true);
     };
 
     const handleCloseSuccess = () => {
@@ -260,20 +291,6 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                           </Group>
                         </Card>
 
-                    {/* ✅ SAFEPOINTS USANDO COMPONENTE CORREGIDO QUE FUNCIONA */}
-                    <Card className={styles.safePointsCard} shadow="sm" withBorder>
-                        <Group gap="xs" align="center" mb="sm">
-                            <div className={styles.safePointsIcon}>📍</div>
-                            <div>
-                                <Text className={styles.safePointsTitle} size="sm" fw={600}>SafePoints - Puntos Seguros</Text>
-                                <Text className={styles.safePointsSubtitle} size="xs" c="dimmed">Recogida y descenso</Text>
-                            </div>
-                        </Group>
-                        
-                        {/* Usar el componente CompactSafePoints que YA FUNCIONA CORRECTAMENTE */}
-                        <CompactSafePoints tripId={trip.id.toString()} />
-                    </Card>
-
                     {/* Campos de pasajeros */}
                     <NumberInput
                         label="Número de asientos"
@@ -350,6 +367,19 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                     onConfirm={handleConfirmSuccess}
                     isConfirming={isConfirming}
                     bookingResult={bookingResult}
+                />
+            )}
+            
+            {/* Modal selector de SafePoints - APARECE ANTES DE CREAR LA RESERVA */}
+            {showSafePointSelector && (
+                <TripSafePointSelector
+                    tripId={Number(trip.id)}
+                    isOpen={showSafePointSelector}
+                    onClose={() => {
+                        setShowSafePointSelector(false);
+                        setShowSuccessModal(true); // Volver al modal de confirmación
+                    }}
+                    onComplete={handleSafePointsComplete}
                 />
             )}
         </>

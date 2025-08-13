@@ -82,23 +82,42 @@ export interface QRValidationResult {
 export const getTicketDetails = async (bookingId: string): Promise<{ success: boolean; data?: { ticket: TicketData }; error?: string }> => {
   try {
     console.log('🎫 [tickets.ts] Fetching ticket details for booking:', bookingId);
+    
+    // Verificar que tenemos token antes de hacer la request
+    const token = localStorage.getItem('auth_token');
+    console.log('� [tickets.ts] Auth token available:', !!token);
+    if (token) {
+      console.log('🔑 [tickets.ts] Token preview:', token.substring(0, 20) + '...');
+    }
+    
+    // USAR EL ENDPOINT CORRECTO SIN /api
+    console.log('🔄 [tickets.ts] Calling /tickets/view endpoint...');
     const response = await apiRequest(`/tickets/view?booking_id=${bookingId}`);
     
-    console.log('📡 [tickets.ts] Backend response:', response);
+    console.log('📡 [tickets.ts] Raw backend response:', JSON.stringify(response, null, 2));
     
     if (response.success && response.ticket) {
+      console.log('✅ [tickets.ts] Successfully parsed ticket data:', response.ticket);
+      return {
+        success: true,
+        data: { ticket: response.ticket }
+      };
+    } else if (response.ticket) {
+      // Algunos backends pueden no devolver un campo 'success' pero sí los datos
+      console.log('✅ [tickets.ts] Found ticket data without success flag:', response.ticket);
       return {
         success: true,
         data: { ticket: response.ticket }
       };
     } else {
+      console.error('❌ [tickets.ts] Backend returned error or no ticket:', response);
       return {
         success: false,
-        error: response.error || 'No se encontraron datos del ticket'
+        error: response.error || response.message || 'No se encontraron datos del ticket'
       };
     }
   } catch (error) {
-    console.error('❌ [tickets.ts] Error getting ticket details:', error);
+    console.error('❌ [tickets.ts] Exception caught:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error obteniendo detalles del ticket'

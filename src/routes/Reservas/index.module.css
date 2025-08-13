@@ -454,6 +454,145 @@
   }
 }
 
+/* Estilos para la sección de información de pasajeros */
+.passengersSection {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  padding: 1.5rem !important;
+}
+
+.passengersSectionTitle {
+  color: var(--text-light) !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 1.25rem !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.passengersSectionTitle::before {
+  content: "👥";
+  font-size: 1rem;
+}
+
+/* Mejorar el NumberInput para cantidad de pasajeros */
+.passengersCountInput {
+  margin-bottom: 1.5rem;
+}
+
+.passengersCountInput .mantine-NumberInput-label {
+  color: var(--text-light) !important;
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.passengersCountInput .mantine-NumberInput-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  color: var(--text-light) !important;
+  font-size: 1rem !important;
+  padding: 0.75rem 1rem !important;
+  height: 48px !important;
+}
+
+.passengersCountInput .mantine-NumberInput-input:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2);
+}
+
+/* Contenedor individual de cada pasajero */
+.passengerFormGroup {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 1.25rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.passengerFormGroup:last-child {
+  margin-bottom: 0;
+}
+
+/* Título del pasajero */
+.passengerTitle {
+  color: var(--text-light) !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 1rem !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.passengerTitle::before {
+  content: "🧑‍💼";
+  font-size: 0.9rem;
+}
+
+/* Estilos mejorados para inputs de pasajeros */
+.passengerInput .mantine-TextInput-label {
+  color: var(--text-light) !important;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.passengerInput .mantine-TextInput-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 10px !important;
+  color: var(--text-light) !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.95rem !important;
+  height: 44px !important;
+}
+
+.passengerInput .mantine-TextInput-input:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2) !important;
+}
+
+.passengerInput .mantine-TextInput-input::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Espaciado para los grupos de inputs */
+.passengerInputGroup {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+.passengerInputGroup > div {
+  flex: 1;
+}
+
+/* Estilos para la card de SafePoints */
+.safePointsCard {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  padding: 1.5rem !important;
+}
+
+.safePointsCard .mantine-Text-root {
+  color: var(--text-light) !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.safePointsCard .mantine-Text-root::before {
+  content: "🗺️";
+  font-size: 1rem;
+}
+
 /* Estilos para SafePoints en el primer modal */
 .safePointsCard {
   background: rgba(13, 110, 253, 0.05) !important;

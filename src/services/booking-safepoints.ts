@@ -1,5 +1,5 @@
-// Servicio para SafePoints específico para booking/trips
-// ✅ CORREGIDO SEGÚN GUÍA BACKEND - USA ENDPOINTS CORRECTOS
+// ✅ SERVICIO CORREGIDO: SafePoints del TRIP (sin booking)
+// El booking NO EXISTE hasta que el usuario selecciona SafePoints
 
 export type SafePointCategory = 
   | 'metro_station' 
@@ -37,45 +37,44 @@ export interface SafePoint {
   updated_at?: string;
 }
 
-// ✅ FUNCIÓN CORREGIDA SEGÚN GUÍA BACKEND - USA BOOKINGID CORRECTO
-export async function getTripSafePoints(bookingId: number, tripId?: number) {
+// ✅ FUNCIÓN PRINCIPAL CORREGIDA - SafePoints del TRIP (antes de crear booking)
+export async function getTripSafePoints(tripId: number) {
   try {
-    console.log(`🔍 [BACKEND CORREGIDO] Cargando SafePoints para booking: ${bookingId}, trip: ${tripId}`);
+    console.log(`🔍 [ENFOQUE CORRECTO] Cargando SafePoints del TRIP: ${tripId} (sin booking)`);
     
-    // ENDPOINT PRINCIPAL - ✅ CORRECTO según backend (/api/booking/:bookingId/available-safepoints)
-    if (bookingId && bookingId > 0) {
-      try {
-        console.log(`🔍 Intentando endpoint principal: https://cupo-backend.fly.dev/api/booking/${bookingId}/available-safepoints`);
-        
-        const response = await fetch(`https://cupo-backend.fly.dev/api/booking/${bookingId}/available-safepoints`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`✅ Endpoint principal funcionó correctamente:`, data);
-          
-          return {
-            success: true,
-            pickup_points: data.available_safepoints?.pickup_options || [],
-            dropoff_points: data.available_safepoints?.dropoff_options || []
-          };
-        } else {
-          console.log(`⚠️ Endpoint principal falló con status ${response.status}`);
+    // ✅ ENDPOINT CORRECTO - SafePoints del trip, NO del booking
+    const endpoint = `https://cupo-backend.fly.dev/api/trip/${tripId}/available-safepoints`;
+    
+    try {
+      console.log(`🔍 Llamando endpoint correcto: ${endpoint}`);
+      
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         }
-      } catch (primaryError) {
-        console.log(`⚠️ Error en endpoint principal:`, primaryError);
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ SafePoints del trip cargados correctamente:`, data);
+        
+        return {
+          success: true,
+          pickup_points: data.pickup_options || data.pickup_points || [],
+          dropoff_points: data.dropoff_options || data.dropoff_points || []
+        };
+      } else {
+        console.log(`⚠️ Endpoint principal falló con status ${response.status}`);
       }
+    } catch (primaryError) {
+      console.log(`⚠️ Error en endpoint principal:`, primaryError);
     }
 
-    // FALLBACK: Endpoints debug (solo para desarrollo) - ✅ CORRECTOS según backend
+    // FALLBACK: Endpoints debug para el trip (no booking)
     const debugEndpoints = [
-      `https://cupo-backend.fly.dev/reservas/debug/trip/${tripId || bookingId}/safepoints/noauth`, // Sin auth
-      `https://cupo-backend.fly.dev/reservas/debug/trip/${tripId || bookingId}/safepoints` // Con auth
+      `https://cupo-backend.fly.dev/api/debug/trip/${tripId}/safepoints`, // Con auth - CORRECTO según backend
     ];
 
     for (const endpoint of debugEndpoints) {
@@ -108,7 +107,7 @@ export async function getTripSafePoints(bookingId: number, tripId?: number) {
         const data = await response.json();
         console.log(`✅ Endpoint debug ${endpoint} funcionó correctamente`, data);
         
-        // Manejar estructura de debug endpoint según guía backend
+        // Manejar estructura de debug endpoint
         if (data.debug_info?.safepoint_interactions) {
           const interactions = data.debug_info.safepoint_interactions.all_interactions?.data || [];
           
@@ -141,16 +140,15 @@ export async function getTripSafePoints(bookingId: number, tripId?: number) {
       }
     }
 
-    // Si ningún endpoint funcionó, devolver estructura vacía pero exitosa
-    console.warn(`⚠️ Ningún endpoint de SafePoints funcionó para booking ${bookingId}, trip ${tripId}`);
+    console.warn(`⚠️ Ningún endpoint de SafePoints funcionó para trip ${tripId}`);
     return {
-      success: true,
+      success: false,
+      error: 'No se pudieron cargar los SafePoints del trip',
       pickup_points: [],
       dropoff_points: []
     };
-    
   } catch (error) {
-    console.error('❌ Error loading trip SafePoints:', error);
+    console.error('❌ Error general in getTripSafePoints:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error desconocido',
@@ -160,72 +158,14 @@ export async function getTripSafePoints(bookingId: number, tripId?: number) {
   }
 }
 
-// ✅ NUEVA FUNCIÓN PARA OBTENER BOOKINGID DESDE TRIPID SEGÚN GUÍA
-export async function getBookingIdFromTripId(tripId: number): Promise<number | null> {
-  try {
-    console.log(`🔍 Buscando bookingId para tripId: ${tripId}`);
-    
-    // Obtener las reservas del usuario - ✅ ENDPOINT CORRECTO según backend
-    const response = await fetch('https://cupo-backend.fly.dev/reservas/user-bookings', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-      }
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      
-      // Buscar booking que corresponda al tripId
-      const booking = data.bookings?.find((b: any) => b.trip?.id === tripId || b.trip_id === tripId);
-      
-      if (booking) {
-        console.log(`✅ Found bookingId ${booking.id} for tripId ${tripId}`);
-        return booking.id;
-      } else {
-        console.warn(`⚠️ No booking found for tripId ${tripId}`);
-        return null;
-      }
-    } else {
-      console.warn(`⚠️ Error getting user bookings: ${response.status}`);
-      return null;
-    }
-  } catch (error) {
-    console.error(`❌ Error getting bookingId for tripId ${tripId}:`, error);
-    return null;
-  }
-}
-
-// ✅ FUNCIÓN PRINCIPAL QUE USA BOOKINGID CORRECTO SEGÚN GUÍA
+// ✅ FUNCIÓN SIMPLIFICADA - Obtener SafePoints sin complejidad de booking
 export async function getTripSafePointsWithBookingId(tripId: number) {
-  try {
-    console.log(`🔍 [BACKEND CORREGIDO] Obteniendo SafePoints para tripId: ${tripId}`);
-    
-    // Primero obtener el bookingId correcto
-    const bookingId = await getBookingIdFromTripId(tripId);
-    
-    if (bookingId) {
-      // Usar endpoint principal con bookingId correcto
-      console.log(`✅ Usando bookingId ${bookingId} para endpoint principal`);
-      return await getTripSafePoints(bookingId, tripId);
-    } else {
-      // Fallback a endpoint debug si no hay bookingId
-      console.log(`⚠️ Usando endpoint debug como fallback para tripId ${tripId}`);
-      return await getTripSafePoints(0, tripId); // bookingId=0, solo usar tripId
-    }
-  } catch (error) {
-    console.error('❌ Error in getTripSafePointsWithBookingId:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Error desconocido',
-      pickup_points: [],
-      dropoff_points: []
-    };
-  }
+  // Simplemente llamar a la función principal sin buscar bookingId
+  console.log(`🔍 [ENFOQUE CORRECTO] Obteniendo SafePoints para tripId: ${tripId} (sin booking)`);
+  return await getTripSafePoints(tripId);
 }
 
-// Función para obtener icono de categoría - mantiene compatibilidad original
+// Función para obtener icono de categoría
 export function getSafePointCategoryIcon(category: string): string {
   const iconMap: Record<string, string> = {
     metro_station: '🚇',
@@ -248,42 +188,175 @@ export function getSafePointCategoryIcon(category: string): string {
 
 // Función para obtener icono usando SafePointCategory tipo
 export function getSafePointIcon(category: SafePointCategory): string {
-  const iconMap: Record<SafePointCategory, string> = {
-    metro_station: '🚇',
-    mall: '🏬',
-    university: '🎓',
-    hospital: '🏥',
-    bank: '🏦',
-    park: '🌳',
-    government: '🏛️',
-    church: '⛪',
-    hotel: '🏨',
-    restaurant: '🍽️',
-    gas_station: '⛽',
-    supermarket: '🛒',
-    user_proposed: '📍'
-  };
-  
-  return iconMap[category] || '📍';
+  return getSafePointCategoryIcon(category);
 }
 
-// Función para obtener color de categoría
+// ✅ FUNCIÓN AGREGADA: Obtener color para categoría de SafePoint
 export function getSafePointColor(category: SafePointCategory): string {
   const colorMap: Record<SafePointCategory, string> = {
-    metro_station: '#2196F3',
-    mall: '#9C27B0',
-    university: '#FF9800',
-    hospital: '#F44336',
-    bank: '#4CAF50',
-    park: '#8BC34A',
-    government: '#607D8B',
-    church: '#795548',
-    hotel: '#E91E63',
-    restaurant: '#FF5722',
-    gas_station: '#FFC107',
-    supermarket: '#3F51B5',
-    user_proposed: '#9E9E9E'
+    metro_station: '#3b82f6',
+    mall: '#a855f7',
+    university: '#f97316',
+    hospital: '#ef4444',
+    bank: '#22c55e',
+    park: '#84cc16',
+    government: '#6366f1',
+    church: '#8b5cf6',
+    hotel: '#06b6d4',
+    restaurant: '#f59e0b',
+    gas_station: '#10b981',
+    supermarket: '#ec4899',
+    user_proposed: '#6b7280'
   };
-  
-  return colorMap[category] || '#9E9E9E';
+  return colorMap[category] || '#6b7280';
+}
+
+// ✅ NUEVA FUNCIÓN: Crear booking CON SafePoints seleccionados
+export async function createBookingWithSafePoints(
+  tripId: number,
+  passengers: number,
+  selectedPickupId?: number,
+  selectedDropoffId?: number,
+  passengerData?: Array<{fullName: string, identificationNumber: string}>
+) {
+  try {
+    console.log(`🎫 [NUEVO FLUJO] Creando booking para trip ${tripId} con SafePoints:`, {
+      pickup: selectedPickupId,
+      dropoff: selectedDropoffId,
+      passengers,
+      passengerData
+    });
+
+    const requestBody: any = {
+      trip_id: tripId,
+      seats_booked: passengers,
+      passengers: passengerData || [
+        {
+          fullName: "Usuario Temporal",
+          identificationNumber: "123456789"
+        }
+      ]
+    };
+
+    // Solo incluir SafePoints si fueron seleccionados
+    if (selectedPickupId) {
+      requestBody.pickup_safepoint_id = selectedPickupId;
+    }
+    if (selectedDropoffId) {
+      requestBody.dropoff_safepoint_id = selectedDropoffId;
+    }
+
+    // Usar apiRequest para manejar la autenticación correctamente
+    const { apiRequest } = await import('@/config/api');
+    
+    const bookingData = await apiRequest('/reservas/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log(`✅ Booking creado exitosamente con SafePoints:`, bookingData);
+    return {
+      success: true,
+      booking: bookingData,
+      hasPickup: !!selectedPickupId,
+      hasDropoff: !!selectedDropoffId
+    };
+
+  } catch (error: any) {
+    console.error('❌ Error en createBookingWithSafePoints:', error);
+    return {
+      success: false,
+      error: error.message || 'Error desconocido'
+    };
+  }
+}
+
+// ✅ NUEVA FUNCIÓN: Actualizar booking con SafePoints seleccionados (DESPUÉS de crear la reserva)
+export async function updateBookingSafePoints(
+  bookingId: number,
+  selectedPickupId?: number,
+  selectedDropoffId?: number
+) {
+  try {
+    console.log(`🔄 Actualizando booking ${bookingId} con SafePoints:`, {
+      pickup: selectedPickupId,
+      dropoff: selectedDropoffId
+    });
+
+    const selections = [];
+
+    // Crear selección de pickup si fue seleccionado
+    if (selectedPickupId) {
+      selections.push({
+        safepoint_id: selectedPickupId,
+        selection_type: 'pickup',
+        status: 'selected'
+      });
+    }
+
+    // Crear selección de dropoff si fue seleccionado
+    if (selectedDropoffId) {
+      selections.push({
+        safepoint_id: selectedDropoffId,
+        selection_type: 'dropoff',
+        status: 'selected'
+      });
+    }
+
+    if (selections.length === 0) {
+      console.log(`ℹ️ No hay SafePoints para actualizar en booking ${bookingId}`);
+      return { success: true, message: 'No hay cambios que realizar' };
+    }
+
+    // Usar apiRequest para manejar la autenticación correctamente
+    const { apiRequest } = await import('@/config/api');
+    
+    // Crear las selecciones de SafePoints para el booking
+    const promises = selections.map(async (selection) => {
+      try {
+        const result = await apiRequest(`/api/booking/${bookingId}/selection`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(selection)
+        });
+        
+        console.log(`✅ Selección ${selection.selection_type} creada:`, result);
+        return { success: true, type: selection.selection_type, result };
+      } catch (error: any) {
+        console.error(`❌ Error creando selección ${selection.selection_type}:`, error);
+        return { success: false, type: selection.selection_type, error: error.message };
+      }
+    });
+
+    const results = await Promise.all(promises);
+    const errors = results.filter(r => !r.success);
+
+    if (errors.length > 0) {
+      console.error(`❌ Errores actualizando SafePoints:`, errors);
+      return {
+        success: false,
+        error: `Error actualizando ${errors.map(e => e.type).join(', ')}`,
+        results
+      };
+    }
+
+    console.log(`✅ Todas las selecciones de SafePoints actualizadas correctamente`);
+    return {
+      success: true,
+      message: 'SafePoints actualizados correctamente',
+      results
+    };
+
+  } catch (error: any) {
+    console.error('❌ Error general en updateBookingSafePoints:', error);
+    return {
+      success: false,
+      error: error.message || 'Error desconocido'
+    };
+  }
 }

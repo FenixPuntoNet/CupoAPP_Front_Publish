@@ -39,12 +39,14 @@ const ViewTicket = () => {
   const [tripLocations, setTripLocations] = useState<TripLocation | null>(null);
   const [bookingQr, setBookingQr] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!booking_id) {
         console.error('booking_id inválido');
-        navigate({ to: '/Actividades' });
+        setError('No se proporcionó un ID de reserva válido');
+        setLoading(false);
         return;
       }
 
@@ -52,31 +54,65 @@ const ViewTicket = () => {
         console.log('🎫 [ViewTicket] Fetching ticket details for booking:', booking_id);
         const result = await getTicketDetails(booking_id);
         
+        console.log('🔍 [ViewTicket] Full result from getTicketDetails:', JSON.stringify(result, null, 2));
+        
         if (result.success && result.data && result.data.ticket) {
           const { ticket } = result.data;
-          console.log('✅ [ViewTicket] Ticket data received:', ticket);
+          console.log('✅ [ViewTicket] Ticket data received:', JSON.stringify(ticket, null, 2));
+          
+          // Verificar estructura del ticket
+          console.log('🔍 [ViewTicket] Booking data:', ticket.booking);
+          console.log('🔍 [ViewTicket] Trip data:', ticket.trip);
+          console.log('🔍 [ViewTicket] Passengers data:', ticket.passengers);
+          console.log('🔍 [ViewTicket] Driver data:', ticket.driver);
+          console.log('🔍 [ViewTicket] Vehicle data:', ticket.vehicle);
           
           // Set QR code from booking
-          setBookingQr(ticket.booking.booking_qr);
+          if (ticket.booking && ticket.booking.booking_qr) {
+            setBookingQr(ticket.booking.booking_qr);
+            console.log('✅ [ViewTicket] QR code set:', ticket.booking.booking_qr);
+          } else {
+            console.warn('⚠️ [ViewTicket] No QR code found in booking data');
+          }
           
           // Set passengers
-          setPassengers(ticket.passengers || []);
+          if (ticket.passengers && Array.isArray(ticket.passengers)) {
+            setPassengers(ticket.passengers);
+            console.log('✅ [ViewTicket] Passengers set:', ticket.passengers.length, 'passengers');
+          } else {
+            console.warn('⚠️ [ViewTicket] No passengers found or invalid passengers data');
+            setPassengers([]);
+          }
           
           // Set trip locations from route data
           if (ticket.trip && ticket.trip.route) {
-            setTripLocations({
+            const locations = {
               origin: { address: ticket.trip.route.origin },
               destination: { address: ticket.trip.route.destination },
-            });
+            };
+            setTripLocations(locations);
+            console.log('✅ [ViewTicket] Trip locations set:', locations);
+          } else {
+            console.warn('⚠️ [ViewTicket] No trip route data found');
           }
+          
+          // ¡IMPORTANTE! Establecer loading = false cuando todo se carga exitosamente
+          setLoading(false);
+          console.log('✅ [ViewTicket] All data loaded successfully, setting loading = false');
         } else {
-          console.error('❌ [ViewTicket] Error fetching ticket details:', result.error);
-          navigate({ to: '/Actividades' });
+          console.error('❌ [ViewTicket] Error fetching ticket details. Success:', result.success, 'Error:', result.error);
+          console.error('❌ [ViewTicket] Full result object:', result);
+          
+          // Establecer el error para mostrarlo en la interfaz
+          setError(result.error || 'Error desconocido al cargar el ticket');
+          setLoading(false);
+          
+          return; // No navegar automáticamente
         }
       } catch (error) {
-        console.error('❌ [ViewTicket] Error cargando datos del tiquete:', error);
-        navigate({ to: '/Actividades' });
-      } finally {
+        console.error('❌ [ViewTicket] Exception caught while loading ticket data:', error);
+        console.error('❌ [ViewTicket] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        setError(error instanceof Error ? error.message : 'Error desconocido');
         setLoading(false);
       }
     };
@@ -190,7 +226,16 @@ const ViewTicket = () => {
     }
   };
 
+  console.log('🔍 [ViewTicket] Render state check:', {
+    loading,
+    error,
+    passengersLength: passengers.length,
+    tripLocations: !!tripLocations,
+    bookingQr: !!bookingQr
+  });
+
   if (loading) {
+    console.log('🔄 [ViewTicket] Showing loading state');
     return (
       <Container className={styles.ticketContainer}>
         <LoadingOverlay visible />
@@ -199,7 +244,30 @@ const ViewTicket = () => {
     );
   }
 
+  if (error) {
+    console.log('❌ [ViewTicket] Showing error state:', error);
+    return (
+      <Container className={styles.ticketContainer}>
+        <Card className={styles.ticketCard}>
+          <Stack align="center" gap="md">
+            <AlertCircle size={48} color="#ff6b6b" />
+            <Text ta="center" size="lg" c="white">
+              Error al cargar el tiquete
+            </Text>
+            <Text ta="center" size="sm" c="dimmed">
+              {error}
+            </Text>
+            <Button onClick={() => navigate({ to: '/Cupos' })} variant="light">
+              Volver a mis cupos
+            </Button>
+          </Stack>
+        </Card>
+      </Container>
+    );
+  }
+
   if (!passengers.length || !tripLocations) {
+    console.log('⚠️ [ViewTicket] Showing no data state - passengers:', passengers.length, 'tripLocations:', !!tripLocations);
     return (
       <Container className={styles.ticketContainer}>
         <Card className={styles.ticketCard}>
@@ -216,6 +284,8 @@ const ViewTicket = () => {
       </Container>
     );
   }
+
+  console.log('✅ [ViewTicket] Rendering main ticket view');
 
   return (
     <Container className={styles.ticketContainer} size="xs">

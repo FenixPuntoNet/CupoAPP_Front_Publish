@@ -105,6 +105,16 @@ const Cupos: React.FC<CuposProps> = () => {
             const driverData = (tripData as any).driver || {};
             const passengersData = Array.isArray(cupo.passengers) ? cupo.passengers : [];
             
+            // Log específico para trip_id debugging
+            console.log('🔍 [Cupos] Processing cupo:', cupo.id, {
+              rawTripId: cupo.trip_id,
+              tripIdType: typeof cupo.trip_id,
+              tripIdIsNull: cupo.trip_id === null,
+              tripIdIsUndefined: cupo.trip_id === undefined,
+              tripData: tripData,
+              hasTripData: !!tripData && Object.keys(tripData).length > 0
+            });
+            
             // Log completo de la estructura de datos para debugging
             console.log('🔍 [Cupos] Full cupo data structure for trip:', cupo.trip_id, {
               fullCupo: cupo,
@@ -153,12 +163,28 @@ const Cupos: React.FC<CuposProps> = () => {
               driverName: driverData.first_name ? `${driverData.first_name} ${driverData.last_name || ''}`.trim() : 'Conductor no disponible'
             });
             
+            // Extraer trip_id de manera inteligente
+            let extractedTripId = cupo.trip_id; // Intentar primero el campo directo
+            
+            // Si trip_id es undefined/null pero tenemos datos de trip, usar trip.id
+            if (!extractedTripId && tripData && (tripData as any).id) {
+              extractedTripId = (tripData as any).id;
+              console.log('🔧 [Cupos] Using trip.id as fallback for trip_id:', extractedTripId);
+            }
+            
+            console.log('🔍 [Cupos] Final trip_id resolution:', {
+              originalTripId: cupo.trip_id,
+              extractedTripId: extractedTripId,
+              tripDataId: (tripData as any)?.id,
+              willUse: extractedTripId
+            });
+            
             return {
               booking_id: cupo.id || 0,
               booking_date: cupo.booking_date || new Date().toISOString(),
               booking_status: cupo.booking_status || 'unknown',
               total_price: cupo.total_price || 0,
-              trip_id: cupo.trip_id || 0,
+              trip_id: extractedTripId, // Usar el trip_id extraído de manera inteligente
               user_id: userId,
               seats_booked: cupo.seats_booked || 1,
               booking_qr: cupo.booking_qr || '',
@@ -329,15 +355,11 @@ const Cupos: React.FC<CuposProps> = () => {
                   <Button
                     size="xs"
                     onClick={() => {
-                      const passenger = booking.passengers?.[0];
-                      if (!passenger) {
-                        showNotification({
-                          title: 'Error',
-                          message: 'No se encontró pasajero asociado a esta reserva.',
-                          color: 'red',
-                        });
-                        return;
-                      }
+                      // Simplemente navegar sin verificar pasajeros ya que ViewTicket lo manejará
+                      console.log('🎫 [Cupos] Navigating to ViewTicket for booking:', booking.booking_id);
+                      console.log('🔍 [Cupos] Booking data:', booking);
+                      console.log('🔍 [Cupos] Passengers data:', booking.passengers);
+                      
                       navigate({
                         to: '/Cupos/ViewTicket',
                         search: {
@@ -358,12 +380,18 @@ const Cupos: React.FC<CuposProps> = () => {
                   <Button
                     size="xs"
                     onClick={() => {
-                      console.log('🚗 [Cupos] Navigating to Chat with trip_id:', booking.trip_id);
+                      console.log('🚗 [Cupos] Navigating to Chat - Full booking data:', booking);
+                      console.log('🚗 [Cupos] trip_id:', booking.trip_id);
+                      console.log('🚗 [Cupos] trip_id type:', typeof booking.trip_id);
+                      console.log('🚗 [Cupos] trip_id is null?', booking.trip_id === null);
+                      console.log('🚗 [Cupos] trip_id is undefined?', booking.trip_id === undefined);
                       
-                      if (!booking.trip_id) {
+                      if (!booking.trip_id || booking.trip_id === null || booking.trip_id === undefined || booking.trip_id === 0) {
+                        console.error('❌ [Cupos] trip_id is invalid:', booking.trip_id);
+                        console.error('❌ [Cupos] Full booking data for debugging:', booking);
                         showNotification({
                           title: 'Error',
-                          message: 'No se encontró información del viaje para acceder al chat.',
+                          message: `No se encontró información del viaje para acceder al chat. Booking ID: ${booking.booking_id}`,
                           color: 'red',
                         });
                         return;
@@ -388,12 +416,20 @@ const Cupos: React.FC<CuposProps> = () => {
                     <Button
                       size="xs"
                       onClick={() => {
-                        if (booking.trip_id && booking.driver_id && booking.driver_id !== 'unknown') {
+                        console.log('⭐ [Cupos] Rating button clicked for booking:', booking.booking_id);
+                        console.log('⭐ [Cupos] trip_id:', booking.trip_id, 'driver_id:', booking.driver_id);
+                        
+                        if (booking.trip_id && booking.trip_id !== 0 && booking.driver_id && booking.driver_id !== 'unknown') {
+                          console.log('✅ [Cupos] Opening rating modal');
                           openRatingModal(booking.trip_id, booking.driver_id);
                         } else {
+                          console.warn('⚠️ [Cupos] Cannot rate - missing data:', {
+                            trip_id: booking.trip_id,
+                            driver_id: booking.driver_id
+                          });
                           showNotification({
                             title: 'No disponible',
-                            message: 'No se puede calificar este viaje porque no se pudo identificar al conductor.',
+                            message: 'No se puede calificar este viaje porque faltan datos del conductor o viaje.',
                             color: 'yellow',
                           });
                         }
