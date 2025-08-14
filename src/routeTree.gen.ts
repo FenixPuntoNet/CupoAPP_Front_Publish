@@ -37,12 +37,6 @@ import { Route as CompletarRegistroIndexRouteImport } from './routes/CompletarRe
 import { Route as ChatIndexRouteImport } from './routes/Chat/index'
 import { Route as ActividadesIndexRouteImport } from './routes/Actividades/index'
 import { Route as ReservasTripReservationModalRouteImport } from './routes/Reservas/TripReservationModal'
-import { Route as RegistrarVehiculoSoat_fixedRouteImport } from './routes/RegistrarVehiculo/Soat_fixed'
-import { Route as RegistrarVehiculoSoatRouteImport } from './routes/RegistrarVehiculo/Soat'
-import { Route as RegistrarVehiculoPropertyCardRouteImport } from './routes/RegistrarVehiculo/PropertyCard'
-import { Route as RegistrarVehiculoLicenseRouteImport } from './routes/RegistrarVehiculo/License'
-import { Route as RegistrarVehiculoDocumentsRequiredRouteImport } from './routes/RegistrarVehiculo/DocumentsRequired'
-import { Route as RegistrarVehiculoDocumentFormRouteImport } from './routes/RegistrarVehiculo/DocumentForm'
 import { Route as RecuperarPaswordForgotPasswordRouteImport } from './routes/RecuperarPasword/ForgotPassword'
 import { Route as CuposViewTicketRouteImport } from './routes/Cupos/ViewTicket'
 import { Route as CuposViewPassengersRouteImport } from './routes/Cupos/ViewPassengers'
@@ -188,41 +182,6 @@ const ReservasTripReservationModalRoute =
     path: '/Reservas/TripReservationModal',
     getParentRoute: () => rootRouteImport,
   } as any)
-const RegistrarVehiculoSoat_fixedRoute =
-  RegistrarVehiculoSoat_fixedRouteImport.update({
-    id: '/RegistrarVehiculo/Soat_fixed',
-    path: '/RegistrarVehiculo/Soat_fixed',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const RegistrarVehiculoSoatRoute = RegistrarVehiculoSoatRouteImport.update({
-  id: '/RegistrarVehiculo/Soat',
-  path: '/RegistrarVehiculo/Soat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegistrarVehiculoPropertyCardRoute =
-  RegistrarVehiculoPropertyCardRouteImport.update({
-    id: '/RegistrarVehiculo/PropertyCard',
-    path: '/RegistrarVehiculo/PropertyCard',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const RegistrarVehiculoLicenseRoute =
-  RegistrarVehiculoLicenseRouteImport.update({
-    id: '/RegistrarVehiculo/License',
-    path: '/RegistrarVehiculo/License',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const RegistrarVehiculoDocumentsRequiredRoute =
-  RegistrarVehiculoDocumentsRequiredRouteImport.update({
-    id: '/RegistrarVehiculo/DocumentsRequired',
-    path: '/RegistrarVehiculo/DocumentsRequired',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const RegistrarVehiculoDocumentFormRoute =
-  RegistrarVehiculoDocumentFormRouteImport.update({
-    id: '/RegistrarVehiculo/DocumentForm',
-    path: '/RegistrarVehiculo/DocumentForm',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const RecuperarPaswordForgotPasswordRoute =
   RecuperarPaswordForgotPasswordRouteImport.update({
     id: '/RecuperarPasword/ForgotPassword',
@@ -264,12 +223,6 @@ export interface FileRoutesByFullPath {
   '/Cupos/ViewPassengers': typeof CuposViewPassengersRoute
   '/Cupos/ViewTicket': typeof CuposViewTicketRoute
   '/RecuperarPasword/ForgotPassword': typeof RecuperarPaswordForgotPasswordRoute
-  '/RegistrarVehiculo/DocumentForm': typeof RegistrarVehiculoDocumentFormRoute
-  '/RegistrarVehiculo/DocumentsRequired': typeof RegistrarVehiculoDocumentsRequiredRoute
-  '/RegistrarVehiculo/License': typeof RegistrarVehiculoLicenseRoute
-  '/RegistrarVehiculo/PropertyCard': typeof RegistrarVehiculoPropertyCardRoute
-  '/RegistrarVehiculo/Soat': typeof RegistrarVehiculoSoatRoute
-  '/RegistrarVehiculo/Soat_fixed': typeof RegistrarVehiculoSoat_fixedRoute
   '/Reservas/TripReservationModal': typeof ReservasTripReservationModalRoute
   '/Actividades': typeof ActividadesIndexRoute
   '/Chat': typeof ChatIndexRoute
@@ -305,12 +258,6 @@ export interface FileRoutesByTo {
   '/Cupos/ViewPassengers': typeof CuposViewPassengersRoute
   '/Cupos/ViewTicket': typeof CuposViewTicketRoute
   '/RecuperarPasword/ForgotPassword': typeof RecuperarPaswordForgotPasswordRoute
-  '/RegistrarVehiculo/DocumentForm': typeof RegistrarVehiculoDocumentFormRoute
-  '/RegistrarVehiculo/DocumentsRequired': typeof RegistrarVehiculoDocumentsRequiredRoute
-  '/RegistrarVehiculo/License': typeof RegistrarVehiculoLicenseRoute
-  '/RegistrarVehiculo/PropertyCard': typeof RegistrarVehiculoPropertyCardRoute
-  '/RegistrarVehiculo/Soat': typeof RegistrarVehiculoSoatRoute
-  '/RegistrarVehiculo/Soat_fixed': typeof RegistrarVehiculoSoat_fixedRoute
   '/Reservas/TripReservationModal': typeof ReservasTripReservationModalRoute
   '/Actividades': typeof ActividadesIndexRoute
   '/Chat': typeof ChatIndexRoute
@@ -347,12 +294,6 @@ export interface FileRoutesById {
   '/Cupos/ViewPassengers': typeof CuposViewPassengersRoute
   '/Cupos/ViewTicket': typeof CuposViewTicketRoute
   '/RecuperarPasword/ForgotPassword': typeof RecuperarPaswordForgotPasswordRoute
-  '/RegistrarVehiculo/DocumentForm': typeof RegistrarVehiculoDocumentFormRoute
-  '/RegistrarVehiculo/DocumentsRequired': typeof RegistrarVehiculoDocumentsRequiredRoute
-  '/RegistrarVehiculo/License': typeof RegistrarVehiculoLicenseRoute
-  '/RegistrarVehiculo/PropertyCard': typeof RegistrarVehiculoPropertyCardRoute
-  '/RegistrarVehiculo/Soat': typeof RegistrarVehiculoSoatRoute
-  '/RegistrarVehiculo/Soat_fixed': typeof RegistrarVehiculoSoat_fixedRoute
   '/Reservas/TripReservationModal': typeof ReservasTripReservationModalRoute
   '/Actividades/': typeof ActividadesIndexRoute
   '/Chat/': typeof ChatIndexRoute
@@ -390,12 +331,6 @@ export interface FileRouteTypes {
     | '/Cupos/ViewPassengers'
     | '/Cupos/ViewTicket'
     | '/RecuperarPasword/ForgotPassword'
-    | '/RegistrarVehiculo/DocumentForm'
-    | '/RegistrarVehiculo/DocumentsRequired'
-    | '/RegistrarVehiculo/License'
-    | '/RegistrarVehiculo/PropertyCard'
-    | '/RegistrarVehiculo/Soat'
-    | '/RegistrarVehiculo/Soat_fixed'
     | '/Reservas/TripReservationModal'
     | '/Actividades'
     | '/Chat'
@@ -431,12 +366,6 @@ export interface FileRouteTypes {
     | '/Cupos/ViewPassengers'
     | '/Cupos/ViewTicket'
     | '/RecuperarPasword/ForgotPassword'
-    | '/RegistrarVehiculo/DocumentForm'
-    | '/RegistrarVehiculo/DocumentsRequired'
-    | '/RegistrarVehiculo/License'
-    | '/RegistrarVehiculo/PropertyCard'
-    | '/RegistrarVehiculo/Soat'
-    | '/RegistrarVehiculo/Soat_fixed'
     | '/Reservas/TripReservationModal'
     | '/Actividades'
     | '/Chat'
@@ -472,12 +401,6 @@ export interface FileRouteTypes {
     | '/Cupos/ViewPassengers'
     | '/Cupos/ViewTicket'
     | '/RecuperarPasword/ForgotPassword'
-    | '/RegistrarVehiculo/DocumentForm'
-    | '/RegistrarVehiculo/DocumentsRequired'
-    | '/RegistrarVehiculo/License'
-    | '/RegistrarVehiculo/PropertyCard'
-    | '/RegistrarVehiculo/Soat'
-    | '/RegistrarVehiculo/Soat_fixed'
     | '/Reservas/TripReservationModal'
     | '/Actividades/'
     | '/Chat/'
@@ -514,12 +437,6 @@ export interface RootRouteChildren {
   CuposViewPassengersRoute: typeof CuposViewPassengersRoute
   CuposViewTicketRoute: typeof CuposViewTicketRoute
   RecuperarPaswordForgotPasswordRoute: typeof RecuperarPaswordForgotPasswordRoute
-  RegistrarVehiculoDocumentFormRoute: typeof RegistrarVehiculoDocumentFormRoute
-  RegistrarVehiculoDocumentsRequiredRoute: typeof RegistrarVehiculoDocumentsRequiredRoute
-  RegistrarVehiculoLicenseRoute: typeof RegistrarVehiculoLicenseRoute
-  RegistrarVehiculoPropertyCardRoute: typeof RegistrarVehiculoPropertyCardRoute
-  RegistrarVehiculoSoatRoute: typeof RegistrarVehiculoSoatRoute
-  RegistrarVehiculoSoat_fixedRoute: typeof RegistrarVehiculoSoat_fixedRoute
   ReservasTripReservationModalRoute: typeof ReservasTripReservationModalRoute
   ActividadesIndexRoute: typeof ActividadesIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
@@ -740,48 +657,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReservasTripReservationModalRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/RegistrarVehiculo/Soat_fixed': {
-      id: '/RegistrarVehiculo/Soat_fixed'
-      path: '/RegistrarVehiculo/Soat_fixed'
-      fullPath: '/RegistrarVehiculo/Soat_fixed'
-      preLoaderRoute: typeof RegistrarVehiculoSoat_fixedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/RegistrarVehiculo/Soat': {
-      id: '/RegistrarVehiculo/Soat'
-      path: '/RegistrarVehiculo/Soat'
-      fullPath: '/RegistrarVehiculo/Soat'
-      preLoaderRoute: typeof RegistrarVehiculoSoatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/RegistrarVehiculo/PropertyCard': {
-      id: '/RegistrarVehiculo/PropertyCard'
-      path: '/RegistrarVehiculo/PropertyCard'
-      fullPath: '/RegistrarVehiculo/PropertyCard'
-      preLoaderRoute: typeof RegistrarVehiculoPropertyCardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/RegistrarVehiculo/License': {
-      id: '/RegistrarVehiculo/License'
-      path: '/RegistrarVehiculo/License'
-      fullPath: '/RegistrarVehiculo/License'
-      preLoaderRoute: typeof RegistrarVehiculoLicenseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/RegistrarVehiculo/DocumentsRequired': {
-      id: '/RegistrarVehiculo/DocumentsRequired'
-      path: '/RegistrarVehiculo/DocumentsRequired'
-      fullPath: '/RegistrarVehiculo/DocumentsRequired'
-      preLoaderRoute: typeof RegistrarVehiculoDocumentsRequiredRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/RegistrarVehiculo/DocumentForm': {
-      id: '/RegistrarVehiculo/DocumentForm'
-      path: '/RegistrarVehiculo/DocumentForm'
-      fullPath: '/RegistrarVehiculo/DocumentForm'
-      preLoaderRoute: typeof RegistrarVehiculoDocumentFormRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/RecuperarPasword/ForgotPassword': {
       id: '/RecuperarPasword/ForgotPassword'
       path: '/RecuperarPasword/ForgotPassword'
@@ -834,13 +709,6 @@ const rootRouteChildren: RootRouteChildren = {
   CuposViewPassengersRoute: CuposViewPassengersRoute,
   CuposViewTicketRoute: CuposViewTicketRoute,
   RecuperarPaswordForgotPasswordRoute: RecuperarPaswordForgotPasswordRoute,
-  RegistrarVehiculoDocumentFormRoute: RegistrarVehiculoDocumentFormRoute,
-  RegistrarVehiculoDocumentsRequiredRoute:
-    RegistrarVehiculoDocumentsRequiredRoute,
-  RegistrarVehiculoLicenseRoute: RegistrarVehiculoLicenseRoute,
-  RegistrarVehiculoPropertyCardRoute: RegistrarVehiculoPropertyCardRoute,
-  RegistrarVehiculoSoatRoute: RegistrarVehiculoSoatRoute,
-  RegistrarVehiculoSoat_fixedRoute: RegistrarVehiculoSoat_fixedRoute,
   ReservasTripReservationModalRoute: ReservasTripReservationModalRoute,
   ActividadesIndexRoute: ActividadesIndexRoute,
   ChatIndexRoute: ChatIndexRoute,

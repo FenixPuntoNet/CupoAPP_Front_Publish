@@ -16,8 +16,6 @@ import {
   LogOut,
   ChevronRight,
   CheckCircle,
-  FileText,
-  Shield,
   AlertCircle,
   Wallet,
   MessageCircle,
@@ -32,10 +30,7 @@ import { DeactivateAccountModal } from '@/components/DeactivateAccountModal'
 import { getCurrentUserProfile } from '@/services/profile'
 import { 
   getUserVehicles, 
-  getDriverLicense, 
-  getPropertyCard, 
-  getSoat,
-  getDocumentsStatus 
+  getDocumentsStatusNew 
 } from '@/services/vehicles'
 
 // Interfaces
@@ -59,10 +54,7 @@ interface UserProfile {
 }
 
 interface VehicleStatus {
-  hasVehicle: boolean
-  hasLicense: boolean
-  hasSoat: boolean
-  hasPropertyCard: boolean
+  hasCompleteVehicle: boolean // Simplificado a un solo estado
 }
 
 interface DocumentStatus {
@@ -97,10 +89,7 @@ const ProfileView: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [vehicleStatus, setVehicleStatus] = useState<VehicleStatus>({
-    hasVehicle: false,
-    hasLicense: false,
-    hasSoat: false,
-    hasPropertyCard: false,
+    hasCompleteVehicle: false,
   })
   const [error, setError] = useState('')
   const [showVehicleOptions, setShowVehicleOptions] = useState(false)
@@ -241,44 +230,71 @@ const ProfileView: React.FC = () => {
         const vehicleResponse = await getUserVehicles();
         const hasVehicle = vehicleResponse.success && vehicleResponse.hasVehicle;
 
-        // Verificar documentos usando los servicios del backend
-        let hasLicense = false;
-        let hasSoat = false;
-        let hasPropertyCard = false;
+        // Verificar estado completo de documentos usando el nuevo endpoint optimizado
+        let hasCompleteVehicle = false;
 
         if (hasVehicle) {
-          // Usar el endpoint optimizado que obtiene todos los documentos
+          // Usar el endpoint optimizado que obtiene el estado completo
           try {
-            const documentsResponse = await getDocumentsStatus();
-            if (documentsResponse.success && documentsResponse.documentsStatus) {
-              hasLicense = documentsResponse.documentsStatus.license.complete;
-              hasSoat = documentsResponse.documentsStatus.insurance.complete;
-              hasPropertyCard = documentsResponse.documentsStatus.property.complete;
-              console.log('📋 Documents status:', {
-                hasLicense,
-                hasSoat,
-                hasPropertyCard
+            const documentsResponse = await getDocumentsStatusNew();
+            console.log('🔍 Raw backend response:', documentsResponse);
+            
+            if (documentsResponse.success) {
+              // El backend devuelve los datos directamente, no dentro de 'data'
+              const docs = documentsResponse;
+              
+              console.log('📊 Backend data breakdown:', {
+                documentsStatus: docs.documentsStatus,
+                progress: docs.progress,
+                completedDocs: docs.completedDocs,
+                totalRequiredDocs: docs.totalRequiredDocs,
+                allComplete: docs.allComplete
               });
+              
+              // Si hay progress y está en 100%, entonces está completo
+              if (docs.progress === 100 && docs.completedDocs === docs.totalRequiredDocs) {
+                hasCompleteVehicle = true;
+                console.log('✅ Vehicle is complete based on progress: 100%');
+              } else {
+                // Fallback: verificar documentos individuales si están disponibles
+                if (docs.documentsStatus) {
+                  const hasLicense = docs.documentsStatus.driverLicense?.hasDocument;
+                  const hasLicensePhotos = docs.documentsStatus.driverLicense?.hasPhotos;
+                  const hasSoat = docs.documentsStatus.soat?.hasDocument;
+                  const hasSoatPhotos = docs.documentsStatus.soat?.hasPhotos;
+                  const soatNotExpired = !docs.documentsStatus.soat?.isExpired;
+                  
+                  console.log('🔍 Individual document checks:', {
+                    hasLicense,
+                    hasLicensePhotos,
+                    hasSoat,
+                    hasSoatPhotos,
+                    soatNotExpired
+                  });
+                  
+                  hasCompleteVehicle = Boolean(
+                    hasLicense && 
+                    hasLicensePhotos &&
+                    hasSoat && 
+                    hasSoatPhotos &&
+                    soatNotExpired
+                  );
+                }
+              }
+              
+              console.log('📋 Final vehicle status determination:', {
+                progress: docs.progress,
+                completedDocs: docs.completedDocs,
+                totalRequiredDocs: docs.totalRequiredDocs,
+                hasCompleteVehicle,
+                method: docs.progress === 100 ? 'progress-based' : 'individual-checks'
+              });
+            } else {
+              console.error('❌ Failed to get documents status:', documentsResponse);
             }
           } catch (documentsError) {
-            console.warn('⚠️ Error fetching documents status, falling back to individual checks');
-            
-            // Fallback: verificar documentos individualmente
-            const [licenseResponse, soatResponse, propertyResponse] = await Promise.all([
-              getDriverLicense().catch(() => ({ success: false, hasLicense: false })),
-              getSoat().catch(() => ({ success: false, hasSoat: false })),
-              getPropertyCard().catch(() => ({ success: false, hasPropertyCard: false }))
-            ]);
-
-            hasLicense = licenseResponse.success && licenseResponse.hasLicense;
-            hasSoat = soatResponse.success && soatResponse.hasSoat;
-            hasPropertyCard = propertyResponse.success && propertyResponse.hasPropertyCard;
-            
-            console.log('📋 Individual document checks:', {
-              hasLicense,
-              hasSoat,
-              hasPropertyCard
-            });
+            console.warn('⚠️ Error fetching complete documents status:', documentsError);
+            hasCompleteVehicle = false;
           }
         }
 
@@ -331,10 +347,7 @@ const ProfileView: React.FC = () => {
         }
 
         setVehicleStatus({
-          hasVehicle: Boolean(hasVehicle),
-          hasLicense: hasLicense,
-          hasSoat: hasSoat,
-          hasPropertyCard: hasPropertyCard
+          hasCompleteVehicle: hasCompleteVehicle,
         });
 
       } catch (error) {
@@ -420,11 +433,7 @@ const ProfileView: React.FC = () => {
   useEffect(() => {
     const checkDocumentCompletion = async () => {
       if (userProfile) {
-        const allDocumentsComplete =
-          vehicleStatus.hasVehicle &&
-          vehicleStatus.hasLicense &&
-          vehicleStatus.hasSoat &&
-          vehicleStatus.hasPropertyCard;
+        const allDocumentsComplete = vehicleStatus.hasCompleteVehicle;
 
         if (userProfile.user_type === 'PASSENGER' && allDocumentsComplete) {
           try {
@@ -493,36 +502,12 @@ const ProfileView: React.FC = () => {
   const getDocumentsList = (): DocumentStatus[] => {
     return [
       {
-        type: 'vehicle',
-        title: 'Registro de Vehículo',
+        type: 'vehicle-complete',
+        title: 'Registro Completo de Vehículo',
         icon: Car,
-        status: vehicleStatus.hasVehicle ? 'complete' : 'required',
+        status: vehicleStatus.hasCompleteVehicle ? 'complete' : 'required',
         path: '/RegistrarVehiculo',
-        description: 'Información básica del vehículo',
-      },
-      {
-        type: 'license',
-        title: 'Licencia de Conducción',
-        icon: FileText,
-        status: vehicleStatus.hasLicense ? 'complete' : 'required',
-        path: '/RegistrarVehiculo/License',
-        description: 'Documento de conducción vigente',
-      },
-      {
-        type: 'soat',
-        title: 'SOAT',
-        icon: Shield,
-        status: vehicleStatus.hasSoat ? 'complete' : 'required',
-        path: '/RegistrarVehiculo/Soat',
-        description: 'Seguro obligatorio vigente',
-      },
-      {
-        type: 'property',
-        title: 'Tarjeta de Propiedad',
-        icon: FileText,
-        status: vehicleStatus.hasPropertyCard ? 'complete' : 'required',
-        path: '/RegistrarVehiculo/PropertyCard',
-        description: 'Documento de propiedad del vehículo',
+        description: 'Vehículo, SOAT, Licencia y Tarjeta de Propiedad',
       },
     ]
   }

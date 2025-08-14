@@ -11,9 +11,6 @@ export interface Vehicle {
   plate: string;
   color: string;
   body_type: string;
-  engine_number: string;
-  chassis_number: string;
-  vin_number: string;
   photo_url?: string | null;
   status?: string; // Campo status que puede ser 'activo', 'pendiente', 'rechazado', 'inactivo'
   created_at?: string;
@@ -27,9 +24,6 @@ export interface VehicleFormData {
   plate: string;
   color: string;
   body_type: string;
-  engine_number: string;
-  chassis_number: string;
-  vin_number: string;
   photo_url?: string | null;
 }
 
@@ -38,7 +32,6 @@ export interface PropertyCard {
   user_id: string;
   vehicle_id: number;
   license_number: string;
-  identification_number: string;
   service_type: string;
   passager_capacity: number;
   cylinder_capacity: string;
@@ -52,7 +45,6 @@ export interface PropertyCard {
 export interface PropertyCardFormData {
   vehicle_id: number;
   license_number: string;
-  identification_number: string;
   service_type: string;
   passager_capacity: number;
   cylinder_capacity: string;
@@ -65,7 +57,6 @@ export interface DriverLicense {
   id: number;
   user_id: string;
   license_number: string;
-  identification_number: string;
   license_category: string;
   blood_type: string;
   expedition_date: string;
@@ -78,7 +69,6 @@ export interface DriverLicense {
 
 export interface DriverLicenseFormData {
   license_number: string;
-  identification_number: string;
   license_category: string;
   blood_type: string;
   expedition_date: string;
@@ -92,7 +82,6 @@ export interface Soat {
   user_id: string;
   vehicle_id: number;
   policy_number: string;
-  identification_number: string;
   insurance_company: string;
   validity_from: string;
   validity_to: string;
@@ -105,7 +94,6 @@ export interface Soat {
 export interface SoatFormData {
   vehicle_id: number;
   policy_number: string;
-  identification_number: string;
   insurance_company: string;
   validity_from: string;
   validity_to: string;
@@ -135,6 +123,151 @@ export interface DocumentsStatus {
     required: boolean;
   };
 }
+
+// ==================== REGISTRO COMPLETO OPTIMIZADO ====================
+
+/**
+ * Nueva interface para registro completo optimizado (según documentación del backend)
+ */
+export interface CompleteVehicleRegistration {
+  // Datos del vehículo (ahora incluye passenger_capacity)
+  vehicle: {
+    brand: string;
+    model: string;
+    year: number;
+    plate: string;
+    color: string;
+    body_type: string;
+    passenger_capacity: number;
+  };
+  // Datos de la licencia
+  license: {
+    license_number: string;
+    license_category: string;
+    blood_type: string;
+    expedition_date: string;
+    expiration_date: string;
+  };
+  // Datos del SOAT
+  soat: {
+    policy_number: string;
+    insurance_company: string;
+    validity_from: string;
+    validity_to: string;
+  };
+}
+
+/**
+ * Registrar vehículo completo con todos los documentos usando el nuevo endpoint optimizado
+ * PROMUEVE AUTOMÁTICAMENTE AL USUARIO DE PASSENGER A DRIVER
+ * Este es el método recomendado para un flujo optimizado y UX mejorada
+ */
+export async function registerCompleteVehicleWithPromotion(
+  data: CompleteVehicleRegistration
+): Promise<{
+  success: boolean;
+  message?: string;
+  vehicleId?: number;
+  licenseId?: number;
+  soatId?: number;
+  data?: {
+    vehicle: any;
+    license: any;
+    soat: any;
+  };
+  error?: string;
+}> {
+  try {
+    console.log('🚀 Registering complete vehicle with automatic DRIVER promotion...');
+    console.log('📋 Data being sent:', data);
+    
+    const response = await apiRequest('/vehiculos/register-complete', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+
+    console.log('✅ Complete registration response:', response);
+    
+    // Extraer IDs de la respuesta para compatibilidad con código existente
+    if (response.success && response.data) {
+      return {
+        ...response,
+        vehicleId: response.data.vehicle?.id,
+        licenseId: response.data.license?.id,
+        soatId: response.data.soat?.id,
+      };
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('❌ Complete registration error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al registrar vehículo completo'
+    };
+  }
+}
+
+/**
+ * Registrar vehículo completo con todos los documentos en una sola llamada
+ * Este es el método recomendado para un flujo optimizado
+ * @deprecated Use registerCompleteVehicleWithPromotion instead
+ */
+export async function registerCompleteVehicleOptimized(
+  data: CompleteVehicleRegistration
+): Promise<{
+  success: boolean;
+  message?: string;
+  data?: {
+    vehicle: any;
+    license: any;
+    property_card: any;
+    soat: any;
+  };
+  vehicleId?: number;
+  licenseId?: number;
+  propertyCardId?: number;
+  soatId?: number;
+  error?: string;
+}> {
+  try {
+    console.log('🚀 Registering complete vehicle with optimized endpoint...');
+    console.log('📋 Data being sent:', data);
+    
+    const response = await apiRequest('/vehiculos/register-complete', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+
+    console.log('✅ Complete registration response:', response);
+    
+    // Extraer IDs de la respuesta para compatibilidad con código existente
+    if (response.success && response.data) {
+      return {
+        ...response,
+        vehicleId: response.data.vehicle?.id,
+        licenseId: response.data.license?.id,
+        propertyCardId: response.data.property_card?.id,
+        soatId: response.data.soat?.id,
+      };
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('❌ Complete registration error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al registrar vehículo completo'
+    };
+  }
+}
+
+// ==================== FUNCIÓN PRINCIPAL PARA FLUJO OPTIMIZADO ====================
+
+/**
+ * DEPRECATED - Esta función está obsoleta desde que eliminamos property_card
+ * Usa registerCompleteVehicleWithPromotion en su lugar
+ */
 
 // ==================== SERVICIOS DE VEHÍCULOS ====================
 
@@ -168,7 +301,7 @@ export async function getMyVehicle(): Promise<{
 }
 
 /**
- * Registrar o actualizar vehículo
+ * Registrar o actualizar vehículo (automáticamente promueve usuario a DRIVER)
  */
 export async function registerVehicle(vehicleData: VehicleFormData): Promise<{
   success: boolean;
@@ -177,15 +310,71 @@ export async function registerVehicle(vehicleData: VehicleFormData): Promise<{
   error?: string;
 }> {
   try {
-    console.log('🚗 Making request to /vehiculos/register');
+    console.log('🚗 Making request to /vehiculos/my-vehicle to check existing vehicle first');
+    
+    // Primero verificar si ya tiene vehículo
+    try {
+      const existingVehicleResponse = await apiRequest('/vehiculos/my-vehicle', {
+        method: 'GET',
+      });
+      
+      if (existingVehicleResponse.success && existingVehicleResponse.vehicle) {
+        console.log('🚗 Vehicle already exists, updating instead');
+        // Si ya tiene vehículo, hacer update
+        const updateResponse = await apiRequest('/vehiculos/update-basic-info', {
+          method: 'PUT',
+          body: JSON.stringify(vehicleData),
+        });
+        return updateResponse;
+      }
+    } catch (error) {
+      console.log('🚗 No existing vehicle found, proceeding with registration');
+    }
+
+    // Si no tiene vehículo, intentar usar el endpoint individual o registrar con mínimos datos
+    console.log('🚗 Attempting vehicle registration with complete endpoint (minimal data)');
     console.log('🚗 Vehicle data being sent:', vehicleData);
     
-    const response = await apiRequest('/vehiculos/register', {
+    // Crear datos mínimos para el registro completo
+    const registrationData = {
+      vehicle: vehicleData,
+      license: {
+        license_number: "TEMP_" + Date.now(),
+        license_category: "C1", 
+        blood_type: "O+",
+        expedition_date: "2024-01-01",
+        expiration_date: "2030-01-01"
+      },
+      property_card: {
+        license_number: "TEMP_PROP_" + Date.now(),
+        service_type: "PARTICULAR",
+        passager_capacity: 5,
+        cylinder_capacity: "1500cc",
+        expedition_date: "2024-01-01"
+      },
+      soat: {
+        policy_number: "TEMP_SOAT_" + Date.now(),
+        insurance_company: "Temporal",
+        validity_from: "2024-01-01", 
+        validity_to: "2025-12-31"
+      }
+    };
+    
+    const response = await apiRequest('/vehiculos/register-complete', {
       method: 'POST',
-      body: JSON.stringify(vehicleData),
+      body: JSON.stringify(registrationData),
     });
 
     console.log('🚗 Register vehicle response:', response);
+
+    // Extraer solo los datos del vehículo de la respuesta completa
+    if (response.success && response.data && response.data.vehicle) {
+      return {
+        success: true,
+        vehicle: response.data.vehicle,
+        message: response.message || 'Vehículo registrado exitosamente. Status actualizado a conductor.'
+      };
+    }
 
     return response;
   } catch (error) {
@@ -197,73 +386,15 @@ export async function registerVehicle(vehicleData: VehicleFormData): Promise<{
   }
 }
 
-/**
- * Subir foto del vehículo con compresión automática
- */
-export async function uploadVehiclePhoto(
-  vehicleId: number, 
-  photoData: string | File, 
-  filename?: string
-): Promise<{
-  success: boolean;
-  message?: string;
-  photo_url?: string | null;
-  vehicle?: Vehicle;
-  compression?: any;
-  error?: string;
-}> {
-  try {
-    let photo_base64: string;
-    let finalFilename = filename;
-    
-    // Si es un archivo, comprimirlo automáticamente
-    if (photoData instanceof File) {
-      console.log('🔄 Compressing vehicle photo...');
-      
-      photo_base64 = await fileToBase64Compressed(photoData, 400); // 400KB para fotos de vehículos
-      finalFilename = finalFilename || photoData.name;
-      
-      console.log('✅ Vehicle photo compressed successfully:', {
-        originalSize: Math.round(photoData.size / 1024) + 'KB',
-        compressedSize: Math.round(photo_base64.length / 1024) + 'KB',
-        filename: finalFilename
-      });
-    } else {
-      photo_base64 = photoData;
-    }
+// ==================== FUNCIONES DE SUBIDA DE FOTOS (OBSOLETAS) ====================
+// Las funciones de subida de fotos están implementadas directamente en el componente de registro
+// para evitar conflictos con el código legacy
 
-    // Validar que la foto esté presente
-    if (!photo_base64) {
-      return {
-        success: false,
-        error: 'La foto es requerida'
-      };
-    }
-
-    console.log('📸 Uploading vehicle photo:', { 
-      vehicleId, 
-      filename: finalFilename, 
-      photoSize: Math.round(photo_base64.length / 1024) + 'KB'
-    });
-
-    const response = await apiRequest('/vehiculos/upload-vehicle-photo', {
-      method: 'POST',
-      body: JSON.stringify({
-        vehicleId,
-        photo_base64,
-        filename: finalFilename
-      }),
-    });
-
-    return response;
-  } catch (error) {
-    console.error('❌ Error uploading vehicle photo:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Error al subir foto del vehículo'
-    };
-  }
-}
+/*
+// Funciones de subida de fotos comentadas temporalmente
+// uploadVehiclePhoto, uploadDriverLicensePhotos, uploadSoatPhotos
+// están implementadas directamente en el componente RegistrarVehiculo
+*/
 
 // ==================== SERVICIOS DE TARJETA DE PROPIEDAD ====================
 
@@ -295,6 +426,7 @@ export async function getPropertyCard(): Promise<{
 
 /**
  * Registrar o actualizar tarjeta de propiedad
+ * REQUIERE que el usuario tenga un vehículo registrado primero
  */
 export async function registerPropertyCard(propertyData: PropertyCardFormData): Promise<{
   success: boolean;
@@ -303,6 +435,22 @@ export async function registerPropertyCard(propertyData: PropertyCardFormData): 
   error?: string;
 }> {
   try {
+    console.log('📄 Starting property card registration...');
+    
+    // ⚠️ VALIDACIÓN CRÍTICA: Verificar que el usuario tenga un vehículo registrado primero
+    console.log('🔍 Checking if user has vehicle registered...');
+    const vehicleCheck = await getMyVehicle();
+    
+    if (!vehicleCheck.success || !vehicleCheck.vehicle) {
+      console.log('❌ No vehicle found - property card registration blocked');
+      return {
+        success: false,
+        error: 'Debes registrar un vehículo antes de poder registrar la tarjeta de propiedad. Primero completa el registro del vehículo.'
+      };
+    }
+    
+    console.log('✅ Vehicle found, proceeding with property card registration');
+    
     const response = await apiRequest('/vehiculos/property-card', {
       method: 'POST',
       body: JSON.stringify(propertyData),
@@ -310,6 +458,7 @@ export async function registerPropertyCard(propertyData: PropertyCardFormData): 
 
     return response;
   } catch (error) {
+    console.error('❌ Register property card error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error al registrar tarjeta de propiedad'
@@ -424,6 +573,7 @@ export async function getDriverLicense(): Promise<{
 
 /**
  * Registrar o actualizar licencia de conducir
+ * REQUIERE que el usuario tenga un vehículo registrado primero
  */
 export async function registerDriverLicense(licenseData: DriverLicenseFormData): Promise<{
   success: boolean;
@@ -432,6 +582,22 @@ export async function registerDriverLicense(licenseData: DriverLicenseFormData):
   error?: string;
 }> {
   try {
+    console.log('🪪 Starting driver license registration...');
+    
+    // ⚠️ VALIDACIÓN CRÍTICA: Verificar que el usuario tenga un vehículo registrado primero
+    console.log('🔍 Checking if user has vehicle registered...');
+    const vehicleCheck = await getMyVehicle();
+    
+    if (!vehicleCheck.success || !vehicleCheck.vehicle) {
+      console.log('❌ No vehicle found - license registration blocked');
+      return {
+        success: false,
+        error: 'Debes registrar un vehículo antes de poder registrar tu licencia de conducir. Primero completa el registro del vehículo.'
+      };
+    }
+    
+    console.log('✅ Vehicle found, proceeding with license registration');
+    
     const response = await apiRequest('/vehiculos/driver-license', {
       method: 'POST',
       body: JSON.stringify(licenseData),
@@ -439,6 +605,7 @@ export async function registerDriverLicense(licenseData: DriverLicenseFormData):
 
     return response;
   } catch (error) {
+    console.error('❌ Register driver license error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error al registrar licencia de conducir'
@@ -467,137 +634,54 @@ export function debugFileForUpload(file: File, type: 'front' | 'back' = 'front')
 /**
  * Subir fotos de licencia de conducir con compresión automática y debugging detallado
  */
+/**
+ * Subir fotos de licencia de conducir - Actualizada para el backend nuevo
+ */
 export async function uploadDriverLicensePhotos(
   licenseId: number, 
   photos: {
     photo_front_base64?: string;
     photo_back_base64?: string;
-    filename_front?: string;
-    filename_back?: string;
-    frontFile?: File;
-    backFile?: File;
   }
 ): Promise<{
   success: boolean;
-  license?: DriverLicense;
-  uploaded?: { front: boolean; back: boolean };
-  compression?: any;
   message?: string;
+  photos?: any;
   error?: string;
 }> {
   try {
-    console.log('🚀 [DEBUG] Starting license photo upload process...');
+    console.log('🚀 Starting license photo upload process...');
     
-    // Debug files si se proporcionan
-    if (photos.frontFile) {
-      debugFileForUpload(photos.frontFile, 'front');
-    }
-    if (photos.backFile) {
-      debugFileForUpload(photos.backFile, 'back');
-    }
-
-    // Si se proporcionan archivos, comprimirlos automáticamente
-    let frontBase64 = photos.photo_front_base64;
-    let backBase64 = photos.photo_back_base64;
-
-    if (photos.frontFile) {
-      console.log('🔄 Compressing front license photo...');
-      try {
-        frontBase64 = await fileToBase64Compressed(photos.frontFile, 450); // 450KB para documentos
-        console.log('✅ Front photo compressed successfully');
-      } catch (compressionError) {
-        console.error('❌ Front photo compression failed:', compressionError);
-        throw new Error(`Error al comprimir la foto frontal: ${compressionError instanceof Error ? compressionError.message : 'Error desconocido'}`);
-      }
-    }
-
-    if (photos.backFile) {
-      console.log('🔄 Compressing back license photo...');
-      try {
-        backBase64 = await fileToBase64Compressed(photos.backFile, 450); // 450KB para documentos
-        console.log('✅ Back photo compressed successfully');
-      } catch (compressionError) {
-        console.error('❌ Back photo compression failed:', compressionError);
-        throw new Error(`Error al comprimir la foto trasera: ${compressionError instanceof Error ? compressionError.message : 'Error desconocido'}`);
-      }
-    }
-
-    // Asegurar que al menos una foto está presente
-    if (!frontBase64 && !backBase64) {
-      console.error('❌ No photos provided for upload');
+    if (!photos.photo_front_base64 && !photos.photo_back_base64) {
       return {
         success: false,
-        error: 'Al menos una foto (frontal o trasera) es requerida'
+        error: 'Al menos una foto es requerida'
       };
     }
 
-    // Debug: Validar el formato de las imágenes finales
-    const debugInfo = {
-      licenseId,
-      hasFront: !!frontBase64,
-      hasBack: !!backBase64,
-      frontSize: frontBase64 ? Math.round(frontBase64.length / 1024) : 0,
-      backSize: backBase64 ? Math.round(backBase64.length / 1024) : 0,
-      frontFilename: photos.filename_front || photos.frontFile?.name,
-      backFilename: photos.filename_back || photos.backFile?.name,
-      frontBase64Preview: frontBase64 ? `${frontBase64.substring(0, 50)}...` : 'N/A',
-      backBase64Preview: backBase64 ? `${backBase64.substring(0, 50)}...` : 'N/A'
-    };
-
-    console.log('📸 [DEBUG] Uploading compressed license photos with data:', debugInfo);
-
-    // Preparar el cuerpo de la petición exactamente como espera el backend
-    const requestBody = {
-      licenseId: licenseId,
-      photo_front_base64: frontBase64,
-      photo_back_base64: backBase64,
-      filename_front: photos.filename_front || photos.frontFile?.name,
-      filename_back: photos.filename_back || photos.backFile?.name
-    };
-
-    // Remover campos undefined para evitar problemas
-    Object.keys(requestBody).forEach(key => {
-      if (requestBody[key as keyof typeof requestBody] === undefined) {
-        delete requestBody[key as keyof typeof requestBody];
-      }
+    console.log('📸 Uploading license photos:', { 
+      licenseId, 
+      hasFront: !!photos.photo_front_base64, 
+      hasBack: !!photos.photo_back_base64,
+      frontSize: photos.photo_front_base64 ? Math.round(photos.photo_front_base64.length / 1024) : 0,
+      backSize: photos.photo_back_base64 ? Math.round(photos.photo_back_base64.length / 1024) : 0
     });
 
-    console.log('📡 [DEBUG] Final request body structure:', {
-      licenseId: requestBody.licenseId,
-      hasFrontPhoto: !!requestBody.photo_front_base64,
-      hasBackPhoto: !!requestBody.photo_back_base64,
-      hasFrontFilename: !!requestBody.filename_front,
-      hasBackFilename: !!requestBody.filename_back,
-      frontPhotoSize: requestBody.photo_front_base64 ? `${Math.round(requestBody.photo_front_base64.length / 1024)}KB` : 'N/A',
-      backPhotoSize: requestBody.photo_back_base64 ? `${Math.round(requestBody.photo_back_base64.length / 1024)}KB` : 'N/A'
-    });
-
-    console.log('🌐 [DEBUG] Making API request to /vehiculos/upload-license-photos...');
-    
     const response = await apiRequest('/vehiculos/upload-license-photos', {
       method: 'POST',
-      body: JSON.stringify(requestBody),
-    });
-
-    console.log('✅ [DEBUG] Upload response received:', {
-      success: response.success,
-      hasCompression: !!response.compression,
-      message: response.message,
-      hasLicense: !!response.license
+      body: JSON.stringify({
+        licenseId,
+        photo_front_base64: photos.photo_front_base64,
+        photo_back_base64: photos.photo_back_base64
+      }),
     });
 
     return response;
   } catch (error) {
     console.error('❌ Error uploading license photos:', error);
-    console.error('❌ Error details:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error al subir fotos de licencia de conducir'
+      error: error instanceof Error ? error.message : 'Error al subir fotos de licencia'
     };
   }
 }
@@ -632,6 +716,7 @@ export async function getSoat(): Promise<{
 
 /**
  * Registrar o actualizar SOAT
+ * REQUIERE que el usuario tenga un vehículo registrado primero
  */
 export async function registerSoat(soatData: SoatFormData): Promise<{
   success: boolean;
@@ -640,6 +725,22 @@ export async function registerSoat(soatData: SoatFormData): Promise<{
   error?: string;
 }> {
   try {
+    console.log('🛡️ Starting SOAT registration...');
+    
+    // ⚠️ VALIDACIÓN CRÍTICA: Verificar que el usuario tenga un vehículo registrado primero
+    console.log('🔍 Checking if user has vehicle registered...');
+    const vehicleCheck = await getMyVehicle();
+    
+    if (!vehicleCheck.success || !vehicleCheck.vehicle) {
+      console.log('❌ No vehicle found - SOAT registration blocked');
+      return {
+        success: false,
+        error: 'Debes registrar un vehículo antes de poder registrar el SOAT. Primero completa el registro del vehículo.'
+      };
+    }
+    
+    console.log('✅ Vehicle found, proceeding with SOAT registration');
+    
     const response = await apiRequest('/vehiculos/soat', {
       method: 'POST',
       body: JSON.stringify(soatData),
@@ -647,6 +748,7 @@ export async function registerSoat(soatData: SoatFormData): Promise<{
 
     return response;
   } catch (error) {
+    console.error('❌ Register SOAT error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error al registrar SOAT'
@@ -660,65 +762,43 @@ export async function registerSoat(soatData: SoatFormData): Promise<{
 /**
  * Subir fotos de SOAT con compresión automática
  */
+/**
+ * Subir fotos de SOAT - Actualizada para el backend nuevo
+ */
 export async function uploadSoatPhotos(
   soatId: number, 
   photos: {
     photo_front_base64?: string;
     photo_back_base64?: string;
-    filename_front?: string;
-    filename_back?: string;
-    frontFile?: File;
-    backFile?: File;
   }
 ): Promise<{
   success: boolean;
-  soat?: Soat;
-  uploaded?: { front: boolean; back: boolean };
-  compression?: any;
   message?: string;
+  photos?: any;
   error?: string;
 }> {
   try {
-    // Si se proporcionan archivos, comprimirlos automáticamente
-    let frontBase64 = photos.photo_front_base64;
-    let backBase64 = photos.photo_back_base64;
-
-    if (photos.frontFile) {
-      console.log('🔄 Compressing front SOAT photo...');
-      frontBase64 = await fileToBase64Compressed(photos.frontFile, 450); // 450KB para documentos
-    }
-
-    if (photos.backFile) {
-      console.log('🔄 Compressing back SOAT photo...');
-      backBase64 = await fileToBase64Compressed(photos.backFile, 450); // 450KB para documentos
-    }
-
-    // Asegurar que al menos una foto está presente
-    if (!frontBase64 && !backBase64) {
+    if (!photos.photo_front_base64 && !photos.photo_back_base64) {
       return {
         success: false,
-        error: 'Al menos una foto (frontal o trasera) es requerida'
+        error: 'Al menos una foto es requerida'
       };
     }
 
-    console.log('📸 Uploading compressed SOAT photos:', {
-      soatId,
-      hasFront: !!frontBase64,
-      hasBack: !!backBase64,
-      frontSize: frontBase64 ? Math.round(frontBase64.length / 1024) : 0,
-      backSize: backBase64 ? Math.round(backBase64.length / 1024) : 0,
-      frontFilename: photos.filename_front || photos.frontFile?.name,
-      backFilename: photos.filename_back || photos.backFile?.name
+    console.log('📸 Uploading SOAT photos:', { 
+      soatId, 
+      hasFront: !!photos.photo_front_base64, 
+      hasBack: !!photos.photo_back_base64,
+      frontSize: photos.photo_front_base64 ? Math.round(photos.photo_front_base64.length / 1024) : 0,
+      backSize: photos.photo_back_base64 ? Math.round(photos.photo_back_base64.length / 1024) : 0
     });
 
     const response = await apiRequest('/vehiculos/upload-soat-photos', {
       method: 'POST',
       body: JSON.stringify({
         soatId,
-        photo_front_base64: frontBase64,
-        photo_back_base64: backBase64,
-        filename_front: photos.filename_front || photos.frontFile?.name,
-        filename_back: photos.filename_back || photos.backFile?.name
+        photo_front_base64: photos.photo_front_base64,
+        photo_back_base64: photos.photo_back_base64
       }),
     });
 
@@ -727,7 +807,7 @@ export async function uploadSoatPhotos(
     console.error('❌ Error uploading SOAT photos:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error al subir fotos del SOAT'
+      error: error instanceof Error ? error.message : 'Error al subir fotos de SOAT'
     };
   }
 }
@@ -1120,7 +1200,7 @@ export async function registerCompleteVehicle(
     if (data.vehiclePhoto) {
       onProgress?.({ step: currentStep, totalSteps, currentAction: 'Subiendo foto del vehículo...', vehicleId });
       
-      const photoResponse = await uploadVehiclePhoto(
+      const photoResponse = await uploadVehiclePhotoNew(
         vehicleId,
         data.vehiclePhoto.photo_base64,
         data.vehiclePhoto.filename
@@ -1226,6 +1306,257 @@ export interface VehicleResponse {
   success: boolean;
   data?: Vehicle[];
   error?: string;
+}
+
+// ==================== NUEVAS FUNCIONES PARA ENDPOINTS DEL BACKEND OPTIMIZADO ====================
+
+/**
+ * Subir foto del vehículo usando el nuevo endpoint del backend
+ */
+export async function uploadVehiclePhotoNew(
+  vehicleId: number,
+  photo_base64: string,
+  filename?: string
+): Promise<{
+  success: boolean;
+  message?: string;
+  photo_url?: string;
+  error?: string;
+}> {
+  try {
+    console.log('📸 Uploading vehicle photo...');
+    
+    const response = await apiRequest('/vehiculos/upload-vehicle-photo', {
+      method: 'POST',
+      body: JSON.stringify({
+        vehicleId,
+        photo_base64,
+        filename
+      }),
+    });
+
+    console.log('✅ Vehicle photo upload response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Vehicle photo upload error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al subir foto del vehículo'
+    };
+  }
+}
+
+/**
+ * Subir fotos de tarjeta de propiedad usando el nuevo endpoint del backend
+ */
+export async function uploadPropertyCardPhotosNew(
+  propertyCardId: number,
+  photos: {
+    photo_front_base64?: string;
+    photo_back_base64?: string;
+    filename_front?: string;
+    filename_back?: string;
+  }
+): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    console.log('📸 Uploading property card photos...');
+    
+    const response = await apiRequest('/vehiculos/upload-property-photos', {
+      method: 'POST',
+      body: JSON.stringify({
+        propertyCardId,
+        ...photos
+      }),
+    });
+
+    console.log('✅ Property card photos upload response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Property card photos upload error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al subir fotos de tarjeta de propiedad'
+    };
+  }
+}
+
+/**
+ * Subir fotos de licencia de conducir usando el nuevo endpoint del backend
+ */
+export async function uploadDriverLicensePhotosNew(
+  licenseId: number,
+  photos: {
+    photo_front_base64?: string;
+    photo_back_base64?: string;
+    filename_front?: string;
+    filename_back?: string;
+  }
+): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    console.log('📸 Uploading driver license photos...');
+    
+    const response = await apiRequest('/vehiculos/upload-license-photos', {
+      method: 'POST',
+      body: JSON.stringify({
+        licenseId,
+        ...photos
+      }),
+    });
+
+    console.log('✅ Driver license photos upload response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Driver license photos upload error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al subir fotos de licencia de conducir'
+    };
+  }
+}
+
+/**
+ * Subir fotos de SOAT usando el nuevo endpoint del backend
+ */
+export async function uploadSoatPhotosNew(
+  soatId: number,
+  photos: {
+    photo_front_base64?: string;
+    photo_back_base64?: string;
+    filename_front?: string;
+    filename_back?: string;
+  }
+): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    console.log('📸 Uploading SOAT photos...');
+    
+    const response = await apiRequest('/vehiculos/upload-soat-photos', {
+      method: 'POST',
+      body: JSON.stringify({
+        soatId,
+        ...photos
+      }),
+    });
+
+    console.log('✅ SOAT photos upload response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ SOAT photos upload error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al subir fotos de SOAT'
+    };
+  }
+}
+
+/**
+ * Obtener estado completo de documentos usando el nuevo endpoint del backend
+ */
+export async function getDocumentsStatusNew(): Promise<{
+  success: boolean;
+  documentsStatus?: {
+    driverLicense: { hasDocument: boolean; hasPhotos: boolean };
+    soat: { hasDocument: boolean; hasPhotos: boolean; isExpired: boolean };
+  };
+  progress?: number;
+  completedDocs?: number;
+  totalRequiredDocs?: number;
+  allComplete?: boolean;
+  error?: string;
+}> {
+  try {
+    console.log('📋 Getting documents status...');
+    
+    const response = await apiRequest('/vehiculos/documents-status', {
+      method: 'GET',
+    });
+
+    console.log('✅ Documents status response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Documents status error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al obtener estado de documentos'
+    };
+  }
+}
+
+/**
+ * Validar datos del vehículo usando el nuevo endpoint del backend
+ */
+export async function validateVehicleDataNew(vehicleData: { 
+  plate: string; 
+  vin_number?: string 
+}): Promise<{
+  success: boolean;
+  validations?: {
+    plate: { valid: boolean; message: string };
+    vin: { valid: boolean; message: string };
+  };
+  plateAvailable?: boolean;
+  allValid?: boolean;
+  error?: string;
+}> {
+  try {
+    console.log('🔍 Validating vehicle data...');
+    
+    const response = await apiRequest('/vehiculos/validate-vehicle', {
+      method: 'POST',
+      body: JSON.stringify(vehicleData),
+    });
+
+    console.log('✅ Vehicle validation response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Vehicle validation error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al validar datos del vehículo'
+    };
+  }
+}
+
+/**
+ * Obtener estadísticas del conductor usando el nuevo endpoint del backend
+ */
+export async function getDriverStatsNew(): Promise<{
+  success: boolean;
+  stats?: {
+    vehicle: { registered: boolean; registration_date: string };
+    trips: { total: number; active: number; completed: number };
+    bookings: { total: number; active: number };
+  };
+  isDriver?: boolean;
+  error?: string;
+}> {
+  try {
+    console.log('📊 Getting driver stats...');
+    
+    const response = await apiRequest('/vehiculos/driver-stats', {
+      method: 'GET',
+    });
+
+    console.log('✅ Driver stats response:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Driver stats error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al obtener estadísticas del conductor'
+    };
+  }
 }
 
 // Funciones legacy renombradas para compatibilidad

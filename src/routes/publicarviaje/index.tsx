@@ -90,6 +90,37 @@ function ReservarView(){
   const [error, setError] = useState<string | null>(null);
   
   // Estados para modal de información
+  // Función para determinar si el modal se puede cerrar
+  const canCloseModal = () => {
+    if (!modalInfo) return true;
+    
+    // Casos críticos que NO permiten cerrar el modal (requieren acción)
+    const criticalCases = [
+      '🚗 Acceso solo para conductores',
+      '⏳ Verificación en proceso', 
+      '❌ Verificación rechazada',
+      '🔒 Cuenta bloqueada',
+      '🚗 Vehículo no encontrado',
+      '⏳ Vehículo en verificación',
+      '❌ Vehículo no aprobado', 
+      '🔒 Vehículo inactivo',
+      '⚠️ Estado de verificación',
+      '⚠️ Estado del vehículo'
+    ];
+    
+    return !criticalCases.includes(modalInfo.title);
+  };
+
+  // Función para manejar el cierre del modal
+  const handleModalClose = () => {
+    if (canCloseModal()) {
+      setShowInfoModal(false);
+    } else {
+      // Para casos críticos, redirigir al home en lugar de cerrar
+      navigate({ to: '/home' });
+    }
+  };
+
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [modalInfo, setModalInfo] = useState<{
     type: 'error' | 'warning' | 'info' | 'success';
@@ -115,6 +146,7 @@ useEffect(() => {
       
       // Validar que exista el perfil del usuario
       const profile = await getCurrentUserProfile();
+      
       if (!profile.success || !profile.data) {
         setModalInfo({
           type: 'warning',
@@ -133,6 +165,202 @@ useEffect(() => {
       }
 
       console.log('✅ Perfil del usuario verificado');
+      console.log('🔍 DEBUGGING - Raw profile data:', profile.data);
+      console.log('🔍 DEBUGGING - Profile data keys:', Object.keys(profile.data));
+
+      // ⚠️ VALIDACIÓN CRÍTICA: Verificar que el usuario sea DRIVER
+      const userType = profile.data.status; // El backend envía el tipo de usuario en 'status'
+      console.log('🔍 Verificando tipo de usuario:', userType);
+      console.log('🔍 DEBUGGING - user_type field:', profile.data.user_type);
+      console.log('🔍 DEBUGGING - status field:', profile.data.status);
+      
+      if (userType !== 'DRIVER') {
+        console.log('❌ BLOCKING: User is not DRIVER, showing modal');
+        setModalInfo({
+          type: 'error',
+          title: '🚗 Acceso solo para conductores',
+          message: 'Solo los conductores registrados pueden publicar viajes.',
+          actionText: 'Registrarse como Conductor',
+          actionLink: '/RegistrarVehiculo',
+          details: [
+            'Para publicar viajes necesitas ser un conductor verificado',
+            'Debes registrar tu vehículo y documentos',
+            'El proceso incluye verificación de documentos',
+            'Una vez aprobado podrás publicar viajes'
+          ]
+        });
+        setShowInfoModal(true);
+        return;
+      }
+
+      // ⚠️ VALIDACIÓN CRÍTICA: Verificar que el conductor esté VERIFICADO
+      // Buscar el estado de verificación en el campo adecuado
+      const verificationStatus = profile.data.verification || (profile.data as any).Verification || 'PENDIENTE';
+      console.log('🔍 Verificando estado de verificación:', verificationStatus);
+      console.log('🔍 DEBUGGING - verification field:', profile.data.verification);
+      console.log('🔍 DEBUGGING - Verification field:', (profile.data as any).Verification);
+      console.log('🔍 DEBUGGING - status field (user type):', profile.data.status);
+      
+      if (verificationStatus !== 'VERIFICADO' && verificationStatus !== 'APPROVED') {
+        console.log('❌ BLOCKING: User verification status not valid, showing modal');
+        console.log('🔍 DEBUGGING - Expected: VERIFICADO or APPROVED');
+        console.log('🔍 DEBUGGING - Actual:', verificationStatus);
+        
+        const statusMessages = {
+          'PENDIENTE': {
+            title: '⏳ Verificación en proceso',
+            message: 'Tu cuenta de conductor está siendo verificada.',
+            details: [
+              'Tus documentos están siendo revisados por nuestro equipo',
+              'Este proceso puede tomar entre 24-48 horas',
+              'Te notificaremos cuando la verificación esté completa',
+              'Puedes completar o actualizar tu información mientras esperas'
+            ]
+          },
+          'RECHAZADO': {
+            title: '❌ Verificación rechazada',
+            message: 'Tu documentación no fue aprobada.',
+            details: [
+              'Los documentos presentados no cumplen con los requisitos',
+              'Verifica que todos los documentos estén vigentes y legibles',
+              'Puedes actualizar y volver a subir los documentos corregidos',
+              'Asegúrate de que las fotos sean claras y completas'
+            ]
+          },
+          'BLOQUEADO': {
+            title: '🔒 Cuenta bloqueada',
+            message: 'Tu cuenta de conductor ha sido suspendida.',
+            details: [
+              'Tu cuenta fue suspendida por motivos de seguridad',
+              'Puedes revisar y actualizar tu información en el módulo de registro',
+              'Asegúrate de que todos tus documentos estén vigentes',
+              'Una vez actualizada la información, podrás solicitar revisión'
+            ]
+          }
+        };
+
+        const statusInfo = statusMessages[verificationStatus as keyof typeof statusMessages] || {
+          title: '⚠️ Estado de verificación',
+          message: 'Tu cuenta necesita verificación para publicar viajes.',
+          details: [
+            'Tu estado de verificación es: ' + verificationStatus,
+            'Puedes revisar y actualizar tu información de conductor',
+            'Asegúrate de que todos los documentos estén completos y vigentes'
+          ]
+        };
+        
+        setModalInfo({
+          type: 'warning',
+          title: statusInfo.title,
+          message: statusInfo.message,
+          actionText: 'Revisar Documentos',
+          actionLink: '/RegistrarVehiculo',
+          details: statusInfo.details
+        });
+        setShowInfoModal(true);
+        return;
+      }
+
+      console.log('✅ Usuario verificado como conductor - continuando validaciones...');
+
+      // Validar que tenga un vehículo registrado y activo
+      try {
+        const vehicleCheck = await getMyVehicle();
+        
+        if (!vehicleCheck.success || !vehicleCheck.vehicle) {
+          setModalInfo({
+            type: 'error',
+            title: '🚗 Vehículo no encontrado',
+            message: 'Necesitas registrar un vehículo antes de publicar viajes.',
+            actionText: 'Registrar Vehículo',
+            actionLink: '/RegistrarVehiculo',
+            details: [
+              'Para publicar viajes necesitas tener un vehículo registrado',
+              'El proceso de registro incluye documentos del vehículo',
+              'También necesitarás SOAT, licencia y tarjeta de propiedad',
+              'El registro es rápido y solo se hace una vez'
+            ]
+          });
+          setShowInfoModal(true);
+          return;
+        }
+
+        // Verificar estado del vehículo
+        const vehicleStatus = vehicleCheck.vehicle.status || 'pendiente';
+        console.log('🔍 Verificando estado del vehículo:', vehicleStatus);
+        
+        // Permitir vehículos activos y pendientes (ya que el usuario está verificado)
+        if (vehicleStatus !== 'activo' && vehicleStatus !== 'pendiente') {
+          const vehicleStatusMessages = {
+            'pendiente': {
+              title: '⏳ Vehículo en verificación',
+              message: 'Tu vehículo está siendo verificado por nuestro equipo.',
+              details: [
+                'Los documentos de tu vehículo están en proceso de verificación',
+                'Este proceso puede tomar entre 24-48 horas',
+                'Te notificaremos cuando esté aprobado',
+                'Puedes revisar que todos los documentos estén completos y legibles'
+              ]
+            },
+            'rechazado': {
+              title: '❌ Vehículo no aprobado',
+              message: 'Tu vehículo no cumple con los requisitos necesarios.',
+              details: [
+                'Los documentos presentados no fueron aprobados',
+                'Verifica que todos los documentos estén vigentes',
+                'Las fotos deben ser claras y legibles',
+                'Puedes actualizar los documentos en el módulo de registro'
+              ]
+            },
+            'inactivo': {
+              title: '🔒 Vehículo inactivo',
+              message: 'Tu vehículo ha sido desactivado temporalmente.',
+              details: [
+                'Tu vehículo fue desactivado por motivos administrativos',
+                'Puede ser por documentos vencidos o problemas de verificación',
+                'Puedes actualizar la información y documentos',
+                'Revisa si algún documento necesita renovación'
+              ]
+            }
+          };
+
+          const vehicleStatusInfo = vehicleStatusMessages[vehicleStatus as keyof typeof vehicleStatusMessages] || {
+            title: '⚠️ Estado del vehículo',
+            message: 'Tu vehículo no está disponible para publicar viajes.',
+            details: ['Puedes revisar y actualizar la información de tu vehículo']
+          };
+
+          setModalInfo({
+            type: 'warning',
+            title: vehicleStatusInfo.title,
+            message: vehicleStatusInfo.message,
+            actionText: 'Actualizar Vehículo',
+            actionLink: '/RegistrarVehiculo',
+            details: vehicleStatusInfo.details
+          });
+          setShowInfoModal(true);
+          return;
+        }
+
+        console.log('✅ Vehículo verificado - estado:', vehicleStatus, '(permitido para usuarios verificados)');
+      } catch (vehicleError) {
+        console.error('❌ Error verificando vehículo:', vehicleError);
+        setModalInfo({
+          type: 'error',
+          title: '🚗 Error al verificar vehículo',
+          message: 'No se pudo verificar el estado de tu vehículo.',
+          actionText: 'Registrar Vehículo',
+          actionLink: '/RegistrarVehiculo',
+          details: [
+            'Hubo un error al verificar tu vehículo',
+            'Asegúrate de tener un vehículo registrado',
+            'Si ya tienes uno registrado, intenta nuevamente',
+            'Contacta soporte si el problema persiste'
+          ]
+        });
+        setShowInfoModal(true);
+        return;
+      }
       
       // Validar que haya seleccionado origen y destino
       const tripData = tripStore.getStoredData();
@@ -156,7 +384,7 @@ useEffect(() => {
       console.log('✅ Datos de viaje verificados:', tripData);
 
     } catch (error) {
-      console.error('Error validando acceso:', error);
+      console.error('❌ Error validando acceso:', error);
       setError('Error validando datos del usuario');
     }
   };
@@ -568,7 +796,7 @@ useEffect(() => {
               'Los documentos de tu vehículo están en proceso de verificación',
               'Este proceso puede tomar entre 24-48 horas',
               'Te notificaremos cuando esté aprobado',
-              'Revisa que todos los documentos estén completos y legibles'
+              'Puedes revisar que todos los documentos estén completos y legibles'
             ]
           },
           'rechazado': {
@@ -578,7 +806,7 @@ useEffect(() => {
               'Los documentos presentados no fueron aprobados',
               'Verifica que todos los documentos estén vigentes',
               'Las fotos deben ser claras y legibles',
-              'Contacta soporte si necesitas ayuda: support@cupo.dev'
+              'Puedes actualizar los documentos en el módulo de registro'
             ]
           },
           'inactivo': {
@@ -587,7 +815,7 @@ useEffect(() => {
             details: [
               'Tu vehículo fue desactivado por motivos administrativos',
               'Puede ser por documentos vencidos o problemas de verificación',
-              'Contacta soporte para reactivarlo: support@cupo.dev',
+              'Puedes actualizar la información y documentos',
               'Revisa si algún documento necesita renovación'
             ]
           }
@@ -596,15 +824,15 @@ useEffect(() => {
         const statusInfo = statusMessages[vehicleStatus as keyof typeof statusMessages] || {
           title: '⚠️ Estado del vehículo',
           message: 'Tu vehículo no está disponible para publicar viajes.',
-          details: ['Contacta soporte para más información: support@cupo.dev']
+          details: ['Puedes revisar y actualizar la información de tu vehículo']
         };
 
         setModalInfo({
           type: 'warning',
           title: statusInfo.title,
           message: statusInfo.message,
-          actionText: 'Contactar Soporte',
-          actionLink: 'mailto:support@cupo.dev',
+          actionText: 'Actualizar Vehículo',
+          actionLink: '/RegistrarVehiculo',
           details: statusInfo.details
         });
         setShowInfoModal(true);
@@ -1201,11 +1429,13 @@ useEffect(() => {
         {/* Modal de información/errores */}
         <Modal
           opened={showInfoModal}
-          onClose={() => setShowInfoModal(false)}
+          onClose={handleModalClose}
           centered
           size="md"
           title={null}
-          withCloseButton={false}
+          withCloseButton={canCloseModal()}
+          closeOnClickOutside={canCloseModal()}
+          closeOnEscape={canCloseModal()}
           styles={{
             content: {
               backgroundColor: 'var(--mantine-color-dark-7)',
@@ -1256,14 +1486,29 @@ useEffect(() => {
 
               {/* Botones de acción */}
               <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
-                <Button
-                  variant="light"
-                  color="gray"
-                  onClick={() => setShowInfoModal(false)}
-                  style={{ flex: 1 }}
-                >
-                  Cerrar
-                </Button>
+                {/* Solo mostrar botón "Cerrar" para casos no críticos */}
+                {canCloseModal() && (
+                  <Button
+                    variant="light"
+                    color="gray"
+                    onClick={handleModalClose}
+                    style={{ flex: modalInfo.actionText && modalInfo.actionLink ? 1 : 2 }}
+                  >
+                    Cerrar
+                  </Button>
+                )}
+                
+                {/* Para casos críticos, mostrar botón "Volver al inicio" si no hay acción específica */}
+                {!canCloseModal() && (!modalInfo.actionText || !modalInfo.actionLink) && (
+                  <Button
+                    variant="filled"
+                    color="blue"
+                    onClick={() => navigate({ to: '/home' })}
+                    style={{ flex: 2 }}
+                  >
+                    Volver al inicio
+                  </Button>
+                )}
                 
                 {modalInfo.actionText && modalInfo.actionLink && (
                   modalInfo.actionLink.startsWith('mailto:') ? (
@@ -1275,7 +1520,7 @@ useEffect(() => {
                       component="a"
                       href={modalInfo.actionLink}
                       onClick={() => setShowInfoModal(false)}
-                      style={{ flex: 1 }}
+                      style={{ flex: canCloseModal() ? 1 : 2 }}
                     >
                       {modalInfo.actionText}
                     </Button>
@@ -1288,7 +1533,7 @@ useEffect(() => {
                       component={Link}
                       to={modalInfo.actionLink}
                       onClick={() => setShowInfoModal(false)}
-                      style={{ flex: 1 }}
+                      style={{ flex: canCloseModal() ? 1 : 2 }}
                     >
                       {modalInfo.actionText}
                     </Button>
