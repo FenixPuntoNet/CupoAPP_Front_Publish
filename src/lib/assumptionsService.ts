@@ -1,4 +1,3 @@
-import { supabase } from './supabaseClient';
 import type { Database } from '../types/Database';
 
 type AssumptionsRow = Database['public']['Tables']['assumptions']['Row'];
@@ -8,45 +7,90 @@ export class AssumptionsService {
    * Obtiene la configuración actual (siempre el primer y único registro)
    */
   static async getAssumptions(): Promise<AssumptionsRow | null> {
-    const { data, error } = await supabase
-      .from('assumptions')
-      .select('*')
-      .limit(1)
-      .single();
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/assumptions/get-assumptions`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-    if (error) {
+      if (!response.ok) {
+        console.error('Error fetching assumptions:', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
       console.error('Error fetching assumptions:', error);
       return null;
     }
-
-    return data;
   }
 
   /**
    * Calcula el precio base de un viaje basado en la distancia y tipo de ruta
    */
   static async calculateTripPrice(distanceKm: number, isUrban: boolean = true): Promise<number> {
-    const assumptions = await this.getAssumptions();
-    
-    if (!assumptions) {
-      throw new Error('No se pudo obtener la configuración de precios');
-    }
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/assumptions/calculate-trip-price`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          distanceKm,
+          isUrban
+        })
+      });
 
-    const pricePerKm = isUrban ? assumptions.urban_price_per_km : assumptions.interurban_price_per_km;
-    return distanceKm * pricePerKm;
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Error al calcular precio del viaje');
+      }
+
+      return data.basePrice;
+    } catch (error) {
+      console.error('Error calculating trip price:', error);
+      throw new Error('No se pudo calcular el precio del viaje');
+    }
   }
 
   /**
    * Calcula el fee que se cobra por un cupo
    */
   static async calculateFee(tripPrice: number): Promise<number> {
-    const assumptions = await this.getAssumptions();
-    
-    if (!assumptions) {
-      throw new Error('No se pudo obtener la configuración de fees');
-    }
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/assumptions/calculate-fee`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tripPrice
+        })
+      });
 
-    return (tripPrice * assumptions.fee_percentage) / 100;
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Error al calcular fee');
+      }
+
+      return data.fee;
+    } catch (error) {
+      console.error('Error calculating fee:', error);
+      throw new Error('No se pudo calcular el fee');
+    }
   }
 
   /**
@@ -57,15 +101,37 @@ export class AssumptionsService {
     fee: number;
     totalPrice: number;
   }> {
-    const basePrice = await this.calculateTripPrice(distanceKm, isUrban);
-    const fee = await this.calculateFee(basePrice);
-    const totalPrice = basePrice + fee;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/assumptions/calculate-total-price`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          distanceKm,
+          isUrban
+        })
+      });
 
-    return {
-      basePrice,
-      fee,
-      totalPrice
-    };
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Error al calcular precio total');
+      }
+
+      return {
+        basePrice: data.basePrice,
+        fee: data.fee,
+        totalPrice: data.totalPrice
+      };
+    } catch (error) {
+      console.error('Error calculating total price:', error);
+      throw new Error('No se pudo calcular el precio total');
+    }
   }
 
   /**
@@ -78,19 +144,30 @@ export class AssumptionsService {
     priceLimitPercentage: number;
     alertThresholdPercentage: number;
   } | null> {
-    const assumptions = await this.getAssumptions();
-    
-    if (!assumptions) {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/assumptions/current-pricing`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.error('Error fetching current pricing:', response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      
+      if (!data.success || !data.pricing) {
+        return null;
+      }
+
+      return data.pricing;
+    } catch (error) {
+      console.error('Error fetching current pricing:', error);
       return null;
     }
-
-    return {
-      urbanPricePerKm: assumptions.urban_price_per_km,
-      interurbanPricePerKm: assumptions.interurban_price_per_km,
-      feePercentage: assumptions.fee_percentage,
-      priceLimitPercentage: assumptions.price_limit_percentage,
-      alertThresholdPercentage: assumptions.alert_threshold_percentage
-    };
   }
 }
 

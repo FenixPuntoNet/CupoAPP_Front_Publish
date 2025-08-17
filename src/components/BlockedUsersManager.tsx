@@ -13,8 +13,6 @@ import {
   Badge
 } from '@mantine/core';
 import { IconUserX, IconCheck, IconAlertTriangle } from '@tabler/icons-react';
-import { unblockUser } from '@/lib/contentModeration';
-import { supabase } from '@/lib/supabaseClient';
 import styles from './BlockedUsersManager.module.css';
 
 interface BlockedUser {
@@ -46,47 +44,51 @@ export const BlockedUsersManager: React.FC<BlockedUsersManagerProps> = ({
     fetchBlockedUsers();
   }, [currentUserId]);
 
+  const getAuthToken = () => {
+    return localStorage.getItem('sb-mqwvbnktcokcccidfgcu-auth-token');
+  };
+
   const fetchBlockedUsers = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Obtener usuarios bloqueados directamente de la tabla
-      const { data: blockedData, error: blockedError } = await supabase
-        .from('user_blocks')
-        .select('blocked_id, reason, created_at')
-        .eq('blocker_id', currentUserId);
-
-      if (blockedError) {
-        throw new Error(blockedError.message);
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error('No hay token de autenticación');
       }
 
-      if (!blockedData || blockedData.length === 0) {
+      // Obtener usuarios bloqueados desde el backend
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/blocking/my-blocks`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.blocks) {
         setBlockedUsers([]);
         return;
       }
 
-      // Obtener información de perfil de los usuarios bloqueados
-      const userIds = blockedData.map((user: any) => user.blocked_id);
-      
-      const { data: profiles, error: profilesError } = await supabase
-        .from('user_profiles')
-        .select('user_id, first_name, last_name, photo_user')
-        .in('user_id', userIds);
-
-      if (profilesError) {
-        throw new Error(profilesError.message);
-      }
-
-      // Combinar datos
-      const blockedUsersWithInfo = blockedData.map((blockedUser: any) => {
-        const profile = profiles?.find(p => p.user_id === blockedUser.blocked_id);
-        return {
-          ...blockedUser,
-          blocked_user_id: blockedUser.blocked_id,
-          user_info: profile
-        };
-      });
+      // Mapear datos del backend al formato esperado
+      const blockedUsersWithInfo = data.blocks.map((block: any) => ({
+        blocked_user_id: block.blocked_id,
+        reason: block.reason,
+        created_at: block.created_at,
+        user_info: block.blocked_user ? {
+          first_name: block.blocked_user.first_name,
+          last_name: block.blocked_user.last_name,
+          photo_user: block.blocked_user.profile_picture
+        } : undefined
+      }));
 
       setBlockedUsers(blockedUsersWithInfo);
     } catch (err: any) {
@@ -101,7 +103,25 @@ export const BlockedUsersManager: React.FC<BlockedUsersManagerProps> = ({
     try {
       setUnblockingUsers(prev => new Set(prev).add(userId));
 
-      const result = await unblockUser(currentUserId, userId);
+      const token = getAuthToken();
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
+
+      // Desbloquear usuario usando el backend
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/blocking/unblock/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status}`);
+      }
+
+      const result = await response.json();
 
       if (result.success) {
         setBlockedUsers(prev => prev.filter(user => user.blocked_user_id !== userId));

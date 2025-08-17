@@ -1,323 +1,319 @@
-import { supabase } from './supabaseClient';
-
-// Lista de palabras prohibidas en español
-const prohibitedWords = [
-  // Groserías comunes
-  'pendejo', 'cabrón', 'cabron', 'hijueputa', 'hijuemadre', 'malparido', 'gonorrea', 'verga',
-  'puto', 'puta', 'zorra', 'perra', 'marica', 'maricón', 'maricon', 'joto', 'culero',
-  'mamón', 'mamon', 'gilipollas', 'imbécil', 'imbecil', 'idiota', 'estúpido', 'estupido',
-  'mierda', 'cagada', 'cagar', 'cagón', 'cagon', 'coño', 'coño', 'joder', 'jodido',
-  
-  // Insultos raciales y discriminatorios
-  'negro', 'indio', 'cholo', 'naco', 'nacos', 'prole', 'proles', 'indigente', 'indígena',
-  'mongólico', 'mongolico', 'retrasado', 'retrasada', 'discapacitado', 'loco', 'loca',
-  
-  // Contenido sexual explícito
-  'porno', 'pornografía', 'pornografia', 'masturbación', 'masturbacion', 'sexo', 'sexual',
-  'violación', 'violacion', 'violador', 'violadora', 'acoso', 'acosar', 'prostituta',
-  'prostituto', 'escort', 'gigolo', 'pene', 'vagina', 'senos', 'nalgas', 'culo',
-  
-  // Drogas y sustancias
-  'droga', 'drogas', 'marihuana', 'cocaína', 'cocaina', 'crack', 'heroína', 'heroina',
-  'éxtasis', 'extasis', 'lsd', 'metanfetamina', 'anfetamina', 'perico', 'bazuco',
-  'porro', 'porros', 'fumanchú', 'fumón', 'fumon', 'drogadicto', 'drogadicta',
-  
-  // Violencia y amenazas
-  'matar', 'asesinar', 'homicidio', 'suicidio', 'golpear', 'golpiza', 'torturar',
-  'tortura', 'secuestrar', 'secuestro', 'violencia', 'violento', 'violenta',
-  'amenaza', 'amenazar', 'balacera', 'balazo', 'pistola', 'arma', 'armado',
-  
-  // Actividades ilegales
-  'robar', 'robo', 'hurto', 'ladrón', 'ladron', 'ratero', 'ratera', 'estafa',
-  'estafar', 'estafador', 'estafadora', 'fraude', 'fraudulento', 'ilegal',
-  'contrabando', 'contrabandista', 'criminal', 'delincuente', 'delincuencia',
-  
-  // Hate speech
-  'odio', 'odiar', 'desprecio', 'despreciar', 'discriminar', 'discriminación',
-  'discriminacion', 'racismo', 'racista', 'xenofobia', 'xenófobo', 'xenofobo',
-  'homofobia', 'homofóbico', 'homofobico', 'transfobia', 'transfóbico', 'transfobico'
-];
-
-// Patrones de comportamiento sospechoso
-const suspiciousPatterns = [
-  // Múltiples signos de exclamación o interrogación
-  /[!]{3,}|[?]{3,}/g,
-  // Texto en mayúsculas (gritar)
-  /[A-ZÁÉÍÓÚÑ]{10,}/g,
-  // Números de teléfono
-  /\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
-  // URLs
-  /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g,
-  // Emails
-  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-  // Palabras con repetición excesiva de letras
-  /\b\w*([a-zA-Z])\1{2,}\w*\b/g,
-  // Espacios excesivos entre caracteres
-  /\b\w(\s+\w){4,}\b/g
-];
-
 export interface ContentModerationResult {
-  isAllowed: boolean;
+  isClean: boolean;
+  recommendation: 'allow' | 'review' | 'block';
+  isAllowed?: boolean;
   reason?: string;
-  severity: 'low' | 'medium' | 'high';
-  detectedIssues: string[];
   filteredContent?: string;
 }
 
-export function moderateContent(content: string): ContentModerationResult {
-  const originalContent = content;
-  let filteredContent = content.toLowerCase();
-  const detectedIssues: string[] = [];
-  let maxSeverity: 'low' | 'medium' | 'high' = 'low';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo-backend.fly.dev';
 
-  // Verificar palabras prohibidas
-  const foundProhibitedWords = prohibitedWords.filter(word => 
-    filteredContent.includes(word.toLowerCase())
-  );
-
-  if (foundProhibitedWords.length > 0) {
-    detectedIssues.push(`Palabras prohibidas: ${foundProhibitedWords.join(', ')}`);
-    maxSeverity = 'high';
-    
-    // Censurar palabras prohibidas
-    foundProhibitedWords.forEach(word => {
-      const regex = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-      filteredContent = filteredContent.replace(regex, '*'.repeat(word.length));
-    });
+// Función para obtener el token de autenticación del localStorage
+const getAuthToken = (): string | null => {
+  try {
+    const token = localStorage.getItem('sb-mqwvbnktcokcccidfgcu-auth-token');
+    return token || null;
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    return null;
   }
+};
 
-  // Verificar patrones sospechosos
-  suspiciousPatterns.forEach((pattern, index) => {
-    if (pattern.test(originalContent)) {
-      switch (index) {
-        case 0:
-          detectedIssues.push('Exceso de signos de exclamación/interrogación');
-          maxSeverity = maxSeverity === 'low' ? 'medium' : maxSeverity;
-          break;
-        case 1:
-          detectedIssues.push('Texto en mayúsculas excesivo');
-          maxSeverity = maxSeverity === 'low' ? 'medium' : maxSeverity;
-          break;
-        case 2:
-          detectedIssues.push('Número de teléfono detectado');
-          maxSeverity = 'high';
-          break;
-        case 3:
-          detectedIssues.push('URL detectada');
-          maxSeverity = 'high';
-          break;
-        case 4:
-          detectedIssues.push('Email detectado');
-          maxSeverity = 'high';
-          break;
-        case 5:
-          detectedIssues.push('Repetición excesiva de letras');
-          maxSeverity = maxSeverity === 'low' ? 'medium' : maxSeverity;
-          break;
-        case 6:
-          detectedIssues.push('Formato de texto sospechoso');
-          maxSeverity = maxSeverity === 'low' ? 'medium' : maxSeverity;
-          break;
-      }
+// Moderar contenido usando el backend
+export async function moderateContent(content: string): Promise<ContentModerationResult> {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      // Si no hay token, permitir el contenido pero con advertencia
+      console.warn('⚠️ No auth token found for content moderation, allowing content');
+      return {
+        isClean: true,
+        recommendation: 'allow',
+        isAllowed: true
+      };
     }
-  });
 
-  // Determinar si el contenido es permitido
-  const isAllowed = maxSeverity !== 'high';
+    const response = await fetch(`${API_BASE_URL}/content-moderation/moderate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content })
+    });
 
-  return {
-    isAllowed,
-    reason: detectedIssues.length > 0 ? detectedIssues.join('; ') : undefined,
-    severity: maxSeverity,
-    detectedIssues,
-    filteredContent: isAllowed ? originalContent : filteredContent
-  };
+    if (!response.ok) {
+      console.error('❌ Content moderation API error:', response.status);
+      // En caso de error del servidor, permitir el contenido
+      return {
+        isClean: true,
+        recommendation: 'allow',
+        isAllowed: true
+      };
+    }
+
+    const result = await response.json();
+    console.log('🛡️ Content moderation result:', result);
+
+    // El backend retorna la estructura correcta
+    return {
+      isClean: result.moderation?.isClean || false,
+      recommendation: result.moderation?.recommendation || 'allow',
+      isAllowed: result.moderation?.recommendation === 'allow',
+      reason: result.moderation?.recommendation !== 'allow' ? 'Contenido inapropiado detectado' : undefined,
+      filteredContent: result.moderation?.filteredContent || content
+    };
+
+  } catch (error) {
+    console.error('❌ Error moderating content:', error);
+    // En caso de error, permitir el contenido para no bloquear la funcionalidad
+    return {
+      isClean: true,
+      recommendation: 'allow',
+      isAllowed: true
+    };
+  }
 }
 
-// Función para reportar contenido
+// Reportar contenido usando el backend
 export async function reportContent(
-  reporterId: string,
   contentType: 'message' | 'profile' | 'trip',
   contentId: number,
   reason: string,
   description?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase
-      .from('content_reports')
-      .insert({
-        reporter_id: reporterId,
-        content_type: contentType,
-        content_id: contentId,
-        reason,
-        description,
-        status: 'pending',
-        created_at: new Date().toISOString()
-      });
-
-    if (error) {
-      console.error('Error reporting content:', error);
-      return { success: false, error: error.message };
+    const token = getAuthToken();
+    if (!token) {
+      return { success: false, error: 'No hay sesión activa' };
     }
 
-    return { success: true };
+    const response = await fetch(`${API_BASE_URL}/content-moderation/report`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contentType,
+        contentId,
+        reason,
+        description
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return { success: result.success, error: result.error };
+
   } catch (error) {
-    console.error('Unexpected error reporting content:', error);
-    return { success: false, error: 'Error inesperado al reportar contenido' };
+    console.error('❌ Error reporting content:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error inesperado al reportar contenido' 
+    };
   }
 }
 
-// Función para bloquear usuario
+// Bloquear usuario usando el backend
 export async function blockUser(
-  blockerId: string,
   blockedId: string,
   reason?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase
-      .from('user_blocks')
-      .insert({
-        blocker_id: blockerId,
-        blocked_id: blockedId,
-        reason,
-        created_at: new Date().toISOString()
-      });
-
-    if (error) {
-      console.error('Error blocking user:', error);
-      return { success: false, error: error.message };
+    const token = getAuthToken();
+    if (!token) {
+      return { success: false, error: 'No hay sesión activa' };
     }
 
-    return { success: true };
+    const response = await fetch(`${API_BASE_URL}/content-moderation/block-user`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        blockedUserId: blockedId,
+        reason
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return { success: result.success, error: result.error };
+
   } catch (error) {
-    console.error('Unexpected error blocking user:', error);
-    return { success: false, error: 'Error inesperado al bloquear usuario' };
+    console.error('❌ Error blocking user:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error inesperado al bloquear usuario' 
+    };
   }
 }
 
-// Función para verificar si un usuario está bloqueado
+// Verificar si usuario está bloqueado
 export async function isUserBlocked(
-  userId: string,
   checkAgainstId: string
 ): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('user_blocks')
-      .select('id')
-      .or(`and(blocker_id.eq.${userId},blocked_id.eq.${checkAgainstId}),and(blocker_id.eq.${checkAgainstId},blocked_id.eq.${userId})`)
-      .limit(1);
-
-    if (error) {
-      console.error('Error checking if user is blocked:', error);
+    const token = getAuthToken();
+    if (!token) {
       return false;
     }
 
-    return data && data.length > 0;
+    const response = await fetch(`${API_BASE_URL}/content-moderation/is-blocked/${checkAgainstId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const result = await response.json();
+    return result.isBlocked || false;
+
   } catch (error) {
-    console.error('Unexpected error checking user block:', error);
+    console.error('❌ Error checking if user is blocked:', error);
     return false;
   }
 }
 
-// Función para obtener usuarios bloqueados
-export async function getBlockedUsers(userId: string): Promise<string[]> {
+// Obtener usuarios bloqueados
+export async function getBlockedUsers(): Promise<string[]> {
   try {
-    const { data, error } = await supabase
-      .from('user_blocks')
-      .select('blocked_id')
-      .eq('blocker_id', userId);
-
-    if (error) {
-      console.error('Error getting blocked users:', error);
+    const token = getAuthToken();
+    if (!token) {
       return [];
     }
 
-    return data?.map(block => block.blocked_id) || [];
+    const response = await fetch(`${API_BASE_URL}/content-moderation/blocked-users`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const result = await response.json();
+    return result.blockedUsers || [];
+
   } catch (error) {
-    console.error('Unexpected error getting blocked users:', error);
+    console.error('❌ Error getting blocked users:', error);
     return [];
   }
 }
 
-// Función para desbloquear usuario
+// Desbloquear usuario
 export async function unblockUser(
-  blockerId: string,
   blockedId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase
-      .from('user_blocks')
-      .delete()
-      .eq('blocker_id', blockerId)
-      .eq('blocked_id', blockedId);
-
-    if (error) {
-      console.error('Error unblocking user:', error);
-      return { success: false, error: error.message };
+    const token = getAuthToken();
+    if (!token) {
+      return { success: false, error: 'No hay sesión activa' };
     }
 
-    return { success: true };
+    const response = await fetch(`${API_BASE_URL}/content-moderation/unblock/${blockedId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return { success: result.success, error: result.error };
+
   } catch (error) {
-    console.error('Unexpected error unblocking user:', error);
-    return { success: false, error: 'Error inesperado al desbloquear usuario' };
+    console.error('❌ Error unblocking user:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error inesperado al desbloquear usuario' 
+    };
   }
 }
 
-// Función para obtener reportes pendientes (para moderadores)
+// Las siguientes funciones de admin requieren permisos especiales
 export async function getPendingReports(): Promise<any[]> {
   try {
-    const { data, error } = await supabase
-      .from('content_reports')
-      .select(`
-        *,
-        reporter:user_profiles!content_reports_reporter_id_fkey(
-          first_name,
-          last_name,
-          user_id
-        )
-      `)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error getting pending reports:', error);
+    const token = getAuthToken();
+    if (!token) {
       return [];
     }
 
-    return data || [];
+    const response = await fetch(`${API_BASE_URL}/reports/admin/list`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const result = await response.json();
+    return result.reports || [];
+
   } catch (error) {
-    console.error('Unexpected error getting pending reports:', error);
+    console.error('❌ Error getting pending reports:', error);
     return [];
   }
 }
 
-// Función para resolver reporte
 export async function resolveReport(
   reportId: number,
-  moderatorId: string,
-  action: 'dismissed' | 'content_removed' | 'user_warned' | 'user_suspended',
   notes?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase
-      .from('content_reports')
-      .update({
-        status: 'resolved',
-        resolved_by: moderatorId,
-        resolution_action: action,
-        resolution_notes: notes,
-        resolved_at: new Date().toISOString()
-      })
-      .eq('id', reportId);
-
-    if (error) {
-      console.error('Error resolving report:', error);
-      return { success: false, error: error.message };
+    const token = getAuthToken();
+    if (!token) {
+      return { success: false, error: 'No hay sesión activa' };
     }
 
-    return { success: true };
+    const response = await fetch(`${API_BASE_URL}/reports/admin/${reportId}/status`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        status: 'resolved',
+        notes
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return { success: result.success, error: result.error };
+
   } catch (error) {
-    console.error('Unexpected error resolving report:', error);
-    return { success: false, error: 'Error inesperado al resolver reporte' };
+    console.error('❌ Error resolving report:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error inesperado al resolver reporte' 
+    };
   }
 }

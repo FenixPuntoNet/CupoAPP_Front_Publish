@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabaseClient'
 import { useChatMessages } from './useChatMessages'
 import { sendChatMessage } from '@/services/chat'
 import { moderateContent, getBlockedUsers } from '@/lib/contentModeration'
@@ -8,6 +7,7 @@ import { BlockUserModal } from '@/components/BlockUserModal'
 import { debugMessageInfo } from '@/utils/reportDebug'
 import { IconFlag, IconUserX } from '@tabler/icons-react'
 import { Alert } from '@mantine/core'
+import { API_BASE_URL } from '@/config/api'
 import styles from './ChatBox.module.css'
 
 type RoleInfo = {
@@ -19,6 +19,91 @@ type RoleInfo = {
 export type Props = {
   chatId: number
   currentUserId: string
+}
+
+// Función para obtener el token de autenticación del localStorage
+const getAuthToken = (): string | null => {
+  try {
+    const token = localStorage.getItem('sb-mqwvbnktcokcccidfgcu-auth-token');
+    return token || null;
+  } catch (error) {
+    console.error('Error accessing localStorage token:', error);
+    return null;
+  }
+};
+
+// Función para obtener participantes del chat desde el backend
+const fetchChatParticipants = async (chatId: number): Promise<any[]> => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No hay sesión activa')
+    }
+
+    // Usar el endpoint de mensajes para obtener información de participantes
+    const response = await fetch(`${API_BASE_URL}/chat/${chatId}/messages`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    }
+
+    const result = await response.json()
+    
+    // Extraer participantes únicos de los mensajes
+    const messages = result.messages || []
+    const uniqueUsers = new Map()
+    
+    messages.forEach((msg: any) => {
+      if (msg.user_id && !uniqueUsers.has(msg.user_id)) {
+        uniqueUsers.set(msg.user_id, {
+          user_id: msg.user_id,
+          role: 'participant' // Default role, puede ser ajustado
+        })
+      }
+    })
+    
+    return Array.from(uniqueUsers.values())
+  } catch (error) {
+    console.error('❌ Error fetching chat participants:', error)
+    return []
+  }
+}
+
+// Función para obtener información de usuario específica
+const fetchUserInfo = async (userId: string): Promise<any> => {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      throw new Error('No hay sesión activa')
+    }
+
+    const response = await fetch(`${API_BASE_URL}/perfil/user/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null // Usuario no encontrado
+      }
+      throw new Error(`Error ${response.status}: ${response.statusText}`)
+    }
+
+    const result = await response.json()
+    return result.user || null
+  } catch (error) {
+    console.error('❌ Error fetching user info:', error)
+    return null
+  }
 }
 
 export function ChatBox({ chatId, currentUserId }: Props) {
@@ -37,16 +122,10 @@ export function ChatBox({ chatId, currentUserId }: Props) {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        // Obtener participantes del chat
-        const { data: participants, error: participantsError } = await supabase
-          .from('chat_participants')
-          .select('user_id, role')
-          .eq('chat_id', chatId)
-
-        if (participantsError) {
-          console.error('❌ Error al obtener participantes:', participantsError)
-          return
-        }
+        console.log('🔄 Fetching chat participants and profiles from backend...');
+        
+        // Obtener participantes del chat desde el backend
+        const participants = await fetchChatParticipants(chatId)
 
         if (!participants || participants.length === 0) {
           console.warn('⚠️ No se encontraron participantes en el chat.')
@@ -62,25 +141,24 @@ export function ChatBox({ chatId, currentUserId }: Props) {
           return
         }
 
-        // Obtener perfiles de usuarios desde user_profiles
-        const { data: profiles, error: profilesError } = await supabase
-          .from('user_profiles')
-          .select('user_id, first_name, photo_user')
-          .in('user_id', userIds)
+        // Obtener información de cada usuario usando el backend
+        const profiles = await Promise.all(
+          userIds.map(async (userId) => {
+            const userInfo = await fetchUserInfo(userId)
+            return userInfo ? { ...userInfo, user_id: userId } : null
+          })
+        )
 
-        if (profilesError) {
-          console.error('❌ Error al obtener perfiles de usuarios:', profilesError)
-          return
-        }
+        const validProfiles = profiles.filter(profile => profile !== null)
 
-        if (!profiles || profiles.length === 0) {
+        if (!validProfiles || validProfiles.length === 0) {
           console.warn('⚠️ No se encontraron perfiles para los usuarios.')
           return
         }
 
         // Crear un mapa de perfiles
         const profileMap = new Map<string, { name: string; photo: string }>()
-        profiles.forEach((profile) => {
+        validProfiles.forEach((profile: any) => {
           if (profile.user_id) {
             profileMap.set(profile.user_id.trim(), {
               name: profile.first_name || 'Sin nombre',
@@ -108,6 +186,7 @@ export function ChatBox({ chatId, currentUserId }: Props) {
         })
 
         setRoles(roleMap)
+        console.log('✅ Chat roles loaded successfully from backend');
       } catch (error) {
         console.error('❌ Error inesperado al obtener roles:', error)
       }
@@ -115,7 +194,7 @@ export function ChatBox({ chatId, currentUserId }: Props) {
 
     const fetchBlockedUsers = async () => {
       try {
-        const blocked = await getBlockedUsers(currentUserId)
+        const blocked = await getBlockedUsers()
         setBlockedUsers(blocked)
       } catch (error) {
         console.error('❌ Error al obtener usuarios bloqueados:', error)
@@ -131,21 +210,21 @@ export function ChatBox({ chatId, currentUserId }: Props) {
 
     console.log('💬 [ChatBox] Sending message to chat:', chatId);
 
-    // Moderar el contenido antes de enviarlo
-    const moderationResult = moderateContent(input)
-    
-    if (!moderationResult.isAllowed) {
-      setContentModerationAlert(
-        `Tu mensaje no pudo ser enviado: ${moderationResult.reason}`
-      )
-      setTimeout(() => setContentModerationAlert(null), 5000)
-      return
-    }
-
-    // Si el contenido fue filtrado, usar la versión filtrada
-    const messageToSend = moderationResult.filteredContent || input
-
     try {
+      // Moderar el contenido antes de enviarlo usando el backend
+      const moderationResult = await moderateContent(input)
+      
+      if (!moderationResult.isAllowed) {
+        setContentModerationAlert(
+          `Tu mensaje no pudo ser enviado: ${moderationResult.reason || 'Contenido inapropiado detectado'}`
+        )
+        setTimeout(() => setContentModerationAlert(null), 5000)
+        return
+      }
+
+      // Si el contenido fue filtrado, usar la versión filtrada
+      const messageToSend = moderationResult.filteredContent || input
+
       const result = await sendChatMessage(chatId, { message: messageToSend });
       
       if (result.success) {
