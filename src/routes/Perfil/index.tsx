@@ -137,7 +137,7 @@ const ProfileView: React.FC = () => {
           id: 'wallet-reload',
           title: 'Recargar billetera',
           onClick: () => {
-            window.location.href = 'https://www.cupo.dev/login';
+            window.location.href = 'https://www.cupo.lat/login';
           },
         },
       ],

@@ -298,7 +298,7 @@ export const RecoverAccountModal: React.FC<RecoverAccountModalProps> = ({
                   a nuestro equipo de soporte.
                 </Text>
                 <Stack gap="xs">
-                  <Text size="sm" c="dimmed">• Envía un email a: soporte@cupo.dev</Text>
+                  <Text size="sm" c="dimmed">• Envía un email a: soporte@cupo.lat</Text>
                   <Text size="sm" c="dimmed">• Incluye tu email registrado</Text>
                   <Text size="sm" c="dimmed">• Explica el motivo de la recuperación</Text>
                 </Stack>

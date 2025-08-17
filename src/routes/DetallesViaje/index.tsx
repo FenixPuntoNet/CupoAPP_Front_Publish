@@ -226,7 +226,7 @@ const InsufficientBalanceModal: React.FC<InsufficientBalanceModalProps> = ({
     currentBalance 
 }) => {
     const handleRechargeWallet = () => {
-        window.location.href = 'https://www.cupo.dev/login';
+        window.location.href = 'https://www.cupo.lat/login';
     };
 
     return (

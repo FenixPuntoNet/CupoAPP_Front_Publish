@@ -98,7 +98,7 @@ const RootComponent = () => {
                   <Button
                     className={styles.registerButton}
                     component="a"
-                    href="https://www.cupo.dev"
+                    href="https://www.cupo.lat"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
