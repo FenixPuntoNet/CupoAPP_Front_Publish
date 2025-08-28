@@ -19,6 +19,7 @@ import { useMaps } from '@/hooks/useMaps';
 import { searchTrips, type TripSearchResult } from '@/services/trips';
 import { getAssumptions, ensureAssumptionsExist } from '@/services/config';
 import type { PlaceSuggestion } from '@/services/googleMaps';
+import { useReserveClick } from '@/hooks/useSingleClick';
 import { CompactSafePoints } from '@/components/TripSafePointsInfo/CompactSafePoints';
 import { DriverModal } from '@/components/DriverModal';
 
@@ -68,6 +69,11 @@ const ReservarView = () => {
     const [formError, setFormError] = useState<string | null>(null);
     const [assumptions, setAssumptions] = useState<any>(null);
     const searchTimeout = useRef<NodeJS.Timeout>();
+
+    // Hook para prevenir múltiples clicks en reservar
+    const reserveClick = useReserveClick(async (trip: TripSearchResult) => {
+        await performReservation(trip);
+    });
 
     // Cargar assumptions al montar el componente
     useEffect(() => {
@@ -275,7 +281,8 @@ const ReservarView = () => {
         setTimeout(() => setFocusedInput(null), 200);
     };
 
-    const handleReservation = (trip: TripSearchResult) => {
+    // Función que contiene la lógica de reserva
+    const performReservation = async (trip: TripSearchResult) => {
         // Convertir TripSearchResult a Trip para compatibilidad
         const tripData: Trip = {
             id: trip.id,
@@ -311,7 +318,17 @@ const ReservarView = () => {
         
         setSelectedTrip(tripData);
         saveToLocalStorage('currentTrip', tripData);
-        navigate({ to: '/Reservas' });
+        setReservationModalOpen(true);
+        
+        // Opcional: navegar después de un breve delay
+        setTimeout(() => {
+            navigate({ to: '/Reservas' });
+        }, 100);
+    };
+
+    // Función actualizada que usa el hook de protección
+    const handleReservation = async (trip: TripSearchResult) => {
+        await reserveClick.execute(trip);
     };
 
     const handleCloseModal = () => {
@@ -913,12 +930,11 @@ const ReservarView = () => {
                                   <Button
                                       fullWidth
                                       className={styles.reserveButton}
-                                      onClick={() => {
-                                          handleReservation(trip);
-                                          setReservationModalOpen(true);
-                                      }}
+                                      onClick={() => handleReservation(trip)}
+                                      loading={reserveClick.isProcessing}
+                                      disabled={reserveClick.isProcessing}
                                   >
-                                      Reservar
+                                      {reserveClick.isProcessing ? 'Procesando...' : 'Reservar'}
                                   </Button>
                                 </Card>
                             );

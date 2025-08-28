@@ -19,6 +19,7 @@ import {
     LoadingOverlay,
     Select,
 } from '@mantine/core';
+import { usePublishTripClick } from '@/hooks/useSingleClick';
 import PublishTripCosts from '@/components/pricing/PublishTripCosts';
 import {
     ArrowLeft,
@@ -60,6 +61,7 @@ interface PreviewModalProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
+    isProcessing?: boolean;
     data: {
         tripData: TripData;
         dateTime: Date | null;
@@ -73,7 +75,7 @@ interface PreviewModalProps {
 }
 
 
-const PreviewInfo: React.FC<PreviewModalProps> = ({ isOpen, onClose, onConfirm, data }) => {
+const PreviewInfo: React.FC<PreviewModalProps> = ({ isOpen, onClose, onConfirm, isProcessing = false, data }) => {
     if (!data.tripData.selectedRoute) return null;
 
     return (
@@ -203,8 +205,10 @@ const PreviewInfo: React.FC<PreviewModalProps> = ({ isOpen, onClose, onConfirm, 
                     <Button
                         onClick={onConfirm}
                         className={styles.confirmButton}
+                        loading={isProcessing}
+                        disabled={isProcessing}
                     >
-                        Confirmar y publicar
+                        {isProcessing ? 'Publicando...' : 'Confirmar y publicar'}
                     </Button>
                 </Group>
             </Stack>
@@ -255,6 +259,12 @@ const InsufficientBalanceModal: React.FC<InsufficientBalanceModalProps> = ({
                     
                     <Text ta="center" size="md" c="dimmed" mb="lg">
                         Para publicar este viaje necesitas tener fondos disponibles en tu billetera como garantía.
+                        {currentBalance === 0 && (
+                            <Text size="sm" mt="xs" c="yellow">
+                                Nota: Es posible que tengas fondos congelados de viajes anteriores. 
+                                Estos se liberarán automáticamente cuando esos viajes se completen.
+                            </Text>
+                        )}
                     </Text>
 
                     <Card className={styles.balanceCard} mb="lg">
@@ -343,7 +353,6 @@ function FormattedNumberInput({
     );
 }
 
-import { useRef } from 'react';
 import { migrateAllPendingDataToTrip, cleanupOldPendingData } from '@/services/backend-integration';
 
 const DetallesViajeView = () => {
@@ -367,22 +376,43 @@ const DetallesViajeView = () => {
     const [dateTime, setDateTime] = useState<Date | null>(null);
     const [stopovers, setStopovers] = useState<TripStopover[]>([]);
     const [loading, setLoading] = useState(false);
-    const isSubmittingRef = useRef(false);
     const [vehicles, setVehicles] = useState<any[]>([]);
     const [vehicleId, setVehicleId] = useState<string | null>(null);
 
     // Hook para assumptions (solo para mostrar en UI si es necesario)
     const { assumptions, loading: assumptionsLoading } = useAssumptions();
 
+    // Hook para prevenir múltiples clicks en publicar viaje
+    const publishTripClick = usePublishTripClick(async () => {
+        await performPublishTrip();
+    });
+
 
     // Cálculo de garantía dinámica según assumptions (ahora incluye tarifa fija POR CUPO)
     const calculateRequiredBalance = (seats: number, pricePerSeat: number): number => {
-        if (!assumptions) return 0;
+        if (!assumptions) {
+            console.log('⚠️ calculateRequiredBalance: assumptions no cargado, retornando 0');
+            return 0;
+        }
         const totalTripValue = seats * pricePerSeat;
         const percentageFee = Math.ceil(totalTripValue * ((assumptions.fee_percentage || 0) / 100));
         const fixedRatePerSeat = assumptions.fixed_rate || 0;
         const totalFixedRate = fixedRatePerSeat * seats; // Tarifa fija POR CUPO
-        return percentageFee + totalFixedRate;
+        const totalRequired = percentageFee + totalFixedRate;
+        
+        console.log('💰 calculateRequiredBalance DEBUG:', {
+            seats,
+            pricePerSeat,
+            totalTripValue,
+            fee_percentage: assumptions.fee_percentage,
+            percentageFee,
+            fixed_rate: assumptions.fixed_rate,
+            fixedRatePerSeat,
+            totalFixedRate,
+            totalRequired: totalRequired.toLocaleString()
+        });
+        
+        return totalRequired;
     };
 
     const checkAndFreezeWalletBalance = async (requiredAmount: number) => {
@@ -393,7 +423,12 @@ const DetallesViajeView = () => {
                 // Obtener el wallet actual para mostrar los saldos
                 const walletData = await getCurrentWallet();
                 if (walletData.success && walletData.data) {
-                    const availableBalance = (walletData.data.balance || 0) - (walletData.data.frozen_balance || 0);
+                    const totalBalance = walletData.data.balance || 0;
+                    const frozenBalance = walletData.data.frozen_balance || 0;
+                    const availableBalance = Math.max(0, totalBalance - frozenBalance);
+                    
+                    console.log(`💰 [MODAL] Balance info: total=$${totalBalance.toLocaleString()}, congelado=$${frozenBalance.toLocaleString()}, disponible=$${availableBalance.toLocaleString()}, requerido=$${requiredAmount.toLocaleString()}`);
+                    
                     setRequiredAmount(requiredAmount);
                     setCurrentBalance(availableBalance);
                     setShowInsufficientBalanceModal(true);
@@ -447,8 +482,18 @@ const DetallesViajeView = () => {
     // useEffect para cargar los porcentajes de configuración desde assumptions
     useEffect(() => {
         if (assumptions && !assumptionsLoading) {
+            console.log('📊 ASSUMPTIONS cargado:', {
+                fee_percentage: assumptions.fee_percentage,
+                fixed_rate: assumptions.fixed_rate,
+                price_limit_percentage: assumptions.price_limit_percentage,
+                alert_threshold_percentage: assumptions.alert_threshold_percentage
+            });
             setPriceLimitPercentage(assumptions.price_limit_percentage);
             setAlertThresholdPercentage(assumptions.alert_threshold_percentage);
+        } else if (assumptionsLoading) {
+            console.log('⏳ ASSUMPTIONS cargando...');
+        } else {
+            console.log('❌ ASSUMPTIONS no disponible');
         }
     }, [assumptions, assumptionsLoading]);
 
@@ -488,10 +533,9 @@ const DetallesViajeView = () => {
         }
     };
 
-    const handleSubmit = async () => {
+    // Función que contiene toda la lógica de publicación del viaje
+    const performPublishTrip = async () => {
         if (!validateForm()) return;
-        if (isSubmittingRef.current) return; // evita múltiples clics
-        isSubmittingRef.current = true;
         setLoading(true);
 
         try {
@@ -506,6 +550,7 @@ const DetallesViajeView = () => {
 
             // Calcular y verificar el balance requerido
             const requiredAmountToCheck = calculateRequiredBalance(seats, pricePerSeat);
+            console.log('🔍 VERIFICACIÓN BALANCE - Inputs:', { seats, pricePerSeat, requiredAmountToCheck });
 
             // Intentar congelar el balance antes de crear el viaje
             const walletCheck = await checkAndFreezeWalletBalance(requiredAmountToCheck);
@@ -648,8 +693,12 @@ const DetallesViajeView = () => {
             });
         } finally {
             setLoading(false);
-            isSubmittingRef.current = false;
         }
+    };
+
+    // Nueva función handleSubmit que usa el hook de protección
+    const handleSubmit = async () => {
+        await publishTripClick.execute();
     };
 
     // Calcular precio usando EXCLUSIVAMENTE el backend
@@ -1065,6 +1114,7 @@ const DetallesViajeView = () => {
                     isOpen={showPreviewModal}
                     onClose={() => setShowPreviewModal(false)}
                     onConfirm={handleSubmit}
+                    isProcessing={publishTripClick.isProcessing || loading}
                     data={{
                         tripData,
                         dateTime,

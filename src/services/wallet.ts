@@ -80,9 +80,14 @@ export const checkAndFreezeBalance = async (requiredAmount: number): Promise<Wal
     if (balanceResponse && (balanceResponse.balance !== undefined || balanceResponse.data?.balance !== undefined)) {
       const balance = balanceResponse.balance || balanceResponse.data?.balance || 0;
       const frozenBalance = balanceResponse.frozen_balance || balanceResponse.data?.frozen_balance || 0;
-      const availableBalance = balance - frozenBalance;
+      const availableBalance = Math.max(0, balance - frozenBalance); // Evitar negativos
       
-      console.log(`💰 Balance verificado: disponible=$${availableBalance.toLocaleString()}, requerido=$${requiredAmount.toLocaleString()}`);
+      console.log(`💰 Balance verificado: total=$${balance.toLocaleString()}, congelado=$${frozenBalance.toLocaleString()}, disponible=$${availableBalance.toLocaleString()}, requerido=$${requiredAmount.toLocaleString()}`);
+      
+      // Advertencia si hay balance congelado alto
+      if (frozenBalance > balance) {
+        console.warn(`⚠️ ADVERTENCIA: Balance congelado ($${frozenBalance.toLocaleString()}) es mayor que el balance total ($${balance.toLocaleString()}). Esto puede indicar un problema con transacciones pendientes.`);
+      }
       
       if (availableBalance >= requiredAmount) {
         console.log('✅ Balance suficiente - el congelamiento se hará automáticamente al publicar el viaje');
