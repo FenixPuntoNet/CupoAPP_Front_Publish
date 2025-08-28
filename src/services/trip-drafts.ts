@@ -26,11 +26,11 @@ export async function addSafePointToDraft(data: SafePointDraftData): Promise<{
   error?: string;
 }> {
   try {
-    console.log('📝 [TRIP-DRAFTS] Adding SafePoint to draft with backend call:', data);
+    console.log('📝 [TRIP-DRAFTS] Adding SafePoint to draft:', data);
     
     // ✅ ESTRUCTURA CORRECTA para safepoint_interactions table
     const requestBody = {
-      safepoint_id: data.safepoint_id,
+      safepoint_id: data.safepoint_id, // Incluir TODOS los IDs (0, 1, 2, etc.)
       trip_id: null, // NULL para borrador - se actualizará cuando se publique el viaje
       interaction_type: data.selection_type, // pickup_selection | dropoff_selection
       interaction_data: {
@@ -39,6 +39,7 @@ export async function addSafePointToDraft(data: SafePointDraftData): Promise<{
         notes: data.notes || '',
         selection_type: data.selection_type,
         is_draft_interaction: true,
+        is_sin_safepoint: data.safepoint_id === 0, // Marcar si es "sin safepoint"
         timestamp: new Date().toISOString(),
         user_context: 'conductor_draft',
         draft_metadata: {
@@ -68,7 +69,8 @@ export async function addSafePointToDraft(data: SafePointDraftData): Promise<{
       interaction_id: response.interaction?.id,
       safepoint_id: data.safepoint_id,
       interaction_type: data.selection_type,
-      trip_id: null
+      trip_id: null,
+      is_sin_safepoint: data.safepoint_id === 0
     });
 
     return {

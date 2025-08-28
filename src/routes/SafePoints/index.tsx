@@ -35,7 +35,6 @@ import {
     type TripData
 } from '../../types/PublicarViaje/TripDataManagement';
 import {
-    searchNearbySafePoints,
     getSafePointsByCategory,
     type SafePoint,
     type SafePointCategory,
@@ -107,6 +106,7 @@ function SafePointsView() {
     // Estados para SafePoints y UI
     const [safePoints, setSafePoints] = useState<SafePoint[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<SafePointCategory | null>(null);
+    const [viewMode, setViewMode] = useState<'route' | 'category'>('route');
     const [showProposalModal, setShowProposalModal] = useState(false);
     const [allowPassengerSafePoints, setAllowPassengerSafePoints] = useState<boolean>(true);
     const [showMap, setShowMap] = useState(false);
@@ -133,79 +133,38 @@ function SafePointsView() {
     //     return Math.floor(Date.now() / 1000);
     // };
 
-    // Cargar SafePoints a lo largo de la ruta (no solo origen/destino)
-    const loadNearbySafePoints = useCallback(async () => {
+    // Nueva función para cargar solo la opción "Sin SafePoint"
+    const loadSinSafePointOnly = useCallback(async () => {
         try {
-            const origin = tripStore.getOrigin();
-            const destination = tripStore.getDestination();
-
-            if (!origin || !destination) {
-                throw new Error('No se encontraron origen y destino');
-            }
-
-            console.log('🔍 Cargando SafePoints a lo largo de la ruta...');
-
-            // Calcular puntos intermedios a lo largo de la ruta
-            const routePoints = [
-                { lat: origin.coords.lat, lng: origin.coords.lng, type: 'origin' },
-                // Punto medio de la ruta
-                { 
-                    lat: (origin.coords.lat + destination.coords.lat) / 2, 
-                    lng: (origin.coords.lng + destination.coords.lng) / 2,
-                    type: 'midway'
-                },
-                { lat: destination.coords.lat, lng: destination.coords.lng, type: 'destination' }
-            ];
-
-            // Buscar SafePoints cerca de cada punto de la ruta
-            const routeSafePointsPromises = routePoints.map(point =>
-                searchNearbySafePoints({
-                    latitude: point.lat,
-                    longitude: point.lng,
-                    radius_km: 3, // Radio menor para SafePoints más relevantes
-                    limit: 12
-                })
-            );
-
-            const routeResults = await Promise.all(routeSafePointsPromises);
-
-            // Combinar y eliminar duplicados
-            const allSafePointsMap = new Map<number, SafePoint>();
+            console.log('🚫 Cargando solo opción "Sin SafePoint"...');
             
-            routeResults.forEach((result, index) => {
-                if (result.success && result.safepoints) {
-                    result.safepoints.forEach((sp: SafePoint) => {
-                        if (!allSafePointsMap.has(sp.id)) {
-                            // Marcar relevancia del SafePoint en la ruta
-                            const enhancedSafePoint = {
-                                ...sp, 
-                                distance_km: sp.distance_km || 0,
-                                route_relevance: routePoints[index].type
-                            };
-                            allSafePointsMap.set(sp.id, enhancedSafePoint);
-                        }
-                    });
-                }
-            });
+            // Crear el SafePoint especial "Sin SafePoint"
+            const sinSafePoint: SafePoint = {
+                id: 0,
+                name: 'Sin SafePoint',
+                description: 'Usar ubicación personalizada sin SafePoints',
+                category: 'sin_safepoint' as SafePointCategory,
+                latitude: 0,
+                longitude: 0,
+                address: 'Ubicación personalizada',
+                city: 'Cualquier ciudad',
+                is_verified: true,
+                is_active: true,
+                rating_average: 0,
+                rating_count: 0,
+                usage_count: 0,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                distance_km: 0
+            };
 
-            // Ordenar por relevancia: verificados primero, luego por distancia
-            const uniqueSafePoints = Array.from(allSafePointsMap.values())
-                .sort((a, b) => {
-                    // Priorizar SafePoints verificados
-                    if (a.is_verified && !b.is_verified) return -1;
-                    if (!a.is_verified && b.is_verified) return 1;
-                    // Luego por distancia
-                    return (a.distance_km || 0) - (b.distance_km || 0);
-                })
-                .slice(0, 25); // Limitar para mejor performance
-            
-            setSafePoints(uniqueSafePoints);
-            console.log('✅ SafePoints de la ruta cargados:', uniqueSafePoints.length);
+            setSafePoints([sinSafePoint]);
+            console.log('✅ Opción "Sin SafePoint" cargada');
 
         } catch (error) {
-            console.error('❌ Error cargando SafePoints de la ruta:', error);
+            console.error('❌ Error cargando opción Sin SafePoint:', error);
             setSafePoints([]);
-            setError('Error cargando SafePoints: ' + (error instanceof Error ? error.message : 'Error de conexión'));
+            setError('Error cargando opción: ' + (error instanceof Error ? error.message : 'Error desconocido'));
         }
     }, []);
 
@@ -232,15 +191,19 @@ function SafePointsView() {
     }, []);
 
     // Manejar selección de categoría
-    const handleCategorySelect = useCallback((category: SafePointCategory | null) => {
+    const handleCategorySelect = useCallback((category: SafePointCategory) => {
         setSelectedCategory(category);
-        if (category) {
-            loadSafePointsByCategory(category);
-        } else {
-            setIsLoading(true);
-            loadNearbySafePoints().finally(() => setIsLoading(false));
-        }
-    }, [loadSafePointsByCategory, loadNearbySafePoints]);
+        setViewMode('category');
+        loadSafePointsByCategory(category);
+    }, [loadSafePointsByCategory]);
+
+    // Nueva función para manejar "En la Ruta" (solo Sin SafePoint)
+    const handleRouteSelect = useCallback(() => {
+        setSelectedCategory(null);
+        setViewMode('route');
+        setIsLoading(true);
+        loadSinSafePointOnly().finally(() => setIsLoading(false));
+    }, [loadSinSafePointOnly]);
 
     // Manejar selección de SafePoint según el paso actual
     const handleSafePointSelect = useCallback(async (safePoint: SafePoint) => {
@@ -351,7 +314,8 @@ function SafePointsView() {
             restaurant: '🍽️',
             gas_station: '⛽',
             supermarket: '🛒',
-            user_proposed: '📍'
+            user_proposed: '📍',
+            sin_safepoint: '🚫'
         };
         return emojiMap[category] || '📍';
     }, []);
@@ -370,8 +334,8 @@ function SafePointsView() {
                 setIsLoading(true);
                 setError(null);
                 
-                // Cargar SafePoints de la ruta
-                await loadNearbySafePoints();
+                // Cargar solo "Sin SafePoint" por defecto
+                await loadSinSafePointOnly();
                 
                 // Cargar datos del borrador si existen
                 if (draft?.draft_safepoint_selections) {
@@ -404,7 +368,7 @@ function SafePointsView() {
         };
 
         loadInitialData();
-    }, [loadNearbySafePoints, draft]);
+    }, [loadSinSafePointOnly, draft]);
 
     // Confirmar selección del paso actual
     const handleConfirm = async () => {
@@ -431,7 +395,9 @@ function SafePointsView() {
                 // Cambiar al paso de destino
                 setCurrentStep('destination');
                 setSelectedCategory(null);
-                loadNearbySafePoints(); // Cargar SafePoints cerca del destino
+                setViewMode('route');
+                setIsLoading(true);
+                loadSinSafePointOnly().finally(() => setIsLoading(false)); // Cargar Sin SafePoint por defecto
                 return;
             } catch (error) {
                 console.error('Error updating draft:', error);
@@ -480,7 +446,8 @@ function SafePointsView() {
             // Guardar en el store local para compatibilidad
             const updateData: Partial<TripData> = {
                 stopovers: safePointStopovers,
-                allowPassengerSafePoints
+                allowPassengerSafePoints,
+                currentStep: 'details' // Saltar paradas e ir directo a detalles
             };
 
             if (allSelectedSafePoints.size > 0) {
@@ -496,8 +463,8 @@ function SafePointsView() {
                 draftExists: !!draft
             });
 
-            // Navegar a paradas
-            navigate({ to: '/Paradas' });
+            // Navegar directamente a detalles del viaje (omitiendo paradas)
+            navigate({ to: '/DetallesViaje' });
 
         } catch (err) {
             console.error('Error confirmando SafePoints:', err);
@@ -549,7 +516,9 @@ function SafePointsView() {
                             onClick={() => {
                                 setCurrentStep('origin');
                                 setSelectedCategory(null);
-                                loadNearbySafePoints();
+                                setViewMode('route');
+                                setIsLoading(true);
+                                loadSinSafePointOnly().finally(() => setIsLoading(false));
                             }}
                             leftSection={<ArrowLeft size={16} />}
                             style={{
@@ -603,17 +572,19 @@ function SafePointsView() {
                 </div>
 
                 <div className={styles.categoryGrid}>
-                    {/* Categoría "Cercanos" (por defecto) */}
+                    {/* Categoría "En la Ruta" - Solo Sin SafePoint */}
                     <div 
-                        className={`${styles.categoryCard} ${!selectedCategory ? styles.active : ''}`}
-                        onClick={() => handleCategorySelect(null)}
+                        className={`${styles.categoryCard} ${viewMode === 'route' ? styles.active : ''}`}
+                        onClick={() => handleRouteSelect()}
                     >
-                        <div className={styles.categoryIcon}>📍</div>
+                        <div className={styles.categoryIcon}>🚫</div>
                         <Text className={styles.categoryName}>En la Ruta</Text>
                         <Text className={styles.categoryCount}>
-                            {!selectedCategory ? safePoints.length : 0} disponibles
+                            {viewMode === 'route' ? safePoints.length : 0} disponibles
                         </Text>
                     </div>
+
+
 
                     {/* Categorías dinámicas */}
                     {Object.entries(categoryConfig).map(([key, config]) => {
@@ -668,7 +639,9 @@ function SafePointsView() {
                     <Text className={styles.sectionTitle}>
                         {selectedCategory 
                             ? (selectedCategory === 'user_proposed' ? 'Categoría' : categoryConfig[selectedCategory as keyof typeof categoryConfig]?.name || 'Categoría')
-                            : 'SafePoints en la Ruta'
+                            : viewMode === 'route' 
+                                ? 'En la Ruta' 
+                                : 'SafePoints'
                         }
                     </Text>
                     {!showMap && (
@@ -949,7 +922,7 @@ function SafePointsView() {
                     <span style={{ fontSize: '16px', fontWeight: '600' }}>
                         ✨ {currentStep === 'origin' 
                             ? 'Continuar al Destino'
-                            : 'Confirmar SafePoints'
+                            : 'Continuar a Publicar'
                         } 
                     </span>
                     <span style={{

@@ -28,18 +28,17 @@ import {
   Sparkles,
   X
 } from 'lucide-react';
-import { GoogleMap, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import { 
-  mapOptions, 
   tripStore,
   type TripRoute,
-  type TripLocation,
-  errorMessages
+  type TripLocation
 } from '../../types/PublicarViaje/TripDataManagement';
 import { calculateSuggestedPrice } from '@/services/config';
 import { publishTrip } from '@/services/viajes';
 import { getMyVehicle } from '@/services/vehicles';
 import { useTripDraft } from '@/hooks/useTripDraft';
+import { ConditionalMap } from '@/components/ui/OptimizedMap';
+import { useOptimizedMaps } from '@/hooks/useOptimizedMaps';
 import styles from './index.module.css';
 import { notifications } from '@mantine/notifications';
 import { getCurrentUser } from '@/services/auth';
@@ -71,6 +70,9 @@ function ReservarView(){
   const { selectedAddress = '', selectedDestination = '' } = useSearch({ from: '/publicarviaje/' });
   const { isLoaded, loadError } = useMaps();
   
+  // 🚀 Hook optimizado para reducir costos de Google Maps
+  const { calculateRouteInfo } = useOptimizedMaps();
+  
   // Hook para manejar borradores
   const { 
     hasDraft,
@@ -81,8 +83,7 @@ function ReservarView(){
   
   // Estados base
   const [showRouteMap, setShowRouteMap] = useState(false);
-  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const [directions, setDirections] = useState<any | null>(null); // Cambiar tipo por compatibilidad
   const [routes, setRoutes] = useState<TripRoute[]>([]);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -400,11 +401,11 @@ useEffect(() => {
     optimizeFuel: false
   });
 
-  // Función para recalcular rutas cuando cambien las preferencias
+  // 🚀 Función optimizada para recalcular rutas
   const recalculateRoutes = useCallback(async () => {
     if (!directions || !selectedAddress || !selectedDestination) return;
     
-    console.log('Recalculando rutas con preferencias:', routePreferences);
+    console.log('🚀 Recalculando rutas con hooks optimizados:', routePreferences);
     
     // Mostrar notificación de recálculo
     notifications.show({
@@ -415,43 +416,40 @@ useEffect(() => {
     });
     
     try {
-      const directionsService = new google.maps.DirectionsService();
-      const result = await new Promise<google.maps.DirectionsResult>((resolve, reject) => {
-        directionsService.route({
-          origin: selectedAddress,
-          destination: selectedDestination,
-          travelMode: google.maps.TravelMode.DRIVING,
-          provideRouteAlternatives: true,
-          optimizeWaypoints: true,
-          avoidTolls: routePreferences.avoidTolls,
-          avoidHighways: routePreferences.avoidHighways,
-        }, (response, status) => {
-          if (status === google.maps.DirectionsStatus.OK && response) {
-            resolve(response);
-          } else {
-            reject(new Error('Error al recalcular rutas'));
-          }
-        });
-      });
+      // 🚀 Usar el hook optimizado en lugar de DirectionsService
+      const routeInfo = await calculateRouteInfo(
+        selectedAddress, 
+        selectedDestination, 
+        'driving'
+      );
+
+      if (!routeInfo) {
+        throw new Error('No se pudieron calcular las rutas');
+      }
 
       const generateUniqueId = (): number => {
         return Math.floor(Math.random() * 1000000);
       };
 
-      const processedRoutes: TripRoute[] = result.routes.map((route, index) => ({
+      // Convertir RouteInfo a TripRoute format
+      const processedRoutes: TripRoute[] = [{
         route_id: generateUniqueId(),
-        index,
-        distance: route.legs[0].distance?.text || '',
-        duration: route.legs[0].duration?.text || '',
-        summary: route.summary || '',
-        startAddress: route.legs[0].start_address,
-        endAddress: route.legs[0].end_address,
-        bounds: route.bounds,
-        polyline: route.overview_polyline,
-        warnings: route.warnings || []
-      }));
+        index: 0,
+        distance: routeInfo.distance.text,
+        duration: routeInfo.duration.text,
+        summary: 'Ruta optimizada',
+        startAddress: routeInfo.startAddress,
+        endAddress: routeInfo.endAddress,
+        bounds: routeInfo.bounds || null,
+        polyline: routeInfo.polyline || '',
+        warnings: []
+      }];
 
-      setDirections(result);
+      // Actualizar estado con formato compatible
+      setDirections({
+        routes: processedRoutes,
+        status: 'OK'
+      });
       setRoutes(processedRoutes);
       setSelectedRouteIndex(0);
 
@@ -462,7 +460,7 @@ useEffect(() => {
       // Mostrar notificación de éxito
       notifications.show({
         title: 'Rutas actualizadas',
-        message: `Se encontraron ${processedRoutes.length} rutas con las nuevas preferencias`,
+        message: `Ruta optimizada calculada exitosamente`,
         color: 'green',
         autoClose: 3000,
       });
@@ -476,7 +474,7 @@ useEffect(() => {
         autoClose: 3000,
       });
     }
-  }, [selectedAddress, selectedDestination, routePreferences, directions]);
+  }, [selectedAddress, selectedDestination, routePreferences, directions, calculateRouteInfo]);
 
   // Efecto para recalcular cuando cambien las preferencias
   useEffect(() => {
@@ -494,10 +492,9 @@ useEffect(() => {
   }, []);
 
   // Referencias
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+  const directionsRendererRef = useRef<any | null>(null);
 
-  // Función para calcular rutas con manejo de marcadores
+  // 🚀 Función optimizada para calcular rutas
   const calculateRouteWithDirections = useCallback(async () => {
       
     const generateUniqueId = (): number => {
@@ -520,95 +517,71 @@ useEffect(() => {
     setError(null);
 
     try {
-      const geocoder = new google.maps.Geocoder();
-      const [originResult, destResult] = await Promise.all([
-        geocoder.geocode({ address: selectedAddress }),
-        geocoder.geocode({ address: selectedDestination })
-      ]);
+      console.log('🚀 Calculando ruta con servicio optimizado...');
+      
+      // 🚀 Usar el hook optimizado para calcular la ruta
+      const routeInfo = await calculateRouteInfo(
+        selectedAddress,
+        selectedDestination,
+        'driving'
+      );
 
-      const origin = originResult.results[0];
-      const destination = destResult.results[0];
-
-      if (!origin?.geometry?.location || !destination?.geometry?.location) {
-        throw new Error('No se pudieron encontrar las direcciones');
+      if (!routeInfo) {
+        throw new Error('No se pudieron calcular las rutas');
       }
 
+      // Crear ubicaciones de origen y destino con datos básicos
       const originLocation: TripLocation = {
-        location_id: generateUniqueId(), // ID unico generado
-        placeId: origin.place_id,
+        location_id: generateUniqueId(),
+        placeId: `origin_${Date.now()}`, // ID temporal
         address: selectedAddress,
         coords: {
-          lat: origin.geometry.location.lat(),
-          lng: origin.geometry.location.lng()
+          lat: 0, // Se actualiza cuando se renderiza el mapa
+          lng: 0
         },
-        mainText: origin.address_components[0].long_name,
-        secondaryText: origin.formatted_address
+        mainText: selectedAddress.split(',')[0] || selectedAddress,
+        secondaryText: selectedAddress
       };
 
       const destinationLocation: TripLocation = {
-        location_id: generateUniqueId(), // ID unico generado
-        placeId: destination.place_id,
+        location_id: generateUniqueId(),
+        placeId: `destination_${Date.now()}`, // ID temporal
         address: selectedDestination,
         coords: {
-          lat: destination.geometry.location.lat(),
-          lng: destination.geometry.location.lng()
+          lat: 0, // Se actualiza cuando se renderiza el mapa
+          lng: 0
         },
-        mainText: destination.address_components[0].long_name,
-        secondaryText: destination.formatted_address
+        mainText: selectedDestination.split(',')[0] || selectedDestination,
+        secondaryText: selectedDestination
       };
-// Coordenadas del origen y destino (ya no se usan para marcadores manuales)
 
       // Actualizar almacenamiento de ubicaciones
       tripStore.setOrigin(originLocation);
       tripStore.setDestination(destinationLocation);
 
-      // Calcular rutas con opciones
-      const directionsService = new google.maps.DirectionsService();
-      const result = await new Promise<google.maps.DirectionsResult>((resolve, reject) => {
-        directionsService.route({
-          origin: originLocation.coords,
-          destination: destinationLocation.coords,
-          travelMode: google.maps.TravelMode.DRIVING,
-          provideRouteAlternatives: true,
-          optimizeWaypoints: true,
-          avoidTolls: routePreferences.avoidTolls,
-          avoidHighways: routePreferences.avoidHighways,
-        }, (response, status) => {
-          if (status === google.maps.DirectionsStatus.OK && response) {
-            if (response.routes.length > 0) {
-              const bounds = new google.maps.LatLngBounds();
-              response.routes[0].legs[0].steps.forEach((step) => {
-                bounds.extend(step.start_location);
-                bounds.extend(step.end_location);
-              });
-              if (mapRef.current) {
-                mapRef.current.fitBounds(bounds, 50); // Padding en píxeles
-              }
-              
-              resolve(response);
-            } else {
-              reject(new Error('No se encontraron rutas'));
-            }
-          } else {
-            reject(new Error(errorMessages.ROUTE_CALCULATION_ERROR));
-          }
-        });
-      });
-    
-        const processedRoutes: TripRoute[] = result.routes.map((route, index) => ({
-        route_id: generateUniqueId(),  // Agregar el route_id generado
-        index,
-        distance: route.legs[0].distance?.text || '',
-        duration: route.legs[0].duration?.text || '',
-        summary: route.summary || '',
-        startAddress: route.legs[0].start_address,
-        endAddress: route.legs[0].end_address,
-        bounds: route.bounds,
-        polyline: route.overview_polyline,
-        warnings: route.warnings || []
-      }));
+      // Crear rutas procesadas
+      const processedRoutes: TripRoute[] = [{
+        route_id: generateUniqueId(),
+        index: 0,
+        distance: routeInfo.distance.text,
+        duration: routeInfo.duration.text,
+        summary: 'Ruta optimizada',
+        startAddress: routeInfo.startAddress,
+        endAddress: routeInfo.endAddress,
+        bounds: routeInfo.bounds || null,
+        polyline: routeInfo.polyline || '',
+        warnings: []
+      }];
 
-      setDirections(result);
+      console.log('🔍 RouteInfo completo:', routeInfo);
+      console.log('🔍 Polyline extraído:', routeInfo.polyline);
+      console.log('🔍 Ruta procesada:', processedRoutes[0]);
+
+      // Actualizar estado
+      setDirections({
+        routes: processedRoutes,
+        status: 'OK'
+      });
       setRoutes(processedRoutes);
       setSelectedRouteIndex(0);
 
@@ -617,15 +590,24 @@ useEffect(() => {
       }
 
       setShowRouteMap(true);
+      
+      console.log('✅ Ruta calculada exitosamente:', routeInfo);
 
-    } catch (err) {
-      console.error('Error:', err);
-      setError(errorMessages.ROUTE_CALCULATION_ERROR);
+    } catch (error) {
+      console.error('❌ Error calculating route:', error);
+      setError('Error al calcular la ruta. Intenta nuevamente.');
     } finally {
       setIsLoading(false);
       setIsCalculatingRoute(false);
     }
-  }, [selectedAddress, selectedDestination, routePreferences]);
+  }, [selectedAddress, selectedDestination, isLoaded, loadError, calculateRouteInfo]);
+
+  // Efecto para recalcular cuando cambien las preferencias
+  useEffect(() => {
+    if (directions && showRouteMap) {
+      recalculateRoutes();
+    }
+  }, [routePreferences.avoidTolls, routePreferences.avoidHighways, routePreferences.optimizeFuel]);
 
   // Limpieza de recursos al desmontar el componente
   useEffect(() => {
@@ -636,32 +618,15 @@ useEffect(() => {
     };
   }, []);
 
-  // Manejador de selección de ruta
+  // 🚀 Manejador optimizado de selección de ruta
   const handleRouteSelect = useCallback((index: number) => {
     if (!directions?.routes[index]) return;
     setSelectedRouteIndex(index);
     
-    // El DirectionsRenderer componente se actualizará automáticamente
-    // Solo necesitamos ajustar la vista del mapa
-    if (mapInstance && directions.routes[index]?.bounds) {
-      mapInstance.fitBounds(directions.routes[index].bounds, {
-        top: 50,
-        bottom: 50,
-        left: 50,
-        right: 50,
-      });
-      setTimeout(() => {
-        const zoom = mapInstance.getZoom();
-        if (zoom && zoom > 16) {
-          mapInstance.setZoom(Math.min(zoom - 0.5, 16));
-        }
-      }, 200);
-    }
-    
     if (routes[index]) {
       tripStore.setRoutes(routes, routes[index]);
     }
-  }, [directions, routes, mapInstance]);
+  }, [directions, routes]);
 
   // Manejador de confirmación
   const handleRouteConfirm = useCallback(async () => {
@@ -1268,87 +1233,22 @@ useEffect(() => {
                   </div>
                 )}
                 
-                <GoogleMap
-                mapContainerStyle={{ width: '100%', height: '100%' }}
-                options={{
-                  ...mapOptions,
-                  gestureHandling: 'greedy',
-                  disableDoubleClickZoom: false,
-                  zoomControl: true,
-                  fullscreenControl: true,
-                  streetViewControl: false,
-                  mapTypeControl: false,
-                  styles: [
-                    // Tema oscuro personalizado
-                    { featureType: "all", elementType: "geometry", stylers: [{ color: "#2c3e50" }] },
-                    { featureType: "all", elementType: "labels.text.fill", stylers: [{ color: "#ecf0f1" }] },
-                    { featureType: "all", elementType: "labels.text.stroke", stylers: [{ color: "#34495e" }] },
-                    { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#00ff9d" }, { lightness: -10 }] },
-                    { featureType: "administrative.land_parcel", elementType: "geometry.stroke", stylers: [{ color: "#00ff9d" }, { lightness: -5 }] },
-                    { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#34495e" }] },
-                    { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#2c3e50" }] },
-                    { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#2c3e50" }] },
-                    { featureType: "poi", elementType: "geometry", stylers: [{ color: "#34495e" }] },
-                    { featureType: "poi", elementType: "labels.text", stylers: [{ visibility: "off" }] },
-                    { featureType: "poi.park", elementType: "geometry.fill", stylers: [{ color: "#27ae60" }, { lightness: -10 }] },
-                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#95a5a6" }] },
-                    { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#ecf0f1" }] },
-                    { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e74c3c" }] },
-                    { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#c0392b" }] },
-                    { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#7f8c8d" }] },
-                    { featureType: "road.local", elementType: "geometry", stylers: [{ color: "#bdc3c7" }] },
-                    { featureType: "transit", elementType: "geometry", stylers: [{ color: "#9b59b6" }] },
-                    { featureType: "transit.line", elementType: "geometry.fill", stylers: [{ color: "#00ff9d" }] },
-                    { featureType: "transit.station", elementType: "geometry", stylers: [{ color: "#00ff9d" }] },
-                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#3498db" }] },
-                    { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#ecf0f1" }] },
-                    { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#2980b9" }] }
-                  ]
-                }}
-                onLoad={(map) => {
-                  setMapInstance(map);
-                  mapRef.current = map;
-                  console.log('Mapa cargado correctamente');
-                }}
-              >
-                {/* Mostrar direcciones usando DirectionsRenderer */}
-                {directions && (
-                  <DirectionsRenderer
-                    directions={directions}
-                    routeIndex={selectedRouteIndex}
-                    options={{
-                      suppressMarkers: true,
-                      polylineOptions: {
-                        strokeColor: '#00ff9d',
-                        strokeWeight: 5,
-                        strokeOpacity: 0.9,
-                        zIndex: 100,
-                      },
-                      suppressInfoWindows: false,
-                    }}
-                  />
-                )}
-
-                {/* Marcadores simples tipo pin */}
-                {directions && (
-                  <>
-                    <Marker
-                      position={{
-                        lat: directions.routes[0].legs[0].start_location.lat(),
-                        lng: directions.routes[0].legs[0].start_location.lng(),
-                      }}
-                      title="Punto de Origen"
-                    />
-                    <Marker
-                      position={{
-                        lat: directions.routes[0].legs[0].end_location.lat(),
-                        lng: directions.routes[0].legs[0].end_location.lng(),
-                      }}
-                      title="Punto de Destino"
-                    />
-                  </>
-                )}
-              </GoogleMap>
+                <ConditionalMap
+                  center={{ lat: 3.4516, lng: -76.5320 }} // Centro por defecto (Cali)
+                  zoom={13}
+                  height="100%"
+                  width="100%"
+                  triggerLoad={showRouteMap}
+                  loadButtonText="Ver ruta en el mapa"
+                  optimizedRoute={routes[selectedRouteIndex] ? {
+                    polyline: routes[selectedRouteIndex].polyline,
+                    startAddress: routes[selectedRouteIndex].startAddress,
+                    endAddress: routes[selectedRouteIndex].endAddress,
+                    distance: routes[selectedRouteIndex].distance,
+                    duration: routes[selectedRouteIndex].duration
+                  } : undefined}
+                  showTraffic={false}
+                />
               </div>
         
               <div className={styles.routesSection}>

@@ -141,7 +141,41 @@ export function useTripDraft() {
     route_order: number;
   }) => {
     try {
-      // ✅ SOLO BACKEND: Llamar al servicio del backend
+      // CASO ESPECIAL: Sin SafePoint (ID 0) - solo manejar localmente
+      if (data.safepoint_id === 0) {
+        console.log('✅ [HOOK] Sin SafePoint (ID 0) - manejo solo local, sin backend');
+        
+        // Solo actualizar el estado local para la UI (NO localStorage, NO backend)
+        const newSelection: SafePointSelection = {
+          id: Date.now(),
+          safepoint_id: 0,
+          selection_type: data.selection_type,
+          route_order: data.route_order,
+          created_at: new Date().toISOString()
+        };
+
+        const updatedSelections = [...safePointSelections, newSelection];
+        setSafePointSelections(updatedSelections);
+
+        // Actualizar draft en memoria (NO localStorage)
+        if (draft) {
+          const updatedDraft = {
+            ...draft,
+            draft_safepoint_selections: updatedSelections,
+            updated_at: new Date().toISOString()
+          };
+          setDraft(updatedDraft);
+        }
+
+        console.log('✅ [HOOK] Sin SafePoint añadido solo localmente:', newSelection);
+        return { 
+          success: true, 
+          selection: newSelection,
+          backend_interaction: null // No hay interacción con backend
+        };
+      }
+
+      // CASO NORMAL: SafePoint real - llamar al backend
       console.log('📝 [HOOK] Adding SafePoint ONLY to backend (NO localStorage):', data);
       
       const backendResult = await addSafePointToDraftService({

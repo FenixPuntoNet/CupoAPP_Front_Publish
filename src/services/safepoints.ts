@@ -24,6 +24,7 @@ export interface SafePoint {
 }
 
 export type SafePointCategory = 
+  | 'sin_safepoint'
   | 'metro_station'
   | 'mall' 
   | 'university'
@@ -292,6 +293,240 @@ export async function updatePendingInteractionsTripId(
 // ==================== SERVICIOS BÁSICOS DE SAFEPOINTS ====================
 
 /**
+ * Buscar SafePoints cercanos a una ubicación usando el nuevo endpoint avanzado
+ */
+export async function searchNearbySafePointsAdvanced(params: {
+  latitude: number;
+  longitude: number;
+  radius_km?: number;
+  category?: SafePointCategory;
+  limit?: number;
+  search_text?: string;
+  include_sin_safepoint?: boolean;
+  exclude_categories?: SafePointCategory[];
+  sort_by?: 'distance' | 'rating' | 'usage' | 'name';
+}): Promise<{
+  success: boolean;
+  safepoints: SafePoint[];
+  count: number;
+  total_found: number;
+  search_params: any;
+  has_more: boolean;
+  error?: string;
+}> {
+  try {
+    console.log('🔍 [ADVANCED SEARCH] Searching SafePoints with new backend endpoint:', params);
+
+    const requestBody = {
+      latitude: params.latitude,
+      longitude: params.longitude,
+      radius_km: params.radius_km || 5,
+      limit: params.limit || 20,
+      include_sin_safepoint: params.include_sin_safepoint !== false, // Default true
+      sort_by: params.sort_by || 'distance',
+      ...(params.category && { category: params.category }),
+      ...(params.search_text && { search_text: params.search_text }),
+      ...(params.exclude_categories && { exclude_categories: params.exclude_categories })
+    };
+
+    const response = await apiRequest('/safepoints/search-advanced', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.success) {
+      throw new Error(response.error || 'Error searching SafePoints');
+    }
+
+    console.log(`✅ [ADVANCED SEARCH] Found ${response.safepoints?.length || 0} SafePoints near ${params.latitude}, ${params.longitude}`, {
+      includes_sin_safepoint: params.include_sin_safepoint,
+      category_filter: params.category,
+      total_found: response.total_found,
+      has_more: response.has_more
+    });
+
+    return {
+      success: true,
+      safepoints: response.safepoints || [],
+      count: response.count || 0,
+      total_found: response.total_found || 0,
+      search_params: response.search_params,
+      has_more: response.has_more || false
+    };
+
+  } catch (error) {
+    console.error('❌ [ADVANCED SEARCH] Error searching SafePoints:', error);
+    return {
+      success: false,
+      safepoints: [],
+      count: 0,
+      total_found: 0,
+      search_params: params,
+      has_more: false,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+}
+
+/**
+ * Obtener el SafePoint especial "Sin SafePoint" (ID: 0)
+ */
+export async function getSinSafePoint(): Promise<{
+  success: boolean;
+  safepoint?: SafePoint;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    console.log('🚫 [SIN SAFEPOINT] Getting special SafePoint with ID 0...');
+
+    const response = await apiRequest('/safepoints/sin-safepoint', {
+      method: 'GET'
+    });
+
+    if (!response.success) {
+      throw new Error(response.error || 'Error obteniendo SafePoint "sin safepoint"');
+    }
+
+    console.log('✅ [SIN SAFEPOINT] Special SafePoint retrieved:', {
+      id: response.safepoint?.id,
+      name: response.safepoint?.name,
+      category: response.safepoint?.category,
+      allows_custom_location: response.safepoint?.features?.allows_custom_location
+    });
+
+    return {
+      success: true,
+      safepoint: response.safepoint,
+      message: response.message
+    };
+
+  } catch (error) {
+    console.error('❌ [SIN SAFEPOINT] Error getting special SafePoint:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+}
+
+/**
+ * Sugerir SafePoints para una ruta usando el nuevo endpoint del backend
+ */
+export async function suggestSafePointsForRouteAdvanced(params: {
+  origin_lat: number;
+  origin_lng: number;
+  destination_lat: number;
+  destination_lng: number;
+  route_points?: Array<{lat: number, lng: number}>;
+  radius_km?: number;
+  include_sin_safepoint?: boolean;
+}): Promise<{
+  success: boolean;
+  route_info: any;
+  pickupOptions: SafePoint[];
+  dropoffOptions: SafePoint[];
+  along_route_options: SafePoint[];
+  summary: any;
+  error?: string;
+}> {
+  try {
+    console.log('🗺️ [ROUTE SUGGESTIONS] Suggesting SafePoints for route using new backend:', params);
+
+    const requestBody = {
+      origin_lat: params.origin_lat,
+      origin_lng: params.origin_lng,
+      destination_lat: params.destination_lat,
+      destination_lng: params.destination_lng,
+      radius_km: params.radius_km || 2,
+      include_sin_safepoint: params.include_sin_safepoint !== false, // Default true
+      ...(params.route_points && { route_points: params.route_points })
+    };
+
+    const response = await apiRequest('/safepoints/suggest-for-route', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.success) {
+      throw new Error(response.error || 'Error sugiriendo SafePoints para la ruta');
+    }
+
+    console.log('✅ [ROUTE SUGGESTIONS] SafePoints suggested for route:', {
+      pickup_count: response.pickupOptions?.length || 0,
+      dropoff_count: response.dropoffOptions?.length || 0,
+      along_route_count: response.along_route_options?.length || 0,
+      includes_sin_safepoint: response.summary?.includes_sin_safepoint
+    });
+
+    return {
+      success: true,
+      route_info: response.route_info || {},
+      pickupOptions: response.pickupOptions || [],
+      dropoffOptions: response.dropoffOptions || [],
+      along_route_options: response.along_route_options || [],
+      summary: response.summary || {}
+    };
+
+  } catch (error) {
+    console.error('❌ [ROUTE SUGGESTIONS] Error suggesting SafePoints for route:', error);
+    return {
+      success: false,
+      route_info: {},
+      pickupOptions: [],
+      dropoffOptions: [],
+      along_route_options: [],
+      summary: {},
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+}
+
+/**
+ * Obtener categorías disponibles de SafePoints
+ */
+export async function getAvailableCategories(): Promise<{
+  success: boolean;
+  categories: Array<{
+    value: SafePointCategory;
+    label: string;
+    icon: string;
+    color: string;
+  }>;
+  error?: string;
+}> {
+  try {
+    console.log('📋 [CATEGORIES] Getting available SafePoint categories...');
+
+    const response = await apiRequest('/safepoints/categories/available', {
+      method: 'GET'
+    });
+
+    if (!response.success) {
+      throw new Error(response.error || 'Error obteniendo categorías disponibles');
+    }
+
+    console.log('✅ [CATEGORIES] Available categories loaded:', {
+      count: response.categories?.length || 0,
+      categories: response.categories?.map((c: any) => c.value) || []
+    });
+
+    return {
+      success: true,
+      categories: response.categories || []
+    };
+
+  } catch (error) {
+    console.error('❌ [CATEGORIES] Error getting available categories:', error);
+    return {
+      success: false,
+      categories: [],
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+}
+
+/**
  * Buscar SafePoints cercanos a una ubicación
  */
 export async function searchNearbySafePoints(params: {
@@ -310,10 +545,26 @@ export async function searchNearbySafePoints(params: {
   error?: string;
 }> {
   try {
-    console.log('🔍 Searching SafePoints with POST /safepoints/search:', params);
+    console.log('🔍 [FIXED] Searching SafePoints with correct endpoint /safepoints/search-advanced:', params);
 
-    // El backend espera POST /safepoints/search con body, no GET con query params
-    const response = await apiRequest('/safepoints/search', {
+    // Validar que las coordenadas están presentes y son válidas
+    if (!params.latitude || !params.longitude) {
+      throw new Error(`Coordenadas inválidas: lat=${params.latitude}, lng=${params.longitude}`);
+    }
+
+    if (typeof params.latitude !== 'number' || typeof params.longitude !== 'number') {
+      throw new Error(`Coordenadas deben ser números: lat=${typeof params.latitude}, lng=${typeof params.longitude}`);
+    }
+
+    console.log('✅ [VALID] Coordenadas validadas:', { 
+      lat: params.latitude, 
+      lng: params.longitude,
+      latType: typeof params.latitude,
+      lngType: typeof params.longitude
+    });
+
+    // El backend usa POST /safepoints/search-advanced, no /safepoints/search
+    const response = await apiRequest('/safepoints/search-advanced', {
       method: 'POST',
       body: JSON.stringify({
         latitude: params.latitude,
@@ -321,7 +572,8 @@ export async function searchNearbySafePoints(params: {
         radius_km: params.radius_km || 5,
         limit: params.limit || 20,
         category: params.category,
-        search_text: undefined // No tenemos texto de búsqueda por ahora
+        include_sin_safepoint: true, // Siempre incluir opción sin safepoint
+        sort_by: 'distance'
       })
     });
 
@@ -342,7 +594,7 @@ export async function searchNearbySafePoints(params: {
     };
 
   } catch (error) {
-    console.error('❌ Error searching nearby SafePoints:', error);
+    console.error('❌ [FIXED] Error searching nearby SafePoints:', error);
     return {
       success: false,
       safepoints: [],
@@ -549,6 +801,7 @@ export async function rateSafePoint(safePointId: number, rating: number, comment
  */
 export function getSafePointIcon(category: SafePointCategory): string {
   const iconMap: Record<SafePointCategory, string> = {
+    sin_safepoint: '🚫',
     metro_station: '🚇',
     mall: '🏬',
     university: '🎓',
@@ -571,6 +824,7 @@ export function getSafePointIcon(category: SafePointCategory): string {
  */
 export function getSafePointColor(category: SafePointCategory): string {
   const colorMap: Record<SafePointCategory, string> = {
+    sin_safepoint: '#6b7280',
     metro_station: '#3b82f6',
     mall: '#a855f7',
     university: '#f97316',
@@ -595,6 +849,7 @@ export function getSafePointColor(category: SafePointCategory): string {
  */
 export function formatSafePointCategory(category: SafePointCategory): string {
   const categoryMap: Record<SafePointCategory, string> = {
+    sin_safepoint: 'Sin SafePoint',
     metro_station: 'Estación de Metro',
     mall: 'Centro Comercial',
     university: 'Universidad',

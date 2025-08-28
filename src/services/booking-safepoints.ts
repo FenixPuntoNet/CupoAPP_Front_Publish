@@ -2,6 +2,7 @@
 // El booking NO EXISTE hasta que el usuario selecciona SafePoints
 
 export type SafePointCategory = 
+  | 'sin_safepoint'
   | 'metro_station' 
   | 'mall' 
   | 'university' 
@@ -194,6 +195,7 @@ export function getSafePointIcon(category: SafePointCategory): string {
 // ✅ FUNCIÓN AGREGADA: Obtener color para categoría de SafePoint
 export function getSafePointColor(category: SafePointCategory): string {
   const colorMap: Record<SafePointCategory, string> = {
+    sin_safepoint: '#6b7280',
     metro_station: '#3b82f6',
     mall: '#a855f7',
     university: '#f97316',

@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Container, TextInput, Text, Button, Title } from '@mantine/core';
 import { ArrowLeft, MapPin, Navigation, Search, Star, Clock } from 'lucide-react';
-import { GoogleMap, Marker } from '@react-google-maps/api';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useMaps } from '@/components/GoogleMapsProvider';
-import { getPlaceSuggestions, getPlaceDetails, reverseGeocode } from '@/services/googleMaps';
+import { ConditionalMap } from '@/components/ui/OptimizedMap';
+import { useOptimizedMaps } from '@/hooks/useOptimizedMaps';
 import styles from './index.module.css';
 
 // Interfaces
@@ -46,7 +46,13 @@ function OrigenView() {
     'Centro de Cali - Plaza Caicedo'
   ]);
 
-  const mapRef = useRef<google.maps.Map | null>(null);
+  // 🚀 Usar hooks optimizados para Google Maps
+  const { 
+    searchPlaces, 
+    getDetails, 
+    getAddressFromCoords 
+  } = useOptimizedMaps();
+
   const searchTimeout = useRef<NodeJS.Timeout>();
 
   // Verificar si Google Maps está cargado
@@ -59,19 +65,6 @@ function OrigenView() {
       setError(null);
     }
   }, [isLoaded, loadError]);
-
-  // Configuración básica del mapa
-  const mapOptions: google.maps.MapOptions = {
-    styles: [
-      {
-        featureType: "all",
-        elementType: "labels.text.fill",
-        stylers: [{ color: "#6b6b6b" }]
-      }
-    ],
-    disableDefaultUI: true,
-    zoomControl: true,
-  };
 
   // Obtener ubicación actual del usuario
   useEffect(() => {
@@ -105,10 +98,20 @@ function OrigenView() {
       setError(null);
       searchTimeout.current = setTimeout(async () => {
         try {
-          console.log('🔍 Searching places with backend service:', searchTerm);
-          const suggestions = await getPlaceSuggestions(searchTerm);
+          console.log('🔍 Searching places with optimized service:', searchTerm);
+          const suggestions = await searchPlaces(searchTerm);
           console.log('✅ Search results received:', suggestions.length);
-          setResults(suggestions);
+          
+          // Convertir formato PlaceSuggestion a Suggestion
+          const convertedResults: Suggestion[] = suggestions.map(suggestion => ({
+            placeId: suggestion.placeId,
+            mainText: suggestion.mainText,
+            secondaryText: suggestion.secondaryText,
+            fullText: suggestion.fullText,
+            types: suggestion.types
+          }));
+          
+          setResults(convertedResults);
           setIsSearching(false);
         } catch (error) {
           console.error('❌ Error searching places:', error);
@@ -134,8 +137,8 @@ function OrigenView() {
       setError(null);
       console.log('📍 Getting place details for:', suggestion.placeId);
       
-      // Usar el servicio del backend para obtener detalles del lugar
-      const placeDetails = await getPlaceDetails(suggestion.placeId);
+      // 🚀 Usar el hook optimizado para obtener detalles del lugar
+      const placeDetails = await getDetails(suggestion.placeId);
       
       if (placeDetails && placeDetails.location) {
         setSelectedLocation(placeDetails.location);
@@ -145,14 +148,6 @@ function OrigenView() {
         setResults([]);
 
         console.log('✅ Place details received:', placeDetails);
-
-        // Animar el mapa suavemente
-        setTimeout(() => {
-          if (mapRef.current) {
-            mapRef.current.panTo(placeDetails.location);
-            mapRef.current.setZoom(16);
-          }
-        }, 100);
       } else {
         setError('Error al obtener detalles del lugar');
       }
@@ -175,8 +170,8 @@ function OrigenView() {
       setError(null);
       console.log('🗺️ Reverse geocoding location:', location);
       
-      // Usar el servicio del backend para geocodificación inversa
-      const address = await reverseGeocode(location.lat, location.lng);
+      // 🚀 Usar el hook optimizado para geocodificación inversa
+      const address = await getAddressFromCoords(location.lat, location.lng);
       
       if (address) {
         setSelectedLocation(location);
@@ -205,8 +200,8 @@ function OrigenView() {
     try {
       console.log('📍 Getting address for current location:', currentLocation);
       
-      // Obtener dirección de la ubicación actual usando el servicio del backend
-      const address = await reverseGeocode(currentLocation.lat, currentLocation.lng);
+      // 🚀 Obtener dirección de la ubicación actual usando el hook optimizado
+      const address = await getAddressFromCoords(currentLocation.lat, currentLocation.lng);
       
       if (address) {
         setSelectedAddress(address);
@@ -217,12 +212,6 @@ function OrigenView() {
         setSearchTerm('Ubicación actual');
       }
 
-      setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.panTo(currentLocation);
-          mapRef.current.setZoom(16);
-        }
-      }, 100);
     } catch (err) {
       console.error('❌ Error with current location:', err);
       setError('Error al procesar tu ubicación actual');
@@ -370,37 +359,26 @@ function OrigenView() {
         )}
         
         {showMap && (
-          <GoogleMap
-            mapContainerStyle={{ width: '100%', height: '100%' }}
-            options={{
-              ...mapOptions,
-              gestureHandling: 'greedy',
-              zoomControl: true,
-              streetViewControl: false,
-              fullscreenControl: false,
-              mapTypeControl: false,
-            }}
+          <ConditionalMap
             center={selectedLocation || currentLocation || { lat: 3.4516, lng: -76.5320 }}
             zoom={selectedLocation ? 16 : 13}
-            onClick={handleMapClick}
-            onLoad={(map: google.maps.Map) => {
-              mapRef.current = map;
-            }}
-          >
-            {selectedLocation && (
-              <Marker
-                position={selectedLocation}
-                icon={{
-                  path: google.maps.SymbolPath.CIRCLE,
-                  scale: 10,
-                  fillColor: '#00ff9d',
-                  fillOpacity: 1,
-                  strokeColor: '#FFFFFF',
-                  strokeWeight: 3,
-                }}
-              />
-            )}
-          </GoogleMap>
+            markers={selectedLocation ? [{
+              position: selectedLocation,
+              title: selectedAddress || 'Origen seleccionado',
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: '#00ff9d',
+                fillOpacity: 1,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 3,
+              }
+            }] : []}
+            onMapClick={handleMapClick}
+            height="100%"
+            width="100%"
+            triggerLoad={true} // Cargar inmediatamente cuando showMap=true
+          />
         )}
       </div>
 
