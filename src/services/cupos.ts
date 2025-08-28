@@ -326,7 +326,21 @@ export const getCuposReservados = async (tripId: number): Promise<{ success: boo
     };
   }
 };// Validar un cupo específico (QR scan) - ACTUALIZADO según la nueva implementación del backend
-export const validateCupo = async (bookingId: number, qrCode: string): Promise<{ success: boolean; data?: { message: string; status: string; booking_id: number; commission_charged?: number; commission_percentage?: number }; error?: string }> => {
+export const validateCupo = async (bookingId: number, qrCode: string): Promise<{ 
+  success: boolean; 
+  data?: { 
+    message: string; 
+    status: string; 
+    booking_id: number; 
+    booking_price?: number;
+    commission_charged?: number; 
+    commission_percentage?: number; 
+    fixed_rate?: number;
+    percentage_commission?: number;
+    refund_amount?: number;
+  }; 
+  error?: string 
+}> => {
   try {
     console.log(`🔍 [validateCupo] Validating cupo for booking ${bookingId} with QR: ${qrCode}`);
     
@@ -346,8 +360,12 @@ export const validateCupo = async (bookingId: number, qrCode: string): Promise<{
           message: response.data.message || 'Cupo validado exitosamente',
           status: response.data.status || 'completed',
           booking_id: response.data.booking_id || bookingId,
+          booking_price: response.data.booking_price,
           commission_charged: response.data.commission_charged,
-          commission_percentage: response.data.commission_percentage
+          commission_percentage: response.data.commission_percentage,
+          fixed_rate: response.data.fixed_rate,
+          percentage_commission: response.data.percentage_commission,
+          refund_amount: response.data.refund_amount
         }
       };
     }

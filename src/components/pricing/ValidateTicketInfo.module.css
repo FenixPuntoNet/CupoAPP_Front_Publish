@@ -1,0 +1,58 @@
+.commissionBreakdown {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
+}
+
+.commissionLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.commissionLine:last-child {
+  border-bottom: none;
+}
+
+.deductionSection {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 4px solid #f87171;
+  margin: 16px 0;
+}
+
+.refundSection {
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+.total {
+  background: rgba(248, 113, 113, 0.1);
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 8px;
+  border-top: 2px solid #f87171;
+}
+
+.infoBox {
+  background: #eff6ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.breakdown {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 8px;
+  font-style: italic;
+}

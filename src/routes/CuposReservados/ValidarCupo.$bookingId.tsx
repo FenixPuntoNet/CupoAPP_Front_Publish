@@ -20,6 +20,8 @@ import { BarcodeScanner } from '@capacitor-community/barcode-scanner'
 import styles from './ValidarCupo.module.css'
 import { Capacitor } from '@capacitor/core'
 import { CameraPreview } from '@capacitor-community/camera-preview'
+import ValidateTicketInfo from '@/components/pricing/ValidateTicketInfo'
+import { useAssumptions } from '@/hooks/useAssumptions'
 
 // Estilos CSS mejorados
 const animationStyles = `
@@ -54,6 +56,7 @@ if (typeof document !== 'undefined' && !document.getElementById('validar-cupo-st
 const ValidarCupoComponent = () => {
   const params = Route.useParams() as { bookingId: string }
   const bookingId = Number(params.bookingId)
+  const { assumptions } = useAssumptions()
 
   const [loading, setLoading] = useState(false)
   const [scanResult, setScanResult] = useState<string | null>(null)
@@ -63,6 +66,11 @@ const ValidarCupoComponent = () => {
   const [isScanning, setIsScanning] = useState(false)
   const [modoManual, setModoManual] = useState(false)
   const [manualInput, setManualInput] = useState('')
+  const [commissionInfo, setCommissionInfo] = useState<{
+    bookingPrice: number;
+    commissionCharged: number;
+    commissionPercentage: number;
+  } | null>(null)
   const navigate = useNavigate()
 
   // Validar el QR contra la base de datos
@@ -89,6 +97,15 @@ const ValidarCupoComponent = () => {
           setModalType('success')
           setIsModalOpen(true)
           setScanResult(qrData)
+          
+          // Guardar información de comisión para mostrar el desglose
+          if (result.data.booking_price && result.data.commission_charged) {
+            setCommissionInfo({
+              bookingPrice: result.data.booking_price,
+              commissionCharged: result.data.commission_charged,
+              commissionPercentage: result.data.commission_percentage || 0
+            });
+          }
           
           // Mensaje mejorado que incluye información de comisión si está disponible
           let notificationMessage = 'El cupo ha sido validado correctamente';
@@ -553,6 +570,23 @@ const ValidarCupoComponent = () => {
                   : '🔍 Asegúrate de que el código QR esté bien escaneado o que el código manual sea correcto.'}
               </Text>
             </Paper>
+
+            {/* Mostrar desglose de comisión cuando la validación es exitosa */}
+            {modalType === 'success' && commissionInfo && assumptions && (
+              <div style={{ width: '100%', marginTop: '16px' }}>
+                <ValidateTicketInfo
+                  commission={{
+                    bookingPrice: commissionInfo.bookingPrice,
+                    percentageCommission: Math.ceil(commissionInfo.bookingPrice * ((assumptions.fee_percentage || 0) / 100)),
+                    fixedRate: assumptions.fixed_rate || 0,
+                    totalCommission: commissionInfo.commissionCharged,
+                    refund: commissionInfo.bookingPrice - commissionInfo.commissionCharged,
+                    breakdown: `${assumptions.fee_percentage || 0}% ($${Math.ceil(commissionInfo.bookingPrice * ((assumptions.fee_percentage || 0) / 100)).toLocaleString()}) + Tarifa fija ($${(assumptions.fixed_rate || 0).toLocaleString()}) = $${commissionInfo.commissionCharged.toLocaleString()}`
+                  }}
+                  assumptions={assumptions}
+                />
+              </div>
+            )}
 
             {modalType === 'success' && (
               <Group gap="md" justify="center">

@@ -190,7 +190,14 @@ export const updateTrip = async (tripId: number, updateData: TripUpdateRequest):
 };
 
 // Cancelar un viaje
-export const cancelTrip = async (tripId: number): Promise<{ success: boolean; error?: string }> => {
+export const cancelTrip = async (tripId: number): Promise<{ 
+  success: boolean; 
+  data?: {
+    message?: string;
+    refunded_amount?: number;
+  };
+  error?: string 
+}> => {
   try {
     console.log(`🗑️ [cancelTrip] ===== CANCELING TRIP DEBUG =====`);
     console.log(`🗑️ [cancelTrip] Trip ID: ${tripId} (type: ${typeof tripId})`);
@@ -227,14 +234,15 @@ export const cancelTrip = async (tripId: number): Promise<{ success: boolean; er
     
     console.log(`🗑️ [cancelTrip] PASO 2: Enviando request para cancelar viaje ${tripId}...`);
     
-    await apiRequest(`/viajes/trip/${tripId}`, {
+    const response = await apiRequest(`/viajes/trip/${tripId}`, {
       method: 'DELETE'
     });
     
-    console.log(`✅ [cancelTrip] Trip ${tripId} canceled successfully`);
+    console.log(`✅ [cancelTrip] Trip ${tripId} canceled successfully:`, response);
     
     return {
-      success: true
+      success: true,
+      data: response  // Incluir la respuesta del backend con refunded_amount
     };
   } catch (error) {
     console.error(`❌ [cancelTrip] ===== ERROR DETAILS =====`);
@@ -440,7 +448,21 @@ Por favor, verifica el estado del viaje e intenta nuevamente.`;
 };
 
 // Finalizar un viaje (para conductores) - ACTUALIZADO según la nueva implementación del backend
-export const finishTrip = async (tripId: number): Promise<{ success: boolean; data?: { trip: any; unfrozen_amount?: number; message: string }; error?: string }> => {
+export const finishTrip = async (tripId: number): Promise<{ 
+  success: boolean; 
+  data?: { 
+    trip: any; 
+    message: string;
+    balance_summary?: {
+      total_seats: number;
+      seats_validated: number;
+      seats_not_sold: number;
+      refund_amount: number;
+      refund_processed: boolean;
+    };
+  }; 
+  error?: string 
+}> => {
   try {
     console.log(`🏁 [finishTrip] Finishing trip ${tripId}`);
     

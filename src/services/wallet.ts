@@ -67,23 +67,29 @@ export const getCurrentWallet = async (): Promise<WalletResponse> => {
   }
 };
 
-// Verificar y congelar balance para garantía de viaje
+// Verificar balance disponible para garantía de viaje (el congelamiento lo hace el backend automáticamente al publicar)
 export const checkAndFreezeBalance = async (requiredAmount: number): Promise<WalletBalanceCheck> => {
   try {
-    // Primero verificar el balance usando el endpoint del backend
-    const response = await apiRequest('/wallet/balance', {
+    console.log(`🔄 Verificando balance disponible de $${requiredAmount.toLocaleString()}...`);
+    
+    // Solo verificar el balance - el congelamiento lo hace el backend automáticamente al publicar el viaje
+    const balanceResponse = await apiRequest('/wallet/balance', {
       method: 'GET'
     });
 
-    if (response && (response.balance !== undefined || response.data?.balance !== undefined)) {
-      const balance = response.balance || response.data?.balance || 0;
-      const frozenBalance = response.frozen_balance || response.data?.frozen_balance || 0;
+    if (balanceResponse && (balanceResponse.balance !== undefined || balanceResponse.data?.balance !== undefined)) {
+      const balance = balanceResponse.balance || balanceResponse.data?.balance || 0;
+      const frozenBalance = balanceResponse.frozen_balance || balanceResponse.data?.frozen_balance || 0;
       const availableBalance = balance - frozenBalance;
       
+      console.log(`💰 Balance verificado: disponible=$${availableBalance.toLocaleString()}, requerido=$${requiredAmount.toLocaleString()}`);
+      
       if (availableBalance >= requiredAmount) {
+        console.log('✅ Balance suficiente - el congelamiento se hará automáticamente al publicar el viaje');
+        
         return {
           success: true,
-          message: `Se han congelado $${requiredAmount.toLocaleString()} de tu billetera como garantía para este viaje.`
+          message: `Tienes saldo suficiente. Se congelarán $${requiredAmount.toLocaleString()} automáticamente al publicar el viaje.`
         };
       } else {
         return {

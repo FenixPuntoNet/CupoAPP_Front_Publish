@@ -164,18 +164,28 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
           console.log(`✅ [TripCard] Trip ${trip.id} finished successfully`);
           
           setTripStatus('finished');
+          
+          // El backend ahora devuelve balance_summary con información detallada
+          const balanceSummary = result.data.balance_summary;
+          let modalMessage = result.data.message || 'El viaje se ha finalizado correctamente.';
+          
+          // Agregar información del balance si hay reembolso
+          if (balanceSummary && balanceSummary.refund_processed) {
+            modalMessage += ` Se han devuelto $${balanceSummary.refund_amount?.toLocaleString()} correspondientes a ${balanceSummary.seats_not_sold} cupos no vendidos.`;
+          }
+          
           setResultModal({
             title: 'Viaje Finalizado',
             color: 'green',
-            message: result.data.message || 'El viaje se ha finalizado correctamente.',
-            ...(result.data.unfrozen_amount && {
-              devolucion: result.data.unfrozen_amount
+            message: modalMessage,
+            ...(balanceSummary?.refund_amount && balanceSummary.refund_amount > 0 && {
+              devolucion: balanceSummary.refund_amount
             })
           });
           
           showNotification({
             title: '¡Viaje finalizado!',
-            message: result.data.message || 'El viaje se ha finalizado correctamente.',
+            message: modalMessage,
             color: 'green',
           });
         } else {
@@ -204,15 +214,27 @@ const TripCard: React.FC<TripCardProps> = ({ trip, userId: _userId }) => {
           console.log(`✅ [TripCard] Trip ${trip.id} canceled successfully`);
           
           setTripStatus('canceled');
+          
+          // Mensaje base de cancelación
+          let cancelMessage = 'El viaje ha sido cancelado exitosamente.';
+          
+          // Si hay información de reembolso, agregarla al mensaje
+          if (result.data?.refunded_amount) {
+            cancelMessage += ` Se han devuelto $${result.data.refunded_amount.toLocaleString()} de la garantía congelada.`;
+          }
+          
           setResultModal({
             title: 'Viaje Cancelado',
             color: 'orange',
-            message: 'El viaje ha sido cancelado exitosamente.'
+            message: cancelMessage,
+            ...(result.data?.refunded_amount && {
+              devolucion: result.data.refunded_amount
+            })
           });
           
           showNotification({
             title: 'Viaje cancelado',
-            message: 'El viaje ha sido cancelado exitosamente.',
+            message: cancelMessage,
             color: 'orange',
           });
         } else {

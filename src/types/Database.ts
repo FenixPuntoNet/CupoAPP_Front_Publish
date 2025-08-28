@@ -1252,6 +1252,7 @@ export type Database = {
           urban_price_per_km: number
           interurban_price_per_km: number
           fee_percentage: number
+          fixed_rate: number | null
           price_limit_percentage: number
           alert_threshold_percentage: number
           created_at: string
@@ -1262,6 +1263,7 @@ export type Database = {
           urban_price_per_km: number
           interurban_price_per_km: number
           fee_percentage: number
+          fixed_rate?: number | null
           price_limit_percentage?: number
           alert_threshold_percentage?: number
           created_at?: string
@@ -1272,6 +1274,7 @@ export type Database = {
           urban_price_per_km?: number
           interurban_price_per_km?: number
           fee_percentage?: number
+          fixed_rate?: number | null
           price_limit_percentage?: number
           alert_threshold_percentage?: number
           created_at?: string

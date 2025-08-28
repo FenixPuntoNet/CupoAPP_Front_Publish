@@ -6,6 +6,7 @@ export interface Assumptions {
   price_limit_percentage: number;
   alert_threshold_percentage: number;
   fee_percentage?: number;
+  fixed_rate?: number | null;
 }
 
 export interface PriceCalculationResult {
@@ -130,7 +131,11 @@ export const calculateSuggestedPrice = async (distance: string | number): Promis
 };
 
 // Calcular el fee que se cobra por un cupo - USA ASSUMPTIONS DEL BACKEND
-export const calculateFee = async (tripPrice: number): Promise<number> => {
+export const calculateFee = async (tripPrice: number): Promise<{
+  percentageFee: number;
+  fixedRate: number;
+  totalFee: number;
+}> => {
   const assumptions = await getAssumptions();
   
   if (!assumptions) {
@@ -139,7 +144,15 @@ export const calculateFee = async (tripPrice: number): Promise<number> => {
 
   // Usar el fee_percentage que viene del backend
   const feePercentage = assumptions.fee_percentage || 10;
-  return (tripPrice * feePercentage) / 100;
+  const fixedRate = assumptions.fixed_rate || 0;
+  const percentageFee = Math.ceil((tripPrice * feePercentage) / 100);
+  const totalFee = percentageFee + fixedRate;
+
+  return {
+    percentageFee,
+    fixedRate,
+    totalFee
+  };
 };
 
 // Obtener los precios actuales de forma rápida para mostrar en UI - SOLO DEL BACKEND
@@ -147,6 +160,7 @@ export const getCurrentPricing = async (): Promise<{
   urbanPricePerKm: number;
   interurbanPricePerKm: number;
   feePercentage: number;
+  fixedRate: number;
   priceLimitPercentage: number;
   alertThresholdPercentage: number;
 } | null> => {
@@ -160,7 +174,67 @@ export const getCurrentPricing = async (): Promise<{
     urbanPricePerKm: assumptions.urban_price_per_km,
     interurbanPricePerKm: assumptions.interurban_price_per_km,
     feePercentage: assumptions.fee_percentage || 10,
+    fixedRate: assumptions.fixed_rate || 0,
     priceLimitPercentage: assumptions.price_limit_percentage || 20,
     alertThresholdPercentage: assumptions.alert_threshold_percentage || 30
+  };
+};
+
+// Calcular costos de publicar viaje (garantía que se congela)
+export const calculatePublishingCosts = async (seats: number, pricePerSeat: number): Promise<{
+  tripValue: number;
+  percentageFee: number;
+  fixedRate: number;
+  totalGuarantee: number;
+  breakdown: string;
+} | null> => {
+  const assumptions = await getAssumptions();
+  
+  if (!assumptions) {
+    return null;
+  }
+
+  const tripValue = seats * pricePerSeat;
+  const feePercentage = assumptions.fee_percentage || 10;
+  const fixedRatePerSeat = assumptions.fixed_rate || 0;
+  const totalFixedRate = fixedRatePerSeat * seats; // Tarifa fija POR CUPO
+  const percentageFee = Math.ceil(tripValue * (feePercentage / 100));
+  const totalGuarantee = percentageFee + totalFixedRate;
+
+  return {
+    tripValue,
+    percentageFee,
+    fixedRate: totalFixedRate,
+    totalGuarantee,
+    breakdown: `${feePercentage}% ($${percentageFee.toLocaleString()}) + Tarifa fija (${seats} × $${fixedRatePerSeat.toLocaleString()}) = $${totalGuarantee.toLocaleString()}`
+  };
+};
+
+// Calcular comisión por validar cupo (solo se cobra por 1 cupo validado)
+export const calculateCommission = async (pricePerSeat: number): Promise<{
+  percentageCommission: number;
+  fixedRate: number;
+  totalCommission: number;
+  refundAmount: number;
+  breakdown: string;
+} | null> => {
+  const assumptions = await getAssumptions();
+  
+  if (!assumptions) {
+    return null;
+  }
+
+  const feePercentage = assumptions.fee_percentage || 10;
+  const fixedRatePerSeat = assumptions.fixed_rate || 0; // Tarifa fija POR CUPO
+  const percentageCommission = Math.ceil(pricePerSeat * (feePercentage / 100));
+  const totalCommission = percentageCommission + fixedRatePerSeat;
+  const refundAmount = pricePerSeat - totalCommission;
+
+  return {
+    percentageCommission,
+    fixedRate: fixedRatePerSeat,
+    totalCommission,
+    refundAmount,
+    breakdown: `${feePercentage}% ($${percentageCommission.toLocaleString()}) + Tarifa fija por cupo ($${fixedRatePerSeat.toLocaleString()}) = $${totalCommission.toLocaleString()}`
   };
 };

@@ -15,7 +15,11 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
   const [isUrban, setIsUrban] = useState(true);
   const [calculatedPrice, setCalculatedPrice] = useState<{
     basePrice: number;
-    fee: number;
+    fee: {
+      percentageFee: number;
+      fixedRate: number;
+      totalFee: number;
+    };
     totalPrice: number;
   } | null>(null);
   const [calculating, setCalculating] = useState(false);
@@ -27,7 +31,7 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
     try {
       const result = await calculateTotalPrice(distance);
       setCalculatedPrice(result);
-      onPriceCalculated?.(result.basePrice, result.fee, result.totalPrice);
+      onPriceCalculated?.(result.basePrice, result.fee.totalFee, result.totalPrice);
     } catch (error) {
       console.error('Error calculating price:', error);
     } finally {
@@ -144,9 +148,21 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-blue-700">Comisión ({assumptions.fee_percentage}%):</span>
+                <span className="text-blue-700">Comisión porcentual ({assumptions.fee_percentage}%):</span>
                 <span className="font-semibold text-blue-900">
-                  {formatCurrency(calculatedPrice.fee)}
+                  {formatCurrency(calculatedPrice.fee.percentageFee)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-blue-700">Tarifa fija de servicio:</span>
+                <span className="font-semibold text-blue-900">
+                  {formatCurrency(calculatedPrice.fee.fixedRate)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center bg-blue-100 p-2 rounded">
+                <span className="text-blue-800 font-medium">Total comisión:</span>
+                <span className="font-semibold text-blue-900">
+                  {formatCurrency(calculatedPrice.fee.totalFee)}
                 </span>
               </div>
               <div className="border-t border-blue-300 pt-2">

@@ -19,6 +19,7 @@ import {
     LoadingOverlay,
     Select,
 } from '@mantine/core';
+import PublishTripCosts from '@/components/pricing/PublishTripCosts';
 import {
     ArrowLeft,
     Clock,
@@ -374,12 +375,14 @@ const DetallesViajeView = () => {
     const { assumptions, loading: assumptionsLoading } = useAssumptions();
 
 
-    // Cálculo de garantía dinámica según assumptions
+    // Cálculo de garantía dinámica según assumptions (ahora incluye tarifa fija POR CUPO)
     const calculateRequiredBalance = (seats: number, pricePerSeat: number): number => {
         if (!assumptions) return 0;
         const totalTripValue = seats * pricePerSeat;
-        const fee = (assumptions.fee_percentage || 0) / 100;
-        return Math.ceil(totalTripValue * fee);
+        const percentageFee = Math.ceil(totalTripValue * ((assumptions.fee_percentage || 0) / 100));
+        const fixedRatePerSeat = assumptions.fixed_rate || 0;
+        const totalFixedRate = fixedRatePerSeat * seats; // Tarifa fija POR CUPO
+        return percentageFee + totalFixedRate;
     };
 
     const checkAndFreezeWalletBalance = async (requiredAmount: number) => {
@@ -512,12 +515,8 @@ const DetallesViajeView = () => {
                 return;
             }
 
-            // Si el congelamiento fue exitoso, mostrar mensaje y continuar con la creación del viaje
-            notifications.show({
-                title: 'Garantía reservada',
-                message: walletCheck.message,
-                color: 'green'
-            });
+            // No mostrar notificación aquí - solo mostrar si el viaje se publica exitosamente
+            console.log('✅ Garantía congelada exitosamente:', walletCheck.message);
 
             // Usar el servicio para publicar el viaje
             const tripPublishData = {
@@ -590,14 +589,14 @@ const DetallesViajeView = () => {
                         if (migrationResult.total_updated > 0) {
                             notifications.show({
                                 title: '🎉 Viaje publicado y datos migrados',
-                                message: `${migrationResult.total_updated} elementos recientes migrados exitosamente`,
+                                message: `Garantía congelada exitosamente. ${migrationResult.total_updated} elementos recientes migrados.`,
                                 color: 'green',
                                 autoClose: 5000
                             });
                         } else {
                             notifications.show({
                                 title: '✅ Viaje publicado exitosamente',
-                                message: 'Tu viaje está activo y disponible para reservas',
+                                message: 'Garantía congelada exitosamente. Tu viaje está activo y disponible para reservas.',
                                 color: 'green',
                                 autoClose: 4000
                             });
@@ -621,7 +620,7 @@ const DetallesViajeView = () => {
                     // La migración falló, pero el viaje ya se creó exitosamente
                     notifications.show({
                         title: '✅ Viaje creado exitosamente',
-                        message: 'Tu viaje está activo. Algunos datos auxiliares se migrarán automáticamente',
+                        message: 'Garantía congelada exitosamente. Tu viaje está activo. Algunos datos auxiliares se migrarán automáticamente.',
                         color: 'green',
                         autoClose: 5000
                     });
@@ -637,7 +636,16 @@ const DetallesViajeView = () => {
 
         } catch (error: any) {
             console.error("Error durante el proceso de publicación:", error);
-            setFormError(error.message || 'Error al guardar el viaje');
+            const errorMessage = error.message || 'Error al guardar el viaje';
+            setFormError(errorMessage);
+            
+            // Mostrar notificación de error con información sobre la garantía
+            notifications.show({
+                title: '❌ Error al publicar viaje',
+                message: `${errorMessage}. Nota: Si se congeló una garantía, será liberada automáticamente.`,
+                color: 'red',
+                autoClose: 7000
+            });
         } finally {
             setLoading(false);
             isSubmittingRef.current = false;
@@ -963,22 +971,45 @@ const DetallesViajeView = () => {
                                                 </Text>
                                             </div>
                                             <div className={styles.earningsItem}>
-                                                <Text size="sm" c="dimmed">Comisión de la plataforma ({assumptions?.fee_percentage || 15}%):</Text>
+                                                <Text size="sm" c="dimmed">Comisión porcentual ({assumptions?.fee_percentage || 15}%):</Text>
                                                 <Text size="md" fw={500} c="orange">
                                                     -${Math.round(pricePerSeat * seats * (assumptions?.fee_percentage || 15) / 100).toLocaleString()}
+                                                </Text>
+                                            </div>
+                                            <div className={styles.earningsItem}>
+                                                <Text size="sm" c="dimmed">Tarifa fija de servicio ({seats} cupo{seats > 1 ? 's' : ''} × ${(assumptions?.fixed_rate || 0).toLocaleString()}):</Text>
+                                                <Text size="md" fw={500} c="orange">
+                                                    -${((assumptions?.fixed_rate || 0) * seats).toLocaleString()}
                                                 </Text>
                                             </div>
                                             <div className={styles.earningsDivider} />
                                             <div className={styles.earningsItem}>
                                                 <Text size="sm" fw={500}>Ingresos netos estimados:</Text>
                                                 <Text size="lg" fw={700} className={styles.netEarnings}>
-                                                    ${Math.round(pricePerSeat * seats * (1 - (assumptions?.fee_percentage || 15) / 100)).toLocaleString()}
+                                                    ${(pricePerSeat * seats - Math.round(pricePerSeat * seats * (assumptions?.fee_percentage || 15) / 100) - ((assumptions?.fixed_rate || 0) * seats)).toLocaleString()}
                                                 </Text>
                                             </div>
                                         </div>
                                         <Text size="xs" c="dimmed" className={styles.earningsNote}>
                                             * Los ingresos finales pueden variar según las reservas confirmadas
                                         </Text>
+                                    </div>
+                                )}
+
+                                {/* Desglose de costos de publicación */}
+                                {pricePerSeat > 0 && seats > 0 && assumptions && (
+                                    <div style={{ marginTop: '16px' }}>
+                                        <PublishTripCosts
+                                            costs={{
+                                                tripValue: pricePerSeat * seats,
+                                                percentageFee: Math.ceil(pricePerSeat * seats * ((assumptions.fee_percentage || 0) / 100)),
+                                                fixedRate: (assumptions.fixed_rate || 0) * seats, // Tarifa fija POR CUPO
+                                                totalGuarantee: calculateRequiredBalance(seats, pricePerSeat),
+                                                breakdown: `${assumptions.fee_percentage || 0}% ($${Math.ceil(pricePerSeat * seats * ((assumptions.fee_percentage || 0) / 100)).toLocaleString()}) + Tarifa fija (${seats} × $${(assumptions.fixed_rate || 0).toLocaleString()}) = $${calculateRequiredBalance(seats, pricePerSeat).toLocaleString()}`
+                                            }}
+                                            assumptions={assumptions}
+                                            seats={seats}
+                                        />
                                     </div>
                                 )}
                             </Stack>
@@ -1075,7 +1106,7 @@ const DetallesViajeView = () => {
                                 </Text>
                                 <Text size="sm" c="dimmed" ta="center">
                                     Se ha congelado una garantía de <b>${calculateRequiredBalance(seats, pricePerSeat).toLocaleString()}</b> COP 
-                                    ({assumptions?.fee_percentage || 0}% del valor total) como fee de publicación.
+                                    (incluye {assumptions?.fee_percentage || 0}% del valor total + tarifa fija de ${(assumptions?.fixed_rate || 0).toLocaleString()}) como fee de publicación.
                                 </Text>
                                 <Text size="sm" c="dimmed" ta="center">
                                     Serás redirigido a tus viajes publicados

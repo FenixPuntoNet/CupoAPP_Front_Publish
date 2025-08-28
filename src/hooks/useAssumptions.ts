@@ -3,6 +3,8 @@ import {
   getAssumptions,
   calculateTripPriceViaBackend,
   calculateFee,
+  calculatePublishingCosts,
+  calculateCommission,
   getCurrentPricing
 } from '../services/config';
 
@@ -12,6 +14,7 @@ interface Assumptions {
   price_limit_percentage: number;
   alert_threshold_percentage: number;
   fee_percentage?: number;
+  fixed_rate?: number | null;
 }
 
 interface UseAssumptionsReturn {
@@ -20,12 +23,34 @@ interface UseAssumptionsReturn {
   error: string | null;
   refetch: () => Promise<void>;
   calculateTripPrice: (distanceKm: number) => Promise<number>;
-  calculateFee: (tripPrice: number) => Promise<number>;
+  calculateFee: (tripPrice: number) => Promise<{
+    percentageFee: number;
+    fixedRate: number;
+    totalFee: number;
+  }>;
   calculateTotalPrice: (distanceKm: number) => Promise<{
     basePrice: number;
-    fee: number;
+    fee: {
+      percentageFee: number;
+      fixedRate: number;
+      totalFee: number;
+    };
     totalPrice: number;
   }>;
+  calculatePublishingCosts: (seats: number, pricePerSeat: number) => Promise<{
+    tripValue: number;
+    percentageFee: number;
+    fixedRate: number;
+    totalGuarantee: number;
+    breakdown: string;
+  } | null>;
+  calculateCommission: (bookingPrice: number) => Promise<{
+    percentageCommission: number;
+    fixedRate: number;
+    totalCommission: number;
+    refundAmount: number;
+    breakdown: string;
+  } | null>;
 }
 
 export const useAssumptions = (): UseAssumptionsReturn => {
@@ -64,7 +89,11 @@ export const useAssumptions = (): UseAssumptionsReturn => {
     }
   };
 
-  const calculateFeeWrapper = async (tripPrice: number): Promise<number> => {
+  const calculateFeeWrapper = async (tripPrice: number): Promise<{
+    percentageFee: number;
+    fixedRate: number;
+    totalFee: number;
+  }> => {
     try {
       return await calculateFee(tripPrice);
     } catch (err) {
@@ -86,18 +115,36 @@ export const useAssumptions = (): UseAssumptionsReturn => {
         console.log('✅ [HOOK] Precio total calculado:', {
           basePrice,
           fee,
-          totalPrice: basePrice + fee
+          totalPrice: basePrice + fee.totalFee
         });
         
         return {
           basePrice,
           fee,
-          totalPrice: basePrice + fee
+          totalPrice: basePrice + fee.totalFee
         };
       }
       throw new Error('No se pudo calcular el precio total via backend');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al calcular precio total');
+      throw err;
+    }
+  };
+
+  const calculatePublishingCostsWrapper = async (seats: number, pricePerSeat: number) => {
+    try {
+      return await calculatePublishingCosts(seats, pricePerSeat);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al calcular costos de publicación');
+      throw err;
+    }
+  };
+
+  const calculateCommissionWrapper = async (bookingPrice: number) => {
+    try {
+      return await calculateCommission(bookingPrice);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al calcular comisión');
       throw err;
     }
   };
@@ -113,7 +160,9 @@ export const useAssumptions = (): UseAssumptionsReturn => {
     refetch: fetchAssumptions,
     calculateTripPrice: calculateTripPriceWrapper,
     calculateFee: calculateFeeWrapper,
-    calculateTotalPrice: calculateTotalPriceWrapper
+    calculateTotalPrice: calculateTotalPriceWrapper,
+    calculatePublishingCosts: calculatePublishingCostsWrapper,
+    calculateCommission: calculateCommissionWrapper
   };
 };
 
@@ -123,6 +172,7 @@ export const usePricing = () => {
     urbanPricePerKm: number;
     interurbanPricePerKm: number;
     feePercentage: number;
+    fixedRate: number;
     priceLimitPercentage: number;
     alertThresholdPercentage: number;
   } | null>(null);
