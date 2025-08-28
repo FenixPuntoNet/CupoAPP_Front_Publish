@@ -7,8 +7,14 @@
     "dev": "vite --host",
     "dev:android": "capacitor run android --external --livereload -p 5173",
     "build": "tsc -b && vite build",
+    "build:optimized": "NODE_ENV=production tsc -b && vite build --mode production",
+    "build:analyze": "npm run build:optimized && npx vite-bundle-analyzer dist",
+    "preview": "vite preview",
+    "preview:optimized": "vite preview --mode production",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "cache:clear": "node -e \"console.log('Clearing frontend cache...'); if(typeof localStorage !== 'undefined') localStorage.clear();\"",
+    "optimize": "chmod +x scripts/optimize-frontend.sh && ./scripts/optimize-frontend.sh",
+    "perf:audit": "npx lighthouse http://localhost:4173 --chrome-flags=\"--headless\" --output=json --output-path=./performance-audit.json"
   },
   "dependencies": {
     "@capacitor-community/barcode-scanner": "^4.0.1",

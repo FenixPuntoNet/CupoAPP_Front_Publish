@@ -1,0 +1,214 @@
+/* 🚀 Estilos optimizados para componentes de loading */
+
+.container {
+  padding: 2rem;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minimal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.inlineMinimal {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+}
+
+.text {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* 🚀 Skeleton Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  padding: 1rem;
+}
+
+.skeletonLine {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 8px;
+}
+
+.listSkeleton {
+  padding: 1rem;
+}
+
+.listItem {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.listItemContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.listItemAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 157, 0.1) 0%,
+    rgba(0, 255, 157, 0.2) 50%,
+    rgba(0, 255, 157, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  flex-shrink: 0;
+}
+
+.listItemTitle {
+  height: 16px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+  width: 70%;
+}
+
+.listItemSubtitle {
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+  width: 50%;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.cardSkeleton {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cardImage {
+  height: 180px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 157, 0.1) 0%,
+    rgba(0, 255, 157, 0.2) 50%,
+    rgba(0, 255, 157, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+.cardTitle {
+  height: 20px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+  width: 80%;
+}
+
+.cardSubtitle {
+  height: 14px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+  width: 60%;
+}
+
+.cardButton {
+  height: 36px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 157, 0.1) 0%,
+    rgba(0, 255, 157, 0.2) 50%,
+    rgba(0, 255, 157, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+/* 🚀 Responsive Design */
+@media (max-width: 768px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+  
+  .container {
+    padding: 1rem;
+    min-height: 150px;
+  }
+  
+  .listSkeleton {
+    padding: 0.5rem;
+  }
+}

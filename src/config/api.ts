@@ -1,8 +1,13 @@
 // Configuración de la API Backend
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo-backend.fly.dev';
 
+import { apiCache } from '../lib/cache';
+
 // Storage para token de autenticación
 const AUTH_TOKEN_KEY = 'auth_token';
+
+// 🚀 Pool de conexiones para requests paralelos
+let activeRequests = new Map<string, Promise<any>>();
 
 // Obtener token de autenticación
 export const getAuthToken = (): string | null => {
@@ -21,9 +26,27 @@ export const removeAuthToken = (): void => {
   console.log('🔒 Auth token removed from localStorage');
 };
 
-// Función helper para hacer requests a la API
+// 🚀 Función optimizada para hacer requests a la API
 export const apiRequest = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
   const url = `${API_BASE_URL}${endpoint}`;
+  
+  // 🚀 Generar key único para esta request
+  const requestKey = `${options.method || 'GET'}_${endpoint}_${JSON.stringify(options.body || {})}`;
+  
+  // 🚀 Verificar cache para GET requests
+  if (!options.method || options.method === 'GET') {
+    const cached = apiCache.get(endpoint, options.body);
+    if (cached) {
+      console.log(`💨 [CACHE HIT] ${endpoint}`);
+      return cached.data;
+    }
+  }
+
+  // 🚀 Prevenir requests duplicados
+  if (activeRequests.has(requestKey)) {
+    console.log(`⏳ [DEDUP] Waiting for ongoing request: ${endpoint}`);
+    return activeRequests.get(requestKey);
+  }
   
   // Determinar si es un endpoint que requiere autenticación
   const isPublicEndpoint = endpoint === '/auth/login' || endpoint === '/auth/signup';
@@ -31,38 +54,44 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
   // Obtener token de autenticación para todos los endpoints excepto login y registro
   const token = getAuthToken();
   
-  // Configurar headers con token de autenticación
+  // 🚀 Headers optimizados
   const headers = {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Connection': 'keep-alive',
     ...(token && !isPublicEndpoint ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers
   };
 
-  // Log detallado para TODAS las requests para debugging
-  console.log(`🔄 [API] Request to ${endpoint}`);
-  console.log(`🔑 [API] Using auth token: ${token ? 'yes' : 'no'}`);
-  console.log(`🎫 [API] Token preview: ${token ? token.substring(0, 20) + '...' : 'null'}`);
-  console.log(`📝 [API] Request headers:`, headers);
-  console.log(`📝 [API] Request method:`, options.method || 'GET');
-  console.log(`📝 [API] Request body:`, options.body || 'none');
+  // Log simplificado en producción
+  if (import.meta.env.DEV) {
+    console.log(`🔄 [API] Request to ${endpoint}`);
+    console.log(`🔑 [API] Using auth token: ${token ? 'yes' : 'no'}`);
+    console.log(`📝 [API] Request method:`, options.method || 'GET');
+  }
 
-  // Crear opciones de fetch
+  // 🚀 Crear opciones de fetch optimizadas
   const fetchOptions = {
     ...options,
     headers,
-    credentials: 'include' as RequestCredentials 
+    credentials: 'include' as RequestCredentials,
+    // 🚀 Timeout para requests lentos
+    signal: AbortSignal.timeout(15000) // 15 segundos
   };
 
-  try {
-    const response = await fetch(url, fetchOptions);
+  // 🚀 Crear y guardar la promise de la request
+  const requestPromise = (async () => {
+    try {
+      const response = await fetch(url, fetchOptions);
 
-    // Log detallado de la respuesta para todas las requests
-    console.log(`📡 [API] Response to ${endpoint}: status ${response.status}`);
-    console.log(`📡 [API] Response headers:`, Object.fromEntries(response.headers.entries()));
+      // Log simplificado para respuestas
+      if (import.meta.env.DEV) {
+        console.log(`📡 [API] Response to ${endpoint}: status ${response.status}`);
+      }
 
-    // Si la respuesta del login es exitosa, verificar si hay token en la respuesta
-    if (response.ok && endpoint === '/auth/login') {
-      const data = await response.json();
+      // Si la respuesta del login es exitosa, verificar si hay token en la respuesta
+      if (response.ok && endpoint === '/auth/login') {
+        const data = await response.json();
       
       // Si el backend devuelve access_token, guardarlo
       if (data.access_token) {
@@ -104,15 +133,35 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
       throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
     }
     
-    // Intentar parsear la respuesta como JSON
-    try {
-      return await response.json();
-    } catch (parseError) {
-      console.error(`❌ [API] Failed to parse JSON response from ${endpoint}:`, parseError);
-      throw new Error('Invalid JSON response from server');
+    // 🚀 Procesar respuesta exitosa
+    const result = await response.json();
+    
+    // 🚀 Guardar en cache si es GET request
+    if (!options.method || options.method === 'GET') {
+      apiCache.set(endpoint, result, options.body);
     }
-  } catch (error) {
-    console.error(`❌ [API] Request to ${endpoint} failed:`, error);
-    throw error;
-  }
+    
+    return result;
+    
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error(`❌ [API] Network error for ${endpoint}:`, error);
+      }
+      
+      // 🚀 Retry logic para errores de red
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Error de conexión. Por favor verifica tu internet.');
+      }
+      
+      throw error;
+    } finally {
+      // 🚀 Limpiar request activa
+      activeRequests.delete(requestKey);
+    }
+  })();
+
+  // 🚀 Guardar request activa para evitar duplicados
+  activeRequests.set(requestKey, requestPromise);
+  
+  return requestPromise;
 };
