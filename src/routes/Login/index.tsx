@@ -142,6 +142,14 @@ const LoginView: React.FC = () => {
           
           console.log('🔑 Token guardado directamente en localStorage');
           
+          // ✅ CRÍTICO: Refresh auth context inmediatamente después de guardar token
+          try {
+            await refreshUser(true);
+            console.log('✅ Auth context refreshed after token save');
+          } catch (refreshError) {
+            console.error('⚠️ Error refreshing auth context after token save:', refreshError);
+          }
+          
           // Verificar el usuario con el token guardado
           const userResponse = await apiRequest('/auth/me', { method: 'GET' });
           
@@ -229,6 +237,11 @@ const LoginView: React.FC = () => {
       }
       
       console.log('✅ Bootstrap completed successfully');
+      
+      // ✅ CRÍTICO: Force refresh del usuario para obtener datos actualizados (igual que Registro)
+      console.log('🔄 Forcing user refresh after bootstrap...');
+      await refreshUser(true);
+      
       return res;
     } catch (error) {
       console.error('❌ Bootstrap error:', error);
@@ -297,6 +310,14 @@ const LoginView: React.FC = () => {
   // Función auxiliar para manejar el éxito del login con Google
   const handleSuccessfulGoogleAuth = async () => {
     try {
+      // ✅ CRÍTICO: Refresh del contexto de autenticación PRIMERO
+      try {
+        await refreshUser(true);
+        console.log('✅ Auth context refreshed after Google OAuth');
+      } catch (refreshError) {
+        console.error('⚠️ Error refreshing auth context:', refreshError);
+      }
+
       // Verificar si es un usuario nuevo o existente
       const userResponse = await apiRequest('/auth/me', { method: 'GET' });
       
@@ -317,6 +338,14 @@ const LoginView: React.FC = () => {
             console.warn('⚠️ Bootstrap failed (non-critical):', bootstrapError);
           }
 
+          // ✅ CRÍTICO: Refresh OTRA VEZ después del bootstrap
+          try {
+            await refreshUser(true);
+            console.log('✅ Auth context refreshed after bootstrap');
+          } catch (refreshError) {
+            console.error('⚠️ Error refreshing auth context after bootstrap:', refreshError);
+          }
+
           // Marcar como usuario nuevo para onboarding
           localStorage.setItem('is_new_user', 'true');
           
@@ -330,7 +359,7 @@ const LoginView: React.FC = () => {
             }
           );
 
-          // Navegar directamente al onboarding
+          // ✅ NAVEGAR INMEDIATAMENTE como en Registro
           navigate({ 
             to: "/CompletarRegistro", 
             search: { from: 'onboarding' } 
@@ -347,27 +376,27 @@ const LoginView: React.FC = () => {
           } catch (bootstrapError) {
             console.warn('⚠️ Maintenance bootstrap failed (non-critical):', bootstrapError);
           }
-        }
 
-        // Refresh del contexto de autenticación para usuarios existentes
-        try {
-          await refreshUser(true);
-          console.log('✅ Auth context refreshed after Google OAuth');
-        } catch (refreshError) {
-          console.error('⚠️ Error refreshing auth context:', refreshError);
-        }
-
-        // Mostrar mensaje de éxito para usuario existente
-        showSuccess(
-          'Inicio de sesión exitoso',
-          'Has iniciado sesión con Google correctamente.',
-          { 
-            id: 'google-login-success',
-            autoClose: 2000 
+          // ✅ REFRESH final para usuario existente
+          try {
+            await refreshUser(true);
+            console.log('✅ Auth context final refresh for existing user');
+          } catch (refreshError) {
+            console.error('⚠️ Error in final refresh:', refreshError);
           }
-        );
 
-        // Para usuarios existentes, el AuthGuard se encargará de la navegación automática
+          // Mostrar mensaje de éxito para usuario existente
+          showSuccess(
+            'Inicio de sesión exitoso',
+            'Has iniciado sesión con Google correctamente.',
+            { 
+              id: 'google-login-success',
+              autoClose: 2000 
+            }
+          );
+
+          // Para usuarios existentes, el AuthGuard se encargará de la navegación automática
+        }
       } else {
         throw new Error('No se pudo obtener información del usuario después del OAuth');
       }
