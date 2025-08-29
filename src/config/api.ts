@@ -26,6 +26,13 @@ export const removeAuthToken = (): void => {
   console.log('🔒 Auth token removed from localStorage');
 };
 
+// Limpiar todo el cache de API
+export const clearApiCache = (): void => {
+  apiCache.clear();
+  activeRequests.clear();
+  console.log('🧹 API cache and active requests cleared');
+};
+
 // 🚀 Función optimizada para hacer requests a la API
 export const apiRequest = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
   const url = `${API_BASE_URL}${endpoint}`;
@@ -67,7 +74,11 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
   if (import.meta.env.DEV) {
     console.log(`🔄 [API] Request to ${endpoint}`);
     console.log(`🔑 [API] Using auth token: ${token ? 'yes' : 'no'}`);
-    console.log(`📝 [API] Request method:`, options.method || 'GET');
+    if (token) {
+      console.log(`� [API] Token preview: ${token.substring(0, 30)}...`);
+    }
+    console.log(`�📝 [API] Request method:`, options.method || 'GET');
+    console.log(`📋 [API] Headers:`, headers);
   }
 
   // 🚀 Crear opciones de fetch optimizadas

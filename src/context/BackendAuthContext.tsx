@@ -18,6 +18,7 @@ interface BackendAuthContextType {
   signOut: () => Promise<void>;
   refreshUser: (forceRefresh?: boolean) => Promise<void>;
   markUserAsExperienced: () => void;
+  clearCacheAndRefresh: () => Promise<boolean>;
 }
 
 const BackendAuthContext = createContext<BackendAuthContextType | undefined>(undefined);
@@ -205,6 +206,32 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     console.log('👍 User marked as experienced');
   };
 
+  // Función para limpiar completamente el cache y refrescar contexto
+  const clearCacheAndRefresh = async () => {
+    try {
+      console.log('🧹 Clearing all cache and forcing context refresh...');
+      
+      // Limpiar cache de API
+      const { clearApiCache } = await import('@/config/api');
+      clearApiCache();
+      console.log('✅ API cache cleared');
+      
+      // Resetear estado local
+      setIsInitialized(false);
+      setHasProfile(false);
+      setIsNewUser(false);
+      
+      // Force refresh completo con bypass de cache
+      await refreshUser(true);
+      
+      console.log('✅ Cache cleared and context refreshed');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing cache:', error);
+      return false;
+    }
+  };
+
   const value: BackendAuthContextType = {
     user,
     loading,
@@ -215,6 +242,7 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     signOut,
     refreshUser,
     markUserAsExperienced,
+    clearCacheAndRefresh,
   };
 
   return (

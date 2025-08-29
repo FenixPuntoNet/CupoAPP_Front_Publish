@@ -119,21 +119,28 @@ export function AuthGuard({ children }: AuthGuardProps) {
         // Obtener los parámetros de búsqueda de la URL actual
         const searchParams = new URLSearchParams(window.location.search);
         const fromProfile = searchParams.get('from') === 'profile';
+        const fromOnboarding = searchParams.get('from') === 'onboarding';
         
         console.log('🔍 User with profile on CompletarRegistro:', {
           currentPath,
           fromProfile,
+          fromOnboarding,
+          hasProfile,
+          isNewUser,
           searchParams: Object.fromEntries(searchParams.entries())
         });
         
-        // Solo redirigir a home si NO viene desde el perfil Y no es un nuevo usuario
-        if (!fromProfile && !isNewUser) {
-          console.log('✅ User has profile and not updating, redirecting to home');
+        // ✅ MEJORA: Si ya completó el perfil y no es update, redirigir inmediatamente
+        if (!fromProfile && !fromOnboarding && !isNewUser && hasProfile) {
+          console.log('✅ User has completed profile, redirecting to home');
           navigate({ to: '/home' });
           return;
+        } else if (fromProfile || fromOnboarding) {
+          console.log('📝 Allowing access to CompletarRegistro for update or new user setup');
+          // Permitir el acceso para actualizar perfil o completar onboarding
+          return;
         } else {
-          console.log('📝 Allowing access to CompletarRegistro for profile update or new user');
-          // Permitir el acceso para actualizar perfil o completar perfil de nuevo usuario
+          console.log('🔄 User needs to complete profile setup');
           return;
         }
       }

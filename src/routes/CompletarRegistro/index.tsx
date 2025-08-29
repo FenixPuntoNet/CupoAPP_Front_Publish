@@ -42,7 +42,7 @@ const CompleteProfileView: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const navigate = useNavigate();
-  const { user, isNewUser, markUserAsExperienced, refreshUser } = useBackendAuth();
+  const { user, isNewUser, markUserAsExperienced, refreshUser, clearCacheAndRefresh } = useBackendAuth();
   const search = useSearch({ from: '/CompletarRegistro/' }) as { from?: string };
 
   const form = useForm<ProfileFormData>({
@@ -340,14 +340,25 @@ const CompleteProfileView: React.FC = () => {
         color: 'green',
       });
 
-      // ✅ ACTUALIZAR CONTEXTO: Refrescar los datos del usuario para actualizar hasProfile
-      console.log('🔄 Refreshing user context after profile completion...');
+      // ✅ ACTUALIZAR CONTEXTO: Limpiar cache y refrescar contexto completamente
+      console.log('🧹 Clearing cache and refreshing context after profile completion...');
       try {
-        await refreshUser(true); // Forzar refresh para actualizar hasProfile
-        console.log('✅ User context refreshed successfully');
+        const cacheCleared = await clearCacheAndRefresh();
+        if (cacheCleared) {
+          console.log('✅ Cache cleared and context refreshed successfully');
+        } else {
+          console.warn('⚠️ Cache clear had issues, trying fallback refresh');
+          await refreshUser(true); // Fallback
+        }
       } catch (refreshError) {
-        console.error('⚠️ Could not refresh user context:', refreshError);
-        // No es crítico, continuar con la redirección
+        console.error('⚠️ Could not refresh context after profile completion:', refreshError);
+        // Intentar fallback simple
+        try {
+          await refreshUser(true);
+          console.log('✅ Fallback refresh successful');
+        } catch (fallbackError) {
+          console.error('❌ Even fallback refresh failed:', fallbackError);
+        }
       }
       
       console.log('🔄 Profile completion context:', {
@@ -372,12 +383,16 @@ const CompleteProfileView: React.FC = () => {
         markUserAsExperienced();
         console.log('🎯 New user completed profile, marking as experienced');
         
+        // ✅ LIMPIAR FLAGS DE NUEVO USUARIO
+        localStorage.removeItem('is_new_user');
+        console.log('🧹 Cleared new user flags');
+        
         // Añadir un pequeño delay para asegurar que el contexto se actualice
         setTimeout(() => {
           const destination = values.user_type === 'DRIVER' ? '/RegistrarVehiculo' : '/home';
           console.log('✅ NEW USER JOURNEY COMPLETE: Redirecting to:', destination);
           navigate({ to: destination });
-        }, 100);
+        }, 150); // Aumentamos el delay ligeramente
       } else if (isEditing) {
         // Caso 3: Usuario editando perfil existente
         console.log('✅ EDITING MODE: Redirecting to /Perfil');
