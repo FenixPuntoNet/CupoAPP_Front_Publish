@@ -12,6 +12,7 @@ PODS:
   - CapacitorCordova (6.2.1)
   - CapacitorFilesystem (6.0.3):
     - Capacitor
+  - Clarity (3.1.1)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -21,6 +22,11 @@ DEPENDENCIES:
   - "CapacitorCommunityFileOpener (from `../../node_modules/@capacitor-community/file-opener`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
+  - Clarity
+
+SPEC REPOS:
+  trunk:
+    - Clarity
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -46,7 +52,8 @@ SPEC CHECKSUMS:
   CapacitorCommunityFileOpener: 6373ac7cf5b48ef7086927608aaba524f1e676e4
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
   CapacitorFilesystem: 59270a63c60836248812671aa3b15df673fbaf74
+  Clarity: f93812572440374868b54556236f18129806e699
 
-PODFILE CHECKSUM: eb2b8d6dba7a5d3ca048d703f9649b8247ec6c93
+PODFILE CHECKSUM: 495807bb46ec2658536ba59ab6498429378aab05
 
 COCOAPODS: 1.16.2

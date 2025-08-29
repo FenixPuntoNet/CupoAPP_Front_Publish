@@ -20,6 +20,7 @@ import {
     Select,
 } from '@mantine/core';
 import { usePublishTripClick } from '@/hooks/useSingleClick';
+import { useClarity, useClarityTracking } from '@/hooks/useClarity';
 import PublishTripCosts from '@/components/pricing/PublishTripCosts';
 import {
     ArrowLeft,
@@ -357,6 +358,17 @@ import { migrateAllPendingDataToTrip, cleanupOldPendingData } from '@/services/b
 
 const DetallesViajeView = () => {
     const navigate = useNavigate();
+    
+    // Clarity tracking hooks
+    const { setCustomTag } = useClarity({
+        autoTrackPageViews: true,
+        userProperties: {
+            page_type: 'trip_details',
+            flow: 'publish_trip'
+        }
+    });
+    const { trackButtonClick, trackFormSubmit } = useClarityTracking();
+    
     const [tripData, setTripData] = useState<TripData>(tripStore.getStoredData());
     const [seats, setSeats] = useState<number>(1);
     const [pricePerSeat, setPricePerSeat] = useState<number>(0);
@@ -528,15 +540,58 @@ const DetallesViajeView = () => {
     };
 
     const handlePreviewClick = () => {
+        trackButtonClick('preview_trip');
+        setCustomTag('trip_seats', seats.toString());
+        setCustomTag('trip_price', pricePerSeat.toString());
+        
         if (validateForm()) {
             setShowPreviewModal(true);
         }
+    };
+
+    // Handlers con tracking para interacciones del usuario
+    const handleSeatsChange = (value: number) => {
+        setSeats(value);
+        setCustomTag('seats_selected', value.toString());
+        trackButtonClick('change_seats', value.toString());
+    };
+
+    const handleDateTimeChange = (date: Date | null) => {
+        setDateTime(date);
+        if (date) {
+            setCustomTag('trip_date_set', 'true');
+            trackButtonClick('set_date');
+        }
+    };
+
+    const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setDescription(e.currentTarget.value);
+        if (e.currentTarget.value.length > 0) {
+            setCustomTag('description_added', 'true');
+        }
+    };
+
+    const handlePetsToggle = (checked: boolean) => {
+        setAllowPets(checked);
+        setCustomTag('allow_pets', checked.toString());
+        trackButtonClick('toggle_pets', checked.toString());
+    };
+
+    const handleSmokingToggle = (checked: boolean) => {
+        setAllowSmoking(checked);
+        setCustomTag('allow_smoking', checked.toString());
+        trackButtonClick('toggle_smoking', checked.toString());
     };
 
     // Función que contiene toda la lógica de publicación del viaje
     const performPublishTrip = async () => {
         if (!validateForm()) return;
         setLoading(true);
+
+        // Tracking del intento de publicación
+        trackFormSubmit('publish_trip_attempt');
+        setCustomTag('trip_distance', tripData.selectedRoute?.distance?.toString() || '0');
+        setCustomTag('trip_duration', tripData.selectedRoute?.duration?.toString() || '0');
 
         try {
             if (!tripData.selectedRoute || !tripData.origin || !tripData.destination) {
@@ -675,6 +730,10 @@ const DetallesViajeView = () => {
             setShowPreviewModal(false);
             setShowSuccessModal(true);
 
+            // Tracking del éxito de publicación
+            trackFormSubmit('publish_trip_success', true);
+            setCustomTag('trip_published', 'true');
+
             setTimeout(() => {
                 navigate({ to: '/Actividades' });
             }, 2000);
@@ -683,6 +742,10 @@ const DetallesViajeView = () => {
             console.error("Error durante el proceso de publicación:", error);
             const errorMessage = error.message || 'Error al guardar el viaje';
             setFormError(errorMessage);
+            
+            // Tracking del error
+            trackFormSubmit('publish_trip_error', false);
+            setCustomTag('error_type', 'publish_trip');
             
             // Mostrar notificación de error con información sobre la garantía
             notifications.show({
@@ -769,6 +832,10 @@ const DetallesViajeView = () => {
 
     // Función para manejar cambios en el precio
     const handlePriceChange = (value: number) => {
+        // Tracking de cambio de precio
+        setCustomTag('price_modified', 'true');
+        setCustomTag('new_price', value.toString());
+        
         if (suggestedPrice === 0) {
             setPricePerSeat(value);
             return;
@@ -782,6 +849,11 @@ const DetallesViajeView = () => {
         const limitedPrice = Math.max(minPrice, Math.min(maxPrice, value));
         setPricePerSeat(limitedPrice);
         validatePriceRange(limitedPrice, suggestedPrice);
+        
+        // Tracking del estado del precio
+        if (limitedPrice !== value) {
+            setCustomTag('price_limited', 'true');
+        }
     };
 
     if (!tripData.selectedRoute) return null;
@@ -861,7 +933,7 @@ const DetallesViajeView = () => {
                                     description="Selecciona cuándo saldrás (solo fechas desde hoy en adelante)"
                                     placeholder="Selecciona fecha y hora"
                                     value={dateTime}
-                                    onChange={setDateTime}
+                                    onChange={handleDateTimeChange}
                                     valueFormat="DD MMM YYYY hh:mm A"
                                     locale="es"
                                     clearable={false}
@@ -901,7 +973,7 @@ const DetallesViajeView = () => {
                                 
                                 <FormattedNumberInput
                                     value={seats}
-                                    onChange={setSeats}
+                                    onChange={handleSeatsChange}
                                     min={1}
                                     max={6}
                                     required
@@ -1069,7 +1141,7 @@ const DetallesViajeView = () => {
                             description="Añade información importante para los pasajeros"
                             placeholder="Punto de encuentro, equipaje permitido..."
                             value={description}
-                            onChange={(e) => setDescription(e.currentTarget.value)}
+                            onChange={handleDescriptionChange}
                             minRows={3}
                             maxRows={5}
                             required
@@ -1082,13 +1154,13 @@ const DetallesViajeView = () => {
                                 <Switch
                                     label="Mascotas permitidas"
                                     checked={allowPets}
-                                    onChange={(e) => setAllowPets(e?.currentTarget?.checked ?? !allowPets)}
+                                    onChange={(e) => handlePetsToggle(e?.currentTarget?.checked ?? !allowPets)}
                                     size="lg"
                                 />
                                 <Switch
                                     label="Se permite fumar"
                                     checked={allowSmoking}
-                                    onChange={(e) => setAllowSmoking(e?.currentTarget?.checked ?? !allowSmoking)}
+                                    onChange={(e) => handleSmokingToggle(e?.currentTarget?.checked ?? !allowSmoking)}
                                     size="lg"
                                 />
                             </Group>

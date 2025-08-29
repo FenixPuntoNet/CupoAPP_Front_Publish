@@ -16,6 +16,7 @@ import { IconArrowUpRight, IconArrowDownLeft, IconCheck, IconCircleCheck, IconCa
 import InteractiveMap from '@/components/InteractiveMap';
 // Servicios del backend
 import { useMaps } from '@/hooks/useMaps';
+import { useClarity, useClarityTracking } from '@/hooks/useClarity';
 import { searchTrips, type TripSearchResult } from '@/services/trips';
 import { getAssumptions, ensureAssumptionsExist } from '@/services/config';
 import type { PlaceSuggestion } from '@/services/googleMaps';
@@ -31,6 +32,16 @@ interface SearchFormData {
 }
 
 const ReservarView = () => {
+    // Clarity tracking hooks
+    const { setCustomTag } = useClarity({
+        autoTrackPageViews: true,
+        userProperties: {
+            page_type: 'search_trips',
+            flow: 'find_ride'
+        }
+    });
+    const { trackButtonClick, trackFormSubmit, trackSearch } = useClarityTracking();
+    
     const [showRouteModal, setShowRouteModal] = useState(false);
     const [selectedRouteInfo, setSelectedRouteInfo] = useState<{ origin: string; destination: string } | null>(null);
     const [showDriverModal, setShowDriverModal] = useState(false);
@@ -151,6 +162,10 @@ const ReservarView = () => {
     };
 
     const handleSuggestionClick = async (suggestion: PlaceSuggestion, type: 'origin' | 'destination') => {
+        // Tracking de selección de lugar
+        trackButtonClick(`select_${type}`, suggestion.mainText);
+        setCustomTag(`${type}_selected`, suggestion.mainText);
+        
         try {
             const details = await getDetails(suggestion.placeId);
             if (details) {
@@ -186,6 +201,15 @@ const ReservarView = () => {
         setFormError(null);
         setSearchMessage('');
         setSearchStatus('none');
+        
+        // Tracking de búsqueda
+        trackFormSubmit('search_trips');
+        setCustomTag('search_origin', formData.origin);
+        setCustomTag('search_destination', formData.destination);
+        setCustomTag('search_passengers', formData.passengers.toString());
+        if (formData.date) {
+            setCustomTag('search_date', dayjs(formData.date).format('YYYY-MM-DD'));
+        }
         
         console.log('🔍 Starting search with formData:', formData);
     
@@ -227,6 +251,14 @@ const ReservarView = () => {
             setSearchMessage(response.message || 'Búsqueda completada');
             setSearchStatus(response.status || 'none');
 
+            // Tracking de resultados de búsqueda
+            setCustomTag('search_results_count', response.trips.length.toString());
+            setCustomTag('search_status', response.status || 'none');
+            trackSearch(
+                `${formData.origin} to ${formData.destination}`, 
+                response.trips.length
+            );
+
             // Log del tipo de búsqueda realizada
             const searchType = {
                 'exact': '🎯 Búsqueda exacta: origen + destino + fecha',
@@ -266,6 +298,11 @@ const ReservarView = () => {
                 }
             }
             
+            // Tracking de error en búsqueda
+            setCustomTag('search_error', 'true');
+            setCustomTag('error_type', 'search_trips');
+            setCustomTag('error_message', errorMessage);
+            
             setFormError(errorMessage);
             setSearchMessage(errorDetails);
             setSearchStatus('none');
@@ -283,6 +320,13 @@ const ReservarView = () => {
 
     // Función que contiene la lógica de reserva
     const performReservation = async (trip: TripSearchResult) => {
+        // Tracking de intento de reservación
+        trackButtonClick('reserve_trip');
+        setCustomTag('trip_id_selected', trip.id.toString());
+        setCustomTag('trip_price_selected', trip.pricePerSeat.toString());
+        setCustomTag('trip_seats_selected', trip.seats.toString());
+        setCustomTag('driver_selected', trip.driverName || 'unknown');
+        
         // Convertir TripSearchResult a Trip para compatibilidad
         const tripData: Trip = {
             id: trip.id,
@@ -577,7 +621,12 @@ const ReservarView = () => {
                                 {/* Passenger Selector */}
                                 <div
                                     className={styles.inputContainer}
-                                    onClick={() => setShowPassengerSelector(!showPassengerSelector)}
+                                    onClick={() => {
+                                        setShowPassengerSelector(!showPassengerSelector);
+                                        if (!showPassengerSelector) {
+                                            trackButtonClick('open_passenger_selector');
+                                        }
+                                    }}
                                 >
                                     <div className={styles.inputIcon}>
                                         <User size={20} />
@@ -609,6 +658,9 @@ const ReservarView = () => {
                                         onChange={(num) => {
                                             setFormData((prev) => ({ ...prev, passengers: num }));
                                             setShowPassengerSelector(false);
+                                            // Tracking de selección de pasajeros
+                                            trackButtonClick('select_passengers', num.toString());
+                                            setCustomTag('passengers_selected', num.toString());
                                         }}
                                     />
                                 )}

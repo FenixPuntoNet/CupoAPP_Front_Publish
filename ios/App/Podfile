@@ -21,6 +21,9 @@ end
 target 'App' do
   capacitor_pods
   # Add your Pods here
+  
+  # Microsoft Clarity for iOS Analytics
+  pod 'Clarity'
 end
 
 post_install do |installer|
