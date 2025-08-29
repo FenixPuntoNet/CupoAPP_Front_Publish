@@ -19,33 +19,7 @@ import { useErrorHandling } from "@/hooks/useErrorHandling";
 import { apiRequest } from "@/config/api";
 import styles from "./index.module.css";
 
-// Imports dinámicos para Capacitor (solo se cargan en móvil)
-let App: any = null;
-let Browser: any = null;
-
-// Función para detectar si estamos en un entorno móvil
-const isMobileApp = () => {
-  return window.location.protocol === 'capacitor:' || 
-         (window as any).Capacitor?.isNativePlatform?.() || 
-         false;
-};
-
-// Función para cargar dinámicamente los plugins de Capacitor
-const loadCapacitorPlugins = async () => {
-  if (isMobileApp() && !App && !Browser) {
-    try {
-      const [appModule, browserModule] = await Promise.all([
-        import('@capacitor/app'),
-        import('@capacitor/browser')
-      ]);
-      App = appModule.App;
-      Browser = browserModule.Browser;
-      console.log('✅ Capacitor plugins loaded');
-    } catch (error) {
-      console.warn('⚠️ Failed to load Capacitor plugins:', error);
-    }
-  }
-};
+import { isMobileApp, startMobileOAuth } from '@/utils/deepLinkHandler';
 
 interface LoginFormValues {
   email: string;
@@ -266,80 +240,32 @@ const LoginView: React.FC = () => {
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-
       console.log('🚀 Starting Google OAuth login via backend...');
       
-      // Cargar plugins de Capacitor si estamos en móvil
-      await loadCapacitorPlugins();
-      
-      if (isMobileApp() && App && Browser) {
-        // ===== VERSIÓN MÓVIL (Capacitor) =====
-        console.log('📱 Using mobile Capacitor implementation for login');
+      if (isMobileApp()) {
+        // ===== VERSIÓN MÓVIL MEJORADA (Capacitor) =====
+        console.log('📱 Using improved mobile Capacitor implementation for login');
         
-        const MOBILE_REDIRECT = 'cupo://oauth-callback';
-        const googleAuthUrl = `https://cupo-backend.fly.dev/auth/login/google?redirect=${encodeURIComponent(MOBILE_REDIRECT)}&platform=mobile`;
-        
-        console.log('🔗 Mobile OAuth URL:', googleAuthUrl);
-        
-        // Abrir navegador del sistema
-        await Browser.open({ url: googleAuthUrl });
-
-        // Escuchar deep link
-        await App.addListener('appUrlOpen', async (event: any) => {
-          try {
-            const { url } = event;
-            console.log('🔗 Deep link recibido en login:', url);
-            
-            if (url?.startsWith('cupo://oauth-callback')) {
-              // Cerrar navegador y remover listeners
-              await Browser.close();
-              await App.removeAllListeners();
-              
-              // Extraer token del deep link
-              const urlObj = new URL(url);
-              const accessToken = urlObj.searchParams.get('access_token') || 
-                                urlObj.hash.includes('access_token') ? 
-                                new URLSearchParams(urlObj.hash.substring(1)).get('access_token') : null;
-              
-              if (accessToken) {
-                console.log('🔑 Access token encontrado en deep link (login)');
-                
-                // Guardar token
-                const { setAuthToken } = await import('@/config/api');
-                setAuthToken(accessToken);
-                
-                // Verificar usuario
-                const userResponse = await apiRequest('/auth/me', { method: 'GET' });
-                
-                if (userResponse && userResponse.id) {
-                  console.log('✅ Google OAuth login successful (mobile)');
-                  await handleSuccessfulGoogleAuth();
-                } else {
-                  throw new Error('No se pudo verificar el usuario');
-                }
-              } else {
-                throw new Error('No se encontró access_token en el deep link');
-              }
-            }
-          } catch (error: any) {
-            console.error('Mobile OAuth login error:', error);
-            handleBackendError(error?.message || 'Error con Google OAuth', {
-              id: 'google-oauth-error',
+        await startMobileOAuth('login', {
+          onSuccess: async (userData) => {
+            console.log('✅ Mobile OAuth login successful:', userData);
+            await handleSuccessfulGoogleAuth();
+          },
+          onError: (error) => {
+            console.error('❌ Mobile OAuth login error:', error);
+            handleBackendError(error || 'Error en OAuth móvil', {
+              id: 'mobile-oauth-error',
               autoClose: 6000
             });
             setLoading(false);
+          },
+          onLoading: (loading) => {
+            // El loading ya está manejado por el estado local
+            if (!loading) {
+              setLoading(false);
+            }
           }
         });
-
-        // Timeout después de 5 minutos
-        setTimeout(async () => {
-          await App.removeAllListeners();
-          handleBackendError('Tiempo de espera agotado para el login con Google', {
-            id: 'google-oauth-timeout',
-            autoClose: 6000
-          });
-          setLoading(false);
-        }, 300000);
         
       } else {
         // ===== VERSIÓN WEB (Redirect en misma página) =====

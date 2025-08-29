@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist 	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.cupo.oauth</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>cupo</string>
-			</array>
-		</dict>
-	</array>Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -73,6 +63,16 @@
 				<string>cupo</string>
 			</array>
 		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>googlegmail</string>
+		<string>googlemail</string>
+		<string>googlechrome</string>
+		<string>googlechromes</string>
+		<string>safari</string>
+		<string>http</string>
+		<string>https</string>
 	</array>
 </dict>
 </plist>

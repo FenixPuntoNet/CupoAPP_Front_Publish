@@ -4,6 +4,17 @@ const config: CapacitorConfig = {
   appId: 'com.cupo.app',
   appName: 'cupo',
   webDir: 'dist/client',
+  server: {
+    androidScheme: 'https'
+  },
+  plugins: {
+    App: {
+      appUrlOpen: {
+        supported: true,
+        customSchemes: ['cupo']
+      }
+    }
+  }
 };
 
 export default config;
