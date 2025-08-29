@@ -246,12 +246,12 @@ const LoginView: React.FC = () => {
         // ===== VERSIÓN MÓVIL MEJORADA (Capacitor) =====
         console.log('📱 Using improved mobile Capacitor implementation for login');
         
-        await startMobileOAuth('login', {
-          onSuccess: async (userData) => {
+        await startMobileOAuth({
+          onSuccess: async (userData: any) => {
             console.log('✅ Mobile OAuth login successful:', userData);
             await handleSuccessfulGoogleAuth();
           },
-          onError: (error) => {
+          onError: (error: any) => {
             console.error('❌ Mobile OAuth login error:', error);
             handleBackendError(error || 'Error en OAuth móvil', {
               id: 'mobile-oauth-error',
@@ -259,7 +259,7 @@ const LoginView: React.FC = () => {
             });
             setLoading(false);
           },
-          onLoading: (loading) => {
+          onLoading: (loading: boolean) => {
             // El loading ya está manejado por el estado local
             if (!loading) {
               setLoading(false);

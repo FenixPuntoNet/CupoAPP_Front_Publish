@@ -254,17 +254,17 @@ const RegisterView: React.FC = () => {
         // ===== VERSIÓN MÓVIL MEJORADA (Capacitor) =====
         console.log('📱 Using improved mobile Capacitor implementation for registration');
         
-        await startMobileOAuth('register', {
-          onSuccess: async (userData) => {
+        await startMobileOAuth({
+          onSuccess: async (userData: any) => {
             console.log('✅ Mobile OAuth registration successful:', userData);
             await handleSuccessfulGoogleAuth();
           },
-          onError: (error) => {
+          onError: (error: any) => {
             console.error('❌ Mobile OAuth registration error:', error);
             setError(error || 'Error en OAuth móvil');
             setLoading(false);
           },
-          onLoading: (loading) => {
+          onLoading: (loading: boolean) => {
             // El loading ya está manejado por el estado local
             if (!loading) {
               setLoading(false);
