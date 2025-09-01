@@ -44,7 +44,7 @@ import 'dayjs/locale/es';
 import styles from './index.module.css';
 import { getCurrentUser } from '@/services/auth';
 import { publishTrip } from '@/services/viajes';
-import { checkAndFreezeBalance, getCurrentWallet } from '@/services/wallet';
+import { getCurrentWallet } from '@/services/wallet';
 import { getUserVehicles } from '@/services/vehicles';
 import { useAssumptions } from '../../hooks/useAssumptions';
 import { 
@@ -231,9 +231,50 @@ const InsufficientBalanceModal: React.FC<InsufficientBalanceModalProps> = ({
     requiredAmount, 
     currentBalance 
 }) => {
+    const [walletInfo, setWalletInfo] = useState<{totalBalance: number, frozenBalance: number, availableBalance: number} | null>(null);
+    
+    // Obtener información detallada del wallet cuando se abre el modal
+    useEffect(() => {
+        if (isOpen) {
+            console.log('💰 [MODAL] Modal abierto, obteniendo información detallada del wallet...');
+            getCurrentWallet().then(response => {
+                if (response.success && response.data) {
+                    const totalBalance = response.data.balance || 0;
+                    const frozenBalance = response.data.frozen_balance || 0;
+                    const availableBalance = Math.max(0, totalBalance - frozenBalance);
+                    
+                    console.log('💰 [MODAL] Información detallada del wallet:', {
+                        totalBalance,
+                        frozenBalance,
+                        availableBalance,
+                        currentBalance_prop: currentBalance,
+                        requiredAmount
+                    });
+                    
+                    setWalletInfo({
+                        totalBalance,
+                        frozenBalance,
+                        availableBalance
+                    });
+                } else {
+                    console.error('❌ [MODAL] Error obteniendo información detallada del wallet:', response.error);
+                    setWalletInfo(null);
+                }
+            }).catch(error => {
+                console.error('❌ [MODAL] Error en useEffect del modal:', error);
+                setWalletInfo(null);
+            });
+        }
+    }, [isOpen]);
+
     const handleRechargeWallet = () => {
         window.location.href = 'https://www.cupo.lat/login';
     };
+
+    // Usar la información detallada del wallet si está disponible
+    const displayBalance = walletInfo ? walletInfo.totalBalance : currentBalance; // Usar saldo TOTAL como "disponible"
+    const hasDetailedInfo = walletInfo !== null;
+    const deficit = Math.max(0, requiredAmount - displayBalance);
 
     return (
         <Modal
@@ -260,19 +301,32 @@ const InsufficientBalanceModal: React.FC<InsufficientBalanceModalProps> = ({
                     
                     <Text ta="center" size="md" c="dimmed" mb="lg">
                         Para publicar este viaje necesitas tener fondos disponibles en tu billetera como garantía.
-                        {currentBalance === 0 && (
-                            <Text size="sm" mt="xs" c="yellow">
-                                Nota: Es posible que tengas fondos congelados de viajes anteriores. 
-                                Estos se liberarán automáticamente cuando esos viajes se completen.
+                        {displayBalance === 0 && hasDetailedInfo && walletInfo.frozenBalance > 0 && (
+                            <Text size="sm" mt="xs" c="yellow" fw={500}>
+                                Nota: Tienes ${walletInfo.frozenBalance.toLocaleString()} congelados de viajes anteriores que se liberarán cuando se completen.
+                            </Text>
+                        )}
+                        {displayBalance === 0 && (!hasDetailedInfo || walletInfo.frozenBalance === 0) && (
+                            <Text size="sm" mt="xs" c="blue">
+                                Si recientemente tuviste viajes, es posible que tengas fondos congelados que se liberarán automáticamente cuando esos viajes se completen.
                             </Text>
                         )}
                     </Text>
 
                     <Card className={styles.balanceCard} mb="lg">
                         <Stack gap="sm">
+                            {hasDetailedInfo && walletInfo.frozenBalance > 0 && (
+                                <>
+                                    <Group justify="space-between">
+                                        <Text size="sm" c="dimmed">Fondos congelados:</Text>
+                                        <Text size="sm" fw={500} c="orange">${walletInfo.frozenBalance.toLocaleString()}</Text>
+                                    </Group>
+                                    <div className={styles.divider} />
+                                </>
+                            )}
                             <Group justify="space-between">
-                                <Text size="sm" c="dimmed">Tu saldo actual:</Text>
-                                <Text size="sm" fw={500}>${currentBalance.toLocaleString()}</Text>
+                                <Text size="sm" c="dimmed">Tu saldo total:</Text>
+                                <Text size="sm" fw={500}>${displayBalance.toLocaleString()}</Text>
                             </Group>
                             <Group justify="space-between">
                                 <Text size="sm" c="dimmed">Monto requerido:</Text>
@@ -282,7 +336,7 @@ const InsufficientBalanceModal: React.FC<InsufficientBalanceModalProps> = ({
                             <Group justify="space-between">
                                 <Text size="sm" fw={600}>Necesitas recargar:</Text>
                                 <Text size="sm" fw={600} c="orange">
-                                    ${(requiredAmount - currentBalance).toLocaleString()}
+                                    ${deficit.toLocaleString()}
                                 </Text>
                             </Group>
                         </Stack>
@@ -298,6 +352,11 @@ const InsufficientBalanceModal: React.FC<InsufficientBalanceModalProps> = ({
                                 y comprometidos con sus viajes. El dinero se libera automáticamente cuando el 
                                 viaje se completa exitosamente.
                             </Text>
+                            {hasDetailedInfo && walletInfo.frozenBalance > 0 && (
+                                <Text size="xs" c="dimmed" mt="xs" fw={500}>
+                                    Los fondos congelados actuales (${walletInfo.frozenBalance.toLocaleString()}) se liberarán cuando tus viajes activos se completen.
+                                </Text>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -427,40 +486,6 @@ const DetallesViajeView = () => {
         return totalRequired;
     };
 
-    const checkAndFreezeWalletBalance = async (requiredAmount: number) => {
-        try {
-            const result = await checkAndFreezeBalance(requiredAmount);
-            
-            if (result.showModal) {
-                // Obtener el wallet actual para mostrar los saldos
-                const walletData = await getCurrentWallet();
-                if (walletData.success && walletData.data) {
-                    const totalBalance = walletData.data.balance || 0;
-                    const frozenBalance = walletData.data.frozen_balance || 0;
-                    const availableBalance = Math.max(0, totalBalance - frozenBalance);
-                    
-                    console.log(`💰 [MODAL] Balance info: total=$${totalBalance.toLocaleString()}, congelado=$${frozenBalance.toLocaleString()}, disponible=$${availableBalance.toLocaleString()}, requerido=$${requiredAmount.toLocaleString()}`);
-                    
-                    setRequiredAmount(requiredAmount);
-                    setCurrentBalance(availableBalance);
-                    setShowInsufficientBalanceModal(true);
-                }
-                return { success: false, showModal: true };
-            }
-
-            if (!result.success) {
-                throw new Error(result.error);
-            }
-
-            return {
-                success: true,
-                message: result.message
-            };
-        } catch (error: any) {
-            console.error('Error checking wallet:', error);
-            throw error;
-        }
-    };
       
 
     // useEffect de carga inicial (solo una vez)
@@ -603,22 +628,7 @@ const DetallesViajeView = () => {
                 throw new Error("Usuario no autenticado");
             }
 
-            // Calcular y verificar el balance requerido
-            const requiredAmountToCheck = calculateRequiredBalance(seats, pricePerSeat);
-            console.log('🔍 VERIFICACIÓN BALANCE - Inputs:', { seats, pricePerSeat, requiredAmountToCheck });
-
-            // Intentar congelar el balance antes de crear el viaje
-            const walletCheck = await checkAndFreezeWalletBalance(requiredAmountToCheck);
-
-            // Si no hay saldo suficiente, mostrar modal y salir
-            if (walletCheck.showModal) {
-                return;
-            }
-
-            // No mostrar notificación aquí - solo mostrar si el viaje se publica exitosamente
-            console.log('✅ Garantía congelada exitosamente:', walletCheck.message);
-
-            // Usar el servicio para publicar el viaje
+            // Usar el servicio para publicar el viaje DIRECTAMENTE (sin verificación previa)
             const tripPublishData = {
                 origin: {
                     address: tripData.origin.address,
@@ -659,6 +669,96 @@ const DetallesViajeView = () => {
             const result = await publishTrip(tripPublishData);
 
             if (!result.success) {
+                // SI EL BACKEND DEVUELVE ERROR, verificar si es de saldo insuficiente
+                const errorMessage = result.error || '';
+                console.log('🔍 [ERROR] Received error from backend:', errorMessage);
+                
+                // Detectar errores de saldo insuficiente de manera más robusta
+                const isSaldoInsuficiente = (
+                    errorMessage.toLowerCase().includes('saldo') ||
+                    errorMessage.toLowerCase().includes('balance') ||
+                    errorMessage.toLowerCase().includes('fondos') ||
+                    errorMessage.toLowerCase().includes('insuficiente') ||
+                    errorMessage.toLowerCase().includes('disponible') ||
+                    errorMessage.toLowerCase().includes('wallet') ||
+                    errorMessage.toLowerCase().includes('billetera') ||
+                    errorMessage.toLowerCase().includes('garantía') ||
+                    errorMessage.toLowerCase().includes('garantia') ||
+                    errorMessage.toLowerCase().includes('dinero') ||
+                    errorMessage.toLowerCase().includes('money') ||
+                    errorMessage.toLowerCase().includes('insufficient') ||
+                    errorMessage.toLowerCase().includes('recargar') ||
+                    errorMessage.toLowerCase().includes('funds')
+                );
+                
+                if (isSaldoInsuficiente) {
+                    console.log('💰 [MODAL] Error de saldo detectado. Mensaje:', errorMessage);
+                    
+                    // Calcular la cantidad requerida para mostrar en el modal
+                    const requiredAmount = calculateRequiredBalance(seats, pricePerSeat);
+                    
+                    // Obtener el wallet actual para mostrar los saldos
+                    try {
+                        console.log('💰 [MODAL] Obteniendo información actualizada del wallet...');
+                        const walletData = await getCurrentWallet();
+                        if (walletData.success && walletData.data) {
+                            const totalBalance = walletData.data.balance || 0;
+                            const frozenBalance = walletData.data.frozen_balance || 0;
+                            const availableBalance = Math.max(0, totalBalance - frozenBalance);
+                            
+                            console.log(`💰 [MODAL] Información del wallet obtenida:`, {
+                                total_balance: totalBalance,
+                                frozen_balance: frozenBalance,
+                                calculated_available: availableBalance,
+                                required_amount: requiredAmount,
+                                deficit_from_total: Math.max(0, requiredAmount - totalBalance),
+                                modal_will_show: true,
+                                note: 'Using total_balance as displayBalance per user specification'
+                            });
+                            
+                            console.log(`💰 [MODAL] Mostrando modal de saldo insuficiente:`);
+                            console.log(`    - Saldo total (mostrado como disponible): $${totalBalance.toLocaleString()}`);
+                            console.log(`    - Saldo congelado (informativo): $${frozenBalance.toLocaleString()}`);
+                            console.log(`    - Monto requerido: $${requiredAmount.toLocaleString()}`);
+                            console.log(`    - Necesita recargar: $${Math.max(0, requiredAmount - totalBalance).toLocaleString()}`);
+                            console.log(`    - Nota: Usando saldo total como base para cálculo según especificación`);
+                            
+                            setRequiredAmount(requiredAmount);
+                            setCurrentBalance(totalBalance); // Usar el saldo TOTAL como "disponible" según especificación
+                            setShowInsufficientBalanceModal(true);
+                            
+                            // Log para confirmar que el estado se estableció
+                            setTimeout(() => {
+                                console.log(`💰 [MODAL] Modal state after setState - Modal debería estar visible ahora`);
+                                console.log(`💰 [MODAL] Estados finales:`, {
+                                    requiredAmount: requiredAmount,
+                                    currentBalance: totalBalance, // Ahora usa saldo total
+                                    showModal: true,
+                                    deficit: Math.max(0, requiredAmount - totalBalance)
+                                });
+                            }, 100);
+                            
+                            return; // Salir sin mostrar error genérico
+                        } else {
+                            console.error('❌ [MODAL] Error obteniendo wallet:', walletData.error);
+                            // Fallback: mostrar modal con información limitada
+                            console.log('💰 [MODAL] Usando fallback para mostrar modal...');
+                            setRequiredAmount(requiredAmount);
+                            setCurrentBalance(0); // Mostrar 0 como saldo total si no se puede obtener
+                            setShowInsufficientBalanceModal(true);
+                            return;
+                        }
+                    } catch (walletError) {
+                        console.error('❌ [MODAL] Error obteniendo wallet para modal:', walletError);
+                        // Fallback: mostrar modal con información limitada  
+                        console.log('💰 [MODAL] Usando fallback por error en wallet...');
+                        setRequiredAmount(requiredAmount);
+                        setCurrentBalance(0); // Mostrar 0 como saldo total si hay error
+                        setShowInsufficientBalanceModal(true);
+                        return;
+                    }
+                }
+                
                 throw new Error(result.error || 'Error al publicar el viaje');
             }
 
@@ -667,10 +767,29 @@ const DetallesViajeView = () => {
             // 🚀 MIGRACIÓN AUTOMÁTICA: Migrar SafePoints y paradas pendientes
             if (result.data?.trip_id) {
                 console.log('🔄 Iniciando migración automática de datos pendientes...');
+                console.log('🎯 MIGRATION DEBUG: Trip published successfully, starting data migration:', {
+                    trip_id: result.data.trip_id,
+                    timestamp: new Date().toISOString(),
+                    migration_target: 'SafePoints and Stopovers',
+                    backend_integration_function: 'migrateAllPendingDataToTrip'
+                });
                 
                 try {
                     // 1. MIGRACIÓN INTELIGENTE con filtro temporal
+                    console.log('📞 MIGRATION: Calling migrateAllPendingDataToTrip...');
                     const migrationResult = await migrateAllPendingDataToTrip(result.data.trip_id);
+                    
+                    console.log('📋 MIGRATION RESULT RECEIVED:', {
+                        success: migrationResult.success,
+                        total_updated: migrationResult.total_updated,
+                        safepoints_success: migrationResult.migrations.safepoints.success,
+                        safepoints_count: migrationResult.migrations.safepoints.updated_count,
+                        safepoints_error: migrationResult.migrations.safepoints.error,
+                        stopovers_success: migrationResult.migrations.stopovers.success,
+                        stopovers_count: migrationResult.migrations.stopovers.updated_count,
+                        stopovers_error: migrationResult.migrations.stopovers.error,
+                        overall_message: migrationResult.message
+                    });
                     
                     // 2. LIMPIEZA AUTOMÁTICA de datos antiguos (en background)
                     cleanupOldPendingData().catch(error => {

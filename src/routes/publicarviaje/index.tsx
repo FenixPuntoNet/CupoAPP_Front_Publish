@@ -100,12 +100,12 @@ function ReservarView(){
       '🚗 Acceso solo para conductores',
       '⏳ Verificación en proceso', 
       '❌ Verificación rechazada',
-      '🔒 Cuenta bloqueada',
+      '🔒 Cuenta suspendida',
       '🚗 Vehículo no encontrado',
       '⏳ Vehículo en verificación',
       '❌ Vehículo no aprobado', 
       '🔒 Vehículo inactivo',
-      '⚠️ Estado de verificación',
+      '⚠️ Estado de verificación pendiente',
       '⚠️ Estado del vehículo'
     ];
     
@@ -210,52 +210,64 @@ useEffect(() => {
         const statusMessages = {
           'PENDIENTE': {
             title: '⏳ Verificación en proceso',
-            message: 'Tu cuenta de conductor está siendo verificada.',
+            message: 'Tu documentación está siendo revisada por nuestro equipo de seguridad.',
+            actionText: 'Editar Información',
+            actionLink: '/RegistrarVehiculo',
             details: [
-              'Tus documentos están siendo revisados por nuestro equipo',
-              'Este proceso puede tomar entre 24-48 horas',
-              'Te notificaremos cuando la verificación esté completa',
-              'Puedes completar o actualizar tu información mientras esperas'
+              '📋 Estado: En revisión de documentos',
+              '⏰ Tiempo estimado: Máximo 24 horas',
+              '📧 Te notificaremos por email cuando esté lista',
+              '✏️ Puedes editar tu información si detectas algún error',
+              '📞 Si tienes dudas, contacta nuestro soporte'
             ]
           },
           'RECHAZADO': {
             title: '❌ Verificación rechazada',
-            message: 'Tu documentación no fue aprobada.',
+            message: 'Tu documentación necesita correcciones para continuar.',
+            actionText: 'Corregir Documentos',
+            actionLink: '/RegistrarVehiculo',
             details: [
-              'Los documentos presentados no cumplen con los requisitos',
-              'Verifica que todos los documentos estén vigentes y legibles',
-              'Puedes actualizar y volver a subir los documentos corregidos',
-              'Asegúrate de que las fotos sean claras y completas'
+              '📋 Algunos documentos no cumplen con los requisitos',
+              '🔍 Verifica que estén vigentes, legibles y completos',
+              '📸 Las fotos deben ser nítidas y mostrar todos los datos',
+              '✏️ Puedes actualizar y reenviar los documentos',
+              '💡 Revisa los comentarios específicos en tu perfil'
             ]
           },
           'BLOQUEADO': {
-            title: '🔒 Cuenta bloqueada',
-            message: 'Tu cuenta de conductor ha sido suspendida.',
+            title: '🔒 Cuenta suspendida',
+            message: 'Tu cuenta requiere revisión antes de continuar.',
+            actionText: 'Actualizar Información',
+            actionLink: '/RegistrarVehiculo',
             details: [
-              'Tu cuenta fue suspendida por motivos de seguridad',
-              'Puedes revisar y actualizar tu información en el módulo de registro',
-              'Asegúrate de que todos tus documentos estén vigentes',
-              'Una vez actualizada la información, podrás solicitar revisión'
+              '🛡️ Tu cuenta fue suspendida por motivos de seguridad',
+              '📋 Revisa y actualiza tu información personal',
+              '📄 Verifica que todos tus documentos estén vigentes',
+              '🔄 Una vez actualizado, se procesará automáticamente',
+              '📞 Contacta soporte si necesitas asistencia'
             ]
           }
         };
 
         const statusInfo = statusMessages[verificationStatus as keyof typeof statusMessages] || {
-          title: '⚠️ Estado de verificación',
-          message: 'Tu cuenta necesita verificación para publicar viajes.',
+          title: '⚠️ Estado de verificación pendiente',
+          message: 'Tu cuenta necesita completar el proceso de verificación.',
+          actionText: 'Actualizar Información',
+          actionLink: '/RegistrarVehiculo',
           details: [
-            'Tu estado de verificación es: ' + verificationStatus,
-            'Puedes revisar y actualizar tu información de conductor',
-            'Asegúrate de que todos los documentos estén completos y vigentes'
+            '📋 Estado actual: ' + verificationStatus,
+            '✏️ Puedes revisar y actualizar tu información',
+            '📄 Asegúrate de que todos los documentos estén completos',
+            '⏰ La verificación se procesa en máximo 24 horas'
           ]
         };
         
         setModalInfo({
-          type: 'warning',
+          type: verificationStatus === 'PENDIENTE' ? 'info' : 'warning',
           title: statusInfo.title,
           message: statusInfo.message,
-          actionText: 'Revisar Documentos',
-          actionLink: '/RegistrarVehiculo',
+          actionText: statusInfo.actionText || 'Revisar Documentos',
+          actionLink: statusInfo.actionLink || '/RegistrarVehiculo',
           details: statusInfo.details
         });
         setShowInfoModal(true);
@@ -295,48 +307,63 @@ useEffect(() => {
           const vehicleStatusMessages = {
             'pendiente': {
               title: '⏳ Vehículo en verificación',
-              message: 'Tu vehículo está siendo verificado por nuestro equipo.',
+              message: 'Los documentos de tu vehículo están siendo revisados.',
+              actionText: 'Editar Documentos',
+              actionLink: '/RegistrarVehiculo',
               details: [
-                'Los documentos de tu vehículo están en proceso de verificación',
-                'Este proceso puede tomar entre 24-48 horas',
-                'Te notificaremos cuando esté aprobado',
-                'Puedes revisar que todos los documentos estén completos y legibles'
+                '📋 Estado: Documentos en revisión',
+                '⏰ Tiempo estimado: Máximo 24 horas',
+                '📧 Te notificaremos cuando esté aprobado',
+                '✏️ Puedes editar la información si detectas errores',
+                '📄 Verifica que SOAT, licencia y tarjeta estén vigentes'
               ]
             },
             'rechazado': {
               title: '❌ Vehículo no aprobado',
-              message: 'Tu vehículo no cumple con los requisitos necesarios.',
+              message: 'Los documentos de tu vehículo necesitan correcciones.',
+              actionText: 'Corregir Documentos',
+              actionLink: '/RegistrarVehiculo',
               details: [
-                'Los documentos presentados no fueron aprobados',
-                'Verifica que todos los documentos estén vigentes',
-                'Las fotos deben ser claras y legibles',
-                'Puedes actualizar los documentos en el módulo de registro'
+                '📋 Algunos documentos no cumplen los requisitos',
+                '🔍 Verifica que estén vigentes y legibles',
+                '📸 Las fotos deben mostrar todos los datos claramente',
+                '✏️ Puedes actualizar y reenviar los documentos',
+                '💡 Revisa los comentarios específicos en tu perfil'
               ]
             },
             'inactivo': {
               title: '🔒 Vehículo inactivo',
-              message: 'Tu vehículo ha sido desactivado temporalmente.',
+              message: 'Tu vehículo necesita actualización de documentos.',
+              actionText: 'Reactivar Vehículo',
+              actionLink: '/RegistrarVehiculo',
               details: [
-                'Tu vehículo fue desactivado por motivos administrativos',
-                'Puede ser por documentos vencidos o problemas de verificación',
-                'Puedes actualizar la información y documentos',
-                'Revisa si algún documento necesita renovación'
+                '🔒 Tu vehículo fue desactivado por motivos administrativos',
+                '📄 Puede ser por documentos vencidos o datos incompletos',
+                '🔄 Puedes actualizar toda la información y documentos',
+                '📅 Revisa especialmente las fechas de vencimiento',
+                '✅ Una vez actualizado se reactivará automáticamente'
               ]
             }
           };
 
           const vehicleStatusInfo = vehicleStatusMessages[vehicleStatus as keyof typeof vehicleStatusMessages] || {
             title: '⚠️ Estado del vehículo',
-            message: 'Tu vehículo no está disponible para publicar viajes.',
-            details: ['Puedes revisar y actualizar la información de tu vehículo']
+            message: 'Tu vehículo requiere atención antes de publicar viajes.',
+            actionText: 'Revisar Vehículo',
+            actionLink: '/RegistrarVehiculo',
+            details: [
+              '📋 Estado actual: ' + vehicleStatus,
+              '✏️ Puedes revisar y actualizar la información',
+              '⏰ Las verificaciones se procesan en máximo 24 horas'
+            ]
           };
 
           setModalInfo({
-            type: 'warning',
+            type: vehicleStatus === 'pendiente' ? 'info' : 'warning',
             title: vehicleStatusInfo.title,
             message: vehicleStatusInfo.message,
-            actionText: 'Actualizar Vehículo',
-            actionLink: '/RegistrarVehiculo',
+            actionText: vehicleStatusInfo.actionText,
+            actionLink: vehicleStatusInfo.actionLink,
             details: vehicleStatusInfo.details
           });
           setShowInfoModal(true);
@@ -363,23 +390,11 @@ useEffect(() => {
         return;
       }
       
-      // Validar que haya seleccionado origen y destino
+      // Validar que haya seleccionado origen y destino (sin mostrar modal)
       const tripData = tripStore.getStoredData();
       if (!tripData?.origin || !tripData?.destination) {
-        setModalInfo({
-          type: 'error',
-          title: '📍 Ubicaciones faltantes',
-          message: 'Debes seleccionar origen y destino antes de publicar.',
-          actionText: 'Seleccionar Ubicaciones',
-          actionLink: '/ubicaciones',
-          details: [
-            'El origen y destino son obligatorios para publicar un viaje',
-            'Estas ubicaciones se mostrarán a los pasajeros',
-            'Puedes cambiarlas en cualquier momento antes de publicar'
-          ]
-        });
-        setShowInfoModal(true);
-        return;
+        console.log('⚠️ Ubicaciones no seleccionadas, pero permitiendo continuar para que el usuario las configure');
+        // No mostrar modal - permitir que el usuario configure las ubicaciones en la misma página
       }
 
       console.log('✅ Datos de viaje verificados:', tripData);
@@ -756,48 +771,63 @@ useEffect(() => {
         const statusMessages = {
           'pendiente': {
             title: '⏳ Vehículo en verificación',
-            message: 'Tu vehículo está siendo verificado por nuestro equipo.',
+            message: 'Los documentos de tu vehículo están siendo revisados.',
+            actionText: 'Editar Documentos',
+            actionLink: '/RegistrarVehiculo',
             details: [
-              'Los documentos de tu vehículo están en proceso de verificación',
-              'Este proceso puede tomar entre 24-48 horas',
-              'Te notificaremos cuando esté aprobado',
-              'Puedes revisar que todos los documentos estén completos y legibles'
+              '📋 Estado: Documentos en revisión',
+              '⏰ Tiempo estimado: Máximo 24 horas',
+              '📧 Te notificaremos cuando esté aprobado',
+              '✏️ Puedes editar la información si detectas errores',
+              '📄 Verifica que SOAT, licencia y tarjeta estén vigentes'
             ]
           },
           'rechazado': {
             title: '❌ Vehículo no aprobado',
-            message: 'Tu vehículo no cumple con los requisitos necesarios.',
+            message: 'Los documentos de tu vehículo necesitan correcciones.',
+            actionText: 'Corregir Documentos',
+            actionLink: '/RegistrarVehiculo',
             details: [
-              'Los documentos presentados no fueron aprobados',
-              'Verifica que todos los documentos estén vigentes',
-              'Las fotos deben ser claras y legibles',
-              'Puedes actualizar los documentos en el módulo de registro'
+              '📋 Algunos documentos no cumplen los requisitos',
+              '🔍 Verifica que estén vigentes y legibles',
+              '📸 Las fotos deben mostrar todos los datos claramente',
+              '✏️ Puedes actualizar y reenviar los documentos',
+              '💡 Revisa los comentarios específicos en tu perfil'
             ]
           },
           'inactivo': {
             title: '🔒 Vehículo inactivo',
-            message: 'Tu vehículo ha sido desactivado temporalmente.',
+            message: 'Tu vehículo necesita actualización de documentos.',
+            actionText: 'Reactivar Vehículo',
+            actionLink: '/RegistrarVehiculo',
             details: [
-              'Tu vehículo fue desactivado por motivos administrativos',
-              'Puede ser por documentos vencidos o problemas de verificación',
-              'Puedes actualizar la información y documentos',
-              'Revisa si algún documento necesita renovación'
+              '🔒 Tu vehículo fue desactivado por motivos administrativos',
+              '📄 Puede ser por documentos vencidos o datos incompletos',
+              '🔄 Puedes actualizar toda la información y documentos',
+              '📅 Revisa especialmente las fechas de vencimiento',
+              '✅ Una vez actualizado se reactivará automáticamente'
             ]
           }
         };
 
         const statusInfo = statusMessages[vehicleStatus as keyof typeof statusMessages] || {
           title: '⚠️ Estado del vehículo',
-          message: 'Tu vehículo no está disponible para publicar viajes.',
-          details: ['Puedes revisar y actualizar la información de tu vehículo']
+          message: 'Tu vehículo requiere atención antes de publicar viajes.',
+          actionText: 'Revisar Vehículo',
+          actionLink: '/RegistrarVehiculo',
+          details: [
+            '📋 Estado actual: ' + vehicleStatus,
+            '✏️ Puedes revisar y actualizar la información',
+            '⏰ Las verificaciones se procesan en máximo 24 horas'
+          ]
         };
 
         setModalInfo({
-          type: 'warning',
+          type: vehicleStatus === 'pendiente' ? 'info' : 'warning',
           title: statusInfo.title,
           message: statusInfo.message,
-          actionText: 'Actualizar Vehículo',
-          actionLink: '/RegistrarVehiculo',
+          actionText: statusInfo.actionText,
+          actionLink: statusInfo.actionLink,
           details: statusInfo.details
         });
         setShowInfoModal(true);

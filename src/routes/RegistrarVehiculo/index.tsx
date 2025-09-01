@@ -13,7 +13,6 @@ import {
     SimpleGrid,
     LoadingOverlay,
     Progress,
-    Divider,
     ActionIcon,
     Title
 } from '@mantine/core';
@@ -78,23 +77,37 @@ interface VehiclePhotos {
 
 // Datos para los selects
 const VEHICLE_BRANDS = [
-    'Toyota', 'Chevrolet', 'Renault', 'Nissan', 'Hyundai', 'Ford', 'Kia', 
-    'Mazda', 'Volkswagen', 'Mitsubishi', 'Honda', 'Suzuki', 'Fiat', 'Otro'
+    'Audi', 'BMW', 'BYD', 'Changan', 'Chery', 'Chevrolet', 'Citroën', 'Dacia', 'Daewoo', 
+    'Daihatsu', 'DFSK', 'Dodge', 'FAW', 'Ferrari', 'Fiat', 'Ford', 'Foton', 'GAC', 
+    'Geely', 'Great Wall', 'Haval', 'Honda', 'Hyundai', 'Infiniti', 'Isuzu', 'JAC', 
+    'Jaguar', 'Jeep', 'KIA', 'Land Rover', 'Lexus', 'Lifan', 'Mahindra', 'Mazda', 
+    'Mercedes-Benz', 'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche', 
+    'RAM', 'Renault', 'Seat', 'Skoda', 'SsangYong', 'Subaru', 'Suzuki', 'Tata', 
+    'Toyota', 'Volkswagen', 'Volvo', 'Zotye', 'Otra'
 ];
 
 const BODY_TYPES = [
-    'Sedán', 'Hatchback', 'SUV', 'Camioneta', 'Convertible', 'Coupé', 'Van', 'Otro'
+    'Sedán', 'Hatchback', 'SUV', 'Crossover', 'Camioneta', 'Pick-up', 'Van', 'Minivan', 
+    'Coupé', 'Convertible', 'Station Wagon', 'Compacto', 'Subcompacto', 'Familiar', 
+    'Todo Terreno', 'Deportivo', 'Furgón', 'Panel', 'Otro'
 ];
 
 const COLORS = [
     'Blanco', 'Negro', 'Gris', 'Rojo', 'Azul', 'Verde', 'Amarillo', 'Naranja', 'Plata', 'Otro'
 ];
 
-const LICENSE_CATEGORIES = ['A1', 'A2', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'];
+const LICENSE_CATEGORIES = ['B1', 'B2', 'B3', 'C1', 'C2', 'C3'];
 const BLOOD_TYPES = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 const INSURANCE_COMPANIES = [
-    'Seguros Bolívar', 'Seguros del Estado', 'Liberty Seguros', 'AXA Colpatria', 
-    'Seguros Sura', 'Previsora Seguros', 'Mapfre Seguros', 'Otro'
+    'Seguros del Estado S.A.', 'Seguros Bolívar S.A.', 'Liberty Seguros S.A.', 
+    'AXA Colpatria Seguros S.A.', 'Seguros Sura S.A.', 'Previsora Seguros S.A.', 
+    'Mapfre Seguros Generales de Colombia S.A.', 'Allianz Seguros S.A.', 
+    'HDI Seguros S.A.', 'SBS Seguros Colombia S.A.', 'Equidad Seguros S.A.', 
+    'Zurich Seguros S.A.', 'QBE Seguros S.A.', 'Ace Seguros S.A.', 
+    'La Previsora Compañía de Seguros S.A.', 'Aseguradora Solidaria de Colombia', 
+    'Mundial de Seguros S.A.', 'Seguros Comerciales Bolívar S.A.', 
+    'Cardif Colombia Seguros Generales S.A.', 'RCN Seguros S.A.', 
+    'Seguros Alfa S.A.', 'Cooseguros', 'Otra'
 ];
 
 // Tipos de archivo permitidos
@@ -186,6 +199,14 @@ function VehicleRegistrationComplete() {
     
     // Estado para modo edición
     const [isEditMode, setIsEditMode] = useState(false);
+    
+    // Estados para campos "Otra"
+    const [showOtherBrand, setShowOtherBrand] = useState(false);
+    const [showOtherBodyType, setShowOtherBodyType] = useState(false);
+    const [showOtherInsurance, setShowOtherInsurance] = useState(false);
+    const [otherBrand, setOtherBrand] = useState('');
+    const [otherBodyType, setOtherBodyType] = useState('');
+    const [otherInsurance, setOtherInsurance] = useState('');
 
     // useEffect para cargar datos existentes si ya hay un vehículo registrado
     useEffect(() => {
@@ -373,13 +394,24 @@ function VehicleRegistrationComplete() {
         switch (step) {
             case 0: // Datos del vehículo
                 if (!formData.vehicle.brand) newErrors.brand = 'Marca es requerida';
+                if (formData.vehicle.brand === 'Otra' && !otherBrand.trim()) {
+                    newErrors.brand = 'Especifica la marca del vehículo';
+                }
                 if (!formData.vehicle.model) newErrors.model = 'Modelo es requerido';
                 if (!formData.vehicle.year) newErrors.year = 'Año es requerido';
                 if (!formData.vehicle.plate) newErrors.plate = 'Placa es requerida';
                 if (!formData.vehicle.color) newErrors.color = 'Color es requerido';
                 if (!formData.vehicle.body_type) newErrors.body_type = 'Tipo de carrocería es requerido';
+                if (formData.vehicle.body_type === 'Otro' && !otherBodyType.trim()) {
+                    newErrors.body_type = 'Especifica el tipo de carrocería';
+                }
                 if (!formData.vehicle.passenger_capacity || formData.vehicle.passenger_capacity < 1) {
                     newErrors.passenger_capacity = 'Capacidad de pasajeros es requerida';
+                }
+                
+                // Validar foto del vehículo (obligatoria)
+                if (!photos.vehiclePhoto && !photoPreview.vehiclePhoto) {
+                    newErrors.vehiclePhoto = 'La foto del vehículo es obligatoria';
                 }
                 
                 // Validar formato de placa
@@ -402,6 +434,14 @@ function VehicleRegistrationComplete() {
                 if (!formData.license.expedition_date) newErrors.license_expedition = 'Fecha de expedición es requerida';
                 if (!formData.license.expiration_date) newErrors.license_expiration = 'Fecha de vencimiento es requerida';
                 
+                // Validar fotos de licencia (obligatorias)
+                if (!photos.licensePhotos?.front && !photoPreview['licensePhotos_front']) {
+                    newErrors.license_front = 'La foto frontal de la licencia es obligatoria';
+                }
+                if (!photos.licensePhotos?.back && !photoPreview['licensePhotos_back']) {
+                    newErrors.license_back = 'La foto posterior de la licencia es obligatoria';
+                }
+                
                 // Validar que la licencia no esté vencida
                 if (formData.license.expiration_date) {
                     const expirationDate = new Date(formData.license.expiration_date);
@@ -414,8 +454,13 @@ function VehicleRegistrationComplete() {
             case 2: // SOAT
                 if (!formData.soat.policy_number) newErrors.policy_number = 'Número de póliza es requerido';
                 if (!formData.soat.insurance_company) newErrors.insurance_company = 'Aseguradora es requerida';
+                if (formData.soat.insurance_company === 'Otra' && !otherInsurance.trim()) {
+                    newErrors.insurance_company = 'Especifica la aseguradora';
+                }
                 if (!formData.soat.validity_from) newErrors.validity_from = 'Fecha de inicio es requerida';
                 if (!formData.soat.validity_to) newErrors.validity_to = 'Fecha de vencimiento es requerida';
+                
+                // Las fotos del SOAT son opcionales (no se validan)
                 
                 // Validar que el SOAT no esté vencido
                 if (formData.soat.validity_to) {
@@ -682,9 +727,25 @@ function VehicleRegistrationComplete() {
         try {
             console.log('🚀 Iniciando registro completo...');
             
+            // Preparar datos con valores "Otra" resueltos
+            const finalFormData = {
+                vehicle: {
+                    ...formData.vehicle,
+                    brand: formData.vehicle.brand === 'Otra' ? otherBrand.trim() : formData.vehicle.brand,
+                    body_type: formData.vehicle.body_type === 'Otro' ? otherBodyType.trim() : formData.vehicle.body_type
+                },
+                license: formData.license,
+                soat: {
+                    ...formData.soat,
+                    insurance_company: formData.soat.insurance_company === 'Otra' ? otherInsurance.trim() : formData.soat.insurance_company
+                }
+            };
+            
+            console.log('📝 Datos finales para registro:', finalFormData);
+            
             // Paso 1: Registrar vehículo y documentos
             setRegistrationProgress(30);
-            const registrationResponse = await registerCompleteVehicleWithPromotion(formData);
+            const registrationResponse = await registerCompleteVehicleWithPromotion(finalFormData);
             
             if (!registrationResponse.success) {
                 throw new Error(registrationResponse.error || 'Error en el registro');
@@ -814,27 +875,51 @@ function VehicleRegistrationComplete() {
             </Text>
             
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
-                <Select
-                    label="Marca del vehículo"
-                    placeholder="Selecciona la marca"
-                    data={VEHICLE_BRANDS}
-                    value={formData.vehicle.brand}
-                    onChange={(value) => setFormData(prev => ({
-                        ...prev,
-                        vehicle: { ...prev.vehicle, brand: value || '' }
-                    }))}
-                    error={errors.brand}
-                    required
-                    size="md"
-                    styles={{
-                        input: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            color: 'white'
-                        },
-                        label: { color: 'white', fontWeight: 500 }
-                    }}
-                />
+                <div>
+                    <Select
+                        label="Marca del vehículo"
+                        placeholder="Selecciona la marca"
+                        data={VEHICLE_BRANDS}
+                        value={formData.vehicle.brand}
+                        onChange={(value) => {
+                            setShowOtherBrand(value === 'Otra');
+                            setFormData(prev => ({
+                                ...prev,
+                                vehicle: { ...prev.vehicle, brand: value || '' }
+                            }));
+                            if (value !== 'Otra') {
+                                setOtherBrand('');
+                            }
+                        }}
+                        error={errors.brand}
+                        required
+                        size="md"
+                        styles={{
+                            input: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                color: 'white'
+                            },
+                            label: { color: 'white', fontWeight: 500 }
+                        }}
+                    />
+                    {showOtherBrand && (
+                        <TextInput
+                            placeholder="Especifica la marca"
+                            value={otherBrand}
+                            onChange={(e) => setOtherBrand(e.target.value)}
+                            mt="xs"
+                            size="md"
+                            styles={{
+                                input: {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                                    color: 'white'
+                                }
+                            }}
+                        />
+                    )}
+                </div>
                 
                 <TextInput
                     label="Modelo"
@@ -922,27 +1007,51 @@ function VehicleRegistrationComplete() {
                     }}
                 />
                 
-                <Select
-                    label="Tipo de carrocería"
-                    placeholder="Tipo de vehículo"
-                    data={BODY_TYPES}
-                    value={formData.vehicle.body_type}
-                    onChange={(value) => setFormData(prev => ({
-                        ...prev,
-                        vehicle: { ...prev.vehicle, body_type: value || '' }
-                    }))}
-                    error={errors.body_type}
-                    required
-                    size="md"
-                    styles={{
-                        input: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            color: 'white'
-                        },
-                        label: { color: 'white', fontWeight: 500 }
-                    }}
-                />
+                <div>
+                    <Select
+                        label="Tipo de carrocería"
+                        placeholder="Tipo de vehículo"
+                        data={BODY_TYPES}
+                        value={formData.vehicle.body_type}
+                        onChange={(value) => {
+                            setShowOtherBodyType(value === 'Otro');
+                            setFormData(prev => ({
+                                ...prev,
+                                vehicle: { ...prev.vehicle, body_type: value || '' }
+                            }));
+                            if (value !== 'Otro') {
+                                setOtherBodyType('');
+                            }
+                        }}
+                        error={errors.body_type}
+                        required
+                        size="md"
+                        styles={{
+                            input: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                color: 'white'
+                            },
+                            label: { color: 'white', fontWeight: 500 }
+                        }}
+                    />
+                    {showOtherBodyType && (
+                        <TextInput
+                            placeholder="Especifica el tipo de carrocería"
+                            value={otherBodyType}
+                            onChange={(e) => setOtherBodyType(e.target.value)}
+                            mt="xs"
+                            size="md"
+                            styles={{
+                                input: {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                                    color: 'white'
+                                }
+                            }}
+                        />
+                    )}
+                </div>
             </SimpleGrid>
             
             {/* Campo de capacidad destacado */}
@@ -988,9 +1097,15 @@ function VehicleRegistrationComplete() {
             
             <div className={styles.imageGallery}>
                 <PhotoUpload
-                    label="Foto del vehículo (opcional)"
+                    label="Foto del vehículo (obligatoria)"
                     photoType="vehiclePhoto"
+                    isRequired={true}
                 />
+                {errors.vehiclePhoto && (
+                    <Text size="sm" c="red" mt="xs">
+                        {errors.vehiclePhoto}
+                    </Text>
+                )}
             </div>
         </div>
     );
@@ -1122,17 +1237,33 @@ function VehicleRegistrationComplete() {
             <div className={styles.sectionDivider}></div>
             
             <Text fw={500} mb="md" c="white" size="sm">
-                📷 Fotos de la licencia (opcional)
+                📷 Fotos de la licencia (obligatorias)
             </Text>
             <div className={styles.imageGallery}>
-                <PhotoUpload
-                    label="Frontal"
-                    photoType="licensePhotos_front"
-                />
-                <PhotoUpload
-                    label="Posterior"
-                    photoType="licensePhotos_back"
-                />
+                <div>
+                    <PhotoUpload
+                        label="Frontal (obligatoria)"
+                        photoType="licensePhotos_front"
+                        isRequired={true}
+                    />
+                    {errors.license_front && (
+                        <Text size="sm" c="red" mt="xs">
+                            {errors.license_front}
+                        </Text>
+                    )}
+                </div>
+                <div>
+                    <PhotoUpload
+                        label="Posterior (obligatoria)"
+                        photoType="licensePhotos_back"
+                        isRequired={true}
+                    />
+                    {errors.license_back && (
+                        <Text size="sm" c="red" mt="xs">
+                            {errors.license_back}
+                        </Text>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -1174,30 +1305,54 @@ function VehicleRegistrationComplete() {
                     }}
                 />
                 
-                <Select
-                    label="Compañía aseguradora"
-                    placeholder="Selecciona la aseguradora"
-                    data={INSURANCE_COMPANIES}
-                    value={formData.soat.insurance_company}
-                    onChange={(value) => setFormData(prev => ({
-                        ...prev,
-                        soat: { ...prev.soat, insurance_company: value || '' }
-                    }))}
-                    error={errors.insurance_company}
-                    required
-                    size="md"
-                    styles={{
-                        input: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            color: 'white'
-                        },
-                        label: { color: 'white', fontWeight: 500 }
-                    }}
-                />
+                <div>
+                    <Select
+                        label="Compañía aseguradora"
+                        placeholder="Selecciona la aseguradora"
+                        data={INSURANCE_COMPANIES}
+                        value={formData.soat.insurance_company}
+                        onChange={(value) => {
+                            setShowOtherInsurance(value === 'Otra');
+                            setFormData(prev => ({
+                                ...prev,
+                                soat: { ...prev.soat, insurance_company: value || '' }
+                            }));
+                            if (value !== 'Otra') {
+                                setOtherInsurance('');
+                            }
+                        }}
+                        error={errors.insurance_company}
+                        required
+                        size="md"
+                        styles={{
+                            input: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                color: 'white'
+                            },
+                            label: { color: 'white', fontWeight: 500 }
+                        }}
+                    />
+                    {showOtherInsurance && (
+                        <TextInput
+                            placeholder="Especifica la aseguradora"
+                            value={otherInsurance}
+                            onChange={(e) => setOtherInsurance(e.target.value)}
+                            mt="xs"
+                            size="md"
+                            styles={{
+                                input: {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                                    color: 'white'
+                                }
+                            }}
+                        />
+                    )}
+                </div>
                 
                 <DateInput
-                    label="Fecha de inicio"
+                    label="Fecha de inicio de vigencia"
                     placeholder="Selecciona la fecha"
                     value={formData.soat.validity_from ? new Date(formData.soat.validity_from) : null}
                     onChange={(date) => setFormData(prev => ({
@@ -1239,19 +1394,23 @@ function VehicleRegistrationComplete() {
                 />
             </SimpleGrid>
             
-            <Divider my="xl" color="rgba(255, 255, 255, 0.1)" />
+            <div className={styles.sectionDivider}></div>
             
-            <Text fw={500} mb="sm" c="white">Fotos del SOAT (opcional)</Text>
-            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            <Text fw={500} mb="md" c="white" size="sm">
+                📷 Fotos del SOAT (opcionales)
+            </Text>
+            <div className={styles.imageGallery}>
                 <PhotoUpload
-                    label="Frontal"
+                    label="Frontal (opcional)"
                     photoType="soatPhotos_front"
+                    isRequired={false}
                 />
                 <PhotoUpload
-                    label="Posterior"
+                    label="Posterior (opcional)"
                     photoType="soatPhotos_back"
+                    isRequired={false}
                 />
-            </SimpleGrid>
+            </div>
         </div>
     );
 

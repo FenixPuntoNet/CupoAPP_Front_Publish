@@ -239,12 +239,22 @@ export async function updatePendingInteractionsTripId(
       };
     }
     
+    console.log('🔄 MIGRATION: Calling backend endpoint to update SafePoint interactions...');
+    
     const response = await apiRequest('/safepoints/update-trip-id', {
       method: 'POST',
       body: JSON.stringify({
         interaction_ids: interactionIds,
         trip_id: tripId
       })
+    });
+
+    console.log('📡 MIGRATION: Backend response received:', {
+      response_keys: Object.keys(response),
+      success_field: response.success,
+      updated_count_field: response.updated_count,
+      error_field: response.error,
+      full_response: response
     });
 
     // El backend puede retornar directamente el resultado sin 'success' field

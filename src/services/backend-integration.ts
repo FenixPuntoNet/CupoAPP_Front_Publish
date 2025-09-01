@@ -46,6 +46,14 @@ export async function migrateAllPendingDataToTrip(tripId: number): Promise<{
       console.log('🔄 SAFEPOINTS: Checking pending interactions...');
       const pendingSafePointsResult = await getPendingSafePointInteractions();
       
+      console.log('📊 SAFEPOINTS: Pending interactions query result:', {
+        success: pendingSafePointsResult.success,
+        count: pendingSafePointsResult.count,
+        interactions_found: pendingSafePointsResult.pending_interactions?.length || 0,
+        interaction_ids: pendingSafePointsResult.pending_interactions?.map(i => i.id) || [],
+        first_interaction: pendingSafePointsResult.pending_interactions?.[0] || null
+      });
+      
       if (pendingSafePointsResult.success && pendingSafePointsResult.pending_interactions) {
         // FILTRO INTELIGENTE: Solo las interacciones más recientes (últimos 5 minutos)
         // Esto evita migrar SafePoints de sesiones anteriores

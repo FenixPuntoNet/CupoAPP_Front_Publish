@@ -35,31 +35,90 @@ export interface WalletBalanceCheck {
 // Obtener wallet del usuario actual
 export const getCurrentWallet = async (): Promise<WalletResponse> => {
   try {
-    console.log('🔄 Fetching wallet info...');
+    console.log('🔄 WALLET DEBUG: Fetching wallet info from /wallet/info...');
     const response = await apiRequest('/wallet/info', {
       method: 'GET'
     });
 
-    console.log('💰 Raw wallet response:', response);
+    console.log('💰 WALLET DEBUG: Raw backend response structure:', {
+      response_keys: Object.keys(response || {}),
+      full_response: response,
+      has_data_property: 'data' in (response || {}),
+      response_type: typeof response
+    });
     
-    // Mapear la respuesta del backend al formato esperado
+    // Verificar múltiples posibles estructuras de respuesta del backend
+    let balance = 0;
+    let frozenBalance = 0;
+    let walletId = '0';
+    let userId = '';
+    let createdAt = new Date().toISOString();
+    let updatedAt = new Date().toISOString();
+
+    // Caso 1: Respuesta directa (response.balance, response.frozen_balance)
+    if (response && typeof response.balance === 'number') {
+      console.log('💰 WALLET DEBUG: Using direct response structure');
+      balance = Number(response.balance);
+      frozenBalance = Number(response.frozen_balance || 0);
+      walletId = String(response.id || response.wallet_id || '0');
+      userId = String(response.user_id || '');
+      createdAt = response.created_at || createdAt;
+      updatedAt = response.updated_at || updatedAt;
+    }
+    // Caso 2: Respuesta anidada (response.data.balance)
+    else if (response?.data && typeof response.data.balance === 'number') {
+      console.log('💰 WALLET DEBUG: Using nested data structure');
+      balance = Number(response.data.balance);
+      frozenBalance = Number(response.data.frozen_balance || 0);
+      walletId = String(response.data.id || response.data.wallet_id || '0');
+      userId = String(response.data.user_id || '');
+      createdAt = response.data.created_at || createdAt;
+      updatedAt = response.data.updated_at || updatedAt;
+    }
+    // Caso 3: Respuesta con wrapper success
+    else if (response?.success && response.data) {
+      console.log('💰 WALLET DEBUG: Using success wrapper structure');
+      balance = Number(response.data.balance || 0);
+      frozenBalance = Number(response.data.frozen_balance || 0);
+      walletId = String(response.data.id || response.data.wallet_id || '0');
+      userId = String(response.data.user_id || '');
+      createdAt = response.data.created_at || createdAt;
+      updatedAt = response.data.updated_at || updatedAt;
+    }
+    // Caso 4: Fallback - buscar en cualquier nivel
+    else {
+      console.log('💰 WALLET DEBUG: Using fallback parsing');
+      const flatData = response?.data || response || {};
+      balance = Number(flatData.balance || flatData.total_balance || flatData.current_balance || 0);
+      frozenBalance = Number(flatData.frozen_balance || flatData.frozen || flatData.locked_balance || 0);
+      walletId = String(flatData.id || flatData.wallet_id || flatData.user_wallet_id || '0');
+      userId = String(flatData.user_id || '');
+    }
+    
     const walletData = {
-      id: String(response.id || response.data?.id || '0'),
-      user_id: response.user_id || response.data?.user_id || '',
-      balance: Number(response.balance || response.data?.balance || 0),
-      frozen_balance: Number(response.frozen_balance || response.data?.frozen_balance || 0),
-      created_at: response.created_at || response.data?.created_at || new Date().toISOString(),
-      updated_at: response.updated_at || response.data?.updated_at || new Date().toISOString()
+      id: walletId,
+      user_id: userId,
+      balance: balance,
+      frozen_balance: frozenBalance,
+      created_at: createdAt,
+      updated_at: updatedAt
     };
 
-    console.log('💰 Mapped wallet data:', walletData);
+    console.log('💰 WALLET DEBUG: Final processed wallet data:', {
+      original_balance: balance,
+      original_frozen: frozenBalance,
+      available_balance: Math.max(0, balance - frozenBalance),
+      wallet_id: walletId,
+      user_id: userId,
+      processing_successful: true
+    });
 
     return {
       success: true,
       data: walletData
     };
   } catch (error) {
-    console.error('❌ Error fetching wallet:', error);
+    console.error('❌ WALLET DEBUG: Error fetching wallet:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error al obtener la wallet'
@@ -70,44 +129,50 @@ export const getCurrentWallet = async (): Promise<WalletResponse> => {
 // Verificar balance disponible para garantía de viaje (el congelamiento lo hace el backend automáticamente al publicar)
 export const checkAndFreezeBalance = async (requiredAmount: number): Promise<WalletBalanceCheck> => {
   try {
-    console.log(`🔄 Verificando balance disponible de $${requiredAmount.toLocaleString()}...`);
+    console.log(`🔄 BALANCE CHECK: Verificando balance disponible de $${requiredAmount.toLocaleString()}...`);
     
-    // Solo verificar el balance - el congelamiento lo hace el backend automáticamente al publicar el viaje
-    const balanceResponse = await apiRequest('/wallet/balance', {
-      method: 'GET'
-    });
+    // Usar la misma función getCurrentWallet para consistencia
+    const walletResponse = await getCurrentWallet();
+    
+    if (!walletResponse.success || !walletResponse.data) {
+      throw new Error(walletResponse.error || 'Error al obtener información de la wallet');
+    }
 
-    if (balanceResponse && (balanceResponse.balance !== undefined || balanceResponse.data?.balance !== undefined)) {
-      const balance = balanceResponse.balance || balanceResponse.data?.balance || 0;
-      const frozenBalance = balanceResponse.frozen_balance || balanceResponse.data?.frozen_balance || 0;
-      const availableBalance = Math.max(0, balance - frozenBalance); // Evitar negativos
+    const { balance, frozen_balance } = walletResponse.data;
+    const availableBalance = Math.max(0, balance - frozen_balance); // Evitar negativos
+    
+    console.log(`💰 BALANCE CHECK: Información de saldo:`, {
+      total_balance: balance,
+      frozen_balance: frozen_balance,
+      available_balance: availableBalance,
+      required_amount: requiredAmount,
+      is_sufficient: availableBalance >= requiredAmount,
+      deficit: Math.max(0, requiredAmount - availableBalance)
+    });
+    
+    // Advertencia si hay balance congelado alto
+    if (frozen_balance > balance) {
+      console.warn(`⚠️ BALANCE CHECK: ADVERTENCIA: Balance congelado ($${frozen_balance.toLocaleString()}) es mayor que el balance total ($${balance.toLocaleString()}). Esto puede indicar un problema con transacciones pendientes.`);
+    }
+    
+    if (availableBalance >= requiredAmount) {
+      console.log('✅ BALANCE CHECK: Balance suficiente - el congelamiento se hará automáticamente al publicar el viaje');
       
-      console.log(`💰 Balance verificado: total=$${balance.toLocaleString()}, congelado=$${frozenBalance.toLocaleString()}, disponible=$${availableBalance.toLocaleString()}, requerido=$${requiredAmount.toLocaleString()}`);
-      
-      // Advertencia si hay balance congelado alto
-      if (frozenBalance > balance) {
-        console.warn(`⚠️ ADVERTENCIA: Balance congelado ($${frozenBalance.toLocaleString()}) es mayor que el balance total ($${balance.toLocaleString()}). Esto puede indicar un problema con transacciones pendientes.`);
-      }
-      
-      if (availableBalance >= requiredAmount) {
-        console.log('✅ Balance suficiente - el congelamiento se hará automáticamente al publicar el viaje');
-        
-        return {
-          success: true,
-          message: `Tienes saldo suficiente. Se congelarán $${requiredAmount.toLocaleString()} automáticamente al publicar el viaje.`
-        };
-      } else {
-        return {
-          success: false,
-          showModal: true,
-          message: 'No tienes saldo suficiente en tu billetera para publicar este viaje. Por favor, recarga tu cuenta.'
-        };
-      }
+      return {
+        success: true,
+        message: `Tienes saldo suficiente. Se congelarán $${requiredAmount.toLocaleString()} automáticamente al publicar el viaje.`
+      };
     } else {
-      throw new Error('Error al verificar balance');
+      console.log(`❌ BALANCE CHECK: Balance insuficiente. Disponible: $${availableBalance.toLocaleString()}, Requerido: $${requiredAmount.toLocaleString()}, Faltante: $${(requiredAmount - availableBalance).toLocaleString()}`);
+      
+      return {
+        success: false,
+        showModal: true,
+        message: `No tienes saldo suficiente en tu billetera para publicar este viaje. Necesitas $${(requiredAmount - availableBalance).toLocaleString()} adicionales.`
+      };
     }
   } catch (error) {
-    console.error('❌ Error checking balance:', error);
+    console.error('❌ BALANCE CHECK: Error checking balance:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error al verificar el balance'
