@@ -310,7 +310,7 @@ const LoginView: React.FC = () => {
   // Función auxiliar para manejar el éxito del login con Google
   const handleSuccessfulGoogleAuth = async () => {
     try {
-      // ✅ CRÍTICO: Refresh del contexto de autenticación PRIMERO
+      // ✅ OPTIMIZADO: Refresh del contexto de autenticación PRIMERO
       try {
         await refreshUser(true);
         console.log('✅ Auth context refreshed after Google OAuth');
@@ -318,32 +318,32 @@ const LoginView: React.FC = () => {
         console.error('⚠️ Error refreshing auth context:', refreshError);
       }
 
-      // Verificar si es un usuario nuevo o existente
+      // ✅ MEJORADO: El endpoint /me ahora tiene auto-bootstrap integrado
       const userResponse = await apiRequest('/auth/me', { method: 'GET' });
       
       if (userResponse && userResponse.id) {
         console.log('✅ Usuario autenticado con Google:', userResponse);
+        console.log('🔧 Backend auto-bootstrap status:', userResponse.auto_bootstrapped ? 'executed' : 'not needed');
         
-        // Verificar si necesita bootstrap (es decir, si es un usuario nuevo)
-        const needsBootstrap = userResponse.bootstrap_needed || !userResponse.profile;
+        // Verificar si es un usuario nuevo (necesita onboarding)
+        const isNewUser = userResponse.bootstrap_needed || !userResponse.profile || userResponse.auto_bootstrapped;
         
-        if (needsBootstrap) {
-          console.log('🆕 Usuario nuevo detectado, ejecutando bootstrap y dirigiendo a onboarding...');
-          
-          // Bootstrap para usuario nuevo (incluye términos y condiciones automáticamente)
-          try {
-            await ensureBootstrap();
-            console.log('✅ Bootstrap completed for new user (includes wallet, profile, and terms)');
-          } catch (bootstrapError) {
-            console.warn('⚠️ Bootstrap failed (non-critical):', bootstrapError);
-          }
+        if (isNewUser) {
+          console.log('🆕 Usuario nuevo detectado, dirigiendo a onboarding...');
 
-          // ✅ CRÍTICO: Refresh OTRA VEZ después del bootstrap
-          try {
-            await refreshUser(true);
-            console.log('✅ Auth context refreshed after bootstrap');
-          } catch (refreshError) {
-            console.error('⚠️ Error refreshing auth context after bootstrap:', refreshError);
+          // ✅ OPCIONAL: Solo si el backend indica que necesita bootstrap manual
+          if (userResponse.bootstrap_needed) {
+            console.log('🔧 Backend indicates manual bootstrap needed...');
+            try {
+              await ensureBootstrap();
+              console.log('✅ Manual bootstrap completed');
+              
+              // Refresh después del bootstrap manual
+              await refreshUser(true);
+              console.log('✅ Auth context refreshed after manual bootstrap');
+            } catch (bootstrapError) {
+              console.warn('⚠️ Manual bootstrap failed (non-critical):', bootstrapError);
+            }
           }
 
           // Marcar como usuario nuevo para onboarding
@@ -359,31 +359,15 @@ const LoginView: React.FC = () => {
             }
           );
 
-          // ✅ NAVEGAR INMEDIATAMENTE como en Registro
+          // ✅ NAVEGAR INMEDIATAMENTE a onboarding
           navigate({ 
             to: "/CompletarRegistro", 
             search: { from: 'onboarding' } 
           });
           
-          return; // Salir temprano para evitar el refresh automático
+          return; // Salir temprano para evitar el flujo de usuario existente
         } else {
           console.log('👤 Usuario existente, login normal');
-          
-          // Bootstrap de mantenimiento para usuario existente
-          try {
-            await ensureBootstrap();
-            console.log('✅ Maintenance bootstrap completed');
-          } catch (bootstrapError) {
-            console.warn('⚠️ Maintenance bootstrap failed (non-critical):', bootstrapError);
-          }
-
-          // ✅ REFRESH final para usuario existente
-          try {
-            await refreshUser(true);
-            console.log('✅ Auth context final refresh for existing user');
-          } catch (refreshError) {
-            console.error('⚠️ Error in final refresh:', refreshError);
-          }
 
           // Mostrar mensaje de éxito para usuario existente
           showSuccess(
@@ -447,9 +431,19 @@ const LoginView: React.FC = () => {
         return;
       }
 
-      // Verificar si se recibió un token de autenticación
+      // ✅ OPTIMIZADO: El backend ya ejecuta bootstrap automáticamente en /login
       if (result.token) {
-        console.log('🔑 Login successful with auth token - AuthGuard will handle navigation');
+        console.log('🔑 Login successful with auth token (backend already handled bootstrap)');
+        
+        // ✅ SIMPLIFICADO: Solo refresh del contexto (el backend ya hizo el bootstrap)
+        try {
+          await refreshUser(true);
+          console.log('✅ Auth context refreshed after login');
+        } catch (refreshError) {
+          console.error('⚠️ Error refreshing auth context:', refreshError);
+          // No es crítico - el usuario ya está autenticado
+        }
+        
         showSuccess(
           'Inicio de sesión exitoso',
           'Bienvenido de vuelta. Serás redirigido automáticamente.',

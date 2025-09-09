@@ -301,20 +301,40 @@ const RegisterView: React.FC = () => {
   // Función auxiliar para manejar el éxito del login con Google
   const handleSuccessfulGoogleAuth = async () => {
     try {
-      // Bootstrap para asegurar wallet/perfil/términos (backend ya maneja términos)
-      try {
-        await ensureBootstrap();
-        console.log('✅ Bootstrap completed (includes terms & conditions)');
-      } catch (bootstrapError) {
-        console.warn('⚠️ Bootstrap failed (non-critical):', bootstrapError);
-      }
-
-      // Refresh del contexto de autenticación
+      // ✅ OPTIMIZADO: El endpoint /me ahora maneja auto-bootstrap
+      console.log('🔧 Checking user status with auto-bootstrap support...');
+      
+      // Refresh del contexto de autenticación primero
       try {
         await refreshUser(true);
         console.log('✅ Auth context refreshed after Google OAuth');
       } catch (refreshError) {
         console.error('⚠️ Error refreshing auth context:', refreshError);
+      }
+
+      // El endpoint /me ahora maneja bootstrap automáticamente
+      const userResponse = await apiRequest('/auth/me', { method: 'GET' });
+      
+      if (userResponse && userResponse.id) {
+        console.log('✅ User authenticated with Google (backend handled bootstrap)');
+        console.log('🔧 Auto-bootstrap executed:', userResponse.auto_bootstrapped || 'not needed');
+
+        // Solo ejecutar bootstrap manual si el backend lo indica
+        if (userResponse.bootstrap_needed) {
+          console.log('🔧 Backend indicates manual bootstrap needed...');
+          try {
+            await ensureBootstrap();
+            console.log('✅ Manual bootstrap completed (includes terms & conditions)');
+            
+            // Refresh después del bootstrap manual
+            await refreshUser(true);
+            console.log('✅ Auth context refreshed after manual bootstrap');
+          } catch (bootstrapError) {
+            console.warn('⚠️ Manual bootstrap failed (non-critical):', bootstrapError);
+          }
+        } else {
+          console.log('✅ Backend already handled all bootstrap requirements');
+        }
       }
 
       // Marcar como usuario nuevo para onboarding
@@ -395,6 +415,29 @@ const RegisterView: React.FC = () => {
         } catch (refreshError) {
           console.error('⚠️ Error refreshing auth context:', refreshError);
           // Continuar aunque falle el refresh - el usuario ya está logueado
+        }
+
+        // ✅ OPTIMIZADO: El backend /signup ya maneja bootstrap automático
+        // Solo ejecutar bootstrap manual si es absolutamente necesario
+        try {
+          console.log('🔧 Checking if manual bootstrap is needed after registration...');
+          const userCheck = await apiRequest('/auth/me', { method: 'GET' });
+          
+          // Solo hacer bootstrap manual si el backend indica que es necesario
+          if (userCheck?.bootstrap_needed) {
+            console.log('🔧 Backend indicates manual bootstrap needed after registration...');
+            await ensureBootstrap();
+            console.log('✅ Manual bootstrap completed after registration');
+            
+            // Refresh del contexto después del bootstrap manual
+            await refreshUser(true);
+            console.log('✅ Auth context refreshed after manual bootstrap');
+          } else {
+            console.log('✅ Backend already handled bootstrap during registration');
+          }
+        } catch (bootstrapError) {
+          console.warn('⚠️ Bootstrap check/execution failed (non-critical):', bootstrapError);
+          // No bloquear el registro si falla el bootstrap - el usuario ya está registrado
         }
       }
   

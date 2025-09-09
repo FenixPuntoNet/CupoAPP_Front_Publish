@@ -123,6 +123,128 @@ const validateImageFile = (file: File): boolean => {
     return isValidType && hasValidExtension;
 };
 
+// ✅ NUEVO: Funciones para manejo de fechas en español
+const parseDateFromES = (dateString: string): Date | null => {
+    if (!dateString) return null;
+    
+    // Detectar formato: DD-MM-YYYY, DD/MM/YYYY, o YYYY-MM-DD
+    let day: string, month: string, year: string;
+    
+    if (dateString.includes('-')) {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+            if (parts[0].length === 4) {
+                // Formato YYYY-MM-DD (desde base de datos)
+                [year, month, day] = parts;
+            } else {
+                // Formato DD-MM-YYYY (input del usuario)
+                [day, month, year] = parts;
+            }
+        } else {
+            return null;
+        }
+    } else if (dateString.includes('/')) {
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+            [day, month, year] = parts;
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    }
+    
+    const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    
+    // Validar que la fecha sea válida
+    if (isNaN(parsedDate.getTime())) {
+        return null;
+    }
+    
+    return parsedDate;
+};
+
+const formatDateForAPI = (date: Date): string => {
+    // Formato YYYY-MM-DD para el API
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+// ✅ MEJORADO: Componente de entrada de fecha con calendario profesional
+const DateInputES = ({ 
+    label, 
+    placeholder = "DD-MM-YYYY", 
+    value, 
+    onChange, 
+    error, 
+    required = false 
+}: {
+    label: string;
+    placeholder?: string;
+    value: string;
+    onChange: (value: string) => void;
+    error?: string;
+    required?: boolean;
+}) => {
+    const [dateValue, setDateValue] = useState<Date | null>(null);
+    
+    // Convertir valor del estado a Date para el calendario
+    useEffect(() => {
+        if (value) {
+            // Si el valor viene en formato YYYY-MM-DD (API), convertir
+            if (value.includes('-') && value.length === 10 && value.charAt(4) === '-') {
+                const [year, month, day] = value.split('-');
+                setDateValue(new Date(parseInt(year), parseInt(month) - 1, parseInt(day)));
+            } else {
+                // Si viene en formato DD-MM-YYYY, parsear
+                const date = parseDateFromES(value);
+                setDateValue(date);
+            }
+        } else {
+            setDateValue(null);
+        }
+    }, [value]);
+    
+    const handleDateChange = (date: Date | null) => {
+        setDateValue(date);
+        if (date) {
+            // Convertir a formato API (YYYY-MM-DD)
+            onChange(formatDateForAPI(date));
+        } else {
+            onChange('');
+        }
+    };
+    
+    return (
+        <DateInput
+            label={label}
+            placeholder={placeholder}
+            value={dateValue}
+            onChange={handleDateChange}
+            error={error}
+            required={required}
+            size="md"
+            valueFormat="DD-MM-YYYY"
+            locale="es"
+            styles={{
+                input: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    color: 'white'
+                },
+                label: { color: 'white', fontWeight: 500 }
+            }}
+            description={
+                <Text size="xs" c="rgba(255, 255, 255, 0.6)" mt="2px">
+                    Formato: día-mes-año (ej: 15-03-2024) - Haz clic para ver el calendario
+                </Text>
+            }
+        />
+    );
+};
+
 // Configuración de pasos del stepper (solo 4 pasos)
 const STEPS_CONFIG = [
     {
@@ -169,7 +291,7 @@ function VehicleRegistrationComplete() {
         vehicle: {
             brand: '',
             model: '',
-            year: new Date().getFullYear(),
+            year: 0, // ✅ Cambiado: Sin año por defecto para mostrar placeholder
             plate: '',
             color: '',
             body_type: '',
@@ -178,7 +300,7 @@ function VehicleRegistrationComplete() {
         license: {
             license_number: '',
             license_category: '',
-            blood_type: '',
+            blood_type: '', // ✅ Ya está vacío para mostrar placeholder
             expedition_date: '',
             expiration_date: ''
         },
@@ -944,12 +1066,12 @@ function VehicleRegistrationComplete() {
                 
                 <Select
                     label="Año del vehículo"
-                    placeholder="Selecciona el año"
+                    placeholder="Seleccionar año"
                     data={Array.from({ length: 30 }, (_, i) => String(2026 - i))}
-                    value={String(formData.vehicle.year)}
+                    value={formData.vehicle.year > 0 ? String(formData.vehicle.year) : null}
                     onChange={(value) => setFormData(prev => ({
                         ...prev,
-                        vehicle: { ...prev.vehicle, year: parseInt(value || '2024') }
+                        vehicle: { ...prev.vehicle, year: value ? parseInt(value) : 0 }
                     }))}
                     error={errors.year}
                     required
@@ -987,7 +1109,7 @@ function VehicleRegistrationComplete() {
                 
                 <Select
                     label="Color principal"
-                    placeholder="Color del vehículo"
+                    placeholder="Seleccionar color"
                     data={COLORS}
                     value={formData.vehicle.color}
                     onChange={(value) => setFormData(prev => ({
@@ -1010,7 +1132,7 @@ function VehicleRegistrationComplete() {
                 <div>
                     <Select
                         label="Tipo de carrocería"
-                        placeholder="Tipo de vehículo"
+                        placeholder="Seleccionar tipo"
                         data={BODY_TYPES}
                         value={formData.vehicle.body_type}
                         onChange={(value) => {
@@ -1149,7 +1271,7 @@ function VehicleRegistrationComplete() {
                 
                 <Select
                     label="Categoría de licencia"
-                    placeholder="Categoría"
+                    placeholder="Seleccionar categoría"
                     data={LICENSE_CATEGORIES}
                     value={formData.license.license_category}
                     onChange={(value) => setFormData(prev => ({
@@ -1171,7 +1293,7 @@ function VehicleRegistrationComplete() {
                 
                 <Select
                     label="Tipo de sangre"
-                    placeholder="Tipo de sangre"
+                    placeholder="Seleccionar tipo de sangre"
                     data={BLOOD_TYPES}
                     value={formData.license.blood_type}
                     onChange={(value) => setFormData(prev => ({
@@ -1191,46 +1313,26 @@ function VehicleRegistrationComplete() {
                     }}
                 />
                 
-                <DateInput
+                <DateInputES
                     label="Fecha de expedición"
-                    placeholder="Selecciona la fecha"
-                    value={formData.license.expedition_date ? new Date(formData.license.expedition_date) : null}
-                    onChange={(date) => setFormData(prev => ({
+                    value={formData.license.expedition_date}
+                    onChange={(value) => setFormData(prev => ({
                         ...prev,
-                        license: { ...prev.license, expedition_date: date ? date.toISOString().split('T')[0] : '' }
+                        license: { ...prev.license, expedition_date: value }
                     }))}
                     error={errors.license_expedition}
                     required
-                    size="md"
-                    styles={{
-                        input: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            color: 'white'
-                        },
-                        label: { color: 'white', fontWeight: 500 }
-                    }}
                 />
                 
-                <DateInput
+                <DateInputES
                     label="Fecha de vencimiento"
-                    placeholder="Selecciona la fecha"
-                    value={formData.license.expiration_date ? new Date(formData.license.expiration_date) : null}
-                    onChange={(date) => setFormData(prev => ({
+                    value={formData.license.expiration_date}
+                    onChange={(value) => setFormData(prev => ({
                         ...prev,
-                        license: { ...prev.license, expiration_date: date ? date.toISOString().split('T')[0] : '' }
+                        license: { ...prev.license, expiration_date: value }
                     }))}
                     error={errors.license_expiration}
                     required
-                    size="md"
-                    styles={{
-                        input: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            color: 'white'
-                        },
-                        label: { color: 'white', fontWeight: 500 }
-                    }}
                 />
             </SimpleGrid>
             
@@ -1351,46 +1453,26 @@ function VehicleRegistrationComplete() {
                     )}
                 </div>
                 
-                <DateInput
+                <DateInputES
                     label="Fecha de inicio de vigencia"
-                    placeholder="Selecciona la fecha"
-                    value={formData.soat.validity_from ? new Date(formData.soat.validity_from) : null}
-                    onChange={(date) => setFormData(prev => ({
+                    value={formData.soat.validity_from}
+                    onChange={(value) => setFormData(prev => ({
                         ...prev,
-                        soat: { ...prev.soat, validity_from: date ? date.toISOString().split('T')[0] : '' }
+                        soat: { ...prev.soat, validity_from: value }
                     }))}
                     error={errors.validity_from}
                     required
-                    size="md"
-                    styles={{
-                        input: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            color: 'white'
-                        },
-                        label: { color: 'white', fontWeight: 500 }
-                    }}
                 />
                 
-                <DateInput
+                <DateInputES
                     label="Fecha de vencimiento"
-                    placeholder="Selecciona la fecha"
-                    value={formData.soat.validity_to ? new Date(formData.soat.validity_to) : null}
-                    onChange={(date) => setFormData(prev => ({
+                    value={formData.soat.validity_to}
+                    onChange={(value) => setFormData(prev => ({
                         ...prev,
-                        soat: { ...prev.soat, validity_to: date ? date.toISOString().split('T')[0] : '' }
+                        soat: { ...prev.soat, validity_to: value }
                     }))}
                     error={errors.validity_to}
                     required
-                    size="md"
-                    styles={{
-                        input: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                            color: 'white'
-                        },
-                        label: { color: 'white', fontWeight: 500 }
-                    }}
                 />
             </SimpleGrid>
             
