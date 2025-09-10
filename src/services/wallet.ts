@@ -219,3 +219,100 @@ export const getWalletTransactions = async (): Promise<{ success: boolean; data?
     };
   }
 };
+
+// Verificar si hay suficiente saldo para publicar un viaje
+export const checkBalanceForTripPublish = async (seats: number, pricePerSeat: number): Promise<{
+  success: boolean;
+  hasSufficientBalance: boolean;
+  requiredAmount: number;
+  availableBalance: number;
+  totalBalance: number;
+  frozenBalance: number;
+  error?: string;
+}> => {
+  try {
+    console.log('💰 TRIP BALANCE CHECK: Verificando saldo para publicar viaje...', { seats, pricePerSeat });
+    
+    // Obtener información actualizada del wallet
+    const walletResponse = await getCurrentWallet();
+    
+    if (!walletResponse.success || !walletResponse.data) {
+      console.error('❌ TRIP BALANCE CHECK: Error obteniendo wallet:', walletResponse.error);
+      return {
+        success: false,
+        hasSufficientBalance: false,
+        requiredAmount: 0,
+        availableBalance: 0,
+        totalBalance: 0,
+        frozenBalance: 0,
+        error: walletResponse.error || 'Error obteniendo información del wallet'
+      };
+    }
+
+    const { balance: totalBalance, frozen_balance: frozenBalance } = walletResponse.data;
+    const availableBalance = Math.max(0, totalBalance - frozenBalance);
+
+    // Obtener assumptions actuales para calcular la garantía exactamente como el backend
+    const assumptionsResponse = await apiRequest('/assumptions', { method: 'GET' });
+    
+    console.log('💰 TRIP BALANCE CHECK: Assumptions response:', assumptionsResponse);
+    
+    // Manejar diferentes estructuras de respuesta de assumptions
+    let feePercentage = 5; // Default
+    let fixedRate = 0; // Default
+    
+    if (assumptionsResponse?.success && assumptionsResponse.data) {
+      // Estructura con success wrapper
+      feePercentage = assumptionsResponse.data.fee_percentage || 5;
+      fixedRate = assumptionsResponse.data.fixed_rate || 0;
+    } else if (assumptionsResponse?.fee_percentage !== undefined) {
+      // Estructura directa
+      feePercentage = assumptionsResponse.fee_percentage || 5;
+      fixedRate = assumptionsResponse.fixed_rate || 0;
+    } else if (assumptionsResponse?.data?.fee_percentage !== undefined) {
+      // Estructura anidada
+      feePercentage = assumptionsResponse.data.fee_percentage || 5;
+      fixedRate = assumptionsResponse.data.fixed_rate || 0;
+    } else {
+      console.warn('⚠️ TRIP BALANCE CHECK: No se pudieron obtener assumptions, usando valores por defecto');
+    }
+    
+    const totalTripValue = seats * pricePerSeat;
+    const percentageFee = Math.ceil(totalTripValue * (feePercentage / 100));
+    const totalFixedRate = fixedRate * seats;
+    const requiredAmount = percentageFee + totalFixedRate;
+
+    console.log('💰 TRIP BALANCE CHECK: Cálculo de garantía:', {
+      totalTripValue,
+      feePercentage,
+      percentageFee,
+      fixedRate,
+      seats,
+      totalFixedRate,
+      requiredAmount,
+      availableBalance,
+      hasSufficientBalance: availableBalance >= requiredAmount
+    });
+
+    return {
+      success: true,
+      hasSufficientBalance: availableBalance >= requiredAmount,
+      requiredAmount,
+      availableBalance,
+      totalBalance,
+      frozenBalance
+    };
+
+  } catch (error) {
+    console.error('❌ TRIP BALANCE CHECK: Error verificando saldo:', error);
+    return {
+      success: false,
+      hasSufficientBalance: false,
+      requiredAmount: 0,
+      availableBalance: 0,
+      totalBalance: 0,
+      frozenBalance: 0,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+};

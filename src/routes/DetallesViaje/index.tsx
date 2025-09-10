@@ -44,7 +44,7 @@ import 'dayjs/locale/es';
 import styles from './index.module.css';
 import { getCurrentUser } from '@/services/auth';
 import { publishTrip } from '@/services/viajes';
-import { getCurrentWallet } from '@/services/wallet';
+import { getCurrentWallet, checkBalanceForTripPublish } from '@/services/wallet';
 import { getUserVehicles } from '@/services/vehicles';
 import { useAssumptions } from '../../hooks/useAssumptions';
 import { 
@@ -628,7 +628,27 @@ const DetallesViajeView = () => {
                 throw new Error("Usuario no autenticado");
             }
 
-            // Usar el servicio para publicar el viaje DIRECTAMENTE (sin verificación previa)
+            // ✅ NUEVA VERIFICACIÓN: Comprobar saldo ANTES de intentar publicar
+            console.log('💰 [PUBLISH] Verificando saldo antes de publicar viaje...');
+            const balanceCheck = await checkBalanceForTripPublish(seats, pricePerSeat);
+            
+            if (!balanceCheck.success) {
+                throw new Error(balanceCheck.error || 'Error verificando saldo');
+            }
+
+            if (!balanceCheck.hasSufficientBalance) {
+                console.log('💰 [PUBLISH] Saldo insuficiente detectado en verificación previa');
+                console.log('💰 [PUBLISH] Mostrando modal de saldo insuficiente directamente');
+                
+                setRequiredAmount(balanceCheck.requiredAmount);
+                setCurrentBalance(balanceCheck.totalBalance);
+                setShowInsufficientBalanceModal(true);
+                return; // No continuar con la publicación
+            }
+
+            console.log('✅ [PUBLISH] Verificación de saldo exitosa, procediendo con la publicación');
+
+            // Usar el servicio para publicar el viaje
             const tripPublishData = {
                 origin: {
                     address: tripData.origin.address,
