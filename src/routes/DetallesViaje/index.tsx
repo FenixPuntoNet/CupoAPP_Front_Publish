@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
     Container,
@@ -459,10 +459,10 @@ const DetallesViajeView = () => {
     });
 
 
-    // Cálculo de garantía dinámica según assumptions (ahora incluye tarifa fija POR CUPO)
-    const calculateRequiredBalance = (seats: number, pricePerSeat: number): number => {
+    // Cálculo de garantía dinámica usando useMemo para optimizar performance
+    const requiredGuarantee = useMemo(() => {
         if (!assumptions) {
-            console.log('⚠️ calculateRequiredBalance: assumptions no cargado, retornando 0');
+            console.log('⚠️ requiredGuarantee: assumptions no cargado, retornando 0');
             return 0;
         }
         const totalTripValue = seats * pricePerSeat;
@@ -471,19 +471,28 @@ const DetallesViajeView = () => {
         const totalFixedRate = fixedRatePerSeat * seats; // Tarifa fija POR CUPO
         const totalRequired = percentageFee + totalFixedRate;
         
-        console.log('💰 calculateRequiredBalance DEBUG:', {
-            seats,
-            pricePerSeat,
-            totalTripValue,
-            fee_percentage: assumptions.fee_percentage,
-            percentageFee,
-            fixed_rate: assumptions.fixed_rate,
-            fixedRatePerSeat,
-            totalFixedRate,
-            totalRequired: totalRequired.toLocaleString()
-        });
+        // Solo log si hay un cambio significativo para reducir spam
+        const logKey = `${seats}-${pricePerSeat}-${assumptions.fee_percentage}-${assumptions.fixed_rate}`;
+        if (logKey !== requiredGuarantee.toString()) {
+            console.log('💰 requiredGuarantee UPDATED:', {
+                seats,
+                pricePerSeat,
+                totalTripValue,
+                fee_percentage: assumptions.fee_percentage,
+                percentageFee,
+                fixed_rate: assumptions.fixed_rate,
+                fixedRatePerSeat,
+                totalFixedRate,
+                totalRequired: totalRequired.toLocaleString()
+            });
+        }
         
         return totalRequired;
+    }, [seats, pricePerSeat, assumptions?.fee_percentage, assumptions?.fixed_rate]);
+
+    // Función legacy para compatibilidad (ahora usa el useMemo)
+    const calculateRequiredBalance = (): number => {
+        return requiredGuarantee;
     };
 
       
@@ -628,8 +637,8 @@ const DetallesViajeView = () => {
                 throw new Error("Usuario no autenticado");
             }
 
-            // ✅ NUEVA VERIFICACIÓN: Comprobar saldo ANTES de intentar publicar
-            console.log('💰 [PUBLISH] Verificando saldo antes de publicar viaje...');
+            // ✅ NUEVA VERIFICACIÓN: Comprobar saldo ANTES de intentar publicar usando el BACKEND
+            console.log('💰 [PUBLISH] Verificando saldo via BACKEND antes de publicar viaje...');
             const balanceCheck = await checkBalanceForTripPublish(seats, pricePerSeat);
             
             if (!balanceCheck.success) {
@@ -637,16 +646,21 @@ const DetallesViajeView = () => {
             }
 
             if (!balanceCheck.hasSufficientBalance) {
-                console.log('💰 [PUBLISH] Saldo insuficiente detectado en verificación previa');
+                console.log('💰 [PUBLISH] Saldo insuficiente detectado por el BACKEND en verificación previa');
+                console.log('💰 [PUBLISH] Datos del backend:', {
+                    required: balanceCheck.requiredAmount,
+                    available: balanceCheck.availableBalance,
+                    total: balanceCheck.totalBalance
+                });
                 console.log('💰 [PUBLISH] Mostrando modal de saldo insuficiente directamente');
                 
                 setRequiredAmount(balanceCheck.requiredAmount);
-                setCurrentBalance(balanceCheck.totalBalance);
+                setCurrentBalance(balanceCheck.availableBalance);
                 setShowInsufficientBalanceModal(true);
                 return; // No continuar con la publicación
             }
 
-            console.log('✅ [PUBLISH] Verificación de saldo exitosa, procediendo con la publicación');
+            console.log('✅ [PUBLISH] Verificación de saldo exitosa via BACKEND, procediendo con la publicación');
 
             // Usar el servicio para publicar el viaje
             const tripPublishData = {
@@ -715,7 +729,7 @@ const DetallesViajeView = () => {
                     console.log('💰 [MODAL] Error de saldo detectado. Mensaje:', errorMessage);
                     
                     // Calcular la cantidad requerida para mostrar en el modal
-                    const requiredAmount = calculateRequiredBalance(seats, pricePerSeat);
+                    const requiredAmount = calculateRequiredBalance();
                     
                     // Obtener el wallet actual para mostrar los saldos
                     try {
@@ -1264,8 +1278,8 @@ const DetallesViajeView = () => {
                                                 tripValue: pricePerSeat * seats,
                                                 percentageFee: Math.ceil(pricePerSeat * seats * ((assumptions.fee_percentage || 0) / 100)),
                                                 fixedRate: (assumptions.fixed_rate || 0) * seats, // Tarifa fija POR CUPO
-                                                totalGuarantee: calculateRequiredBalance(seats, pricePerSeat),
-                                                breakdown: `${assumptions.fee_percentage || 0}% ($${Math.ceil(pricePerSeat * seats * ((assumptions.fee_percentage || 0) / 100)).toLocaleString()}) + Tarifa fija (${seats} × $${(assumptions.fixed_rate || 0).toLocaleString()}) = $${calculateRequiredBalance(seats, pricePerSeat).toLocaleString()}`
+                                                totalGuarantee: requiredGuarantee,
+                                                breakdown: `${assumptions.fee_percentage || 0}% ($${Math.ceil(pricePerSeat * seats * ((assumptions.fee_percentage || 0) / 100)).toLocaleString()}) + Tarifa fija (${seats} × $${(assumptions.fixed_rate || 0).toLocaleString()}) = $${requiredGuarantee.toLocaleString()}`
                                             }}
                                             assumptions={assumptions}
                                             seats={seats}
@@ -1366,7 +1380,7 @@ const DetallesViajeView = () => {
                                     <b>{seats} cupo{seats > 1 ? 's' : ''}</b> disponible{seats > 1 ? 's' : ''} a <b>${pricePerSeat.toLocaleString()}</b> cada uno
                                 </Text>
                                 <Text size="sm" c="dimmed" ta="center">
-                                    Se ha congelado una garantía de <b>${calculateRequiredBalance(seats, pricePerSeat).toLocaleString()}</b> COP 
+                                    Se ha congelado una garantía de <b>${requiredGuarantee.toLocaleString()}</b> COP 
                                     (incluye {assumptions?.fee_percentage || 0}% del valor total + tarifa fija de ${(assumptions?.fixed_rate || 0).toLocaleString()}) como fee de publicación.
                                 </Text>
                                 <Text size="sm" c="dimmed" ta="center">

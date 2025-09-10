@@ -220,7 +220,7 @@ export const getWalletTransactions = async (): Promise<{ success: boolean; data?
   }
 };
 
-// Verificar si hay suficiente saldo para publicar un viaje
+// Verificar si hay suficiente saldo para publicar un viaje - USANDO BACKEND
 export const checkBalanceForTripPublish = async (seats: number, pricePerSeat: number): Promise<{
   success: boolean;
   hasSufficientBalance: boolean;
@@ -231,80 +231,59 @@ export const checkBalanceForTripPublish = async (seats: number, pricePerSeat: nu
   error?: string;
 }> => {
   try {
-    console.log('💰 TRIP BALANCE CHECK: Verificando saldo para publicar viaje...', { seats, pricePerSeat });
+    console.log('💰 TRIP BALANCE CHECK: Verificando saldo via BACKEND...', { seats, pricePerSeat });
     
-    // Obtener información actualizada del wallet
-    const walletResponse = await getCurrentWallet();
-    
-    if (!walletResponse.success || !walletResponse.data) {
-      console.error('❌ TRIP BALANCE CHECK: Error obteniendo wallet:', walletResponse.error);
+    // Usar el nuevo endpoint del backend que hace TODA la verificación
+    const response = await apiRequest('/wallet/verify-balance-for-trip', {
+      method: 'POST',
+      body: JSON.stringify({
+        tripData: {
+          precio: pricePerSeat,
+          cupos: seats,
+          origen: 'Frontend',
+          destino: 'Frontend'
+        }
+      })
+    }) as {
+      success: boolean;
+      data: {
+        currentBalance: number;
+        requiredFee: number;
+        feeBreakdown: {
+          totalAmount: number;
+          feePercentage: number;
+          percentageFee: number;
+          fixedRate: number;
+          totalFee: number;
+        };
+        isBalanceSufficient: boolean;
+        message: string;
+      };
+    };
+
+    console.log('💰 TRIP BALANCE CHECK: Backend response:', response);
+
+    if (response.success && response.data) {
+      const { currentBalance, requiredFee, isBalanceSufficient, feeBreakdown } = response.data;
+      
+      console.log('✅ TRIP BALANCE CHECK: Verificación exitosa via backend:', {
+        currentBalance,
+        requiredFee,
+        isBalanceSufficient,
+        feeBreakdown
+      });
+
       return {
-        success: false,
-        hasSufficientBalance: false,
-        requiredAmount: 0,
-        availableBalance: 0,
-        totalBalance: 0,
-        frozenBalance: 0,
-        error: walletResponse.error || 'Error obteniendo información del wallet'
+        success: true,
+        hasSufficientBalance: isBalanceSufficient,
+        requiredAmount: requiredFee,
+        availableBalance: currentBalance, // El backend ya maneja frozen_balance
+        totalBalance: currentBalance,
+        frozenBalance: 0 // El backend ya considera esto en currentBalance
       };
     }
 
-    const { balance: totalBalance, frozen_balance: frozenBalance } = walletResponse.data;
-    const availableBalance = Math.max(0, totalBalance - frozenBalance);
-
-    // Obtener assumptions actuales para calcular la garantía exactamente como el backend
-    const assumptionsResponse = await apiRequest('/assumptions', { method: 'GET' });
-    
-    console.log('💰 TRIP BALANCE CHECK: Assumptions response:', assumptionsResponse);
-    
-    // Manejar diferentes estructuras de respuesta de assumptions
-    let feePercentage = 5; // Default
-    let fixedRate = 0; // Default
-    
-    if (assumptionsResponse?.success && assumptionsResponse.data) {
-      // Estructura con success wrapper
-      feePercentage = assumptionsResponse.data.fee_percentage || 5;
-      fixedRate = assumptionsResponse.data.fixed_rate || 0;
-    } else if (assumptionsResponse?.fee_percentage !== undefined) {
-      // Estructura directa
-      feePercentage = assumptionsResponse.fee_percentage || 5;
-      fixedRate = assumptionsResponse.fixed_rate || 0;
-    } else if (assumptionsResponse?.data?.fee_percentage !== undefined) {
-      // Estructura anidada
-      feePercentage = assumptionsResponse.data.fee_percentage || 5;
-      fixedRate = assumptionsResponse.data.fixed_rate || 0;
-    } else {
-      console.warn('⚠️ TRIP BALANCE CHECK: No se pudieron obtener assumptions, usando valores por defecto');
-    }
-    
-    const totalTripValue = seats * pricePerSeat;
-    const percentageFee = Math.ceil(totalTripValue * (feePercentage / 100));
-    const totalFixedRate = fixedRate * seats;
-    const requiredAmount = percentageFee + totalFixedRate;
-
-    console.log('💰 TRIP BALANCE CHECK: Cálculo de garantía:', {
-      totalTripValue,
-      feePercentage,
-      percentageFee,
-      fixedRate,
-      seats,
-      totalFixedRate,
-      requiredAmount,
-      availableBalance,
-      hasSufficientBalance: availableBalance >= requiredAmount
-    });
-
-    return {
-      success: true,
-      hasSufficientBalance: availableBalance >= requiredAmount,
-      requiredAmount,
-      availableBalance,
-      totalBalance,
-      frozenBalance
-    };
-
-  } catch (error) {
-    console.error('❌ TRIP BALANCE CHECK: Error verificando saldo:', error);
+    console.error('❌ TRIP BALANCE CHECK: Respuesta inválida del backend:', response);
     return {
       success: false,
       hasSufficientBalance: false,
@@ -312,7 +291,156 @@ export const checkBalanceForTripPublish = async (seats: number, pricePerSeat: nu
       availableBalance: 0,
       totalBalance: 0,
       frozenBalance: 0,
-      error: error instanceof Error ? error.message : 'Error desconocido'
+      error: 'Respuesta inválida del servidor'
+    };
+
+  } catch (error) {
+    console.error('❌ TRIP BALANCE CHECK: Error llamando al backend:', error);
+    
+    // Fallback: intentar con el método anterior si el backend falla
+    console.log('🔄 TRIP BALANCE CHECK: Backend falló, intentando fallback con getCurrentWallet...');
+    try {
+      const walletResponse = await getCurrentWallet();
+      
+      if (walletResponse.success && walletResponse.data) {
+        const { balance: totalBalance, frozen_balance: frozenBalance } = walletResponse.data;
+        const availableBalance = Math.max(0, totalBalance - frozenBalance);
+        
+        // Estimación básica con valores por defecto (10% + 250 por cupo)
+        const totalTripValue = seats * pricePerSeat;
+        const estimatedPercentageFee = Math.ceil(totalTripValue * 0.1); // 10%
+        const estimatedFixedFee = 250 * seats; // 250 por cupo
+        const estimatedFee = estimatedPercentageFee + estimatedFixedFee;
+        
+        console.log('⚠️ TRIP BALANCE CHECK: Usando fallback con estimación básica:', {
+          totalTripValue,
+          estimatedPercentageFee,
+          estimatedFixedFee,
+          estimatedFee,
+          availableBalance,
+          hasSufficientBalance: availableBalance >= estimatedFee
+        });
+        
+        return {
+          success: true,
+          hasSufficientBalance: availableBalance >= estimatedFee,
+          requiredAmount: estimatedFee,
+          availableBalance,
+          totalBalance,
+          frozenBalance
+        };
+      }
+    } catch (fallbackError) {
+      console.error('❌ TRIP BALANCE CHECK: Fallback también falló:', fallbackError);
+    }
+    
+    return {
+      success: false,
+      hasSufficientBalance: false,
+      requiredAmount: 0,
+      availableBalance: 0,
+      totalBalance: 0,
+      frozenBalance: 0,
+      error: error instanceof Error ? error.message : 'Error de conexión con el servidor'
+    };
+  }
+};
+
+// Obtener información de tarifas actuales desde el backend
+export const getFeeInfo = async (): Promise<{
+  success: boolean;
+  feeInfo?: {
+    feePercentage: number;
+    fixedRate: number;
+    description: string;
+  };
+  error?: string;
+}> => {
+  try {
+    console.log('💰 FEE INFO: Obteniendo información de tarifas desde el backend...');
+    
+    const response = await apiRequest('/wallet/fee-info', {
+      method: 'GET'
+    }) as {
+      success: boolean;
+      feeInfo: {
+        feePercentage: number;
+        fixedRate: number;
+        description: string;
+      };
+    };
+
+    console.log('💰 FEE INFO: Respuesta del backend:', response);
+
+    if (response.success && response.feeInfo) {
+      return {
+        success: true,
+        feeInfo: response.feeInfo
+      };
+    }
+
+    return {
+      success: false,
+      error: 'No se pudo obtener la información de tarifas'
+    };
+  } catch (error) {
+    console.error('❌ FEE INFO: Error obteniendo información de tarifas:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error de conexión'
+    };
+  }
+};
+
+// Calcular comisión estimada para un viaje (sin autenticación)
+export const calculateTripFee = async (precio: number, cupos: number): Promise<{
+  success: boolean;
+  calculation?: {
+    totalAmount: number;
+    feePercentage: number;
+    percentageFee: number;
+    fixedRate: number;
+    totalFee: number;
+    description: string;
+  };
+  error?: string;
+}> => {
+  try {
+    console.log('💰 TRIP FEE: Calculando comisión para viaje...', { precio, cupos });
+    
+    const response = await apiRequest('/wallet/calculate-trip-fee', {
+      method: 'POST',
+      body: JSON.stringify({ precio, cupos })
+    }) as {
+      success: boolean;
+      calculation: {
+        totalAmount: number;
+        feePercentage: number;
+        percentageFee: number;
+        fixedRate: number;
+        totalFee: number;
+        description: string;
+      };
+    };
+
+    console.log('💰 TRIP FEE: Cálculo completado:', response);
+
+    if (response.success && response.calculation) {
+      return {
+        success: true,
+        calculation: response.calculation
+      };
+    }
+
+    return {
+      success: false,
+      error: 'No se pudo calcular la comisión'
+    };
+  } catch (error) {
+    console.error('❌ TRIP FEE: Error calculando comisión:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error de conexión'
     };
   }
 };
