@@ -248,6 +248,9 @@ export const checkBalanceForTripPublish = async (seats: number, pricePerSeat: nu
       success: boolean;
       data: {
         currentBalance: number;
+        availableBalance: number;  // ✅ Ahora incluido en la respuesta del backend
+        totalBalance: number;      // ✅ Ahora incluido en la respuesta del backend
+        frozenBalance: number;     // ✅ Ahora incluido en la respuesta del backend
         requiredFee: number;
         feeBreakdown: {
           totalAmount: number;
@@ -264,10 +267,21 @@ export const checkBalanceForTripPublish = async (seats: number, pricePerSeat: nu
     console.log('💰 TRIP BALANCE CHECK: Backend response:', response);
 
     if (response.success && response.data) {
-      const { currentBalance, requiredFee, isBalanceSufficient, feeBreakdown } = response.data;
+      const { 
+        currentBalance, 
+        availableBalance, 
+        totalBalance, 
+        frozenBalance, 
+        requiredFee, 
+        isBalanceSufficient, 
+        feeBreakdown 
+      } = response.data;
       
       console.log('✅ TRIP BALANCE CHECK: Verificación exitosa via backend:', {
         currentBalance,
+        availableBalance,
+        totalBalance,
+        frozenBalance,
         requiredFee,
         isBalanceSufficient,
         feeBreakdown
@@ -277,9 +291,9 @@ export const checkBalanceForTripPublish = async (seats: number, pricePerSeat: nu
         success: true,
         hasSufficientBalance: isBalanceSufficient,
         requiredAmount: requiredFee,
-        availableBalance: currentBalance, // El backend ya maneja frozen_balance
-        totalBalance: currentBalance,
-        frozenBalance: 0 // El backend ya considera esto en currentBalance
+        availableBalance: availableBalance,  // ✅ Usar availableBalance del backend
+        totalBalance: totalBalance,          // ✅ Usar totalBalance del backend
+        frozenBalance: frozenBalance         // ✅ Usar frozenBalance del backend
       };
     }
 
