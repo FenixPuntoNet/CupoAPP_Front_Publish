@@ -80,11 +80,11 @@ const RootComponent = () => {
       <MantineProvider theme={theme} defaultColorScheme="dark">
         <GoogleMapsProvider>
           <AuthGuard>
-          <AppShell
-            header={{ height: showNavigation ? 60 : 0 }}
-            footer={{ height: 72 }}
-            className={styles.appShell}
-          >
+            <AppShell
+              header={{ height: showNavigation ? 60 : 0 }}
+              footer={{ height: 72 }}
+              className={styles.appShell}
+            >
             <div className={styles.backgroundEffect} />
 
             {showNavigation && (
