@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "../components/ui/button";
-import { ChevronDown } from "lucide-react";
 import { ThemeProvider } from "../context/ThemeContext";
 import { ThemeToggle } from "../components/ThemeToggle";
 import styles from "./indexlazy.module.css";
@@ -51,25 +50,24 @@ function Index() {
       }, 500);
     }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, []); 
 
   return (
     <div className={styles.container}>
+      <div style={{height: '30px'}} />
       <div className={styles.backgroundEffect} />
       <header className={styles.header}>
       {/* <Button onClick={() => hello().then((v) => console.log(v))}>
         Telefunc
       </Button> */}
         <div className={styles.logo}>
+          <div style={{height: '30px'}} />
           <span className={styles.logoIcon} />
           <span className={styles.logoText}>cupo</span>
         </div>
         <div className={styles.headerButtons}>
+          <div style={{height: '30px'}} />
           <ThemeToggle />
-          <Button variant="ghost" className={styles.langButton}>
-            <span className={styles.flagText}>CO</span>
-            <ChevronDown className={styles.chevron} />
-          </Button>
         </div>
       </header>
 

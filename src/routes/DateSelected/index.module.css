@@ -87,4 +87,43 @@
 :global(.light) .calendarHeader {
     color: #1a1a1a;
 }
+
+/* Estilos completos para modo claro - DateSelected */
+:global(.light) .dateSelectedContainer {
+    background: #f8fffe;
+    color: #1a1a1a;
+}
+
+:global(.light) .header {
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a1a1a;
+}
+
+:global(.light) .title {
+    color: #1a1a1a;
+}
+
+:global(.light) .subtitle {
+    color: #666;
+}
+
+:global(.light) .calendarContainer {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 204, 122, 0.2);
+}
+
+:global(.light) .selectedDateInfo {
+    background: rgba(0, 204, 122, 0.1);
+    color: #1a1a1a;
+    border: 1px solid rgba(0, 204, 122, 0.3);
+}
+
+:global(.light) .confirmButton {
+    background: #00cc7a;
+    color: white;
+}
+
+:global(.light) .confirmButton:hover {
+    background: #00a86b;
+}
   

@@ -231,3 +231,56 @@ body.scanner-active,
     letter-spacing: 1px;
   }
 }
+
+/* Estilos para modo claro - ValidarCupo */
+:global(.light) .validateContainer {
+  background: #f8fffe;
+  color: #1a1a1a;
+}
+
+:global(.light) .header {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+}
+
+:global(.light) .title {
+  color: #1a1a1a;
+}
+
+:global(.light) .subtitle {
+  color: #666;
+}
+
+:global(.light) .qrScannerContainer {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 204, 122, 0.3);
+}
+
+:global(.light) .qrScannerContainer.active {
+  border-color: #00cc7a;
+  box-shadow: 0 0 16px 4px rgba(0, 204, 122, 0.3);
+  background: rgba(0, 204, 122, 0.08);
+}
+
+:global(.light) .scanningText {
+  color: #00cc7a !important;
+}
+
+:global(.light) .validateButton {
+  background: #00cc7a;
+  color: white;
+}
+
+:global(.light) .validateButton:hover {
+  background: #00a86b;
+}
+
+:global(.light) .manualInput {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 204, 122, 0.3);
+  color: #1a1a1a;
+}
+
+:global(.light) .manualInput::placeholder {
+  color: rgba(26, 26, 26, 0.5);
+}

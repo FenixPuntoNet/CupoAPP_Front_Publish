@@ -242,23 +242,23 @@
     flex-direction: column;
     gap: 1rem;
     width: 100%;
-    max-width: 300px;
+    max-width: 280px;
     margin: 0 auto;
     margin-bottom: 1rem;
     position: relative;
     z-index: 10;
-    padding: 1rem;
+    padding: 0.75rem;
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.02);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     transition: all 0.3s ease;
   }
 
   :global(.light) .actionButtons {
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.7);
     border: 1px solid rgba(0, 204, 122, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 204, 122, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 204, 122, 0.08);
   }
   
   .registerButton, .loginButton {
@@ -278,31 +278,31 @@
   color: #000;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0, 255, 157, 0.4);
+  box-shadow: 0 4px 15px rgba(0, 255, 157, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 :global(.light) .registerButton {
-  background: linear-gradient(135deg, #00cc7a 0%, #10b981 50%, #059669 100%);
+  background: linear-gradient(135deg, #00cc7a 0%, #10b981 100%);
   color: white;
-  box-shadow: 0 8px 25px rgba(0, 204, 122, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 204, 122, 0.3);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .registerButton:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(0, 255, 157, 0.5);
-  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 157, 0.4);
+  filter: brightness(1.05);
 }
 
 :global(.light) .registerButton:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(0, 204, 122, 0.6);
-  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 204, 122, 0.4);
+  filter: brightness(1.05);
 }  .registerButton::after {
     content: '';
     position: absolute;
@@ -313,7 +313,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.4),
+      rgba(255, 255, 255, 0.2),
       transparent
     );
     transform: translateX(-100%);
@@ -324,7 +324,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.5),
+      rgba(255, 255, 255, 0.3),
       transparent
     );
   }
@@ -334,14 +334,14 @@
   }
   
   .loginButton {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid #00ff9d;
-    color: #00ff9d;
+    background: transparent;
+    border: 1px solid rgba(0, 255, 157, 0.6);
+    color: rgba(0, 255, 157, 0.8);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(15px);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    backdrop-filter: blur(10px);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0px;
   }
 
   :global(.light) .loginButton {
@@ -350,14 +350,15 @@
     color: #00cc7a;
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 15px rgba(0, 204, 122, 0.2);
+    font-weight: 600;
   }
   
   .loginButton:hover {
-    background: rgba(0, 255, 157, 0.15);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 255, 157, 0.3);
+    background: rgba(0, 255, 157, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 255, 157, 0.2);
     border-color: #00ff9d;
-    color: #fff;
+    color: #00ff9d;
   }
 
   :global(.light) .loginButton:hover {
@@ -502,7 +503,7 @@
     height: 60%;
     background: radial-gradient(
       ellipse at center,
-      rgba(0, 204, 122, 0.03) 0%,
+      rgba(0, 204, 122, 0.02) 0%,
       transparent 70%
     );
     border-radius: 50%;
@@ -513,11 +514,11 @@
   @keyframes floatGlow {
     0%, 100% { 
       transform: translateY(0) scale(1);
-      opacity: 0.5;
+      opacity: 0.3;
     }
     50% { 
       transform: translateY(-20px) scale(1.1);
-      opacity: 0.8;
+      opacity: 0.5;
     }
   }
 

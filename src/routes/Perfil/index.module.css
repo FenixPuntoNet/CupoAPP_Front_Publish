@@ -683,3 +683,90 @@
   align-items: center;
   gap: 4px;
 }
+
+/* Estilos completos para modo claro - Perfil */
+:global(.light) .perfilContainer {
+  background: #f8fffe;
+  color: #1a1a1a;
+}
+
+:global(.light) .profileHeader {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+}
+
+:global(.light) .profileSection {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 204, 122, 0.2);
+}
+
+:global(.light) .sectionTitle {
+  color: #1a1a1a;
+}
+
+:global(.light) .profileItem {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 204, 122, 0.2);
+  color: #1a1a1a;
+}
+
+:global(.light) .profileItem:hover {
+  background: rgba(0, 204, 122, 0.1);
+  border-color: rgba(0, 204, 122, 0.4);
+}
+
+:global(.light) .itemLabel {
+  color: #666;
+}
+
+:global(.light) .itemValue {
+  color: #1a1a1a;
+}
+
+:global(.light) .editButton {
+  background: #00cc7a;
+  color: white;
+}
+
+:global(.light) .editButton:hover {
+  background: #00a86b;
+}
+
+:global(.light) .statusBox {
+  border: 1px solid rgba(0, 204, 122, 0.3);
+}
+
+:global(.light) .statusText {
+  color: #1a1a1a;
+}
+
+:global(.light) .verificationApprovedBox {
+  background: rgba(0, 204, 122, 0.1);
+  border-color: rgba(0, 204, 122, 0.3);
+}
+
+:global(.light) .verificationApprovedText {
+  color: #00cc7a !important;
+}
+
+:global(.light) .verificationRejectedBox {
+  background: rgba(255, 77, 77, 0.1);
+  border-color: rgba(255, 77, 77, 0.3);
+}
+
+:global(.light) .verificationRejectedText {
+  color: #ff4d4d !important;
+}
+
+:global(.light) .verificationPendingBox {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+:global(.light) .verificationPendingText {
+  color: #ffc107 !important;
+}
+
+:global(.light) .verificationPendingSubtitle {
+  color: rgba(255, 193, 7, 0.8) !important;
+}

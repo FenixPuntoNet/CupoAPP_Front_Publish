@@ -267,3 +267,42 @@
     font-size: 0.7rem;
   }
 }
+
+/* Estilos adicionales para modo claro - elementos faltantes */
+:global(.light) .chatContainer {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+}
+
+:global(.light) .chatList {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+:global(.light) .chatAvatar {
+  background: rgba(0, 204, 122, 0.1);
+  border: 2px solid rgba(0, 204, 122, 0.3);
+}
+
+:global(.light) .avatarIcon {
+  color: #00cc7a;
+}
+
+:global(.light) .loadingContainer {
+  color: #666;
+}
+
+:global(.light) .emptyContainer {
+  color: #666;
+}
+
+:global(.light) .emptyIcon {
+  color: rgba(0, 204, 122, 0.6);
+}
+
+:global(.light) .emptyTitle {
+  color: #1a1a1a;
+}
+
+:global(.light) .emptyDescription {
+  color: #666;
+}

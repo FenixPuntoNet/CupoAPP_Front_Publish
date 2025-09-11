@@ -251,23 +251,9 @@
   filter: brightness(1);
 }
 
-:global(.light) .logoImage {
-  filter: brightness(0) invert(1);
-  animation: logoSpinIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:global(.dark) .logoImage {
-  filter: brightness(1);
-  animation: logoSpinIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 .logoWrapper:hover .logoImage {
   transform: scale(1.1) rotate(10deg);
   filter: brightness(1.2);
-}
-
-:global(.light) .logoWrapper:hover .logoImage {
-  filter: brightness(0) invert(1) brightness(1.2);
 }
 
 /* Active States */

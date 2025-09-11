@@ -556,3 +556,86 @@
     background: #000000;
   }
 }
+
+/* Estilos completos para modo claro */
+:global(.light) .loadingScreen {
+  background: linear-gradient(135deg, #f8fffe 0%, #ffffff 100%);
+}
+
+:global(.light) .loadingSpinner {
+  border: 4px solid rgba(0, 204, 122, 0.1);
+  border-top-color: rgba(0, 204, 122, 0.8);
+}
+
+:global(.light) .loadingText {
+  color: #1a1a1a;
+}
+
+:global(.light) .chatHeader {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+  border-bottom: 1px solid rgba(0, 204, 122, 0.2);
+}
+
+:global(.light) .headerTitle {
+  color: #1a1a1a;
+}
+
+:global(.light) .backButton {
+  color: #00cc7a;
+  background: rgba(0, 204, 122, 0.1);
+}
+
+:global(.light) .backButton:hover {
+  background: rgba(0, 204, 122, 0.2);
+}
+
+:global(.light) .chatContainer {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+:global(.light) .messagesList {
+  background: transparent;
+}
+
+:global(.light) .messageItem {
+  color: #1a1a1a;
+}
+
+:global(.light) .messageFromSelf {
+  background: linear-gradient(135deg, rgba(0, 204, 122, 0.8), rgba(0, 204, 122, 0.6));
+  color: white;
+}
+
+:global(.light) .messageFromOther {
+  background: rgba(255, 255, 255, 0.9);
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 204, 122, 0.2);
+}
+
+:global(.light) .messageTime {
+  color: rgba(26, 26, 26, 0.6);
+}
+
+:global(.light) .messageInput {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 204, 122, 0.3);
+  color: #1a1a1a;
+}
+
+:global(.light) .messageInput::placeholder {
+  color: rgba(26, 26, 26, 0.5);
+}
+
+:global(.light) .sendButton {
+  background: #00cc7a;
+  color: white;
+}
+
+:global(.light) .sendButton:hover {
+  background: #00a86b;
+}
+
+:global(.light) .sendButton:disabled {
+  background: rgba(0, 204, 122, 0.3);
+}

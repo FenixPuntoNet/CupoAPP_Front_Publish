@@ -514,3 +514,68 @@
   opacity: 0.4;
   pointer-events: none;
 }
+
+/* Estilos para modo claro - Actividades */
+:global(.light) .actividadesContainer {
+  background: #f8fffe;
+  color: #1a1a1a;
+}
+
+:global(.light) .actividadesHeader {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+}
+
+:global(.light) .headerTitle {
+  color: #1a1a1a;
+}
+
+:global(.light) .tripCard {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 204, 122, 0.2);
+  color: #1a1a1a;
+}
+
+:global(.light) .tripCard:hover {
+  background: rgba(0, 204, 122, 0.05);
+  border-color: rgba(0, 204, 122, 0.4);
+}
+
+:global(.light) .tripInfo {
+  color: #1a1a1a;
+}
+
+:global(.light) .tripRoute {
+  color: #00cc7a;
+}
+
+:global(.light) .tripDate {
+  color: #666;
+}
+
+:global(.light) .tripStatus {
+  color: #1a1a1a;
+}
+
+:global(.light) .tripActions .mantine-Button-root {
+  background: #00cc7a;
+  color: white;
+  border-color: #00cc7a;
+}
+
+:global(.light) .tripActions .mantine-Button-root:hover {
+  background: #00a86b;
+  border-color: #00a86b;
+}
+
+:global(.light) .tripActions .mantine-Button-root:has(svg.lucide-message-square) {
+  background-color: transparent;
+  border: 1px solid rgba(0, 204, 122, 0.5);
+  color: #00cc7a;
+}
+
+:global(.light) .tripActions .mantine-Button-root:has(svg.lucide-message-square):hover {
+  border-color: #00cc7a;
+  color: #00a86b;
+  background: rgba(0, 204, 122, 0.1);
+}

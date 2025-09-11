@@ -785,3 +785,61 @@
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
   margin: 1.5rem 0;
 }
+
+/* Estilos para componentes Mantine en modo claro */
+:global(.light) .mantine-Input-input {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 204, 122, 0.3) !important;
+  color: #1a1a1a !important;
+}
+
+:global(.light) .mantine-Input-input:focus {
+  border-color: #00cc7a !important;
+  box-shadow: 0 0 0 2px rgba(0, 204, 122, 0.2) !important;
+}
+
+:global(.light) .mantine-Select-input {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 204, 122, 0.3) !important;
+  color: #1a1a1a !important;
+}
+
+:global(.light) .mantine-Select-input:focus {
+  border-color: #00cc7a !important;
+}
+
+:global(.light) .mantine-Select-dropdown {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 204, 122, 0.3) !important;
+}
+
+:global(.light) .mantine-Select-item {
+  color: #1a1a1a !important;
+}
+
+:global(.light) .mantine-Select-item:hover {
+  background-color: rgba(0, 204, 122, 0.1) !important;
+}
+
+:global(.light) .mantine-Select-item[data-selected] {
+  background-color: rgba(0, 204, 122, 0.2) !important;
+  color: #00cc7a !important;
+}
+
+:global(.light) .mantine-TextInput-label {
+  color: #1a1a1a !important;
+}
+
+:global(.light) .mantine-Select-label {
+  color: #1a1a1a !important;
+}
+
+:global(.light) .mantine-Textarea-input {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 204, 122, 0.3) !important;
+  color: #1a1a1a !important;
+}
+
+:global(.light) .mantine-Textarea-label {
+  color: #1a1a1a !important;
+}

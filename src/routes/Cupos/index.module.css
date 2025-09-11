@@ -141,3 +141,50 @@
     0% { transform: translate(0, 0) rotate(0deg); }
     100% { transform: translate(-5%, -5%) rotate(360deg); }
   }
+
+/* Estilos para modo claro - Cupos */
+:global(.light) .cuposContainer {
+  background: #f8fffe;
+  color: #1a1a1a;
+}
+
+:global(.light) .cuposHeader {
+  background: rgba(255, 255, 255, 0.95);
+  color: #1a1a1a;
+}
+
+:global(.light) .headerTitle {
+  color: #1a1a1a;
+}
+
+:global(.light) .cupoCard {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 204, 122, 0.2);
+  color: #1a1a1a;
+}
+
+:global(.light) .cupoCard:hover {
+  background: rgba(0, 204, 122, 0.05);
+  border-color: rgba(0, 204, 122, 0.4);
+}
+
+:global(.light) .cupoInfo {
+  color: #1a1a1a;
+}
+
+:global(.light) .cupoRoute {
+  color: #00cc7a;
+}
+
+:global(.light) .cupoStatus {
+  color: #666;
+}
+
+:global(.light) .listContainer {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+:global(.light) .listHeader {
+  background: rgba(0, 204, 122, 0.1);
+  color: #1a1a1a;
+}

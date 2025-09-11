@@ -669,3 +669,52 @@
   text-align: center;
   margin-bottom: 0.7rem;
 }
+
+/* Estilos adicionales para modo claro - Account */
+:global(.light) .referrals-streaks-space {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+}
+
+:global(.light) .referral-meta-box,
+:global(.light) .streak-line {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.15);
+}
+
+:global(.light) .referral-section-title,
+:global(.light) .streak-section-title {
+  color: #1f2937;
+  text-shadow: none;
+}
+
+:global(.light) .streak-name,
+:global(.light) .streak-progress-label,
+:global(.light) .referral-meta-box .mantine-Text-root {
+  color: #1f2937;
+}
+
+:global(.light) .meta-modal-content {
+  background: #ffffff;
+  color: #1f2937;
+}
+
+:global(.light) .meta-modal-content .meta-title {
+  color: #059669;
+}
+
+:global(.light) .meta-modal-content .meta-desc {
+  color: #1f2937;
+}
+
+:global(.light) .meta-modal-content .close-btn {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+:global(.light) .meta-modal-content .close-btn:hover {
+  background: #10b981;
+  color: white;
+}

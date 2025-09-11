@@ -631,3 +631,62 @@
     padding-bottom: 1.2rem;
   }
 }
+
+/* Estilos adicionales para modo claro - Change/Redeem Store */
+:global(.light) .cart-modal {
+  background: #ffffff;
+  color: #1f2937;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.15);
+}
+
+:global(.light) .cart-modal h3 {
+  color: #059669;
+}
+
+:global(.light) .redeem-item-name {
+  color: #059669;
+}
+
+:global(.light) .redeem-cart-bar {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+:global(.light) .redeem-history-item {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+}
+
+:global(.light) .redeem-history-name {
+  color: #059669;
+}
+
+:global(.light) .redeem-history-date {
+  color: #6b7280;
+}
+
+:global(.light) .qty-btn,
+:global(.light) .remove-btn {
+  background: rgba(255, 255, 255, 0.9);
+  color: #059669;
+  border: 1.5px solid #10b981;
+}
+
+:global(.light) .qty-value {
+  color: #059669;
+}
+
+:global(.light) .cart-count {
+  color: #1f2937;
+}
+
+:global(.light) .cart-total {
+  color: #059669;
+}
+
+:global(.light) .result-modal {
+  background: #ffffff;
+  color: #1f2937;
+}
