@@ -29,6 +29,14 @@
   }
 }
 
+:global(.light) .card {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+:global(.light) .card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
 .title {
   font-family: 'Greycliff CF', sans-serif;
   font-weight: 900;
@@ -65,6 +73,15 @@
     background-color: #fff;
     transform: scale(1.1);
   }
+}
+
+:global(.light) .carouselControl button {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+}
+
+:global(.light) .carouselControl button:hover {
+  background-color: rgba(0, 0, 0, 0.9);
 }
 
 .carouselControl button svg {

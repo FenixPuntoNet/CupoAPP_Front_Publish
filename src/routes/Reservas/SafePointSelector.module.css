@@ -1,6 +1,12 @@
 /* SafePointSelector Component Styles */
 .safePointSelector {
   min-height: 400px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+:global(.light) .safePointSelector {
+  background-color: #f8fffe;
+  color: #1a1a1a;
 }
 
 .section {
@@ -14,11 +20,20 @@
   color: var(--mantine-color-dark-6);
 }
 
+:global(.light) .sectionTitle {
+  color: #1f2937;
+}
+
 .safePointCard {
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid var(--mantine-color-gray-3);
   margin-bottom: 8px;
+}
+
+:global(.light) .safePointCard {
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
 }
 
 .safePointCard:hover {
@@ -27,9 +42,19 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+:global(.light) .safePointCard:hover {
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
 .safePointCard.selected {
   border-color: var(--mantine-color-blue-6);
   background-color: var(--mantine-color-blue-0);
+}
+
+:global(.light) .safePointCard.selected {
+  border-color: #10b981;
+  background-color: #ecfdf5;
 }
 
 .safePointHeader {
@@ -51,10 +76,18 @@
   flex: 1;
 }
 
+:global(.light) .safePointName {
+  color: #1f2937;
+}
+
 .safePointAddress {
   color: var(--mantine-color-gray-6);
   font-size: 14px;
   margin-bottom: 8px;
+}
+
+:global(.light) .safePointAddress {
+  color: #6b7280;
 }
 
 .safePointDetails {
@@ -79,6 +112,11 @@
   background-color: var(--mantine-color-orange-0);
 }
 
+:global(.light) .proposalCard {
+  border: 2px dashed #fbbf24;
+  background-color: #fefbf3;
+}
+
 .proposalForm {
   margin-top: 16px;
   padding: 16px;
@@ -87,10 +125,19 @@
   border: 1px solid var(--mantine-color-gray-3);
 }
 
+:global(.light) .proposalForm {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+}
+
 .emptyState {
   text-align: center;
   padding: 32px 16px;
   color: var(--mantine-color-gray-6);
+}
+
+:global(.light) .emptyState {
+  color: #6b7280;
 }
 
 .emptyStateIcon {
@@ -110,6 +157,10 @@
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid var(--mantine-color-gray-3);
+}
+
+:global(.light) .actionButtons {
+  border-top: 1px solid #e5e7eb;
 }
 
 /* Responsive adjustments */

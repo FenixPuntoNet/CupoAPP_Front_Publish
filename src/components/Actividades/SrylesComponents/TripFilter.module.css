@@ -12,6 +12,11 @@
     transition: all 0.3s ease;
   }
   
+  :global(.light) .filterContainer {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 155, 119, 0.2);
+  }
+  
   .filterContainer::before {
     content: '';
     position: absolute;
@@ -33,6 +38,11 @@
     box-shadow: 0 8px 32px rgba(0, 255, 157, 0.1);
   }
   
+  :global(.light) .filterContainer:hover {
+    border-color: rgba(0, 155, 119, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 155, 119, 0.15);
+  }
+  
   .filterLabel {
     color: rgba(0, 255, 157, 0.9) !important;
     font-weight: 600 !important;
@@ -40,6 +50,10 @@
     letter-spacing: 0.5px !important;
     margin-bottom: 0.5rem !important;
     text-transform: uppercase !important;
+  }
+  
+  :global(.light) .filterLabel {
+    color: rgba(0, 155, 119, 0.9) !important;
   }
   
   .filterSelect {
@@ -59,14 +73,30 @@
     height: auto !important;
   }
   
+  :global(.light) .filterSelect input {
+    background: rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(0, 155, 119, 0.2) !important;
+    color: #000000 !important;
+  }
+  
   .filterSelect input:hover {
     border-color: rgba(0, 255, 157, 0.3) !important;
     background: rgba(255, 255, 255, 0.08) !important;
   }
   
+  :global(.light) .filterSelect input:hover {
+    border-color: rgba(0, 155, 119, 0.4) !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+  }
+  
   .filterSelect input:focus {
     border-color: rgba(0, 255, 157, 0.5) !important;
     box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.1) !important;
+  }
+  
+  :global(.light) .filterSelect input:focus {
+    border-color: rgba(0, 155, 119, 0.6) !important;
+    box-shadow: 0 0 0 2px rgba(0, 155, 119, 0.15) !important;
   }
   
   /* Dropdown styles */
@@ -138,6 +168,10 @@
   
   .filterSelect input::placeholder {
     color: rgba(255, 255, 255, 0.5) !important;
+  }
+  
+  :global(.light) .filterSelect input::placeholder {
+    color: rgba(0, 0, 0, 0.5) !important;
   }
   
   /* Clear button styles */

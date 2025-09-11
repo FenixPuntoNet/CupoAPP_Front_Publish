@@ -9,6 +9,10 @@
   transform: translateY(-2px);
 }
 
+:global(.light) .passengerCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 155, 119, 0.15);
+}
+
 .safePointIcon {
   font-size: 1.5rem;
   display: flex;
@@ -28,6 +32,11 @@
   border-left: 4px solid #059669;
 }
 
+:global(.light) .routeInfo {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-left: 4px solid #009b77;
+}
+
 .tabContent {
   min-height: 200px;
 }
@@ -36,6 +45,10 @@
   text-align: center;
   padding: 2rem;
   color: #6b7280;
+}
+
+:global(.light) .emptyState {
+  color: #475569;
 }
 
 .passengerName {
@@ -49,10 +62,18 @@
   margin-bottom: 0.25rem;
 }
 
+:global(.light) .safePointName {
+  color: #009b77;
+}
+
 .safePointAddress {
   color: #6b7280;
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
+}
+
+:global(.light) .safePointAddress {
+  color: #475569;
 }
 
 .passengerNotes {
@@ -62,6 +83,11 @@
   border-left: 3px solid #3b82f6;
   font-style: italic;
   margin-top: 0.5rem;
+}
+
+:global(.light) .passengerNotes {
+  background: #f0f9ff;
+  border-left: 3px solid #0284c7;
 }
 
 .estimatedTime {

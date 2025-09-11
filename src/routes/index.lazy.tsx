@@ -2,11 +2,17 @@ import { useState, useEffect } from "react";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "../components/ui/button";
 import { ChevronDown } from "lucide-react";
+import { ThemeProvider } from "../context/ThemeContext";
+import { ThemeToggle } from "../components/ThemeToggle";
 import styles from "./indexlazy.module.css";
 // import { hello } from "$/hello.telefunc.ts";
 
 export const Route = createLazyFileRoute("/")({
-  component: Index,
+  component: () => (
+    <ThemeProvider>
+      <Index />
+    </ThemeProvider>
+  ),
 });
 
 function Index() {
@@ -58,10 +64,13 @@ function Index() {
           <span className={styles.logoIcon} />
           <span className={styles.logoText}>cupo</span>
         </div>
-        <Button variant="ghost" className={styles.langButton}>
-          <span className={styles.flagText}>CO</span>
-          <ChevronDown className={styles.chevron} />
-        </Button>
+        <div className={styles.headerButtons}>
+          <ThemeToggle />
+          <Button variant="ghost" className={styles.langButton}>
+            <span className={styles.flagText}>CO</span>
+            <ChevronDown className={styles.chevron} />
+          </Button>
+        </div>
       </header>
 
       <main className={styles.main}>

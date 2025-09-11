@@ -13,6 +13,12 @@
   overflow: hidden;
 }
 
+:global(.light) .tripCard {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 155, 119, 0.2);
+  backdrop-filter: blur(8px);
+}
+
 /* Trip card with passengers waiting */
 .tripCardWithPassengers {
   border: 2px solid rgba(255, 167, 38, 0.6) !important;
@@ -77,6 +83,11 @@
   border-color: rgba(0, 255, 157, 0.2);
 }
 
+:global(.light) .tripCard:hover {
+  box-shadow: 0 8px 32px rgba(0, 155, 119, 0.2);
+  border-color: rgba(0, 155, 119, 0.3);
+}
+
 /* Header Styles */
 .tripHeader {
   display: flex;
@@ -100,11 +111,19 @@
   letter-spacing: 0.5px;
 }
 
+:global(.light) .tripTitle {
+  color: rgba(0, 155, 119, 0.9);
+}
+
 .tripText {
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.9);
   margin-bottom: 1rem;
   line-height: 1.4;
+}
+
+:global(.light) .tripText {
+  color: rgba(0, 0, 0, 0.8);
 }
 
 /* Badge Styles */
@@ -162,6 +181,12 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+:global(.light) .tripSummary {
+  color: rgba(0, 0, 0, 0.7);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 /* Cupos info section */
 .cuposStatus {
   margin: 1rem 0;
@@ -169,6 +194,11 @@
   background: rgba(255, 255, 255, 0.03);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:global(.light) .cuposStatus {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .cuposInfo {
@@ -227,6 +257,11 @@
   justify-content: center;
 }
 
+:global(.light) .tripActions button {
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  color: #000000 !important;
+}
+
 @media (max-width: 768px) {
   .tripActions button {
     width: 100%;
@@ -240,6 +275,12 @@
   border-color: rgba(0, 255, 157, 0.3) !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 4px 12px rgba(0, 255, 157, 0.1) !important;
+}
+
+:global(.light) .tripActions button:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 155, 119, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(0, 155, 119, 0.1) !important;
 }
 
 .tripActions button:active {

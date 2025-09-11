@@ -18,6 +18,8 @@ import styles from "./root.module.css";
 import { BackendAuthProvider } from '@/context/BackendAuthContext';
 import { AuthGuard } from '@/components/AuthGuard';
 import { GoogleMapsProvider } from '@/components/GoogleMapsProvider';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 // Configure telefunc to use external backend
 config.telefuncUrl = "https://cupo-backend.fly.dev/_telefunc";
@@ -76,8 +78,18 @@ const RootComponent = () => {
   const showNavigation = !noNavBarRoutes.includes(location.pathname);
 
   return (
+    <ThemeProvider>
+      <AppContent showNavigation={showNavigation} />
+    </ThemeProvider>
+  );
+};
+
+const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
+  const { mantineColorScheme } = useTheme();
+
+  return (
     <BackendAuthProvider>
-      <MantineProvider theme={theme} defaultColorScheme="dark">
+      <MantineProvider theme={theme} defaultColorScheme={mantineColorScheme}>
         <GoogleMapsProvider>
           <AuthGuard>
             <AppShell
@@ -95,15 +107,18 @@ const RootComponent = () => {
                     alt="Logo"
                     className={styles.logoImage}
                   />
-                  <Button
-                    className={styles.registerButton}
-                    component="a"
-                    href="https://www.cupo.lat"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <span>Más información</span>
-                  </Button>
+                  <Group gap="sm">
+                    <ThemeToggle />
+                    <Button
+                      className={styles.registerButton}
+                      component="a"
+                      href="https://www.cupo.lat"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span>Más información</span>
+                    </Button>
+                  </Group>
                 </Group>
               </AppShell.Header>
             )}

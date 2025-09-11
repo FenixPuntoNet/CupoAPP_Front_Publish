@@ -1,6 +1,11 @@
 .container {
   max-height: 500px;
   overflow-y: auto;
+  transition: background-color 0.3s ease;
+}
+
+:global(.light) .container {
+  background-color: #f8fffe;
 }
 
 .loading {
@@ -13,6 +18,12 @@
 .filtersCard {
   border: 1px solid #e9ecef;
   background-color: #f8f9fa;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+:global(.light) .filtersCard {
+  border: 1px solid rgba(0, 155, 119, 0.2);
+  background-color: #ffffff;
 }
 
 .safePointCard {
@@ -21,9 +32,19 @@
   cursor: pointer;
 }
 
+:global(.light) .safePointCard {
+  border: 1px solid rgba(0, 155, 119, 0.2);
+  background-color: #ffffff;
+}
+
 .safePointCard:hover {
   border-color: #495057;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+:global(.light) .safePointCard:hover {
+  border-color: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
 }
 
 .safePointCard.selected {
@@ -32,15 +53,32 @@
   box-shadow: 0 2px 8px rgba(51, 154, 240, 0.2);
 }
 
+:global(.light) .safePointCard.selected {
+  border-color: #10b981;
+  background-color: #ecfdf5;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
 .safePointName {
   color: #333;
   line-height: 1.2;
   word-break: break-word;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .safePointName {
+  color: #1a1a1a;
 }
 
 .emptyCard {
   border: 1px dashed #dee2e6;
   background-color: #f8f9fa;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+:global(.light) .emptyCard {
+  border: 1px dashed #d1d5db;
+  background-color: #ffffff;
 }
 
 /* Responsive adjustments */

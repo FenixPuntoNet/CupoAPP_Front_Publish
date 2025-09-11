@@ -8,6 +8,11 @@
   padding: 1rem;
 }
 
+:global(.light) .passengerSelector {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 155, 119, 0.3);
+}
+
 .passengerCard {
   cursor: pointer;
   padding: 0.75rem;
@@ -19,13 +24,26 @@
   justify-content: center;
 }
 
+:global(.light) .passengerCard {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 .passengerCard:hover {
   background: rgba(0, 255, 157, 0.2);
+}
+
+:global(.light) .passengerCard:hover {
+  background: rgba(0, 155, 119, 0.15);
 }
 
 .selectedCard {
   background: rgba(0, 255, 157, 0.3);
   box-shadow: 0 0 10px rgba(0, 255, 157, 0.4);
+}
+
+:global(.light) .selectedCard {
+  background: rgba(0, 155, 119, 0.2);
+  box-shadow: 0 0 10px rgba(0, 155, 119, 0.3);
 }
 
 .passengerIcons {
@@ -36,6 +54,10 @@
 .passengerIcon {
   color: white;
   transition: transform 0.3s ease;
+}
+
+:global(.light) .passengerIcon {
+  color: #000000;
 }
 
 .passengerCard:hover .passengerIcon {

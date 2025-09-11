@@ -653,7 +653,7 @@ const LoginView: React.FC = () => {
         onClose={() => setRecoverModalOpened(false)}
       />
 
-      <Text className={styles.version}>v 0.0.1 (0)</Text>
+      <Text className={styles.version}>Version 6.0.0 (1)</Text>
     </Container>
   );
 };

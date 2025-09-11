@@ -25,6 +25,8 @@ import {
 import type { LucideProps } from 'lucide-react'
 import styles from './index.module.css'
 import { useBackendAuth } from '@/context/BackendAuthContext'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { ThemeProvider } from '@/context/ThemeContext'
 import { Rating } from '@mantine/core'
 import { DeactivateAccountModal } from '@/components/DeactivateAccountModal'
 import { getCurrentUserProfile } from '@/services/profile'
@@ -418,14 +420,19 @@ const ProfileView: React.FC = () => {
             )}
           </div>
         </div>
-        <Button
-          className={styles.updateProfileBtn}
-          variant="outline"
-          size="xs"
-          onClick={handleUpdateProfile}
-        >
-          Actualizar perfil
-        </Button>
+        <div className={styles.profileActions}>
+          <Button
+            className={styles.updateProfileBtn}
+            variant="outline"
+            size="xs"
+            onClick={handleUpdateProfile}
+          >
+            Actualizar perfil
+          </Button>
+          <div className={styles.themeToggleContainer}>
+            <ThemeToggle />
+          </div>
+        </div>
       </div>
     );
   };
@@ -750,8 +757,16 @@ const ProfileView: React.FC = () => {
   )
 }
 
+const ProfileViewWithTheme: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <ProfileView />
+    </ThemeProvider>
+  );
+};
+
 export const Route = createFileRoute('/Perfil/')({
-  component: ProfileView,
+  component: ProfileViewWithTheme,
 })
 
-export default ProfileView
+export default ProfileViewWithTheme

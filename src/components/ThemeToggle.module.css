@@ -1,0 +1,46 @@
+/* Theme Toggle Component Styles */
+.themeToggle {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s ease !important;
+  border-radius: 12px !important;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.themeToggle:hover {
+  background: rgba(0, 255, 157, 0.1) !important;
+  border-color: rgba(0, 255, 157, 0.3) !important;
+  transform: scale(1.05) !important;
+}
+
+.icon {
+  width: 20px !important;
+  height: 20px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.3s ease !important;
+}
+
+.themeToggle:hover .icon {
+  color: #00ff9d !important;
+}
+
+/* Light mode adjustments */
+:global(.light) .themeToggle {
+  background: rgba(0, 0, 0, 0.1) !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+:global(.light) .themeToggle:hover {
+  background: rgba(0, 255, 157, 0.1) !important;
+  border-color: rgba(0, 255, 157, 0.3) !important;
+}
+
+:global(.light) .icon {
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+:global(.light) .themeToggle:hover .icon {
+  color: #00cc7a !important;
+}

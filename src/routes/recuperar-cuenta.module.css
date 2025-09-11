@@ -9,6 +9,10 @@
   margin: 0 auto;
 }
 
+:global(.light) .container {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
 /* Navigation */
 .backNavButton {
   display: flex;
@@ -24,10 +28,21 @@
   backdrop-filter: blur(10px);
 }
 
+:global(.light) .backNavButton {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #d1d5db;
+  color: #10b981;
+}
+
 .backNavButton:hover {
   background: rgba(255, 255, 255, 1);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+:global(.light) .backNavButton:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 /* Header section */
@@ -61,10 +76,18 @@
   margin-bottom: 0.5rem;
 }
 
+:global(.light) .title {
+  color: #1f2937;
+}
+
 .subtitle {
   color: #868e96;
   font-size: 1rem;
   line-height: 1.5;
+}
+
+:global(.light) .subtitle {
+  color: #6b7280;
 }
 
 /* Input section */
@@ -80,6 +103,10 @@
   display: block;
 }
 
+:global(.light) .inputLabel {
+  color: #374151;
+}
+
 .input {
   width: 100%;
 }
@@ -93,9 +120,19 @@
   background: rgba(255, 255, 255, 0.9);
 }
 
+:global(.light) .input input {
+  border: 2px solid #d1d5db;
+  background: #ffffff;
+}
+
 .input input:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+:global(.light) .input input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 /* Buttons */
@@ -152,14 +189,29 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+:global(.light) .statusCard,
+:global(.light) .successCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 155, 119, 0.1);
+}
+
 .statusTitle {
   color: #2c2e33;
   font-size: 1rem;
 }
 
+:global(.light) .statusTitle {
+  color: #1f2937;
+}
+
 .successTitle {
   color: #51cf66;
   font-size: 1rem;
+}
+
+:global(.light) .successTitle {
+  color: #10b981;
 }
 
 /* Alerts */

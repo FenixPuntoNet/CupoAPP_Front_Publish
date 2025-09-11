@@ -3,6 +3,40 @@
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
   padding-left: 16px;
   padding-right: 16px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #121212 100%);
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+:global(.light) .container {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fffe 30%, #f0fffe 70%, #e8fffc 100%);
+  color: #1a1a1a;
+}
+
+/* Efectos de fondo para modo claro */
+:global(.light) .container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at 20% 30%,
+    rgba(0, 204, 122, 0.05) 0%,
+    transparent 50%
+  ),
+  radial-gradient(
+    circle at 80% 70%,
+    rgba(16, 185, 129, 0.05) 0%,
+    transparent 50%
+  );
+  z-index: 1;
 }
 
 @media (max-width: 600px) {
@@ -12,33 +46,133 @@
     padding-left: 8px;
     padding-right: 8px;
   }
+
+  .formWrapper {
+    padding: 2rem 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .backButton {
+    top: 1rem;
+    left: 1rem;
+    padding: 0.6rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .avatarContainer {
+    width: 90px;
+    height: 90px;
+  }
+
+  .previewImage {
+    width: 90px;
+    height: 90px;
+  }
+
+  .input input,
+  .input select {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .submitButton {
+    height: 50px;
+    font-size: 1rem;
+  }
+
+  .phoneInputContainer .form-control,
+  .phoneInputContainer input[type="tel"] {
+    font-size: 16px !important;
+    height: 48px !important;
+  }
 }
 
-.backButton {
-  color: #00f2a9;
-  background: rgba(0, 242, 169, 0.1);
-  border-radius: 50%;
-  padding: 0.6rem;
-  transition: all 0.2s ease;
-  position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
+/* Animaciones de entrada */
+.formWrapper {
+  animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.backButton:hover {
-  background: rgba(0, 242, 169, 0.2);
-  transform: scale(1.05);
+.header > * {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.avatarContainer { animation-delay: 0.1s; }
+.title { animation-delay: 0.2s; }
+.subtitle { animation-delay: 0.3s; }
+
+.form > * {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.input:nth-child(1) { animation-delay: 0.4s; }
+.input:nth-child(2) { animation-delay: 0.5s; }
+.input:nth-child(3) { animation-delay: 0.6s; }
+.phoneInputContainer { animation-delay: 0.7s; }
+.submitButton { animation-delay: 0.8s; }
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Efectos hover para inputs en modo claro */
+:global(.light) .input input:hover,
+:global(.light) .input select:hover {
+  border-color: rgba(0, 204, 122, 0.4);
+  box-shadow: 0 4px 15px rgba(0, 204, 122, 0.1);
+}
+
+:global(.light) .phoneInputContainer input[type="tel"]:hover {
+  border-color: rgba(0, 204, 122, 0.4) !important;
+  box-shadow: 0 4px 15px rgba(0, 204, 122, 0.1) !important;
 }
 
 .formWrapper {
-  background-color: #151515;
-  border-radius: 1.5rem;
-  padding: 2.5rem 2rem;
+  background: rgba(21, 21, 21, 0.95);
+  border-radius: 2rem;
+  padding: 3rem 2.5rem;
   width: 100%;
   max-width: 480px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 242, 169, 0.1);
   position: relative;
   z-index: 2;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:global(.light) .formWrapper {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 20px 60px rgba(0, 204, 122, 0.15),
+    0 0 0 1px rgba(0, 204, 122, 0.1);
+  color: #1a1a1a;
+  border: 1px solid rgba(0, 204, 122, 0.1);
+  backdrop-filter: blur(20px);
 }
 
 .header {
@@ -61,8 +195,18 @@
   height: 110px;
   object-fit: cover;
   border-radius: 50%;
-  border: 3px solid #00f2a9;
-  box-shadow: 0 0 20px rgba(0, 242, 169, 0.2);
+  border: 4px solid #00f2a9;
+  box-shadow: 
+    0 0 30px rgba(0, 242, 169, 0.3),
+    0 8px 20px rgba(0, 242, 169, 0.2);
+  transition: all 0.3s ease;
+}
+
+:global(.light) .previewImage {
+  border: 4px solid #00cc7a;
+  box-shadow: 
+    0 0 30px rgba(0, 204, 122, 0.3),
+    0 8px 20px rgba(0, 204, 122, 0.2);
 }
 
 .photoInput {
@@ -71,30 +215,69 @@
 
 .uploadOverlay {
   position: absolute;
-  right: -6px;
-  bottom: -6px;
-  background-color: #00f2a9;
+  right: -8px;
+  bottom: -8px;
+  background: linear-gradient(135deg, #00f2a9 0%, #00cc7a 100%);
   border-radius: 50%;
-  padding: 0.4rem;
+  padding: 0.5rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 0 10px rgba(0, 242, 169, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 0 15px rgba(0, 242, 169, 0.4),
+    0 4px 12px rgba(0, 242, 169, 0.2);
+  border: 2px solid #fff;
+}
+
+:global(.light) .uploadOverlay {
+  background: linear-gradient(135deg, #00cc7a 0%, #10b981 100%);
+  box-shadow: 
+    0 0 15px rgba(0, 204, 122, 0.4),
+    0 4px 12px rgba(0, 204, 122, 0.2);
+  border: 2px solid #fff;
 }
 
 .uploadOverlay:hover {
-  transform: scale(1.05);
+  transform: scale(1.1) rotate(10deg);
+  box-shadow: 
+    0 0 20px rgba(0, 242, 169, 0.5),
+    0 6px 15px rgba(0, 242, 169, 0.3);
+}
+
+:global(.light) .uploadOverlay:hover {
+  box-shadow: 
+    0 0 20px rgba(0, 204, 122, 0.5),
+    0 6px 15px rgba(0, 204, 122, 0.3);
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: #ffffff;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ffffff 0%, #00f2a9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(0, 242, 169, 0.2);
+}
+
+:global(.light) .title {
+  background: linear-gradient(135deg, #1a1a1a 0%, #00cc7a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(0, 204, 122, 0.2);
 }
 
 .subtitle {
-  font-size: 0.95rem;
-  color: #aaa;
-  margin-top: 0.25rem;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+:global(.light) .subtitle {
+  color: rgba(26, 26, 26, 0.7);
 }
 
 .form {
@@ -107,49 +290,114 @@
 
 .input input,
 .input select {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  border-radius: 0.75rem;
-  height: 48px;
-  padding: 0 1rem;
-  font-size: 0.95rem;
+  border-radius: 1rem;
+  height: 52px;
+  padding: 0 1.25rem;
+  font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-weight: 400;
   letter-spacing: -0.2px;
   line-height: 1.4;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-transform: none;
   -webkit-text-security: none;
   -webkit-appearance: none;
   appearance: none;
+  backdrop-filter: blur(10px);
+}
+
+:global(.light) .input input,
+:global(.light) .input select {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 204, 122, 0.2);
+  color: #1a1a1a;
+  box-shadow: 0 2px 10px rgba(0, 204, 122, 0.1);
 }
 
 .input input:focus,
 .input select:focus {
   border-color: #00f2a9;
-  box-shadow: 0 0 0 2px rgba(0, 242, 169, 0.15);
-  background-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 
+    0 0 0 3px rgba(0, 242, 169, 0.15),
+    0 0 20px rgba(0, 242, 169, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+:global(.light) .input input:focus,
+:global(.light) .input select:focus {
+  border-color: #00cc7a;
+  box-shadow: 
+    0 0 0 3px rgba(0, 204, 122, 0.15),
+    0 0 20px rgba(0, 204, 122, 0.1);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .submitButton {
-  background-color: #00f2a9;
+  background: linear-gradient(135deg, #00f2a9 0%, #00cc7a 100%);
   color: #000;
-  font-weight: 600;
-  font-size: 1rem;
-  height: 48px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  height: 56px;
   width: 100%;
   border: none;
-  border-radius: 0.75rem;
-  transition: all 0.2s ease;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
   cursor: pointer;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 8px 25px rgba(0, 242, 169, 0.3),
+    0 0 0 1px rgba(0, 242, 169, 0.2);
+}
+
+:global(.light) .submitButton {
+  background: linear-gradient(135deg, #00cc7a 0%, #10b981 100%);
+  color: white;
+  box-shadow: 
+    0 8px 25px rgba(0, 204, 122, 0.4),
+    0 0 0 1px rgba(0, 204, 122, 0.2);
+}
+
+.submitButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: left 0.6s ease;
 }
 
 .submitButton:hover {
-  background-color: #00ddb0;
-  box-shadow: 0 8px 20px rgba(0, 242, 169, 0.25);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #00ddb0 0%, #00b366 100%);
+  box-shadow: 
+    0 12px 35px rgba(0, 242, 169, 0.4),
+    0 0 0 1px rgba(0, 242, 169, 0.3);
+  transform: translateY(-3px);
+}
+
+:global(.light) .submitButton:hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 
+    0 12px 35px rgba(0, 204, 122, 0.5),
+    0 0 0 1px rgba(0, 204, 122, 0.3);
+}
+
+.submitButton:hover::before {
+  left: 100%;
 }
 
 /* --- PHONE INPUT STYLES --- */
@@ -162,62 +410,120 @@
 /* Input de teléfono igual a los demás */
 .phoneInputContainer .form-control,
 .phoneInputContainer input[type="tel"] {
-  background-color: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: #ffffff !important;
-  border-radius: 0.75rem !important;
-  height: 48px !important;
-  padding: 0 1rem 0 3.2rem !important; /* aumento padding izquierdo */
+  border-radius: 1rem !important;
+  height: 52px !important;
+  padding: 0 1.25rem 0 3.5rem !important;
   font-size: 16px !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.3s ease !important;
   width: 100% !important;
   box-shadow: none !important;
   outline: none !important;
   line-height: 1.2 !important;
   font-family: inherit !important;
   caret-color: #00f2a9 !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+:global(.light) .phoneInputContainer .form-control,
+:global(.light) .phoneInputContainer input[type="tel"] {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 204, 122, 0.2) !important;
+  color: #1a1a1a !important;
+  box-shadow: 0 2px 10px rgba(0, 204, 122, 0.1) !important;
+  caret-color: #00cc7a !important;
 }
 
 .phoneInputContainer .form-control:focus,
 .phoneInputContainer input[type="tel"]:focus {
   border-color: #00f2a9 !important;
-  box-shadow: 0 0 0 2px rgba(0, 242, 169, 0.15) !important;
-  background-color: rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 
+    0 0 0 3px rgba(0, 242, 169, 0.15),
+    0 0 20px rgba(0, 242, 169, 0.1) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
   color: #fff !important;
+  transform: translateY(-2px) !important;
+}
+
+:global(.light) .phoneInputContainer .form-control:focus,
+:global(.light) .phoneInputContainer input[type="tel"]:focus {
+  border-color: #00cc7a !important;
+  box-shadow: 
+    0 0 0 3px rgba(0, 204, 122, 0.15),
+    0 0 20px rgba(0, 204, 122, 0.1) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #1a1a1a !important;
 }
 
 /* Bandera y dropdown */
 .phoneInputContainer .flag-dropdown {
   background: transparent !important;
   border: none !important;
+  border-radius: 1rem 0 0 1rem !important;
+  padding-left: 0.75rem !important;
 }
 
 .phoneInputContainer .selected-flag {
   background: transparent !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+  padding: 0 0.5rem !important;
+}
+
+:global(.light) .phoneInputContainer .selected-flag {
+  border-right: 1px solid rgba(0, 204, 122, 0.2) !important;
 }
 
 .phoneInputContainer .selected-flag .flag {
   filter: none !important;
   background: none !important;
+  border-radius: 4px !important;
 }
 
 .phoneInputContainer .selected-flag .arrow {
   border-top: 4px solid #00f2a9 !important;
+  margin-left: 0.25rem !important;
+}
+
+:global(.light) .phoneInputContainer .selected-flag .arrow {
+  border-top: 4px solid #00cc7a !important;
 }
 
 .phoneInputContainer .country-list {
-  background-color: #151515 !important;
+  background: rgba(21, 21, 21, 0.95) !important;
   color: #fff !important;
+  border: 1px solid rgba(0, 242, 169, 0.2) !important;
+  border-radius: 1rem !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4) !important;
+}
+
+:global(.light) .phoneInputContainer .country-list {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #1a1a1a !important;
+  border: 1px solid rgba(0, 204, 122, 0.2) !important;
+  box-shadow: 0 20px 60px rgba(0, 204, 122, 0.2) !important;
 }
 
 .phoneInputContainer .country-list .country {
   color: #fff !important;
+  padding: 0.75rem 1rem !important;
+  transition: all 0.2s ease !important;
+}
+
+:global(.light) .phoneInputContainer .country-list .country {
+  color: #1a1a1a !important;
 }
 
 .phoneInputContainer .country-list .country.highlight {
-  background: #00f2a9 !important;
-  color: #000 !important;
+  background: rgba(0, 242, 169, 0.2) !important;
+  color: #00f2a9 !important;
+}
+
+:global(.light) .phoneInputContainer .country-list .country.highlight {
+  background: rgba(0, 204, 122, 0.1) !important;
+  color: #00cc7a !important;
 }
 
 /* Label igual a todos */
@@ -225,11 +531,19 @@
 .phoneInputContainer .label,
 .label,
 .input label {
-  color: #d0d0d0;
-  font-size: 0.95rem;
-  margin-bottom: 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
   display: block;
-  font-weight: 400;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+:global(.light) .phoneInputContainer label,
+:global(.light) .phoneInputContainer .label,
+:global(.light) .label,
+:global(.light) .input label {
+  color: rgba(26, 26, 26, 0.8);
 }
 @media (max-width: 600px) {
   .phoneInputContainer .form-control,

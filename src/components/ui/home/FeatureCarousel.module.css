@@ -26,6 +26,11 @@
   backdrop-filter: blur(10px);
 }
 
+:global(.light) .featureCard {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(var(--feature-color), 0.3) !important;
+}
+
 .cardContent {
   position: relative;
   z-index: 2;
@@ -122,9 +127,21 @@
   -webkit-text-fill-color: transparent;
 }
 
+:global(.light) .title {
+  color: #000000;
+  background: linear-gradient(45deg, #1a202c, var(--feature-color));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .description {
   color: rgba(255, 255, 255, 0.7) !important;
   line-height: 1.6 !important;
+}
+
+:global(.light) .description {
+  color: rgba(0, 0, 0, 0.7) !important;
 }
 
 .navigationButton {
@@ -145,6 +162,12 @@
   z-index: 4;
 }
 
+:global(.light) .navigationButton {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #000000;
+}
+
 .prevButton {
   left: 20px;
 }
@@ -157,6 +180,11 @@
   background: rgba(0, 255, 157, 0.2);
   border-color: #00ff9d;
   transform: translateY(-50%) scale(1.1);
+}
+
+:global(.light) .navigationButton:hover {
+  background: rgba(0, 155, 119, 0.15);
+  border-color: #009b77;
 }
 
 .indicators {
@@ -180,9 +208,17 @@
   transition: all 0.3s ease;
 }
 
+:global(.light) .indicator {
+  background: rgba(0, 0, 0, 0.2);
+}
+
 .activeIndicator {
   background: #00ff9d;
   width: 45px;
+}
+
+:global(.light) .activeIndicator {
+  background: #009b77;
 }
 
 @keyframes float {

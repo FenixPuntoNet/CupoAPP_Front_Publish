@@ -13,13 +13,26 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+:global(.light) .selectionCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 155, 119, 0.15);
+}
+
 .preferredCard {
   background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
   border-color: rgba(255, 193, 7, 0.3) !important;
 }
 
+:global(.light) .preferredCard {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 193, 7, 0.03) 100%);
+  border-color: rgba(255, 193, 7, 0.4) !important;
+}
+
 .regularCard {
   background: rgba(255, 255, 255, 0.02);
+}
+
+:global(.light) .regularCard {
+  background: rgba(0, 0, 0, 0.01);
 }
 
 .safepointInfo {

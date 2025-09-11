@@ -8,12 +8,24 @@
   background: rgba(59, 130, 246, 0.1);
   border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 12px;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+:global(.light) .explanationCard {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.25);
 }
 
 .selectedCard {
   background: rgba(34, 197, 94, 0.1);
   border: 1px solid rgba(34, 197, 94, 0.3);
   border-radius: 12px;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+:global(.light) .selectedCard {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
 }
 
 .optionCard {
@@ -24,11 +36,22 @@
   cursor: pointer;
 }
 
+:global(.light) .optionCard {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 155, 119, 0.15);
+}
+
 .optionCard:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+:global(.light) .optionCard:hover {
+  background: rgba(0, 155, 119, 0.05);
+  border-color: rgba(0, 155, 119, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 155, 119, 0.15);
 }
 
 .optionCard:active {
@@ -49,6 +72,11 @@
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
+:global(.light) .safepointIcon {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
 /* Buttons */
 .skipButton {
   background: transparent !important;
@@ -58,8 +86,18 @@
   transition: all 0.3s ease !important;
 }
 
+:global(.light) .skipButton {
+  border: 1px solid #4a5568 !important;
+  color: #4a5568 !important;
+}
+
 .skipButton:hover {
   background: #6c757d !important;
+  color: white !important;
+}
+
+:global(.light) .skipButton:hover {
+  background: #4a5568 !important;
   color: white !important;
 }
 

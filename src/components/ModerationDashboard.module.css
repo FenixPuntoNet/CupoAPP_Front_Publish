@@ -11,9 +11,17 @@
   margin-bottom: 0.5rem;
 }
 
+:global(.light) .title {
+  color: #111827;
+}
+
 .subtitle {
   color: #6b7280;
   margin-bottom: 2rem;
+}
+
+:global(.light) .subtitle {
+  color: #4b5563;
 }
 
 .statCard {
@@ -24,9 +32,18 @@
   transition: all 0.2s ease;
 }
 
+:global(.light) .statCard {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #d1d5db;
+}
+
 .statCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .statCard:hover {
+  box-shadow: 0 4px 20px rgba(0, 155, 119, 0.1);
 }
 
 .reportsCard {
@@ -35,4 +52,10 @@
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+:global(.light) .reportsCard {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 2px 12px rgba(0, 155, 119, 0.08);
 }

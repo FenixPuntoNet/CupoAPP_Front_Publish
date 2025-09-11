@@ -54,7 +54,7 @@ function DestinoView() {
   useEffect(() => {
     if (loadError) {
       console.error('Google Maps load error:', loadError);
-      setError('Error cargando Google Maps. Por favor, recarga la página.');
+      setError('Error cargando Google Maps. Por favor, reinica la app..');
     } else if (isLoaded) {
       console.log('✅ Google Maps loaded successfully for destination');
       setError(null);

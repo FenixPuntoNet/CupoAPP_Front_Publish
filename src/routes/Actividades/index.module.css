@@ -5,6 +5,13 @@
         padding-bottom: calc(24px + env(safe-area-inset-bottom));
         padding-left: 16px;
         padding-right: 16px;
+        transition: background-color 0.3s ease;
+      }
+
+      /* Light mode */
+      :global(.light) .container {
+        background-color: #f8fffe;
+        color: #1a1a1a;
       }
       
       @media (max-width: 600px) {
@@ -21,6 +28,11 @@
           font-weight: bold;
           color: #00ff9d;
           margin-bottom: 16px;
+          transition: color 0.3s ease;
+      }
+
+      :global(.light) .title {
+          color: #00cc7a;
       }
       
       .noTripsText {
@@ -42,6 +54,13 @@
           background-color: #171717;
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 12px;
+          transition: all 0.3s ease;
+      }
+
+      :global(.light) .tripCard {
+          background-color: #ffffff;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          color: #1a1a1a;
       }
       
       .tripTitle {
@@ -53,6 +72,11 @@
           font-size: 16px;
           color: #fff;
           margin-bottom: 8px;
+          transition: color 0.3s ease;
+      }
+
+      :global(.light) .tripText {
+          color: #1a1a1a;
       }
       
       .tripBadge {

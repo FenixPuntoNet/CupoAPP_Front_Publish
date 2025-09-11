@@ -9,6 +9,14 @@
   border-radius: 16px;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
   color: white;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+:global(.light) .modalContent {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+  border: 1px solid rgba(0, 155, 119, 0.2);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+  color: #1a1a1a;
 }
 
 .modalHeader {
@@ -16,6 +24,12 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px 16px 0 0;
   padding: 1.5rem;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+:global(.light) .modalHeader {
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 155, 119, 0.1);
 }
 
 .modalBody {

@@ -8,6 +8,11 @@
   background: #0a0a0a;
   position: relative;
   overflow: hidden;
+  transition: background 0.3s ease;
+}
+
+:global(.light) .chatContainer {
+  background: #f8fffe;
 }
 
 .moderationAlert {
@@ -38,6 +43,14 @@
   flex-direction: column;
   gap: 0.75rem;
   min-height: 0;
+  transition: background 0.3s ease;
+}
+
+:global(.light) .messagesArea {
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 155, 119, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 155, 119, 0.05) 0%, transparent 50%),
+    linear-gradient(135deg, #f8fffe 0%, #ffffff 100%);
 }
 
 .messagesArea::-webkit-scrollbar {
@@ -71,6 +84,12 @@
   color: white;
   margin-bottom: 0.5rem;
   text-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+  transition: color 0.3s ease;
+}
+
+:global(.light) .emptyState h3 {
+  color: #1a1a1a;
+  text-shadow: none;
 }
 
 .emptyState p {

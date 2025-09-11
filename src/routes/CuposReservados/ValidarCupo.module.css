@@ -1,8 +1,18 @@
 .container {
-  padding-top: calc(24px + env(safe-area-inset-top));
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
-  padding-left: 16px;
-  padding-right: 16px;
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: white;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+:global(.light) .container {
+  background-color: #f8fffe;
+  color: #1a1a1a;
 }
 
 @media (max-width: 600px) {
@@ -19,6 +29,11 @@
   margin-bottom: 20px;
   color: #34D399; /* Verde menta */
   font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .title {
+  color: #00cc7a;
 }
 
 .qrScannerContainer {
@@ -31,10 +46,15 @@
   align-items: center;
   justify-content: center;
   background-color: #0f172a; /* Fondo oscuro */
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
   z-index: 10000;
   position: relative;
   overflow: hidden;
+}
+
+:global(.light) .qrScannerContainer {
+  background-color: #ffffff;
+  border-color: #00cc7a;
 }
 
 .qrScannerContainer.scanning {

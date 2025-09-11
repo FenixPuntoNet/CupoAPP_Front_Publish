@@ -7,11 +7,23 @@
   color: #ffffff !important;
 }
 
+:global(.light) .modalContent {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 1px solid rgba(220, 38, 38, 0.4) !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 0 20px rgba(220, 38, 38, 0.1) !important;
+  color: #000000 !important;
+}
+
 .modalHeader {
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
   border-bottom: 1px solid rgba(220, 38, 38, 0.2) !important;
   padding: 24px !important;
   border-radius: 16px 16px 0 0 !important;
+}
+
+:global(.light) .modalHeader {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border-bottom: 1px solid rgba(220, 38, 38, 0.3) !important;
 }
 
 .modalHeader .mantine-Modal-title {
@@ -20,10 +32,18 @@
   font-size: 1.25rem !important;
 }
 
+:global(.light) .modalHeader .mantine-Modal-title {
+  color: #000000 !important;
+}
+
 .modalBody {
   padding: 24px !important;
   background: transparent !important;
   color: #ffffff !important;
+}
+
+:global(.light) .modalBody {
+  color: #000000 !important;
 }
 
 /* Estilos del texto */
@@ -32,8 +52,16 @@
   line-height: 1.6 !important;
 }
 
+:global(.light) .modalBody .mantine-Text-root {
+  color: #000000 !important;
+}
+
 .modalBody .mantine-Text-root[data-size="sm"] {
   color: rgba(255, 255, 255, 0.8) !important;
+}
+
+:global(.light) .modalBody .mantine-Text-root[data-size="sm"] {
+  color: rgba(0, 0, 0, 0.7) !important;
 }
 
 /* Botón de bloqueo */
@@ -73,9 +101,19 @@
   transition: all 0.2s ease !important;
 }
 
+:global(.light) .cancelButton {
+  border: 1px solid rgba(0, 0, 0, 0.3) !important;
+  color: #000000 !important;
+}
+
 .cancelButton:hover {
   background: rgba(255, 255, 255, 0.05) !important;
   border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+:global(.light) .cancelButton:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Alerta de advertencia */
@@ -110,14 +148,27 @@
   margin-bottom: 16px !important;
 }
 
+:global(.light) .userInfo {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
 .userInfo .mantine-Text-root {
   color: #ffffff !important;
   font-weight: 600 !important;
 }
 
+:global(.light) .userInfo .mantine-Text-root {
+  color: #000000 !important;
+}
+
 .userInfo .mantine-Text-root[data-size="lg"] {
   color: #ffffff !important;
   font-weight: 600 !important;
+}
+
+:global(.light) .userInfo .mantine-Text-root[data-size="lg"] {
+  color: #000000 !important;
 }
 
 /* Nota alternativa con mejor contraste */
@@ -130,15 +181,28 @@
   backdrop-filter: blur(10px);
 }
 
+:global(.light) .alternativeNote {
+  background: rgba(59, 130, 246, 0.08) !important;
+  border: 1px solid rgba(59, 130, 246, 0.25) !important;
+}
+
 .alternativeText {
   color: #ffffff !important;
   font-weight: 500 !important;
   line-height: 1.5 !important;
 }
 
+:global(.light) .alternativeText {
+  color: #000000 !important;
+}
+
 .alternativeText strong {
   color: #93c5fd !important;
   font-weight: 700 !important;
+}
+
+:global(.light) .alternativeText strong {
+  color: #1d4ed8 !important;
 }
 
 /* Responsive */

@@ -7,6 +7,12 @@
   position: relative;
   overflow-x: hidden;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: background 0.3s ease;
+}
+
+:global(.light) .container {
+  background: linear-gradient(135deg, #f8fffe 0%, #e6f7ff 50%, #f8fffe 100%);
+  color: #1a1a1a;
 }
 
 .container::before {
@@ -35,6 +41,12 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
+:global(.light) .header {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);
+}
+
 .backButton {
   background: linear-gradient(135deg, #00ff9d 0%, #00d4aa 100%);
   border: none;
@@ -49,6 +61,11 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 20px rgba(0, 255, 157, 0.25);
   flex-shrink: 0;
+}
+
+:global(.light) .backButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
 }
 
 .backButton:hover {
@@ -68,6 +85,13 @@
   flex: 1;
 }
 
+:global(.light) .headerTitle {
+  background: linear-gradient(135deg, #1f2937 0%, #10b981 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .formContainer {
   background: rgba(255, 255, 255, 0.04);
   border-radius: 20px;
@@ -80,6 +104,12 @@
   position: relative;
   z-index: 2;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+:global(.light) .formContainer {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  box-shadow: 0 20px 40px rgba(16, 185, 129, 0.1);
 }
 
 .stepperContainer {
@@ -121,6 +151,11 @@
   overflow: hidden;
 }
 
+:global(.light) .stepCard {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+}
+
 .stepCard::before {
   content: '';
   position: absolute;
@@ -130,6 +165,10 @@
   height: 2px;
   background: linear-gradient(90deg, #00ff9d 0%, #00d4aa 100%);
   border-radius: 16px 16px 0 0;
+}
+
+:global(.light) .stepCard::before {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
 }
 
 .stepCard:hover {
@@ -162,11 +201,22 @@
   line-height: 1.3;
 }
 
+:global(.light) .stepTitle {
+  background: linear-gradient(135deg, #1f2937 0%, #10b981 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .stepDescription {
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.9rem;
   line-height: 1.4;
   margin-bottom: 1.25rem;
+}
+
+:global(.light) .stepDescription {
+  color: rgba(31, 41, 55, 0.7);
 }
 
 .navigationButtons {

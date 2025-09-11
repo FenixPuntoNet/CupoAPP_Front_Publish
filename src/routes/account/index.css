@@ -4,6 +4,12 @@
   background: linear-gradient(120deg, #191c22 0%, #23243a 100%);
   padding-top: 24px;
   padding-bottom: 40px;
+  transition: background 0.3s ease;
+}
+
+/* Light mode */
+:global(.light) .account-container {
+  background: linear-gradient(120deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
 /* --- TARJETA PRINCIPAL (FRONTAL) --- */
@@ -25,6 +31,13 @@
   transform: translateZ(0);
   will-change: transform;
   backface-visibility: hidden;
+}
+
+:global(.light) .card-uni-wallet,
+:global(.light) .bank-card-front {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.25);
 }
 .card-uni-wallet:hover,
 .bank-card-front:hover {
@@ -153,6 +166,13 @@
   will-change: transform;
   backface-visibility: hidden;
 }
+
+:global(.light) .card-profile,
+:global(.light) .bank-card-back {
+  background: linear-gradient(120deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 10px 32px rgba(16, 185, 129, 0.15);
+  color: #1f2937;
+}
 .bank-card-stripe {
   width: 100%;
   height: 28px;
@@ -257,6 +277,12 @@
   transition: background 0.3s, box-shadow 0.3s;
 }
 
+:global(.light) .referrals-streaks-space {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+  border: 1.5px solid rgba(16, 185, 129, 0.2);
+}
+
 .referrals-streaks-header {
   width: 100%;
   display: flex;
@@ -291,6 +317,13 @@
   cursor: pointer;
 }
 
+:global(.light) .referral-meta-box,
+:global(.light) .streak-line {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.15);
+  border: 1.5px solid rgba(16, 185, 129, 0.3);
+}
+
 .referral-section-title,
 .streak-section-title {
   font-size: 1.1rem;
@@ -305,6 +338,12 @@
   padding: 0.3rem 0.5rem;
   color: #ffffff;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+:global(.light) .referral-section-title,
+:global(.light) .streak-section-title {
+  color: #1f2937;
+  text-shadow: none;
 }
 @media (max-width: 600px) {
   .account-container {
@@ -426,6 +465,13 @@
   color: #ffffff !important;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
   font-weight: 600;
+}
+
+:global(.light) .streak-name,
+:global(.light) .streak-progress-label,
+:global(.light) .referral-meta-box .mantine-Text-root {
+  color: #1f2937 !important;
+  text-shadow: none;
 }
 
 .streak-progress-label span {

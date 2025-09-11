@@ -170,7 +170,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
             Verificando sesión...
           </Text>
           <Text style={{ marginTop: '0.5rem', color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
-            Si esto toma mucho tiempo, por favor recarga la página
+            Si esto toma mucho tiempo, por favor reinica la app.
           </Text>
         </div>
       </Center>

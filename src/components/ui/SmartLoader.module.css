@@ -27,6 +27,10 @@
   letter-spacing: 0.5px;
 }
 
+:global(.light) .text {
+  color: rgba(0, 0, 0, 0.7);
+}
+
 .overlay {
   position: fixed;
   top: 0;
@@ -39,6 +43,10 @@
   align-items: center;
   justify-content: center;
   z-index: 9999;
+}
+
+:global(.light) .overlay {
+  background: rgba(255, 255, 255, 0.9);
 }
 
 /* 🚀 Skeleton Animations */
@@ -67,6 +75,15 @@
   border-radius: 8px;
 }
 
+:global(.light) .skeletonLine {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+}
+
 .listSkeleton {
   padding: 1rem;
 }
@@ -76,6 +93,11 @@
   border-radius: 12px;
   padding: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:global(.light) .listItem {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .listItemContent {
@@ -139,6 +161,11 @@
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:global(.light) .cardSkeleton {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .cardImage {

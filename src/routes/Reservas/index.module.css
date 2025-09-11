@@ -8,6 +8,16 @@
   --text-dim: rgba(255, 255, 255, 0.7);
 }
 
+:global(.light) {
+  --primary-color: #00cc7a;
+  --primary-dark: #00994d;
+  --primary-darker: #007a3d;
+  --background-dark: #f8fffe;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --text-light: rgba(26, 26, 26, 0.9);
+  --text-dim: rgba(26, 26, 26, 0.7);
+}
+
 /* Modal principal */
 .mantine-Modal-content {
   background: var(--card-bg) !important;

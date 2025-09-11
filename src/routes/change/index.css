@@ -10,6 +10,14 @@
   align-items: center;
   animation: fadeIn 0.7s;
   min-height: 100vh;
+  transition: all 0.3s ease;
+}
+
+/* Light mode */
+:global(.light) .redeem-store-container {
+  background: #ffffff;
+  box-shadow: 0 10px 36px rgba(0,0,0,0.1);
+  color: #1a1a1a;
 }
 
 @media (max-width: 600px) {
@@ -70,6 +78,10 @@
   margin-bottom: 0.2rem;
 }
 
+:global(.light) .redeem-subtitle {
+  color: #4b5563;
+}
+
 /* --- SALDO DE COINS --- */
 .coins-balance-card {
   width: 100%;
@@ -86,6 +98,11 @@
   animation: fadeIn 0.7s;
 }
 
+:global(.light) .coins-balance-card {
+  background: linear-gradient(90deg, #ffffff 60%, rgba(245, 158, 11, 0.1) 100%);
+  box-shadow: 0 4px 24px rgba(245, 158, 11, 0.2);
+}
+
 .coins-balance-icon {
   font-size: 2.2rem;
   margin-bottom: 0.5rem;
@@ -100,6 +117,10 @@
   font-size: 1.01rem;
   margin-bottom: 0.2rem;
   letter-spacing: 0.5px;
+}
+
+:global(.light) .coins-balance-label {
+  color: #1f2937;
 }
 
 .coins-balance-value {
@@ -149,6 +170,12 @@
   border: 1.5px solid #3bd28922;
   animation: fadeIn 0.7s;
   cursor: pointer;
+}
+
+:global(.light) .redeem-item-card {
+  background: linear-gradient(120deg, #ffffff 60%, #f8fafc 100%);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.1);
+  border: 1.5px solid rgba(16, 185, 129, 0.2);
 }
 
 .redeem-item-card.in-cart {
@@ -221,6 +248,10 @@
   color: #e5e5e5;
   margin-bottom: 0.1rem;
   min-height: 28px;
+}
+
+:global(.light) .redeem-item-desc {
+  color: #6b7280;
 }
 
 .redeem-item-value {

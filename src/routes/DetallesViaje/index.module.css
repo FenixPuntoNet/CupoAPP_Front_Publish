@@ -19,6 +19,26 @@
   --animation-duration: 0.3s;
 }
 
+:global(.light) {
+  --primary: #00cc7a;
+  --primary-dark: #00994d;
+  --primary-light: rgba(0, 155, 119, 0.1);
+  --background: #f8fffe;
+  --card-bg: #ffffff;
+  --card-hover: #f5f5f5;
+  --text-primary: #1a1a1a;
+  --text-secondary: rgba(26, 26, 26, 0.7);
+  --border-color: rgba(0, 155, 119, 0.2);
+  --error: #dc2626;
+  --success: #00cc7a;
+  --warning: #f59e0b;
+  --gradient-primary: linear-gradient(135deg, #00cc7a 0%, #00994d 100%);
+  --shadow-sm: 0 2px 4px rgba(0, 155, 119, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 155, 119, 0.2);
+  --shadow-lg: 0 8px 16px rgba(0, 155, 119, 0.3);
+  --animation-duration: 0.3s;
+}
+
 /* Estilos base del contenedor */
 .container {
   min-height: 100vh;

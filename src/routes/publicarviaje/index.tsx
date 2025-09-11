@@ -523,7 +523,7 @@ useEffect(() => {
 
     // Verificar si Google Maps está disponible
     if (!isLoaded || loadError) {
-      setError('Google Maps no está disponible. Por favor, recarga la página.');
+      setError('Google Maps no está disponible. Por favor, reinica la app..');
       return;
     }
 
@@ -1076,7 +1076,7 @@ useEffect(() => {
         <Container size="sm" className={styles.content}>
           <div style={{ textAlign: 'center', padding: '2rem' }}>
             <AlertCircle size={48} color="red" />
-            <Text size="sm" c="red" mt="md">Error al cargar Google Maps. Por favor, recarga la página.</Text>
+            <Text size="sm" c="red" mt="md">Error al cargar Google Maps. Por favor, reinica la app..</Text>
           </div>
         </Container>
       </Container>

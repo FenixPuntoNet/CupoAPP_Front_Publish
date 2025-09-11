@@ -15,12 +15,22 @@ container {
   color: white;
   text-align: center;
   margin-bottom: 20px; /* Space below title */
+  transition: color 0.3s ease;
+}
+
+:global(.light) .title {
+  color: #1a1a1a;
 }
 
 .noTripsText {
   color: rgba(255, 255, 255, 0.7); /* Slightly transparent text */
   text-align: center;
   margin-top: 30px; /* Space above text */
+  transition: color 0.3s ease;
+}
+
+:global(.light) .noTripsText {
+  color: rgba(26, 26, 26, 0.7);
 }
 
 /* Publish Button */

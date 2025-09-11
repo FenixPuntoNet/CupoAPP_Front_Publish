@@ -6,6 +6,11 @@
   overflow-x: hidden;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   padding-bottom: 100px !important; /* Más espacio para navegación fija */
+  transition: background 0.3s ease;
+}
+
+:global(.light) .container {
+  background: linear-gradient(135deg, #f8fffe 0%, #e6f7ff 25%, #d1f2ff 50%, #b3e9ff 100%);
 }
 
 .container::before {

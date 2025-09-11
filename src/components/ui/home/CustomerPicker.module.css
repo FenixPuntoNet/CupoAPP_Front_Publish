@@ -6,8 +6,17 @@
     color: white;
   }
   
+  :global(.light) .dateInput {
+    background: rgba(0, 0, 0, 0.05);
+    color: #000000;
+  }
+  
   .icon {
     color: rgba(255, 255, 255, 0.5);
+  }
+  
+  :global(.light) .icon {
+    color: rgba(0, 0, 0, 0.5);
   }
   
   .popoverContent {
@@ -16,17 +25,33 @@
     padding: 1rem;
   }
   
+  :global(.light) .popoverContent {
+    background-color: #ffffff;
+  }
+  
   .calendarHeader {
     color: #00ff9d;
     font-weight: bold;
+  }
+  
+  :global(.light) .calendarHeader {
+    color: #009b77;
   }
   
   .day {
     color: white;
   }
   
+  :global(.light) .day {
+    color: #000000;
+  }
+  
   .day:hover {
     background-color: rgba(0, 255, 157, 0.2);
+  }
+  
+  :global(.light) .day:hover {
+    background-color: rgba(0, 155, 119, 0.15);
   }
   
   .month {
@@ -34,8 +59,16 @@
     color: white;
   }
   
+  :global(.light) .month {
+    color: #000000;
+  }
+  
   .weekday {
     color: rgba(255, 255, 255, 0.5);
     font-weight: bold;
+  }
+  
+  :global(.light) .weekday {
+    color: rgba(0, 0, 0, 0.5);
   }
   

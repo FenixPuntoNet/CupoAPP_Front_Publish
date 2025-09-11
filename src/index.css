@@ -66,7 +66,29 @@
   }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
+}
+
+/* Light mode specific styles */
+.light {
+  /* Cupo brand colors for light mode */
+  --cupo-primary: #00cc7a;
+  --cupo-primary-light: #00ff9d;
+  --cupo-bg-light: #f8fffe;
+  --cupo-card-light: #ffffff;
+  --cupo-text-light: #1a1a1a;
+  --cupo-text-secondary-light: #666666;
+}
+
+.dark {
+  /* Cupo brand colors for dark mode */
+  --cupo-primary: #00ff9d;
+  --cupo-primary-dark: #00cc7a;
+  --cupo-bg-dark: #0a0a0a;
+  --cupo-card-dark: #1a1a1a;
+  --cupo-text-dark: #ffffff;
+  --cupo-text-secondary-dark: rgba(255, 255, 255, 0.7);
 }
 
 /* --- SAFE AREA & SPACERS --- */

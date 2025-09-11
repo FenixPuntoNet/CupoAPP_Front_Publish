@@ -3,6 +3,11 @@
     padding: 16px; /* Reducido para móvil */
 }
 
+:global(.light) .modalContent {
+    background-color: #ffffff;
+    color: #1f2937;
+}
+
 @media (min-width: 768px) {
   .modalContent {
     padding: 24px; /* Vuelve al valor original en pantallas mayores */
@@ -20,6 +25,11 @@
 .modalTitle {
     font-size: 18px; /* Reducido para móvil */
     font-weight: 600;
+    color: #ffffff;
+}
+
+:global(.light) .modalTitle {
+    color: #1f2937;
 }
 
 @media (min-width: 768px) {
@@ -31,6 +41,11 @@
 .modalCloseButton {
     cursor: pointer;
     font-size: 18px;
+    color: #ffffff;
+}
+
+:global(.light) .modalCloseButton {
+    color: #6b7280;
 }
 
 /* Resumen del Viaje */
@@ -40,6 +55,13 @@
     border-radius: 12px;
     padding: 16px; /* Reducido para móvil */
     margin-bottom: 16px; /* Reducido para móvil */
+}
+
+:global(.light) .tripSummaryCard {
+    background-color: #ffffff;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 155, 119, 0.1);
 }
 
 @media (min-width: 768px) {
@@ -52,6 +74,11 @@
 .dateTime {
     font-size: 14px; /* Reducido para móvil */
     margin-bottom: 8px;
+    color: #ffffff;
+}
+
+:global(.light) .dateTime {
+    color: #4b5563;
 }
 
 @media (min-width: 768px) {
@@ -68,6 +95,12 @@
     font-size: 12px; /* Reducido para móvil */
     font-weight: 600;
     margin-bottom: 12px;
+    color: #ffffff;
+}
+
+:global(.light) .pricePerSeat {
+    background-color: #10b981;
+    color: #ffffff;
 }
 
 @media (min-width: 768px) {
@@ -87,6 +120,10 @@
     margin-bottom: 4px;
 }
 
+:global(.light) .locationTitle {
+    color: #6b7280;
+}
+
 @media (min-width: 768px) {
   .locationTitle {
       font-size: 13px; /* Vuelve al valor original en pantallas mayores */
@@ -96,6 +133,11 @@
 .locationText {
     font-size: 14px; /* Reducido para móvil */
     font-weight: 500;
+    color: #ffffff;
+}
+
+:global(.light) .locationText {
+    color: #1f2937;
 }
 
 @media (min-width: 768px) {
@@ -107,6 +149,10 @@
 .routeDivider {
     border-bottom: 1px solid #4a4a4a;
     margin: 8px 0;
+}
+
+:global(.light) .routeDivider {
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .tripBadges {
@@ -127,6 +173,11 @@
     gap: 4px;
 }
 
+:global(.light) .tripBadge {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
 @media (min-width: 768px) {
     .tripBadge {
         font-size: 13px; /* Vuelve al valor original en pantallas mayores */
@@ -135,6 +186,11 @@
 
 .tripBadge.negative {
     background-color: #992828;
+}
+
+:global(.light) .tripBadge.negative {
+    background-color: #fef2f2;
+    color: #dc2626;
 }
 
 /* Input de Número de Asientos */
@@ -152,6 +208,11 @@
     font-size: 14px; /* Reducido para móvil */
     display: block;
     margin-bottom: 6px;
+    color: #ffffff;
+}
+
+:global(.light) .numberInputLabel {
+    color: #1f2937;
 }
 
 @media (min-width: 768px) {
@@ -167,6 +228,10 @@
     margin-bottom: 8px;
 }
 
+:global(.light) .numberInputDescription {
+    color: #6b7280;
+}
+
 @media (min-width: 768px) {
     .numberInputDescription {
         font-size: 14px; /* Vuelve al valor original en pantallas mayores */
@@ -180,6 +245,13 @@
     border-radius: 12px;
     padding: 16px; /* Reducido para móvil */
     margin-bottom: 16px; /* Reducido para móvil */
+}
+
+:global(.light) .priceCard {
+    background-color: #ffffff;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 155, 119, 0.1);
 }
 
 @media (min-width: 768px) {
@@ -205,6 +277,10 @@
     color: #a9a9a9;
 }
 
+:global(.light) .priceTitle {
+    color: #6b7280;
+}
+
 @media (min-width: 768px) {
     .priceTitle {
         font-size: 14px; /* Vuelve al valor original en pantallas mayores */
@@ -214,6 +290,11 @@
 .priceValue {
     font-size: 14px; /* Reducido para móvil */
     font-weight: 500;
+    color: #ffffff;
+}
+
+:global(.light) .priceValue {
+    color: #1f2937;
 }
 
 @media (min-width: 768px) {
@@ -230,6 +311,12 @@
     align-items: center;
     padding-top: 8px;
     border-top: 1px solid #4a4a4a;
+    color: #ffffff;
+}
+
+:global(.light) .priceTotal {
+    border-top: 1px solid #e5e7eb;
+    color: #1f2937;
 }
 
 @media (min-width: 768px) {
@@ -242,6 +329,10 @@
 .priceTotalValue {
     font-weight: 700;
     color: #37b24d;
+}
+
+:global(.light) .priceTotalValue {
+    color: #10b981;
 }
 
 /* Textarea */
@@ -261,6 +352,11 @@
     font-size: 14px; /* Reducido para móvil */
     display: block;
     margin-bottom: 6px;
+    color: #ffffff;
+}
+
+:global(.light) .textareaLabel {
+    color: #1f2937;
 }
 
 @media (min-width: 768px) {
@@ -274,6 +370,10 @@
     color: #a9a9a9;
     display: block;
     margin-bottom: 8px;
+}
+
+:global(.light) .textareaDescription {
+    color: #6b7280;
 }
 
 @media (min-width: 768px) {
@@ -301,6 +401,10 @@
     margin-top: 16px;
 }
 
+:global(.light) .confirmButton {
+    background-color: #10b981;
+}
+
 @media (min-width: 768px) {
     .confirmButton {
         padding: 14px 20px;
@@ -312,11 +416,19 @@
     background-color: #1c7ed6;
 }
 
+:global(.light) .confirmButton:hover {
+    background-color: #059669;
+}
+
 .successIcon {
     background-color: #37b24d;
     border-radius: 50%;
     padding: 10px;
     color: #ffffff;
+}
+
+:global(.light) .successIcon {
+    background-color: #10b981;
 }
 
 /* Otros estilos */
@@ -325,6 +437,10 @@
     color: #f03e3e;
     font-size: 12px; /* Reducido para móvil */
     margin-top: 4px;
+}
+
+:global(.light) .errorText {
+    color: #dc2626;
 }
 
 @media (min-width: 768px) {

@@ -3,12 +3,66 @@
   border: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-radius: 8px;
+  background: #ffffff;
+}
+
+:global(.light) .infoCard {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 155, 119, 0.1);
+  border: 1px solid #e5e7eb;
 }
 
 .safePointName {
   color: #333;
   line-height: 1.2;
   word-break: break-word;
+}
+
+:global(.light) .safePointName {
+  color: #1f2937;
+}
+
+/* Marker styles for map pins */
+.marker {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.marker:hover {
+  transform: scale(1.1);
+}
+
+.markerPin {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 2px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  position: relative;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+:global(.light) .markerPin {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.4);
+}
+
+.markerIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+:global(.light) .markerIcon {
+  color: #ffffff;
 }
 
 /* Responsive adjustments */

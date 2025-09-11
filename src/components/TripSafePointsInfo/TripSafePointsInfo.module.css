@@ -7,9 +7,19 @@
   transition: all 0.3s ease;
 }
 
+:global(.light) .safePointsContainer {
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(249, 250, 251, 1) 100%);
+}
+
 .safePointsContainer:hover {
   border-color: var(--mantine-color-blue-4);
   box-shadow: 0 2px 8px rgba(34, 139, 34, 0.1);
+}
+
+:global(.light) .safePointsContainer:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
 }
 
 .safePointCard {
@@ -20,10 +30,20 @@
   cursor: default;
 }
 
+:global(.light) .safePointCard {
+  background: #ffffff;
+  border: 1px solid rgba(229, 231, 235, 1);
+}
+
 .safePointCard:hover {
   border-color: var(--mantine-color-blue-3);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transform: translateY(-1px);
+}
+
+:global(.light) .safePointCard:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.08);
 }
 
 .safePointIcon {

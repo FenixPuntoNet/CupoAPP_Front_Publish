@@ -1,14 +1,14 @@
 .container {
   min-height: 100vh;
-  background-color: #0a0a0a;
-  color: white;
-  padding: 24px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #18181b 100%);
+  color: #fff;
   position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  /* Agregamos un espaciado adicional en la parte inferior para evitar que los elementos se peguen al borde inferior en dispositivos con notch */
-  padding-bottom: 40px;
+  overflow-x: hidden;
+}
+
+:global(.light) .container {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #1f2937;
 }
 
 /* Efectos de fondo dinámicos */

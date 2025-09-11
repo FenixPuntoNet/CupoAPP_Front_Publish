@@ -6,12 +6,22 @@
   box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
 }
 
+:global(.light) .commissionBreakdown {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+}
+
 .commissionLine {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid #e5e7eb;
+}
+
+:global(.light) .commissionLine {
+  border-bottom: 1px solid #d1d5db;
 }
 
 .commissionLine:last-child {
@@ -26,12 +36,22 @@
   margin: 16px 0;
 }
 
+:global(.light) .deductionSection {
+  background: #ffffff;
+  border-left: 4px solid #ef4444;
+}
+
 .refundSection {
   background: #dcfce7;
   border: 1px solid #bbf7d0;
   border-radius: 8px;
   padding: 20px;
   margin: 16px 0;
+}
+
+:global(.light) .refundSection {
+  background: #f0fdf4;
+  border: 1px solid #a7f3d0;
 }
 
 .total {
@@ -42,6 +62,11 @@
   border-top: 2px solid #f87171;
 }
 
+:global(.light) .total {
+  background: rgba(239, 68, 68, 0.08);
+  border-top: 2px solid #ef4444;
+}
+
 .infoBox {
   background: #eff6ff;
   border: 1px solid #c7d2fe;
@@ -50,9 +75,18 @@
   margin-top: 16px;
 }
 
+:global(.light) .infoBox {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+}
+
 .breakdown {
   font-size: 12px;
   color: #6b7280;
   margin-top: 8px;
   font-style: italic;
+}
+
+:global(.light) .breakdown {
+  color: #475569;
 }

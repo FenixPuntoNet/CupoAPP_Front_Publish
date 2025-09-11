@@ -28,14 +28,26 @@
   margin-bottom: 0.5rem;
 }
 
+:global(.light) .chatItem {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
 .chatItem:hover {
   background-color: rgba(255, 255, 255, 0.05);
   transform: translateX(2px);
 }
 
+:global(.light) .chatItem:hover {
+  background-color: rgba(0, 155, 119, 0.05);
+}
+
 .chatItem:active {
   background-color: rgba(0, 255, 157, 0.1);
   transform: scale(0.98);
+}
+
+:global(.light) .chatItem:active {
+  background-color: rgba(0, 155, 119, 0.1);
 }
 
 .chatAvatar {
@@ -49,6 +61,11 @@
   margin-right: 12px;
   flex-shrink: 0;
   border: 2px solid rgba(0, 255, 157, 0.3);
+}
+
+:global(.light) .chatAvatar {
+  background: linear-gradient(135deg, rgba(0, 155, 119, 0.2), rgba(0, 155, 119, 0.1));
+  border: 2px solid rgba(0, 155, 119, 0.4);
 }
 
 .avatarIcon {
@@ -78,12 +95,22 @@
   text-overflow: ellipsis;
   max-width: 70%;
   text-shadow: 0 0 8px rgba(0, 255, 157, 0.2);
+  transition: color 0.3s ease;
+}
+
+:global(.light) .chatName {
+  color: #1a1a1a;
+  text-shadow: none;
 }
 
 .chatTime {
   font-size: 0.75rem;
   color: rgba(0, 255, 157, 0.8);
   font-weight: 500;
+}
+
+:global(.light) .chatTime {
+  color: rgba(0, 155, 119, 0.8);
 }
 
 .chatPreview {
@@ -101,12 +128,21 @@
   text-overflow: ellipsis;
   max-width: 80%;
   line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .lastMessage {
+  color: rgba(26, 26, 26, 0.6);
 }
 
 .memberCount {
   font-size: 0.75rem;
   color: rgba(0, 255, 157, 0.8);
   font-weight: 500;
+}
+
+:global(.light) .memberCount {
+  color: rgba(0, 155, 119, 0.8);
 }
 
 .loadingContainer,
@@ -138,12 +174,22 @@
   font-size: 1.2rem;
   color: white;
   margin-bottom: 0.5rem;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .emptyContainer h3 {
+  color: #1a1a1a;
 }
 
 .emptyContainer p {
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .emptyContainer p {
+  color: rgba(26, 26, 26, 0.6);
 }
 
 .emptyIcon {

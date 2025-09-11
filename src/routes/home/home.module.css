@@ -11,6 +11,12 @@
   display: flex;
   flex-direction: column;
   z-index: 1;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+:global(.light) .container {
+  background: linear-gradient(120deg, #f8fffe 60%, #e6f7ff 100%);
+  color: #1a1a1a;
 }
 
 /* 1. Carrusel principal al inicio */
@@ -34,6 +40,12 @@
   align-items: center;
   position: relative;
   overflow: visible;
+  transition: background 0.3s ease;
+}
+
+:global(.light) .carouselCard {
+  background: linear-gradient(120deg, #ffffff 60%, #f0fdfa 100%);
+  box-shadow: 0 8px 40px rgba(0, 155, 119, 0.2);
 }
 
 .carouselMainTitle {
@@ -58,6 +70,11 @@
   font-weight: 500;
   text-align: center;
   max-width: 90vw;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .carouselSubtitle {
+  color: rgba(26, 26, 26, 0.8);
 }
 
 /* 2. Hero Section */
@@ -72,6 +89,12 @@
   border-radius: 2.5rem;
   margin-bottom: 2.5rem;
   box-shadow: 0 8px 40px #00ff9d22;
+  transition: background 0.3s ease;
+}
+
+:global(.light) .heroSection {
+  background: linear-gradient(60deg, #f8fffe 60%, #e6f7ff 100%);
+  box-shadow: 0 8px 40px rgba(0, 155, 119, 0.2);
 }
 
 .heroContent {
@@ -88,6 +111,11 @@
   color: #fff;
   letter-spacing: -1px;
   animation: fadeInUp 1s ease;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .heroTitle {
+  color: #1a1a1a;
 }
 
 .heroHighlight {
@@ -104,6 +132,11 @@
   margin-bottom: 2.2rem;
   animation: fadeInUp 1s ease 0.2s backwards;
   font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .heroSubtitle {
+  color: rgba(26, 26, 26, 0.8);
 }
 
 .heroButtons {
@@ -180,6 +213,16 @@
   border-radius: 2rem;
   margin-bottom: 2.5rem;
   box-shadow: 0 8px 32px #00ff9d11;
+  transition: background 0.3s ease;
+}
+
+:global(.light) .featuresSection {
+  background: linear-gradient(
+    to bottom,
+    #ffffff 80%,
+    #f0fdfa 100%
+  );
+  box-shadow: 0 8px 32px rgba(0, 155, 119, 0.15);
 }
 
 .featuresSection::before {
@@ -208,6 +251,11 @@
   margin-bottom: 1rem !important;
   position: relative;
   letter-spacing: -1px;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .sectionTitle {
+  color: #1a1a1a;
 }
 
 .titleGlow {
@@ -223,6 +271,11 @@
   margin: 0 auto !important;
   line-height: 1.6;
   font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .sectionSubtitle {
+  color: rgba(26, 26, 26, 0.8);
 }
 
 /* 4. Destinations Section - corregido para card compacto */
@@ -252,6 +305,12 @@
   align-items: center;
   position: relative;
   overflow: visible;
+  transition: background 0.3s ease;
+}
+
+:global(.light) .destinationsCard {
+  background: linear-gradient(120deg, #ffffff 60%, #f0fdfa 100%);
+  box-shadow: 0 4px 24px rgba(0, 155, 119, 0.2);
 }
 
 .destinationsTitle {
@@ -270,6 +329,11 @@
   margin-bottom: 1rem;
   text-align: center;
   font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .destinationsSubtitle {
+  color: rgba(26, 26, 26, 0.8);
 }
 
 .cardsCarouselContainer {
@@ -297,6 +361,12 @@
   z-index: 2;
   animation: fadeInUp 1s;
   max-width: 100vw;
+  transition: background 0.3s ease;
+}
+
+:global(.light) .rewardsSection {
+  background: linear-gradient(90deg, #ffffff 60%, #f0fdfa 100%);
+  box-shadow: 0 8px 32px rgba(0, 155, 119, 0.2);
 }
 
 .rewardsHeader {
@@ -330,6 +400,11 @@
   max-width: 95vw;
   margin-left: auto;
   margin-right: auto;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .rewardsSubtitle {
+  color: rgba(26, 26, 26, 0.8);
 }
 
 .rewardsGrid {
@@ -351,7 +426,7 @@
   max-width: 150px;
   width: 100%;
   border: 2px solid transparent;
-  transition: border 0.2s, box-shadow 0.2s, transform 0.18s;
+  transition: border 0.2s, box-shadow 0.2s, transform 0.18s, background 0.3s ease;
   background: #23233b;
   box-shadow: 0 2px 12px #00ff9d22;
   margin-bottom: 0.2rem;
@@ -361,11 +436,21 @@
   padding: 0.6rem 0.3rem 0.6rem 0.3rem;
 }
 
+:global(.light) .rewardCard {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 12px rgba(0, 155, 119, 0.15);
+}
+
 .rewardCard:hover {
   border: 2px solid #00ff9d;
   box-shadow: 0 8px 28px #00ff9d55;
   transform: translateY(-2px) scale(1.02);
   background: linear-gradient(120deg, #00ff9d22 40%, #18181b 100%);
+}
+
+:global(.light) .rewardCard:hover {
+  background: linear-gradient(120deg, rgba(0, 204, 122, 0.1) 40%, rgba(255, 255, 255, 0.95) 100%);
+  box-shadow: 0 8px 28px rgba(0, 155, 119, 0.3);
 }
 
 .rewardIcon {
@@ -411,6 +496,11 @@
   opacity: 0.98;
   margin-bottom: 0.18rem;
   text-align: center;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .rewardCardDesc {
+  color: rgba(26, 26, 26, 0.7);
 }
 
 .rewardCardBtn {
@@ -427,10 +517,23 @@
   padding: 0.2rem 0.5rem !important;
 }
 
+:global(.light) .rewardCardBtn {
+  border: 2px solid #0284c7 !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2);
+}
+
 .rewardCardBtn:hover {
   background: #38bdf8 !important;
   color: #10131a !important;
   border-color: #38bdf8 !important;
+}
+
+:global(.light) .rewardCardBtn:hover {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
 }
 
 /* CTA Section */
@@ -445,6 +548,16 @@
   border-radius: 1.5rem;
   margin-bottom: 2vw;
   box-shadow: 0 8px 32px #00ff9d11;
+  transition: background 0.3s ease;
+}
+
+:global(.light) .ctaSection {
+  background: linear-gradient(
+    to bottom,
+    #f8fffe,
+    #e6f7ff 90%
+  );
+  box-shadow: 0 8px 32px rgba(0, 155, 119, 0.15);
 }
 
 .ctaCard {
@@ -458,6 +571,12 @@
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
+  transition: background 0.3s ease, border 0.3s ease;
+}
+
+:global(.light) .ctaCard {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 204, 122, 0.3) !important;
 }
 
 .ctaTitle {
@@ -475,6 +594,11 @@
   color: #bfffe0 !important;
   margin-bottom: 0.7rem !important;
   line-height: 1.5;
+  transition: color 0.3s ease;
+}
+
+:global(.light) .ctaText {
+  color: rgba(26, 26, 26, 0.8) !important;
 }
 
 .registerButton {

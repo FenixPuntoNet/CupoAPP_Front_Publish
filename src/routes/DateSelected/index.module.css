@@ -6,7 +6,13 @@
     height: 100vh;
     background-color: #0a0a0a;
     color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
+
+:global(.light) .datePickerContainer {
+    background-color: #f8fffe;
+    color: #1a1a1a;
+}
   
   .header {
     display: flex;
@@ -19,20 +25,35 @@
   .title {
     font-size: 2rem;
     color: #00ff9d;
+    transition: color 0.3s ease;
   }
+
+:global(.light) .title {
+    color: #00cc7a;
+}
   
   .close {
     font-size: 1.5rem;
     color: white;
     cursor: pointer;
+    transition: color 0.3s ease;
   }
+
+:global(.light) .close {
+    color: #1a1a1a;
+}
   
   .day {
     background-color: transparent;
     color: white;
     border-radius: 50%;
     padding: 0.5rem;
+    transition: color 0.3s ease;
   }
+
+:global(.light) .day {
+    color: #1a1a1a;
+}
   
   .day.selected {
     background-color: #00ff9d;
@@ -41,14 +62,29 @@
   
   .weekday {
     color: #00ff9d;
+    transition: color 0.3s ease;
   }
+
+:global(.light) .weekday {
+    color: #00cc7a;
+}
   
   .month {
     color: white;
     font-size: 1.2rem;
+    transition: color 0.3s ease;
   }
+
+:global(.light) .month {
+    color: #1a1a1a;
+}
   
   .calendarHeader {
     color: white;
+    transition: color 0.3s ease;
   }
+
+:global(.light) .calendarHeader {
+    color: #1a1a1a;
+}
   

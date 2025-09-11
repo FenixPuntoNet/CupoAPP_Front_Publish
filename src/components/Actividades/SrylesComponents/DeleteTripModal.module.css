@@ -11,6 +11,12 @@
     flex-direction: column; /* Stack elements vertically */
 }
 
+:global(.light) .modal {
+    background-color: #ffffff;
+    color: #000000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
 .modal > div {
     margin-bottom: 20px; /* Added some space at the bottom to elements inside the modal */
 }
@@ -37,6 +43,10 @@
     text-align: left; /* Aligned the text to the left */
     margin-bottom: 24px;
     letter-spacing: 0.3px;
+}
+
+:global(.light) .description {
+    color: rgba(0, 0, 0, 0.8);
 }
 
 
@@ -79,10 +89,20 @@
   cursor: pointer;
 }
 
+:global(.light) .cancelButton {
+  color: rgba(0, 0, 0, 0.8);
+  border: 1.5px solid rgba(0, 0, 0, 0.3);
+}
+
 .cancelButton:hover {
   color: rgba(255, 255, 255, 0.95);
   border-color: rgba(255, 255, 255, 0.945);
     transform: translateY(-2px);
+}
+
+:global(.light) .cancelButton:hover {
+  color: rgba(0, 0, 0, 0.9);
+  border-color: rgba(0, 0, 0, 0.5);
 }
 
 .buttonGroup {
@@ -102,6 +122,14 @@
   transition: color 0.3s ease;
 }
 
+:global(.light) .closeButton {
+  color: rgba(0, 0, 0, 0.6);
+}
+
 .closeButton:hover {
     color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.light) .closeButton:hover {
+    color: rgba(0, 0, 0, 0.8);
 }

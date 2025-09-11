@@ -5,6 +5,14 @@
   border-radius: 16px !important;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 157, 0.1) !important;
   color: #ffffff !important;
+  transition: background 0.3s ease, border-color 0.3s ease !important;
+}
+
+:global(.light) .modalContent {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%) !important;
+  border: 1px solid rgba(0, 155, 119, 0.3) !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1), 0 0 20px rgba(0, 155, 119, 0.1) !important;
+  color: #1a1a1a !important;
 }
 
 .modalHeader {
@@ -12,6 +20,12 @@
   border-bottom: 1px solid rgba(0, 255, 157, 0.2) !important;
   padding: 24px !important;
   border-radius: 16px 16px 0 0 !important;
+  transition: background 0.3s ease, border-color 0.3s ease !important;
+}
+
+:global(.light) .modalHeader {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%) !important;
+  border-bottom: 1px solid rgba(0, 155, 119, 0.2) !important;
 }
 
 .modalHeader .mantine-Modal-title {
