@@ -353,6 +353,7 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
       // Log detallado para errores de cualquier request
       console.log(`❌ [API] ${endpoint} failed with status: ${response.status}`);
       console.log(`❌ [API] Error data:`, errorData);
+      console.log(`❌ [API] Response headers:`, Object.fromEntries(response.headers.entries()));
       
       // Para errores estructurados (como 403 con información adicional), crear un error más rico
       if (errorData && typeof errorData === 'object') {

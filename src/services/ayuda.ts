@@ -48,13 +48,31 @@ export interface SupportChatsResponse {
 // Obtener o crear asistente para el usuario
 export async function getOrCreateAssistant(): Promise<{ success: boolean; data?: AssistantResponse; error?: string }> {
   try {
+    console.log('🔄 Calling /ayuda/assistant endpoint...');
+    
     const data = await apiRequest('/ayuda/assistant', {
       method: 'GET'
     });
 
+    console.log('✅ Assistant endpoint response:', data);
     return { success: true, data };
   } catch (error) {
-    console.error('Error in getOrCreateAssistant:', error);
+    console.error('❌ Error in getOrCreateAssistant:', error);
+    
+    // Información adicional de debug
+    if (error instanceof Error) {
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      
+      // Si es un error de API con detalles adicionales
+      if ((error as any).current_status) {
+        console.error('❌ Current status:', (error as any).current_status);
+      }
+      if ((error as any).contact_support) {
+        console.error('❌ Contact support:', (error as any).contact_support);
+      }
+    }
+    
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Error de conexión al obtener asistente' 
