@@ -92,11 +92,11 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
       <MantineProvider theme={theme} defaultColorScheme={mantineColorScheme}>
         <GoogleMapsProvider>
           <AuthGuard>
-            <AppShell
-              header={{ height: showNavigation ? 60 : 0 }}
-              footer={{ height: 72 }}
-              className={styles.appShell}
-            >
+          <AppShell
+            header={{ height: showNavigation ? 60 : 0 }}
+            footer={{ height: 72 }}
+            className={styles.appShell}
+          >
             <div className={styles.backgroundEffect} />
 
             {showNavigation && (

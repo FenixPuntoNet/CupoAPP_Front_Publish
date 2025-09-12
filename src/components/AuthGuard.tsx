@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from '@tanstack/react-router';
 import { Center, Loader, Text } from '@mantine/core';
 import { useBackendAuth } from '@/context/BackendAuthContext';
-import { getAuthToken, isSessionActive } from '@/config/api';
+import { getAuthToken } from '@/config/api';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -47,19 +47,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
       // Detectar cambio de estado de autenticación (sesión expirada)
       if (lastAuthState.current === true && isAuthenticated === false) {
         console.log('🚨 Session expired - User was authenticated but now is not');
-        
-        // Verificar si la sesión realmente expiró por inactividad o si es un error temporal
-        const hasToken = !!getAuthToken();
-        const sessionStillActive = isSessionActive();
-        
-        if (!hasToken || !sessionStillActive) {
-          console.log('🔒 Session definitively expired, redirecting to login');
-          navigate({ to: '/Login' });
-        } else {
-          console.log('⚠️ Temporary auth state, will retry on next check');
-          // No redirigir inmediatamente, podría ser un estado temporal
-        }
-        
+        // Redirigir al login en lugar de home cuando expire la sesión
+        navigate({ to: '/Login' });
         lastAuthState.current = isAuthenticated;
         return;
       }
