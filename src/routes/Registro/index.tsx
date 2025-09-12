@@ -15,10 +15,12 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useForm } from "@mantine/form";
 import styles from "./index.module.css";
 import { TermsModal } from "@/components/TermsModal";
+import AppleSignInButton from "@/components/AppleSignInButton";
 import { registerUser, type SignupRequest } from "@/services/auth";
 import { saveTermsAndConditions } from "@/services/terms";
 import { useBackendAuth } from "@/context/BackendAuthContext";
 import { apiRequest } from "@/config/api";
+import { signInWithApple, processAppleCallback, isAppleCallback, cleanAppleCallbackUrl } from "@/services/appleAuth";
 
 import { isMobileApp, startMobileOAuth } from '@/utils/deepLinkHandler';
 
@@ -40,25 +42,49 @@ const RegisterView: React.FC = () => {
     return localStorage.getItem("cookiesAccepted") === "true";
   });
 
-  // ✅ MEJORA: Detección temprana del OAuth callback
+  // ✅ MEJORA: Detección temprana del OAuth callback (Google y Apple)
   const [isOAuthCallback, setIsOAuthCallback] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
     const authCode = urlParams.get('code');
-    return !!(accessToken || authCode);
+    const appleState = localStorage.getItem('apple_oauth_state');
+    return !!(accessToken || authCode || appleState);
   });
 
   const navigate = useNavigate();
   const { refreshUser } = useBackendAuth();
 
-  // Detectar regreso del OAuth de Google
+  // Detectar regreso del OAuth (Google y Apple)
   useEffect(() => {
     const checkOAuthReturn = async () => {
       // Si detectamos OAuth callback, activar loading inmediatamente
       if (isOAuthCallback) {
         setLoading(true);
         console.log('🔄 OAuth callback detectado, iniciando procesamiento...');
+      }
+
+      // ✅ NUEVO: Verificar callback de Apple primero
+      if (isAppleCallback()) {
+        console.log('🍎 Detectado Apple OAuth callback en registro, procesando...');
+        
+        try {
+          const appleResult = await processAppleCallback();
+          
+          if (appleResult.success) {
+            await handleSuccessfulAppleAuth();
+          } else {
+            setError(appleResult.error || 'Error en Apple Sign-In');
+          }
+        } catch (error: any) {
+          console.error('❌ Error procesando Apple callback:', error);
+          setError(error?.message || 'Error procesando Apple Sign-In');
+        } finally {
+          cleanAppleCallbackUrl();
+          setLoading(false);
+          setIsOAuthCallback(false);
+        }
+        return;
       }
       
       // Verificar si estamos en una URL de callback con tokens
@@ -215,6 +241,206 @@ const RegisterView: React.FC = () => {
     checkOAuthReturn();
   }, []);
 
+  // ✅ MEJORADO: Setup listeners anti-loop para OAuth móvil de Apple
+  useEffect(() => {
+    const isMobile = window?.navigator?.userAgent?.includes('Capacitor') || 
+                     window?.location?.protocol === 'capacitor:' ||
+                     !!(window as any)?.Capacitor;
+    
+    if (isMobile) {
+      console.log('📱 Setting up anti-loop mobile listeners for Apple OAuth return (Registro)');
+      
+      let oauthCheckInterval: NodeJS.Timeout | null = null;
+      let loadingTimeout: NodeJS.Timeout | null = null;
+      
+      // Función para limpiar todos los timers y estados
+      const cleanupOAuthState = () => {
+        if (oauthCheckInterval) clearInterval(oauthCheckInterval);
+        if (loadingTimeout) clearTimeout(loadingTimeout);
+        localStorage.removeItem('apple_oauth_pending');
+        localStorage.removeItem('apple_oauth_checking');
+        setLoading(false);
+      };
+      
+      // Timeout para evitar loading infinito (2 minutos máximo)
+      loadingTimeout = setTimeout(() => {
+        console.log('⏰ OAuth timeout reached - stopping loading state');
+        cleanupOAuthState();
+        setError('El proceso de registro tardó demasiado. Intenta nuevamente.');
+      }, 120000);
+
+      // Función mejorada para manejar el regreso de la app
+      const handleAppReturn = async () => {
+        console.log('🔄 App returned, checking for Apple OAuth completion in registration...');
+        
+        // Evitar multiple checks simultáneos
+        const isAlreadyChecking = localStorage.getItem('apple_oauth_checking');
+        if (isAlreadyChecking) {
+          console.log('⚠️ Already checking OAuth state, skipping duplicate check');
+          return;
+        }
+        
+        localStorage.setItem('apple_oauth_checking', 'true');
+        
+        try {
+          // ESTRATEGIA 1: Verificar token pendiente de Apple OAuth
+          const pendingAppleAuth = localStorage.getItem('apple_oauth_pending');
+          
+          if (pendingAppleAuth) {
+            console.log('🍎 Detected pending Apple OAuth in registration, processing...');
+            setLoading(true);
+            
+            try {
+              const tokenData = JSON.parse(pendingAppleAuth);
+              
+              // Configurar token
+              const { setAuthToken } = await import('@/config/api');
+              setAuthToken(tokenData.token);
+              
+              // Refrescar usuario
+              await refreshUser();
+              
+              cleanupOAuthState();
+              
+              // Si es un usuario nuevo, ir al completar registro con onboarding
+              if (tokenData.isNewUser) {
+                console.log('🆕 New user detected, navigating to complete registration');
+                localStorage.setItem('is_new_user', 'true');
+                navigate({ 
+                  to: "/CompletarRegistro", 
+                  search: { from: 'onboarding' } 
+                });
+              } else {
+                console.log('👤 Existing user detected, navigating to wallet');
+                navigate({ to: '/Wallet' });
+              }
+              
+              return;
+              
+            } catch (error) {
+              console.error('❌ Error processing Apple OAuth return in registration:', error);
+              localStorage.removeItem('apple_oauth_pending');
+            }
+          }
+          
+          // ESTRATEGIA 2: Verificar si ya hay un auth_token válido
+          const authToken = localStorage.getItem('auth_token');
+          if (authToken && authToken !== 'null' && authToken !== 'undefined') {
+            console.log('🔑 Found valid auth_token, verifying authentication...');
+            setLoading(true);
+            
+            try {
+              // Verificar con el backend si el token es válido
+              const userResponse = await apiRequest('/auth/me', { method: 'GET' });
+              
+              if (userResponse && userResponse.id) {
+                console.log('✅ Apple OAuth completed successfully via deep link in registration');
+                
+                await refreshUser();
+                cleanupOAuthState();
+                
+                // Para registro, siempre asumir usuario nuevo y ir a completar registro
+                localStorage.setItem('is_new_user', 'true');
+                navigate({ 
+                  to: "/CompletarRegistro", 
+                  search: { from: 'apple_oauth' } 
+                });
+                
+                return;
+              }
+            } catch (error) {
+              console.log('⚠️ Auth token found but invalid in registration:', error);
+              localStorage.removeItem('auth_token');
+            }
+          }
+          
+          // ESTRATEGIA 3: Polling del backend como fallback
+          const startPollingCheck = () => {
+            console.log('🔄 Starting backend polling for registration...');
+            let pollAttempts = 0;
+            const maxPollAttempts = 12;
+            
+            oauthCheckInterval = setInterval(async () => {
+              pollAttempts++;
+              console.log(`� Registration polling attempt ${pollAttempts}/${maxPollAttempts}`);
+              
+              try {
+                const storedToken = localStorage.getItem('auth_token');
+                if (storedToken && storedToken !== 'null') {
+                  const userResponse = await apiRequest('/auth/me', { method: 'GET' });
+                  
+                  if (userResponse && userResponse.id) {
+                    console.log('✅ Registration polling detected successful authentication!');
+                    
+                    await refreshUser();
+                    cleanupOAuthState();
+                    
+                    // Para registro con polling, asumir usuario nuevo
+                    localStorage.setItem('is_new_user', 'true');
+                    navigate({ 
+                      to: "/CompletarRegistro", 
+                      search: { from: 'apple_oauth_polling' } 
+                    });
+                    
+                    return;
+                  }
+                }
+                
+                if (pollAttempts >= maxPollAttempts) {
+                  console.log('🚫 Max polling attempts reached in registration');
+                  cleanupOAuthState();
+                  
+                  const finalToken = localStorage.getItem('auth_token');
+                  if (!finalToken || finalToken === 'null') {
+                    setError('No se pudo completar el registro con Apple. Intenta nuevamente.');
+                  }
+                }
+              } catch (error) {
+                console.log(`⚠️ Registration polling attempt ${pollAttempts} failed:`, error);
+                
+                if (pollAttempts >= maxPollAttempts) {
+                  console.log('🚫 Max polling attempts reached with errors in registration');
+                  cleanupOAuthState();
+                }
+              }
+            }, 10000);
+          };
+          
+          // Solo iniciar polling si no encontramos auth inmediatamente
+          setTimeout(() => {
+            const currentAuthToken = localStorage.getItem('auth_token');
+            const stillPending = localStorage.getItem('apple_oauth_pending');
+            
+            if ((!currentAuthToken || currentAuthToken === 'null') && !stillPending) {
+              startPollingCheck();
+            }
+          }, 3000);
+          
+        } finally {
+          localStorage.removeItem('apple_oauth_checking');
+        }
+      };
+      
+      // Configurar listener para app state changes
+      if ((window as any).Capacitor) {
+        const capacitor = (window as any).Capacitor;
+        if (capacitor.Plugins && capacitor.Plugins.App) {
+          const listener = capacitor.Plugins.App.addListener('appStateChange', (state: any) => {
+            console.log('📱 App state changed in registration:', state);
+            if (state.isActive) {
+              setTimeout(handleAppReturn, 1500);
+            }
+          });
+          
+          return () => {
+            cleanupOAuthState();
+            listener.remove();
+          };
+        }
+      }
+    }
+  }, [refreshUser, navigate]);
+
   // Función para hacer bootstrap via backend (sin Supabase)
   const ensureBootstrap = async () => {
     try {
@@ -349,6 +575,98 @@ const RegisterView: React.FC = () => {
         search: { from: 'onboarding' } 
       });
     } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ NUEVO: Función auxiliar para manejar el éxito del registro con Apple
+  const handleSuccessfulAppleAuth = async () => {
+    try {
+      console.log('🍎 Processing successful Apple registration...');
+      
+      // Refresh del contexto de autenticación primero
+      try {
+        await refreshUser(true);
+        console.log('✅ Auth context refreshed after Apple OAuth');
+      } catch (refreshError) {
+        console.error('⚠️ Error refreshing auth context:', refreshError);
+      }
+
+      // Obtener información del usuario autenticado
+      const userResponse = await apiRequest('/auth/me', { method: 'GET' });
+      
+      if (userResponse && userResponse.id) {
+        console.log('✅ User authenticated with Apple (backend handled bootstrap)');
+        console.log('🔧 Auto-bootstrap executed:', userResponse.auto_bootstrapped || 'not needed');
+
+        // Bootstrap manual si es necesario
+        if (userResponse.bootstrap_needed) {
+          console.log('🔧 Backend indicates manual bootstrap needed...');
+          try {
+            await ensureBootstrap();
+            console.log('✅ Manual bootstrap completed');
+            await refreshUser(true);
+          } catch (bootstrapError) {
+            console.warn('⚠️ Manual bootstrap failed (non-critical):', bootstrapError);
+          }
+        }
+      }
+
+      // Marcar como usuario nuevo para onboarding
+      localStorage.setItem('is_new_user', 'true');
+      
+      // Limpiar estado OAuth
+      localStorage.removeItem('apple_oauth_state');
+      
+      // Navegar al onboarding
+      navigate({ 
+        to: "/CompletarRegistro", 
+        search: { from: 'onboarding' } 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ NUEVO: Función principal de Apple OAuth para Registro
+  const handleAppleRegister = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      console.log('🍎 Starting Apple OAuth registration via backend...');
+      
+      // Detectar si es móvil para usar callbacks específicos
+      const isMobile = window?.navigator?.userAgent?.includes('Capacitor') || 
+                       window?.location?.protocol === 'capacitor:' ||
+                       !!(window as any)?.Capacitor;
+      
+      if (isMobile) {
+        // Para móvil: el DeepLinkHandler maneja el flujo completo
+        console.log('📱 Using mobile Apple OAuth flow with DeepLinkHandler');
+        
+        const result = await signInWithApple(true); // true = registro
+        
+        if (!result.success && result.error) {
+          setError(result.error);
+          setLoading(false);
+        }
+        
+        // Para móvil, el éxito se maneja a través del DeepLinkHandler
+        // que llamará automáticamente cuando regrese del OAuth
+      } else {
+        // Para web: flujo normal
+        const result = await signInWithApple(true); // true = registro
+        
+        if (!result.success && result.error) {
+          setError(result.error);
+          setLoading(false);
+        }
+        // Si success=true, el usuario fue redirigido a Apple
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error iniciando Apple OAuth:', error);
+      setError(error?.message || 'No se pudo iniciar registro con Apple');
       setLoading(false);
     }
   };
@@ -581,6 +899,16 @@ const RegisterView: React.FC = () => {
         >
           Continuar con Google
         </Button>
+        
+        {/* ✅ NUEVO: Botón de Apple Sign-In para registro */}
+        <AppleSignInButton
+          onClick={handleAppleRegister}
+          loading={loading}
+          disabled={loading}
+          text="Registrarse con Apple"
+          variant="register"
+        />
+        
         <Text className={styles.dividerText}>
           o regístrate con tu correo
         </Text>

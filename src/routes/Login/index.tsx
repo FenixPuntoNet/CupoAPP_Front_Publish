@@ -14,12 +14,17 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "@mantine/form";
 import { RecoverAccountModal } from "@/components/RecoverAccountModal";
+import AppleSignInButton from "@/components/AppleSignInButton";
 import { useBackendAuth } from "@/context/BackendAuthContext";
 import { useErrorHandling } from "@/hooks/useErrorHandling";
 import { apiRequest } from "@/config/api";
+import { signInWithApple, processAppleCallback, isAppleCallback, cleanAppleCallbackUrl } from "@/services/appleAuth";
 import styles from "./index.module.css";
 
 import { isMobileApp, startMobileOAuth } from '@/utils/deepLinkHandler';
+
+// ✅ NUEVO: Import debug tools for testing
+import '@/utils/appleOAuthTestTools';
 
 interface LoginFormValues {
   email: string;
@@ -31,26 +36,325 @@ const LoginView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [recoverModalOpened, setRecoverModalOpened] = useState(false);
   
-  // ✅ MEJORA: Detección temprana del OAuth callback
+  // ✅ MEJORA: Detección temprana del OAuth callback (Google y Apple)
   const [isOAuthCallback, setIsOAuthCallback] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
     const authCode = urlParams.get('code');
-    return !!(accessToken || authCode);
+    const appleState = localStorage.getItem('apple_oauth_state');
+    return !!(accessToken || authCode || appleState);
   });
   
   const navigate = useNavigate();
   const { signIn, refreshUser } = useBackendAuth();
   const { handleValidationError, handleBackendError, showSuccess } = useErrorHandling();
 
-  // Detectar regreso del OAuth de Google
+  // ✅ MEJORADO: Setup listeners anti-loop para OAuth móvil de Apple
+  useEffect(() => {
+    const isMobile = window?.navigator?.userAgent?.includes('Capacitor') || 
+                     window?.location?.protocol === 'capacitor:' ||
+                     !!(window as any)?.Capacitor;
+    
+    if (isMobile) {
+      console.log('📱 Setting up anti-loop mobile listeners for Apple OAuth return');
+      
+      let oauthCheckInterval: NodeJS.Timeout | null = null;
+      let loadingTimeout: NodeJS.Timeout | null = null;
+      
+      // Función para limpiar todos los timers y estados
+      const cleanupOAuthState = () => {
+        if (oauthCheckInterval) clearInterval(oauthCheckInterval);
+        if (loadingTimeout) clearTimeout(loadingTimeout);
+        localStorage.removeItem('apple_oauth_pending');
+        localStorage.removeItem('apple_oauth_checking');
+        setLoading(false);
+      };
+      
+      // Timeout para evitar loading infinito (2 minutos máximo)
+      loadingTimeout = setTimeout(() => {
+        console.log('⏰ OAuth timeout reached - stopping loading state');
+        cleanupOAuthState();
+        handleBackendError('El proceso de autenticación tardó demasiado. Intenta nuevamente.', {
+          id: 'apple-oauth-timeout',
+          autoClose: 8000
+        });
+      }, 120000); // 2 minutos
+
+      // Función mejorada para manejar el regreso de la app
+      const handleAppReturn = async () => {
+        console.log('🔄 App returned, checking for Apple OAuth completion...');
+        
+        // Evitar multiple checks simultáneos
+        const isAlreadyChecking = localStorage.getItem('apple_oauth_checking');
+        if (isAlreadyChecking) {
+          console.log('⚠️ Already checking OAuth state, skipping duplicate check');
+          return;
+        }
+        
+        localStorage.setItem('apple_oauth_checking', 'true');
+        
+        try {
+          // ESTRATEGIA 1: Verificar token pendiente de Apple OAuth
+          const pendingAppleAuth = localStorage.getItem('apple_oauth_pending');
+          
+          if (pendingAppleAuth) {
+            console.log('🍎 Detected pending Apple OAuth in localStorage, processing...');
+            setLoading(true);
+            
+            try {
+              const tokenData = JSON.parse(pendingAppleAuth);
+              
+              // Configurar token
+              const { setAuthToken } = await import('@/config/api');
+              setAuthToken(tokenData.token);
+              
+              // Refrescar usuario
+              await refreshUser();
+              
+              showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
+              
+              // Limpiar estado
+              cleanupOAuthState();
+              
+              // Navegar al wallet
+              setTimeout(() => {
+                navigate({ to: '/Wallet' });
+              }, 1000);
+              
+              return;
+              
+            } catch (error) {
+              console.error('❌ Error processing Apple OAuth return from localStorage:', error);
+              localStorage.removeItem('apple_oauth_pending');
+            }
+          }
+          
+          // ESTRATEGIA 2: Verificar si ya hay un auth_token válido (deep link funcionó)
+          const authToken = localStorage.getItem('auth_token');
+          if (authToken && authToken !== 'null' && authToken !== 'undefined') {
+            console.log('🔑 Found valid auth_token, verifying authentication...');
+            setLoading(true);
+            
+            try {
+              // Verificar con el backend si el token es válido
+              const userResponse = await apiRequest('/auth/me', { method: 'GET' });
+              
+              if (userResponse && userResponse.id) {
+                console.log('✅ Apple OAuth completed successfully via deep link');
+                
+                // Forzar actualización del contexto de autenticación
+                await refreshUser(true);
+                
+                // Esperar a que el contexto se actualice y verificar el token
+                let contextSyncAttempts = 0;
+                const maxSyncAttempts = 15;
+                
+                const waitForContextSync = async () => {
+                  while (contextSyncAttempts < maxSyncAttempts) {
+                    contextSyncAttempts++;
+                    console.log(`🔄 Verifying auth state sync... attempt ${contextSyncAttempts}/${maxSyncAttempts}`);
+                    
+                    // Verificar directamente con el backend si el token es válido
+                    try {
+                      const authCheck = await apiRequest('/auth/me', { method: 'GET' });
+                      if (authCheck && authCheck.id) {
+                        console.log('✅ Backend confirms authentication is valid');
+                        break;
+                      }
+                    } catch (error) {
+                      console.log(`⚠️ Auth check attempt ${contextSyncAttempts} failed:`, error);
+                    }
+                    
+                    // Esperar 300ms antes del siguiente intento
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                  }
+                  
+                  if (contextSyncAttempts >= maxSyncAttempts) {
+                    console.log('⚠️ Context sync timeout, but proceeding with navigation');
+                  }
+                };
+                
+                await waitForContextSync();
+                
+                showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
+                cleanupOAuthState();
+                
+                // Navegación con delay para asegurar sincronización completa
+                setTimeout(() => {
+                  console.log('🚀 Navigating to /Wallet after Apple OAuth success');
+                  navigate({ to: '/Wallet' });
+                }, 800);
+                
+                return;
+              }
+            } catch (error) {
+              console.log('⚠️ Auth token found but invalid:', error);
+              // Token inválido, limpiar y continuar
+              localStorage.removeItem('auth_token');
+            }
+          }
+          
+          // ESTRATEGIA 3: Polling del backend como fallback
+          // Esta estrategia verifica si el usuario fue autenticado en el backend
+          // aún si los deep links no funcionaron correctamente
+          const startPollingCheck = () => {
+            console.log('🔄 Starting backend polling as fallback strategy...');
+            let pollAttempts = 0;
+            const maxPollAttempts = 12; // 2 minutos con intervals de 10s
+            
+            oauthCheckInterval = setInterval(async () => {
+              pollAttempts++;
+              console.log(`� Polling attempt ${pollAttempts}/${maxPollAttempts} - checking backend auth status`);
+              
+              try {
+                // Verificar si hay algún token de auth válido
+                const storedToken = localStorage.getItem('auth_token');
+                if (storedToken && storedToken !== 'null') {
+                  const userResponse = await apiRequest('/auth/me', { method: 'GET' });
+                  
+                  if (userResponse && userResponse.id) {
+                    console.log('✅ Backend polling detected successful authentication!');
+                    
+                    // Forzar actualización del contexto de autenticación
+                    await refreshUser(true);
+                    
+                    // Esperar a que el contexto se actualice completamente
+                    let contextSyncAttempts = 0;
+                    const maxSyncAttempts = 10;
+                    
+                    const waitForContextSync = async () => {
+                      while (contextSyncAttempts < maxSyncAttempts) {
+                        contextSyncAttempts++;
+                        console.log(`🔄 Verifying polling auth state sync... attempt ${contextSyncAttempts}/${maxSyncAttempts}`);
+                        
+                        // Verificar directamente con el backend
+                        try {
+                          const authCheck = await apiRequest('/auth/me', { method: 'GET' });
+                          if (authCheck && authCheck.id) {
+                            console.log('✅ Backend confirms authentication from polling is valid');
+                            break;
+                          }
+                        } catch (error) {
+                          console.log(`⚠️ Polling auth check attempt ${contextSyncAttempts} failed:`, error);
+                        }
+                        
+                        // Esperar 200ms antes del siguiente intento
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                      }
+                    };
+                    
+                    await waitForContextSync();
+                    
+                    showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
+                    cleanupOAuthState();
+                    
+                    setTimeout(() => {
+                      console.log('🚀 Navigating to /Wallet after polling OAuth success');
+                      navigate({ to: '/Wallet' });
+                    }, 800);
+                    
+                    return;
+                  }
+                }
+                
+                // Si llegamos al máximo de intentos, detener polling
+                if (pollAttempts >= maxPollAttempts) {
+                  console.log('🚫 Max polling attempts reached, stopping OAuth check');
+                  cleanupOAuthState();
+                  
+                  // Solo mostrar error si realmente no hay autenticación
+                  const finalToken = localStorage.getItem('auth_token');
+                  if (!finalToken || finalToken === 'null') {
+                    handleBackendError('No se pudo completar el proceso de autenticación. Intenta nuevamente.', {
+                      id: 'apple-oauth-polling-failed',
+                      autoClose: 8000
+                    });
+                  }
+                }
+              } catch (error) {
+                console.log(`⚠️ Polling attempt ${pollAttempts} failed:`, error);
+                
+                if (pollAttempts >= maxPollAttempts) {
+                  console.log('🚫 Max polling attempts reached with errors, stopping');
+                  cleanupOAuthState();
+                }
+              }
+            }, 10000); // Check every 10 seconds
+          };
+          
+          // Solo iniciar polling si no encontramos auth inmediatamente
+          setTimeout(() => {
+            const currentAuthToken = localStorage.getItem('auth_token');
+            const stillPending = localStorage.getItem('apple_oauth_pending');
+            
+            if ((!currentAuthToken || currentAuthToken === 'null') && !stillPending) {
+              startPollingCheck();
+            }
+          }, 3000); // Wait 3s before starting polling
+          
+        } finally {
+          localStorage.removeItem('apple_oauth_checking');
+        }
+      };
+      
+      // Configurar listener para app state changes
+      if ((window as any).Capacitor) {
+        const capacitor = (window as any).Capacitor;
+        if (capacitor.Plugins && capacitor.Plugins.App) {
+          const listener = capacitor.Plugins.App.addListener('appStateChange', (state: any) => {
+            console.log('📱 App state changed:', state);
+            if (state.isActive) {
+              // Dar un momento para que el deep link se procese antes de verificar
+              setTimeout(handleAppReturn, 1500);
+            }
+          });
+          
+          return () => {
+            cleanupOAuthState();
+            listener.remove();
+          };
+        }
+      }
+    }
+  }, [refreshUser, handleBackendError, navigate]);
+
+  // Detectar regreso del OAuth (Google y Apple)
   useEffect(() => {
     const checkOAuthReturn = async () => {
       // Si detectamos OAuth callback, activar loading inmediatamente
       if (isOAuthCallback) {
         setLoading(true);
         console.log('🔄 OAuth callback detectado, iniciando procesamiento...');
+      }
+
+      // ✅ NUEVO: Verificar callback de Apple primero
+      if (isAppleCallback()) {
+        console.log('🍎 Detectado Apple OAuth callback, procesando...');
+        
+        try {
+          const appleResult = await processAppleCallback();
+          
+          if (appleResult.success) {
+            await handleSuccessfulAppleAuth();
+          } else {
+            handleBackendError(appleResult.error || 'Error en Apple Sign-In', {
+              id: 'apple-oauth-error',
+              autoClose: 6000
+            });
+          }
+        } catch (error: any) {
+          console.error('❌ Error procesando Apple callback:', error);
+          handleBackendError(error?.message || 'Error procesando Apple Sign-In', {
+            id: 'apple-callback-error',
+            autoClose: 6000
+          });
+        } finally {
+          cleanAppleCallbackUrl();
+          setLoading(false);
+          setIsOAuthCallback(false);
+        }
+        return;
       }
       
       // Verificar si estamos en una URL de callback con tokens o códigos
@@ -396,6 +700,141 @@ const LoginView: React.FC = () => {
     }
   };
 
+  // ✅ NUEVO: Función auxiliar para manejar el éxito del login con Apple
+  const handleSuccessfulAppleAuth = async () => {
+    try {
+      // ✅ Refresh del contexto de autenticación PRIMERO
+      try {
+        await refreshUser(true);
+        console.log('✅ Auth context refreshed after Apple OAuth');
+      } catch (refreshError) {
+        console.error('⚠️ Error refreshing auth context:', refreshError);
+      }
+
+      // Obtener información del usuario autenticado
+      const userResponse = await apiRequest('/auth/me', { method: 'GET' });
+      
+      if (userResponse && userResponse.id) {
+        console.log('✅ Usuario autenticado con Apple:', userResponse);
+        console.log('🔧 Backend auto-bootstrap status:', userResponse.auto_bootstrapped ? 'executed' : 'not needed');
+        
+        // Verificar si es un usuario nuevo (necesita onboarding)
+        const isNewUser = userResponse.bootstrap_needed || !userResponse.profile || userResponse.auto_bootstrapped;
+        
+        if (isNewUser) {
+          console.log('🆕 Usuario nuevo con Apple detectado, dirigiendo a onboarding...');
+
+          // Bootstrap manual si es necesario
+          if (userResponse.bootstrap_needed) {
+            console.log('🔧 Backend indicates manual bootstrap needed...');
+            try {
+              await ensureBootstrap();
+              console.log('✅ Manual bootstrap completed');
+              await refreshUser(true);
+            } catch (bootstrapError) {
+              console.warn('⚠️ Manual bootstrap failed (non-critical):', bootstrapError);
+            }
+          }
+
+          // Marcar como usuario nuevo para onboarding
+          localStorage.setItem('is_new_user', 'true');
+          
+          // Mostrar mensaje de bienvenida para nuevo usuario
+          showSuccess(
+            '¡Bienvenido a Cupo!',
+            'Tu cuenta con Apple ha sido creada. Completa tu perfil para empezar.',
+            { 
+              id: 'apple-register-success',
+              autoClose: 3000 
+            }
+          );
+
+          // Navegar a onboarding
+          navigate({ 
+            to: "/CompletarRegistro", 
+            search: { from: 'onboarding' } 
+          });
+          
+          return;
+        } else {
+          console.log('👤 Usuario existente con Apple, login normal');
+
+          // Mostrar mensaje de éxito para usuario existente
+          showSuccess(
+            'Inicio de sesión exitoso',
+            'Has iniciado sesión con Apple correctamente.',
+            { 
+              id: 'apple-login-success',
+              autoClose: 2000 
+            }
+          );
+        }
+      } else {
+        throw new Error('No se pudo obtener información del usuario después de Apple OAuth');
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error en handleSuccessfulAppleAuth:', error);
+      handleBackendError(error?.message || 'Error procesando login con Apple', {
+        id: 'apple-auth-process-error',
+        autoClose: 6000
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ NUEVO: Función principal de Apple OAuth para Login
+  const handleAppleLogin = async () => {
+    try {
+      setLoading(true);
+      console.log('🍎 Starting Apple OAuth login via backend...');
+      
+      // Detectar si es móvil para usar callbacks específicos
+      const isMobile = window?.navigator?.userAgent?.includes('Capacitor') || 
+                       window?.location?.protocol === 'capacitor:' ||
+                       !!(window as any)?.Capacitor;
+      
+      if (isMobile) {
+        // Para móvil: el DeepLinkHandler maneja el flujo completo
+        console.log('📱 Using mobile Apple OAuth flow with DeepLinkHandler');
+        
+        const result = await signInWithApple(false); // false = login
+        
+        if (!result.success && result.error) {
+          handleBackendError(result.error, {
+            id: 'apple-oauth-init-error',
+            autoClose: 6000
+          });
+          setLoading(false);
+        }
+        
+        // Para móvil, el éxito se maneja a través del DeepLinkHandler
+        // que llamará automáticamente cuando regrese del OAuth
+      } else {
+        // Para web: flujo normal
+        const result = await signInWithApple(false); // false = login
+        
+        if (!result.success && result.error) {
+          handleBackendError(result.error, {
+            id: 'apple-oauth-init-error',
+            autoClose: 6000
+          });
+          setLoading(false);
+        }
+        // Si success=true, el usuario fue redirigido a Apple
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error iniciando Apple OAuth:', error);
+      handleBackendError(error?.message || 'No se pudo iniciar sesión con Apple', {
+        id: 'apple-oauth-init-error',
+        autoClose: 6000
+      });
+      setLoading(false);
+    }
+  };
+
   const form = useForm<LoginFormValues>({
     initialValues: {
       email: "",
@@ -559,7 +998,7 @@ const LoginView: React.FC = () => {
         </Text>
       </Box>
 
-      {/* Botón de Google OAuth */}
+      {/* Botones de OAuth */}
       <Box className={styles.socialLogin}>
         <Button
           variant="outline"
@@ -579,6 +1018,16 @@ const LoginView: React.FC = () => {
         >
           Continuar con Google
         </Button>
+        
+        {/* ✅ NUEVO: Botón de Apple Sign-In */}
+        <AppleSignInButton
+          onClick={handleAppleLogin}
+          loading={loading}
+          disabled={loading}
+          text="Continuar con Apple"
+          variant="login"
+        />
+        
         <Text className={styles.dividerText}>
           o inicia sesión con tu correo
         </Text>

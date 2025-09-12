@@ -1,0 +1,104 @@
+/* Botón Apple Sign-In */
+.appleButton {
+  height: 48px !important;
+  border-radius: 8px !important;
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+.appleButton:hover {
+  background-color: #1a1a1a !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.appleButton:active {
+  background-color: #333333 !important;
+  transform: translateY(0);
+}
+
+.appleButton:disabled {
+  background-color: #666666 !important;
+  color: #cccccc !important;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none !important;
+}
+
+/* Efecto de ondulación al hacer clic */
+.appleButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+  pointer-events: none;
+}
+
+.appleButton:active::before {
+  width: 200px;
+  height: 200px;
+}
+
+/* Tema claro */
+:global(.light) .appleButton {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+}
+
+:global(.light) .appleButton:hover {
+  background-color: #1a1a1a !important;
+  border-color: #9ca3af !important;
+}
+
+:global(.light) .appleButton:disabled {
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Animación de carga */
+.appleButton[data-loading="true"] {
+  color: transparent !important;
+}
+
+.appleButton[data-loading="true"]::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid transparent;
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .appleButton {
+    height: 52px !important;
+    font-size: 16px !important;
+  }
+}

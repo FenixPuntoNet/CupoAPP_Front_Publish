@@ -65,6 +65,7 @@
     "embla-carousel-react": "^8.5.2",
     "framer-motion": "^11.18.2",
     "html2canvas": "^1.4.1",
+    "jsonwebtoken": "^9.0.2",
     "jsqr": "^1.4.0",
     "ky": "^1.7.4",
     "lucide-react": "^0.471.2",
