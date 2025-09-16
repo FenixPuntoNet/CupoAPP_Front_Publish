@@ -300,8 +300,16 @@
   width: 100% !important;
 }
 
+:global(.light) .dateInput {
+  color: #1a1a1a !important;
+}
+
 .dateInput::placeholder {
   color: rgba(255, 255, 255, 0.5) !important;
+}
+
+:global(.light) .dateInput::placeholder {
+  color: rgba(26, 26, 26, 0.5) !important;
 }
 
 .dateDropdown {
@@ -312,9 +320,18 @@
   margin-top: 0.5rem !important;
 }
 
+:global(.light) .dateDropdown {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 204, 122, 0.3) !important;
+}
+
 .dateDay {
   color: white !important;
   border-radius: 8px !important;
+}
+
+:global(.light) .dateDay {
+  color: #1a1a1a !important;
 }
 
 .dateDay[data-selected] {
@@ -322,16 +339,33 @@
   color: black !important;
 }
 
+:global(.light) .dateDay[data-selected] {
+  background: #10b981 !important;
+  color: white !important;
+}
+
 .dateDay:hover {
   background: rgba(0, 255, 157, 0.1) !important;
+}
+
+:global(.light) .dateDay:hover {
+  background: rgba(0, 204, 122, 0.1) !important;
 }
 
 .dateWeekday {
   color: rgba(255, 255, 255, 0.6) !important;
 }
 
+:global(.light) .dateWeekday {
+  color: rgba(26, 26, 26, 0.6) !important;
+}
+
 .dateMonth {
   color: white !important;
+}
+
+:global(.light) .dateMonth {
+  color: #1a1a1a !important;
 }
 
 /* All previous styles from your CSS file should remain unchanged */
@@ -358,6 +392,11 @@
   z-index: 1000;
 }
 
+:global(.light) .suggestionsContainer {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 204, 122, 0.2);
+}
+
 .suggestionItem {
   display: flex;
   align-items: center;
@@ -371,8 +410,16 @@
   transition: background-color 0.2s;
 }
 
+:global(.light) .suggestionItem {
+  color: #1a1a1a;
+}
+
 .suggestionItem:hover {
   background: rgba(255, 255, 255, 0.05);
+}
+
+:global(.light) .suggestionItem:hover {
+  background: rgba(0, 204, 122, 0.05);
 }
 
 .suggestionIcon {
@@ -381,15 +428,27 @@
   flex-shrink: 0;
 }
 
+:global(.light) .suggestionIcon {
+  color: rgba(26, 26, 26, 0.5);
+}
+
 .suggestionMain {
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.light) .suggestionMain {
+  color: rgba(26, 26, 26, 0.9);
 }
 
 .suggestionSecondary {
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.5);
   margin-top: 2px;
+}
+
+:global(.light) .suggestionSecondary {
+  color: rgba(26, 26, 26, 0.5);
 }
 
 .input input {
@@ -625,10 +684,23 @@
   box-shadow: 0 2px 12px rgba(0,255,157,0.10);
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
+
+:global(.light) .reserveButton {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 12px rgba(16,185,129,0.15);
+}
+
 .reserveButton:hover {
   background: linear-gradient(90deg, #00e6b2 0%, #00ff9d 100%) !important;
   color: #0a0a0a !important;
   box-shadow: 0 4px 16px rgba(0,255,157,0.18);
+}
+
+:global(.light) .reserveButton:hover {
+  background: linear-gradient(90deg, #059669 0%, #10b981 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.25);
 }
 
 /* Sección de fecha y precio - mejorada */
@@ -639,6 +711,10 @@
     margin-bottom: 1rem;
     padding-bottom: 0.8rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+:global(.light) .headerSection {
+    border-bottom: 1px solid rgba(26, 26, 26, 0.08);
 }
 
 .headerSection .dateAndPrice {
@@ -655,6 +731,10 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+:global(.light) .dateText {
+  color: rgba(26, 26, 26, 0.9) !important;
 }
 
 .dateText::before {
@@ -699,6 +779,11 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+:global(.light) .tripRoute {
+    background: rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
 .routePoint {
     display: flex;
     align-items: center;
@@ -715,6 +800,10 @@
     border-radius: 50%;
 }
 
+:global(.light) .iconWrapper {
+    background: rgba(0, 204, 122, 0.1);
+}
+
 .routeDetails {
     flex: 1;
 }
@@ -725,10 +814,18 @@
     margin-bottom: 0.25rem;
 }
 
+:global(.light) .routeLabel {
+    color: rgba(26, 26, 26, 0.6) !important;
+}
+
 .routeAddress {
     font-size: 1rem;
     color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
+}
+
+:global(.light) .routeAddress {
+    color: rgba(26, 26, 26, 0.9) !important;
 }
 
 .routeLineWrapper {
@@ -836,6 +933,11 @@
   animation: fadeInRouteModal 0.3s ease-out;
 }
 
+:global(.light) .routeMapModal {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 12px 48px rgba(0, 204, 122, 0.15);
+}
+
 @media (max-width: 768px) {
   .routeMapModal {
     padding: 0.5rem;
@@ -855,6 +957,11 @@
   border-radius: 12px 12px 0 0 !important;
 }
 
+:global(.light) .routeMapModalHeader {
+  border-bottom: 2px solid rgba(0, 204, 122, 0.3) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
 .routeMapModalTitle {
   font-size: 1.4rem !important;
   font-weight: 700 !important;
@@ -863,6 +970,10 @@
   display: flex !important;
   align-items: center !important;
   gap: 0.5rem !important;
+}
+
+:global(.light) .routeMapModalTitle {
+  color: #10b981 !important;
 }
 
 .closeButton {
@@ -885,12 +996,25 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
+:global(.light) .closeButton {
+  background: rgba(26, 26, 26, 0.95) !important;
+  border: 2px solid rgba(0, 204, 122, 0.4) !important;
+  color: #ffffff !important;
+}
+
 .closeButton:hover {
   background: rgba(0, 255, 157, 0.9) !important;
   border-color: #00ff9d !important;
   color: #0a0a0a !important;
   transform: scale(1.05) !important;
   box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3) !important;
+}
+
+:global(.light) .closeButton:hover {
+  background: rgba(16, 185, 129, 0.9) !important;
+  border-color: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
 }
 
 /* ==== MODAL DE MAPA SIMPLIFICADO ==== */
@@ -1017,11 +1141,25 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+:global(.light) .routeInfoOverlay {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 204, 122, 0.3);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 204, 122, 0.1);
+}
+
 .routeInfoOverlay:hover {
   transform: translateY(-2px);
   box-shadow: 
     0 12px 32px rgba(0, 0, 0, 0.5),
     0 6px 16px rgba(0, 255, 157, 0.15);
+}
+
+:global(.light) .routeInfoOverlay:hover {
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.15),
+    0 6px 16px rgba(0, 204, 122, 0.15);
 }
 
 .routeInfoHeader {
@@ -1033,9 +1171,18 @@
   border-bottom: 1px solid rgba(0, 255, 157, 0.2);
 }
 
+:global(.light) .routeInfoHeader {
+  background: linear-gradient(90deg, rgba(0, 204, 122, 0.1) 0%, rgba(0, 204, 122, 0.05) 100%);
+  border-bottom: 1px solid rgba(0, 204, 122, 0.2);
+}
+
 .routeInfoIcon {
   color: #00ff9d;
   flex-shrink: 0;
+}
+
+:global(.light) .routeInfoIcon {
+  color: #10b981;
 }
 
 .routeInfoTitle {
@@ -1043,6 +1190,10 @@
   font-weight: 600;
   font-size: 0.9rem;
   letter-spacing: 0.5px;
+}
+
+:global(.light) .routeInfoTitle {
+  color: #10b981;
 }
 
 .routeInfoContent {
@@ -1066,12 +1217,20 @@
   letter-spacing: 0.5px;
 }
 
+:global(.light) .routeLabel {
+  color: rgba(26, 26, 26, 0.7) !important;
+}
+
 .routeAddress {
   color: white;
   font-size: 0.85rem;
   font-weight: 400;
   line-height: 1.4;
   word-break: break-word;
+}
+
+:global(.light) .routeAddress {
+  color: #1a1a1a !important;
 }
 
 .routeInfoDivider {
@@ -1292,9 +1451,19 @@
   transition: all 0.2s ease;
 }
 
+:global(.light) .driverSection {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 204, 122, 0.15);
+}
+
 .driverSection:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(0, 255, 157, 0.15);
+}
+
+:global(.light) .driverSection:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 204, 122, 0.25);
 }
 
 .driverPhoto {
@@ -1307,6 +1476,12 @@
   box-shadow: 0 2px 8px rgba(0,255,157,0.15);
   transition: all 0.2s ease;
   flex-shrink: 0;
+}
+
+:global(.light) .driverPhoto {
+  background: rgba(0,0,0,0.10);
+  border: 2px solid #10b981;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.15);
 }
 
 .driverInfo {
@@ -1325,12 +1500,20 @@
   margin-bottom: 0.1rem;
 }
 
+:global(.light) .driverLabel {
+  color: #10b981 !important;
+}
+
 .driverName {
   color: #fff;
   font-size: 0.95rem;
   font-weight: 600;
   margin-bottom: 0.2rem;
   letter-spacing: 0.1px;
+}
+
+:global(.light) .driverName {
+  color: #1a1a1a !important;
 }
 
 @media (max-width: 600px) {
@@ -1364,25 +1547,58 @@
   border-radius: 8px;
   border-left: 3px solid;
 }
+
+:global(.light) .priceStatusMsg {
+  color: #1a1a1a;
+  background: rgba(0,0,0,0.03);
+}
+
 .priceStatusMsg--green { 
   color: #00ff9d; 
   border-left-color: #00ff9d;
   background: rgba(0,255,157,0.05);
 }
+
+:global(.light) .priceStatusMsg--green { 
+  color: #10b981; 
+  border-left-color: #10b981;
+  background: rgba(16,185,129,0.08);
+}
+
 .priceStatusMsg--yellow { 
   color: #ffd700; 
   border-left-color: #ffd700;
   background: rgba(255,215,0,0.05);
 }
+
+:global(.light) .priceStatusMsg--yellow { 
+  color: #d97706; 
+  border-left-color: #d97706;
+  background: rgba(217,119,6,0.08);
+}
+
 .priceStatusMsg--red { 
   color: #ff5e62; 
   border-left-color: #ff5e62;
   background: rgba(255,94,98,0.05);
 }
+
+:global(.light) .priceStatusMsg--red { 
+  color: #dc2626; 
+  border-left-color: #dc2626;
+  background: rgba(220,38,38,0.08);
+}
+
 .priceStatusMsg--blue { 
   color: #4a9eff; 
   border-left-color: #4a9eff;
   background: rgba(74,158,255,0.05);
+}
+
+:global(.light) .priceStatusMsg--blue { 
+  color: #2563eb; 
+  border-left-color: #2563eb;
+  background: rgba(37,99,235,0.08);
 }
 
 /* Información adicional - mejorada */
@@ -1404,12 +1620,22 @@
     box-shadow: 0 2px 6px rgba(0, 255, 157, 0.1);
 }
 
+:global(.light) .infoIcon {
+    color: #10b981;
+    background: rgba(0, 204, 122, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 204, 122, 0.1);
+}
+
 .infoText {
     color: rgba(255, 255, 255, 0.9);
     font-size: 0.8rem;
     font-weight: 500;
     line-height: 1.3;
     text-align: center;
+}
+
+:global(.light) .infoText {
+    color: rgba(26, 26, 26, 0.9) !important;
 }
 
 /* Estilos para mensajes de búsqueda */
@@ -1420,29 +1646,58 @@
   animation: slideInUp 0.6s ease-out;
 }
 
+:global(.light) .searchMessageCard {
+  background: linear-gradient(135deg, rgba(0, 204, 122, 0.1), rgba(0, 204, 122, 0.05)) !important;
+  border: 1px solid rgba(0, 204, 122, 0.2) !important;
+}
+
 .searchMessage {
   color: var(--text-light) !important;
   line-height: 1.5;
+}
+
+:global(.light) .searchMessage {
+  color: #1a1a1a !important;
 }
 
 .searchMessage--exact {
   color: #00ff9d !important;
 }
 
+:global(.light) .searchMessage--exact {
+  color: #10b981 !important;
+}
+
 .searchMessage--close {
   color: #ffd43b !important;
+}
+
+:global(.light) .searchMessage--close {
+  color: #d97706 !important;
 }
 
 .searchMessage--date {
   color: #74c0fc !important;
 }
 
+:global(.light) .searchMessage--date {
+  color: #2563eb !important;
+}
+
 .searchMessage--all {
   color: #ffa8a8 !important;
 }
 
+:global(.light) .searchMessage--all {
+  color: #dc2626 !important;
+}
+
 .searchMessage--none {
   color: #ff6b6b !important;
+}
+
+:global(.light) .searchMessage--none {
+  color: #dc2626 !important;
 }
 
 /* Iconos de estado de búsqueda */

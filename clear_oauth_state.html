@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Limpiar Estado OAuth - Cupo</title>
+</head>
+<body>
+    <h1>🧹 Limpiar Estado OAuth Corrupto</h1>
+    <p>Esta página limpiará completamente cualquier estado OAuth corrupto.</p>
+    
+    <button onclick="clearAll()" style="padding: 20px; font-size: 18px; background: #ff4757; color: white; border: none; border-radius: 8px; cursor: pointer;">
+        🗑️ LIMPIAR TODO
+    </button>
+    
+    <div id="result" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;"></div>
+    
+    <script>
+        function clearAll() {
+            const result = document.getElementById('result');
+            
+            // Lista de todas las keys relacionadas con OAuth que podrían estar causando problemas
+            const keysToRemove = [
+                'apple_oauth_pending',
+                'apple_oauth_state', 
+                'apple_oauth_checking',
+                'oauth_state',
+                'google_oauth_pending',
+                'google_oauth_state',
+                'auth_token',
+                'user_data',
+                'auth_user',
+                'login_redirect',
+                'oauth_callback_processed',
+                'apple_auth_active',
+                'google_auth_active'
+            ];
+            
+            let clearedKeys = [];
+            let foundKeys = [];
+            
+            // Verificar qué keys existen
+            keysToRemove.forEach(key => {
+                if (localStorage.getItem(key) !== null) {
+                    foundKeys.push(key);
+                }
+            });
+            
+            // Limpiar todas las keys
+            keysToRemove.forEach(key => {
+                if (localStorage.getItem(key) !== null) {
+                    localStorage.removeItem(key);
+                    clearedKeys.push(key);
+                }
+            });
+            
+            // Limpiar también sessionStorage
+            keysToRemove.forEach(key => {
+                if (sessionStorage.getItem(key) !== null) {
+                    sessionStorage.removeItem(key);
+                    clearedKeys.push(key + ' (session)');
+                }
+            });
+            
+            // Mostrar resultado
+            result.innerHTML = `
+                <h3>✅ Limpieza Completada</h3>
+                <p><strong>Keys encontradas:</strong> ${foundKeys.length > 0 ? foundKeys.join(', ') : 'Ninguna'}</p>
+                <p><strong>Keys eliminadas:</strong> ${clearedKeys.length > 0 ? clearedKeys.join(', ') : 'Ninguna'}</p>
+                <p><strong>Estado actual de localStorage:</strong> ${localStorage.length} items restantes</p>
+                <hr>
+                <p>🔄 <strong>Ahora recarga la página de tu app para probar OAuth nuevamente.</strong></p>
+                <button onclick="window.close()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+                    Cerrar
+                </button>
+            `;
+        }
+        
+        // Auto-mostrar el estado actual al cargar
+        window.onload = function() {
+            const result = document.getElementById('result');
+            const oauthKeys = [
+                'apple_oauth_pending',
+                'apple_oauth_state', 
+                'apple_oauth_checking',
+                'oauth_state',
+                'auth_token'
+            ];
+            
+            let currentState = [];
+            oauthKeys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    currentState.push(`${key}: ${value.substring(0, 50)}${value.length > 50 ? '...' : ''}`);
+                }
+            });
+            
+            result.innerHTML = `
+                <h3>📊 Estado Actual</h3>
+                <p><strong>Items de OAuth en localStorage:</strong></p>
+                ${currentState.length > 0 ? 
+                    '<ul><li>' + currentState.join('</li><li>') + '</li></ul>' : 
+                    '<p>✅ No hay items de OAuth activos</p>'
+                }
+                <p><strong>Total items en localStorage:</strong> ${localStorage.length}</p>
+            `;
+        };
+    </script>
+</body>
+</html>

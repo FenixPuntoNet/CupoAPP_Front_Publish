@@ -190,6 +190,11 @@
   position: relative;
 }
 
+/* ✅ FIX: Labels para MODO CLARO */
+:global(.light) .inputLabel {
+  color: rgba(31, 41, 55, 0.8) !important; /* Labels visibles en modo claro */
+}
+
 .inputLabel {
   font-size: 15px;
   color: rgba(255, 255, 255, 0.8);
@@ -225,6 +230,22 @@
   line-height: 1.4 !important;
 }
 
+/* ✅ FIX CRÍTICO: Estilos para MODO CLARO */
+:global(.light) .input input {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #1f2937 !important; /* Texto oscuro para modo claro */
+}
+
+:global(.light) .input input::placeholder {
+  color: rgba(31, 41, 55, 0.5) !important; /* Placeholder visible en modo claro */
+}
+
+:global(.light) .input input:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+
 .input input:focus {
   border-color: #00ff9d !important;
   box-shadow: 
@@ -256,6 +277,16 @@
   justify-content: center;
   transition: all 0.3s ease;
   margin-right: 8px;
+}
+
+/* ✅ FIX: Eye button para MODO CLARO */
+:global(.light) .eyeButton {
+  color: rgba(31, 41, 55, 0.6) !important; /* Visible en modo claro */
+}
+
+:global(.light) .eyeButton:hover {
+  color: #10b981 !important; /* Hover verde en modo claro */
+  background: rgba(16, 185, 129, 0.1) !important;
 }
 
 .eyeButton:hover {

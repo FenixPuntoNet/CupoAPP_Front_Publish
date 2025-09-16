@@ -8,11 +8,12 @@
   overflow-x: hidden;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   transition: background 0.3s ease;
+  color: #ffffff;
 }
 
 :global(.light) .container {
   background: linear-gradient(135deg, #f8fffe 0%, #e6f7ff 50%, #f8fffe 100%);
-  color: #1a1a1a;
+  color: #374151;
 }
 
 .container::before {
@@ -122,11 +123,23 @@
   border-radius: 12px;
   padding: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+:global(.light) .stepperWrapper {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #374151;
 }
 
 .stepContent {
   margin-top: 2rem;
   animation: fadeInUp 0.5s ease-out;
+  color: #ffffff;
+}
+
+:global(.light) .stepContent {
+  color: #374151;
 }
 
 @keyframes fadeInUp {
@@ -149,11 +162,14 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  color: #ffffff;
 }
 
 :global(.light) .stepCard {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(16, 185, 129, 0.1);
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  color: #374151 !important;
 }
 
 .stepCard::before {
@@ -229,6 +245,10 @@
   gap: 1rem;
 }
 
+:global(.light) .navigationButtons {
+  border-top: 1px solid rgba(16, 185, 129, 0.15);
+}
+
 .progressContainer {
   position: fixed;
   bottom: 1.5rem;
@@ -240,6 +260,14 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   z-index: 1000;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+}
+
+:global(.light) .progressContainer {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+  color: #374151;
 }
 
 .photoUploadArea {
@@ -254,12 +282,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+:global(.light) .photoUploadArea {
+  border: 2px dashed rgba(16, 185, 129, 0.4) !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  color: #374151 !important;
 }
 
 .photoUploadArea:hover {
   border-color: rgba(0, 255, 157, 0.4);
   background: rgba(0, 255, 157, 0.08);
   transform: translateY(-1px);
+}
+
+:global(.light) .photoUploadArea:hover {
+  border-color: rgba(16, 185, 129, 0.6) !important;
+  background: rgba(16, 185, 129, 0.12) !important;
 }
 
 .photoPreview {
@@ -451,9 +491,19 @@
   width: 100%;
 }
 
+:global(.light) .successModalButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3) !important;
+}
+
 .successModalButton:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 255, 157, 0.4);
+}
+
+:global(.light) .successModalButton:hover {
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4) !important;
 }
 
 .summaryGrid {
@@ -471,9 +521,19 @@
   transition: all 0.3s ease;
 }
 
+:global(.light) .summaryCard {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
 .summaryCard:hover {
   border-color: rgba(0, 255, 157, 0.3);
   transform: translateY(-2px);
+}
+
+:global(.light) .summaryCard:hover {
+  border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
 .summaryCardTitle {
@@ -485,12 +545,20 @@
   gap: 0.5rem;
 }
 
+:global(.light) .summaryCardTitle {
+  color: #10b981 !important;
+}
+
 .summaryItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+:global(.light) .summaryItem {
+  border-bottom: 1px solid rgba(26, 26, 26, 0.1) !important;
 }
 
 .summaryItem:last-child {
@@ -502,10 +570,18 @@
   font-size: 0.9rem;
 }
 
+:global(.light) .summaryLabel {
+  color: rgba(26, 26, 26, 0.7) !important;
+}
+
 .summaryValue {
   color: #fff;
   font-weight: 500;
   text-align: right;
+}
+
+:global(.light) .summaryValue {
+  color: #374151 !important;
 }
 
 .loadingOverlay {
@@ -533,9 +609,19 @@
   overflow: hidden;
 }
 
+:global(.light) .primaryButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25) !important;
+}
+
 .primaryButton:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(0, 255, 157, 0.35);
+}
+
+:global(.light) .primaryButton:hover {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
 }
 
 .primaryButton:disabled {
@@ -543,6 +629,10 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: 0 2px 8px rgba(0, 255, 157, 0.15);
+}
+
+:global(.light) .primaryButton:disabled {
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15) !important;
 }
 
 .secondaryButton {
@@ -564,10 +654,21 @@
   overflow: hidden;
 }
 
+:global(.light) .secondaryButton {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #374151 !important;
+}
+
 .secondaryButton:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
+}
+
+:global(.light) .secondaryButton:hover {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
 /* Responsive Design */
@@ -745,11 +846,22 @@
   padding: 0.75rem;
   text-align: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+:global(.light) .imageCard {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(16, 185, 129, 0.2) !important;
+  color: #374151 !important;
 }
 
 .imageCard:hover {
   border-color: rgba(0, 255, 157, 0.2);
   transform: translateY(-2px);
+}
+
+:global(.light) .imageCard:hover {
+  border-color: rgba(16, 185, 129, 0.4) !important;
 }
 
 .imageCardLabel {
@@ -761,12 +873,23 @@
   letter-spacing: 0.5px;
 }
 
+:global(.light) .imageCardLabel {
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
 .capacityHighlight {
   background: linear-gradient(135deg, rgba(0, 255, 157, 0.1) 0%, rgba(0, 212, 170, 0.1) 100%);
   border: 1px solid rgba(0, 255, 157, 0.2);
   border-radius: 12px;
   padding: 1rem;
   margin-top: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:global(.light) .capacityHighlight {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #374151 !important;
 }
 
 .capacityIcon {
@@ -780,66 +903,250 @@
   margin-right: 0.75rem;
 }
 
+:global(.light) .capacityIcon {
+  background: rgba(16, 185, 129, 0.2) !important;
+}
+
 .sectionDivider {
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
   margin: 1.5rem 0;
 }
 
-/* Estilos para componentes Mantine en modo claro */
-:global(.light) .mantine-Input-input {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-color: rgba(0, 204, 122, 0.3) !important;
-  color: #1a1a1a !important;
+/* Estilos para componentes Mantine SOLO en RegistrarVehiculo en MODO OSCURO */
+.container :global(.mantine-Input-input) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
 }
 
-:global(.light) .mantine-Input-input:focus {
-  border-color: #00cc7a !important;
-  box-shadow: 0 0 0 2px rgba(0, 204, 122, 0.2) !important;
+.container :global(.mantine-Input-input::placeholder) {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
-:global(.light) .mantine-Select-input {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-color: rgba(0, 204, 122, 0.3) !important;
-  color: #1a1a1a !important;
+.container :global(.mantine-Input-input:focus) {
+  border-color: #00ff9d !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2) !important;
 }
 
-:global(.light) .mantine-Select-input:focus {
-  border-color: #00cc7a !important;
+.container :global(.mantine-Select-input) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
 }
 
-:global(.light) .mantine-Select-dropdown {
+.container :global(.mantine-Select-input:focus) {
+  border-color: #00ff9d !important;
+}
+
+.container :global(.mantine-Select-dropdown) {
+  background-color: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.container :global(.mantine-Select-item) {
+  color: #ffffff !important;
+}
+
+.container :global(.mantine-Select-item:hover) {
+  background-color: rgba(0, 255, 157, 0.1) !important;
+}
+
+.container :global(.mantine-Select-item[data-selected]) {
+  background-color: rgba(0, 255, 157, 0.2) !important;
+  color: #00ff9d !important;
+}
+
+.container :global(.mantine-TextInput-label) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.container :global(.mantine-Select-label) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.container :global(.mantine-Textarea-input) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.container :global(.mantine-Textarea-label) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.container :global(.mantine-NumberInput-input) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.container :global(.mantine-NumberInput-label) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.container :global(.mantine-FileInput-input) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.container :global(.mantine-FileInput-label) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.container :global(.mantine-DateInput-input) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.container :global(.mantine-DateInput-input::placeholder) {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.container :global(.mantine-DateInput-label) {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.container :global(.mantine-TextInput-input) {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.container :global(.mantine-TextInput-input::placeholder) {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.container :global(.mantine-Textarea-input::placeholder) {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.container :global(.mantine-NumberInput-input::placeholder) {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.container :global(.mantine-FileInput-input::placeholder) {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.container :global(.mantine-Stepper-stepLabel) {
+  color: #ffffff !important;
+}
+
+.container :global(.mantine-Stepper-stepDescription) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Estilos para componentes Mantine SOLO en RegistrarVehiculo en modo claro */
+:global(.light) .container :global(.mantine-Input-input) {
   background-color: #ffffff !important;
-  border-color: rgba(0, 204, 122, 0.3) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #374151 !important;
 }
 
-:global(.light) .mantine-Select-item {
-  color: #1a1a1a !important;
+:global(.light) .container :global(.mantine-Input-input::placeholder) {
+  color: rgba(55, 65, 81, 0.6) !important;
 }
 
-:global(.light) .mantine-Select-item:hover {
-  background-color: rgba(0, 204, 122, 0.1) !important;
+:global(.light) .container :global(.mantine-Input-input:focus) {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
 }
 
-:global(.light) .mantine-Select-item[data-selected] {
-  background-color: rgba(0, 204, 122, 0.2) !important;
-  color: #00cc7a !important;
+:global(.light) .container :global(.mantine-Select-input) {
+  background-color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #374151 !important;
 }
 
-:global(.light) .mantine-TextInput-label {
-  color: #1a1a1a !important;
+:global(.light) .container :global(.mantine-Select-input:focus) {
+  border-color: #10b981 !important;
 }
 
-:global(.light) .mantine-Select-label {
-  color: #1a1a1a !important;
+:global(.light) .container :global(.mantine-Select-dropdown) {
+  background-color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
 }
 
-:global(.light) .mantine-Textarea-input {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-color: rgba(0, 204, 122, 0.3) !important;
-  color: #1a1a1a !important;
+:global(.light) .container :global(.mantine-Select-item) {
+  color: #374151 !important;
 }
 
-:global(.light) .mantine-Textarea-label {
-  color: #1a1a1a !important;
+:global(.light) .container :global(.mantine-Select-item:hover) {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+:global(.light) .container :global(.mantine-Select-item[data-selected]) {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+  color: #10b981 !important;
+}
+
+:global(.light) .container :global(.mantine-TextInput-label) {
+  color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+:global(.light) .container :global(.mantine-Select-label) {
+  color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+:global(.light) .container :global(.mantine-Textarea-input) {
+  background-color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #374151 !important;
+}
+
+:global(.light) .container :global(.mantine-Textarea-label) {
+  color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+:global(.light) .container :global(.mantine-NumberInput-input) {
+  background-color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #374151 !important;
+}
+
+:global(.light) .container :global(.mantine-NumberInput-label) {
+  color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+:global(.light) .container :global(.mantine-FileInput-input) {
+  background-color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #374151 !important;
+}
+
+:global(.light) .container :global(.mantine-FileInput-label) {
+  color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+:global(.light) .container :global(.mantine-DateInput-input) {
+  background-color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #374151 !important;
+}
+
+:global(.light) .container :global(.mantine-DateInput-label) {
+  color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+:global(.light) .container :global(.mantine-Stepper-stepLabel) {
+  color: #374151 !important;
+}
+
+:global(.light) .container :global(.mantine-Stepper-stepDescription) {
+  color: rgba(55, 65, 81, 0.7) !important;
 }

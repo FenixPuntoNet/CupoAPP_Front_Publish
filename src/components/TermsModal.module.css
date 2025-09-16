@@ -22,6 +22,196 @@
   --border-active: rgba(0, 155, 119, 0.4);
 }
 
+/* ✅ FIX CRÍTICO: Estilos específicos para modo claro */
+:global(.light) .title {
+  color: #00cc7a !important;
+}
+
+:global(.light) .sectionTitle {
+  color: #00cc7a !important;
+}
+
+:global(.light) .content {
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+:global(.light) .bulletPoint {
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+:global(.light) .pageIndicator {
+  color: rgba(26, 26, 26, 0.6) !important;
+}
+
+:global(.light) .disclaimer {
+  color: rgba(26, 26, 26, 0.6) !important;
+}
+
+/* ✅ FIX: Botones visibles en modo claro */
+:global(.light) .closeButton {
+  background: rgba(0, 204, 122, 0.1) !important;
+  border: 1px solid rgba(0, 155, 119, 0.2) !important;
+  color: #00cc7a !important;
+}
+
+:global(.light) .closeButton:hover {
+  background: rgba(0, 204, 122, 0.15) !important;
+  border-color: rgba(0, 155, 119, 0.4) !important;
+}
+
+:global(.light) .pill {
+  background: rgba(26, 26, 26, 0.05) !important;
+  border: 1px solid rgba(26, 26, 26, 0.1) !important;
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+:global(.light) .pill:hover {
+  background: rgba(26, 26, 26, 0.08) !important;
+  border-color: rgba(26, 26, 26, 0.2) !important;
+  color: #1a1a1a !important;
+}
+
+:global(.light) .navButton {
+  background: rgba(26, 26, 26, 0.05) !important;
+  border: 1px solid rgba(26, 26, 26, 0.1) !important;
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+:global(.light) .navButton:hover:not(:disabled) {
+  background: rgba(26, 26, 26, 0.08) !important;
+  border-color: rgba(0, 155, 119, 0.4) !important;
+  color: #1a1a1a !important;
+}
+
+/* ✅ FIX CRÍTICO: Todos los textos dentro del modal en modo claro */
+:global(.light) .modal * {
+  color: #1a1a1a !important;
+}
+
+:global(.light) .modal .mantine-Text-root {
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+:global(.light) .modal .mantine-ScrollArea-viewport {
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+:global(.light) .modal .mantine-ScrollArea-viewport * {
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+/* Asegurar que TODOS los elementos de texto sean visibles */
+:global(.light) .modal p,
+:global(.light) .modal span,
+:global(.light) .modal div {
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+/* Override para contenido específico */
+:global(.light) .contentInner,
+:global(.light) .contentInner *,
+:global(.light) .contentInner p,
+:global(.light) .contentInner div,
+:global(.light) .contentInner span {
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+/* Títulos y headers mantendrán el verde */
+:global(.light) .modal .title,
+:global(.light) .modal .sectionTitle,
+:global(.light) .modal h1,
+:global(.light) .modal h2,
+:global(.light) .modal h3 {
+  color: #00cc7a !important;
+}
+
+/* ✅ FIX: Fondo del container en modo claro */
+:global(.light) .container {
+  background: linear-gradient(135deg, #f8fffe 0%, #ffffff 100%) !important;
+  color: rgba(26, 26, 26, 0.8) !important;
+}
+
+:global(.light) .header {
+  background: linear-gradient(135deg, rgba(0, 204, 122, 0.05) 0%, rgba(0, 204, 122, 0.02) 100%) !important;
+}
+
+:global(.light) .footer {
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.05) 100%) !important;
+}
+
+/* ✅ FIX SÚPER AGRESIVO: FORZAR todo texto visible en modo claro */
+:global(.light) .modal,
+:global(.light) .modal *,
+:global(.light) .modal p,
+:global(.light) .modal div,
+:global(.light) .modal span,
+:global(.light) .modal text,
+:global(.light) .modal .mantine-Text-root,
+:global(.light) .modal [class*="mantine-"] {
+  color: rgba(26, 26, 26, 0.85) !important;
+}
+
+/* ✅ Override para elementos de Mantine que pueden tener estilos inline */
+:global(.light) .modal .mantine-ScrollArea-viewport,
+:global(.light) .modal .mantine-ScrollArea-viewport *,
+:global(.light) .modal .mantine-Modal-content,
+:global(.light) .modal .mantine-Modal-content * {
+  color: rgba(26, 26, 26, 0.85) !important;
+}
+
+/* ✅ Contenido específico del modal */
+:global(.light) .contentInner,
+:global(.light) .contentInner *:not(.title):not(.sectionTitle):not(h1):not(h2):not(h3) {
+  color: rgba(26, 26, 26, 0.85) !important;
+}
+
+/* ✅ Elementos específicos que pueden estar en blanco */
+:global(.light) .modal pre,
+:global(.light) .modal code,
+:global(.light) .modal blockquote,
+:global(.light) .modal li,
+:global(.light) .modal td,
+:global(.light) .modal th {
+  color: rgba(26, 26, 26, 0.85) !important;
+}
+
+/* ✅ Para elementos con texto en blanco directo */
+:global(.light) .modal [style*="color: white"],
+:global(.light) .modal [style*="color: #fff"],
+:global(.light) .modal [style*="color: rgba(255, 255, 255"] {
+  color: rgba(26, 26, 26, 0.85) !important;
+}
+
+/* ✅ ESPECÍFICO PARA MODAL: Sobrescribir todo dentro del modal */
+:global(.light) .modal * {
+  color: rgba(26, 26, 26, 0.85) !important;
+}
+
+/* ✅ Y también para el contenedor directo */
+:global(.light) .container * {
+  color: rgba(26, 26, 26, 0.85) !important;
+}
+
+/* ✅ Mantener títulos verdes */
+:global(.light) .title,
+:global(.light) .sectionTitle,
+:global(.light) h1,
+:global(.light) h2,
+:global(.light) h3,
+:global(.light) .modal .title,
+:global(.light) .modal .sectionTitle,
+:global(.light) .modal h1,
+:global(.light) .modal h2,
+:global(.light) .modal h3 {
+  color: #00cc7a !important;
+}
+
+/* ✅ Botones y elementos verdes */
+:global(.light) .closeButton,
+:global(.light) .pageBadge {
+  color: #00cc7a !important;
+}
+
 .container {
   display: flex;
   flex-direction: column;
