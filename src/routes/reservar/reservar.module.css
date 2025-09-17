@@ -1837,114 +1837,160 @@
 /* 🎯 CALENDARIO EN MODO OSCURO - RESERVAR */
 /* ========================================= */
 
-/* CALENDARIO DROPDOWN EN MODO OSCURO */
-:global(.dark .mantine-DatePickerInput-dropdown),
-:global([data-mantine-color-scheme="dark"] .mantine-DatePickerInput-dropdown) {
+/* CALENDARIO DROPDOWN EN MODO OSCURO CON MAYOR ESPECIFICIDAD */
+:global(html.dark) .mantine-DatePickerInput-dropdown,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-DatePickerInput-dropdown,
+:global(body.dark) .mantine-DatePickerInput-dropdown,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-DatePickerInput-dropdown,
+:global(.dark) .mantine-DatePickerInput-dropdown,
+:global([data-mantine-color-scheme="dark"]) .mantine-DatePickerInput-dropdown {
   background: #141414 !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #ffffff !important;
 }
 
-:global(.dark .mantine-Calendar),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar) {
+:global(html.dark) .mantine-Calendar,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-Calendar,
+:global(body.dark) .mantine-Calendar,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-Calendar,
+:global(.dark) .mantine-Calendar,
+:global([data-mantine-color-scheme="dark"]) .mantine-Calendar {
   background: #141414 !important;
   color: #ffffff !important;
 }
 
-:global(.dark .mantine-Calendar-header),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-header) {
+:global(html.dark) .mantine-Calendar-header,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-Calendar-header,
+:global(body.dark) .mantine-Calendar-header,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-Calendar-header,
+:global(.dark) .mantine-Calendar-header,
+:global([data-mantine-color-scheme="dark"]) .mantine-Calendar-header {
   color: #ffffff !important;
   background: #141414 !important;
 }
 
-:global(.dark .mantine-Calendar-monthPickerControl),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-monthPickerControl),
-:global(.dark .mantine-Calendar-yearPickerControl),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-yearPickerControl) {
+:global(html.dark) .mantine-Calendar-day,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-Calendar-day,
+:global(body.dark) .mantine-Calendar-day,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-Calendar-day,
+:global(.dark) .mantine-Calendar-day,
+:global([data-mantine-color-scheme="dark"]) .mantine-Calendar-day {
   color: #ffffff !important;
   background: transparent !important;
 }
 
-:global(.dark .mantine-Calendar-monthPickerControl:hover),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-monthPickerControl:hover),
-:global(.dark .mantine-Calendar-yearPickerControl:hover),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-yearPickerControl:hover) {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
-}
-
-:global(.dark .mantine-Calendar-day),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day) {
-  color: #ffffff !important;
-  background: transparent !important;
-}
-
-:global(.dark .mantine-Calendar-day:hover),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day:hover) {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
-}
-
-:global(.dark .mantine-Calendar-day[data-today]),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day[data-today]) {
-  background: rgba(0, 255, 157, 0.2) !important;
-  color: #00ff9d !important;
-}
-
-:global(.dark .mantine-Calendar-day[data-selected]),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day[data-selected]) {
-  background: #00ff9d !important;
-  color: #0a0a0a !important;
-}
-
-:global(.dark .mantine-Calendar-weekday),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-weekday) {
+:global(html.dark) .mantine-Calendar-weekday,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-Calendar-weekday,
+:global(body.dark) .mantine-Calendar-weekday,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-Calendar-weekday,
+:global(.dark) .mantine-Calendar-weekday,
+:global([data-mantine-color-scheme="dark"]) .mantine-Calendar-weekday {
   color: rgba(255, 255, 255, 0.7) !important;
-}
-
-:global(.dark .mantine-Calendar-calendarHeaderControl),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-calendarHeaderControl) {
-  color: #ffffff !important;
-  background: transparent !important;
-}
-
-:global(.dark .mantine-Calendar-calendarHeaderControl:hover),
-:global([data-mantine-color-scheme="dark"] .mantine-Calendar-calendarHeaderControl:hover) {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
 }
 
 /* ========================================= */
 /* 🎯 LETRAS BLANCAS SOLO EN MODO OSCURO - RESERVAR */
 /* ========================================= */
 
-/* LABELS DE FORMULARIOS SOLO EN MODO OSCURO */
+/* FORZAR ESTILOS CON MAYOR ESPECIFICIDAD PARA REACTIVIDAD DEL TEMA */
+:global(html.dark) .mantine-InputLabel-root,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-InputLabel-root,
+:global(body.dark) .mantine-InputLabel-root,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-InputLabel-root,
 :global(.dark) .mantine-InputLabel-root,
-:global([data-mantine-color-scheme="dark"]) .mantine-InputLabel-root,
+:global([data-mantine-color-scheme="dark"]) .mantine-InputLabel-root {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .mantine-TextInput-label,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-TextInput-label,
+:global(body.dark) .mantine-TextInput-label,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-TextInput-label,
 :global(.dark) .mantine-TextInput-label,
-:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-label {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .mantine-Select-label,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-Select-label,
+:global(body.dark) .mantine-Select-label,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-Select-label,
 :global(.dark) .mantine-Select-label,
-:global([data-mantine-color-scheme="dark"]) .mantine-Select-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-Select-label {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .mantine-DateInput-label,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-DateInput-label,
+:global(body.dark) .mantine-DateInput-label,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-DateInput-label,
 :global(.dark) .mantine-DateInput-label,
 :global([data-mantine-color-scheme="dark"]) .mantine-DateInput-label {
   color: #ffffff !important;
 }
 
-/* TEXTO EN INPUTS SOLO EN MODO OSCURO */
+/* TEXTO EN INPUTS CON MAYOR ESPECIFICIDAD */
+:global(html.dark) .mantine-TextInput-input,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-TextInput-input,
+:global(body.dark) .mantine-TextInput-input,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-TextInput-input,
 :global(.dark) .mantine-TextInput-input,
-:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-input {
+  color: #ffffff !important;
+  background: #141414 !important;
+}
+
+:global(html.dark) .mantine-Select-input,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-Select-input,
+:global(body.dark) .mantine-Select-input,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-Select-input,
 :global(.dark) .mantine-Select-input,
-:global([data-mantine-color-scheme="dark"]) .mantine-Select-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-Select-input {
+  color: #ffffff !important;
+  background: #141414 !important;
+}
+
+:global(html.dark) .mantine-DateInput-input,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-DateInput-input,
+:global(body.dark) .mantine-DateInput-input,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-DateInput-input,
 :global(.dark) .mantine-DateInput-input,
 :global([data-mantine-color-scheme="dark"]) .mantine-DateInput-input {
   color: #ffffff !important;
   background: #141414 !important;
 }
 
-/* TEXTO EN GENERAL SOLO EN MODO OSCURO */
+/* TEXTO EN GENERAL CON MAYOR ESPECIFICIDAD */
+:global(html.dark) .mantine-Text-root,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-Text-root,
+:global(body.dark) .mantine-Text-root,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-Text-root,
 :global(.dark) .mantine-Text-root,
-:global([data-mantine-color-scheme="dark"]) .mantine-Text-root,
+:global([data-mantine-color-scheme="dark"]) .mantine-Text-root {
+  color: #ffffff !important;
+}
+
+:global(html.dark) .mantine-Title-root,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-Title-root,
+:global(body.dark) .mantine-Title-root,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-Title-root,
 :global(.dark) .mantine-Title-root,
 :global([data-mantine-color-scheme="dark"]) .mantine-Title-root {
   color: #ffffff !important;
+}
+
+/* FORZAR TODOS LOS ELEMENTOS DE TEXTO EN ESTE CONTENEDOR */
+:global(html.dark) .container *,
+:global(html[data-mantine-color-scheme="dark"]) .container *,
+:global(body.dark) .container *,
+:global(body[data-mantine-color-scheme="dark"]) .container * {
+  color: #ffffff !important;
+}
+
+/* ASEGURAR QUE LOS PLACEHOLDERS TAMBIÉN SEAN VISIBLES */
+:global(html.dark) .mantine-TextInput-input::placeholder,
+:global(html[data-mantine-color-scheme="dark"]) .mantine-TextInput-input::placeholder,
+:global(body.dark) .mantine-TextInput-input::placeholder,
+:global(body[data-mantine-color-scheme="dark"]) .mantine-TextInput-input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
 }
