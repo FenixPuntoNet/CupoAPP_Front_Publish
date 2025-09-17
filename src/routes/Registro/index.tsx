@@ -483,28 +483,54 @@ const RegisterView: React.FC = () => {
   // Función para hacer bootstrap via backend (sin Supabase)
   const ensureBootstrap = async () => {
     try {
-      console.log('🔧 Ensuring user bootstrap via backend...');
+      console.log('🔧 [FRONTEND-BOOTSTRAP] Starting user bootstrap via backend...');
+      console.log('🔧 [FRONTEND-BOOTSTRAP] This will ensure wallet, profile, and terms are created');
+      
+      // ✅ VERIFICACIÓN: Comprobar que tenemos token válido antes del bootstrap
+      const currentToken = localStorage.getItem('auth_token');
+      console.log('🔑 [FRONTEND-BOOTSTRAP] Current auth token:', currentToken ? 'EXISTS' : 'MISSING');
+      console.log('🔑 [FRONTEND-BOOTSTRAP] Token length:', currentToken?.length || 0);
+      
       const res = await apiRequest('/auth/bootstrap', {
         method: 'POST',
-        body: JSON.stringify({}) // Enviar objeto vacío en lugar de undefined
+        body: JSON.stringify({
+          debug: true,
+          timestamp: Date.now(),
+          client: 'frontend-registro'
+        })
       });
       
+      console.log('🔧 [FRONTEND-BOOTSTRAP] Raw bootstrap response:', JSON.stringify(res, null, 2));
+      
       if (!res.success) {
+        console.error('❌ [FRONTEND-BOOTSTRAP] Backend bootstrap failed:', res.error);
+        console.error('❌ [FRONTEND-BOOTSTRAP] Full error response:', res);
         throw new Error(res.error || 'Bootstrap falló');
       }
       
-      console.log('✅ Bootstrap completed successfully');
+      console.log('✅ [FRONTEND-BOOTSTRAP] Backend bootstrap completed successfully');
+      console.log('🔧 [FRONTEND-BOOTSTRAP] Bootstrap result:', {
+        wallet_created: res.wallet_created || res.walletCreated,
+        profile_created: res.profile_created || res.profileCreated,
+        terms_saved: res.terms_saved || res.termsSaved
+      });
       
       // Limpiar cualquier cache para forzar fresh data en próximas requests
-      console.log('🔄 Clearing cache after bootstrap...');
+      console.log('🔄 [FRONTEND-BOOTSTRAP] Clearing cache after bootstrap...');
       
       // Force refresh del usuario para obtener datos actualizados
-      console.log('🔄 Forcing user refresh after bootstrap...');
+      console.log('🔄 [FRONTEND-BOOTSTRAP] Forcing user refresh after bootstrap...');
       await refreshUser(true);
+      console.log('✅ [FRONTEND-BOOTSTRAP] User refresh completed');
       
       return res;
-    } catch (error) {
-      console.error('❌ Bootstrap error:', error);
+    } catch (error: any) {
+      console.error('❌ [FRONTEND-BOOTSTRAP] Bootstrap error:', error);
+      console.error('❌ [FRONTEND-BOOTSTRAP] Error details:', {
+        message: error?.message,
+        status: error?.status,
+        response: error?.response
+      });
       throw error;
     }
   };
@@ -584,21 +610,20 @@ const RegisterView: React.FC = () => {
         console.log('✅ User authenticated with Google (backend handled bootstrap)');
         console.log('🔧 Auto-bootstrap executed:', userResponse.auto_bootstrapped || 'not needed');
 
-        // Solo ejecutar bootstrap manual si el backend lo indica
-        if (userResponse.bootstrap_needed) {
-          console.log('🔧 Backend indicates manual bootstrap needed...');
-          try {
-            await ensureBootstrap();
-            console.log('✅ Manual bootstrap completed (includes terms & conditions)');
-            
-            // Refresh después del bootstrap manual
-            await refreshUser(true);
-            console.log('✅ Auth context refreshed after manual bootstrap');
-          } catch (bootstrapError) {
-            console.warn('⚠️ Manual bootstrap failed (non-critical):', bootstrapError);
-          }
-        } else {
-          console.log('✅ Backend already handled all bootstrap requirements');
+        // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para usuarios OAuth para asegurar wallet/profile
+        console.log('🔧 Executing bootstrap for OAuth registration to ensure wallet/profile creation...');
+        try {
+          await ensureBootstrap();
+          console.log('✅ Bootstrap completed successfully (includes wallet, profile, and terms)');
+          
+          // Refresh después del bootstrap
+          await refreshUser(true);
+          console.log('✅ Auth context refreshed after bootstrap');
+        } catch (bootstrapError) {
+          console.error('❌ Bootstrap failed during registration:', bootstrapError);
+          setError('Error configurando cuenta. Por favor, intenta de nuevo.');
+          setLoading(false);
+          return;
         }
       }
 
@@ -638,16 +663,20 @@ const RegisterView: React.FC = () => {
         console.log('✅ User authenticated with Apple (backend handled bootstrap)');
         console.log('🔧 Auto-bootstrap executed:', userResponse.auto_bootstrapped || 'not needed');
 
-        // Bootstrap manual si es necesario
-        if (userResponse.bootstrap_needed) {
-          console.log('🔧 Backend indicates manual bootstrap needed...');
-          try {
-            await ensureBootstrap();
-            console.log('✅ Manual bootstrap completed');
-            await refreshUser(true);
-          } catch (bootstrapError) {
-            console.warn('⚠️ Manual bootstrap failed (non-critical):', bootstrapError);
-          }
+        // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para usuarios OAuth para asegurar wallet/profile
+        console.log('🔧 Executing bootstrap for Apple OAuth registration to ensure wallet/profile creation...');
+        try {
+          await ensureBootstrap();
+          console.log('✅ Apple Bootstrap completed successfully (includes wallet, profile, and terms)');
+          
+          // Refresh después del bootstrap
+          await refreshUser(true);
+          console.log('✅ Auth context refreshed after Apple bootstrap');
+        } catch (bootstrapError) {
+          console.error('❌ Apple Bootstrap failed during registration:', bootstrapError);
+          setError('Error configurando cuenta. Por favor, intenta de nuevo.');
+          setLoading(false);
+          return;
         }
       }
 
@@ -815,27 +844,19 @@ const RegisterView: React.FC = () => {
           // Continuar aunque falle el refresh - el usuario ya está logueado
         }
 
-        // ✅ OPTIMIZADO: El backend /signup ya maneja bootstrap automático
-        // Solo ejecutar bootstrap manual si es absolutamente necesario
+        // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para asegurar wallet/profile/terms
         try {
-          console.log('🔧 Checking if manual bootstrap is needed after registration...');
-          const userCheck = await apiRequest('/auth/me', { method: 'GET' });
+          console.log('🔧 Executing bootstrap for traditional registration to ensure wallet/profile creation...');
+          await ensureBootstrap();
+          console.log('✅ Bootstrap completed successfully after traditional registration');
           
-          // Solo hacer bootstrap manual si el backend indica que es necesario
-          if (userCheck?.bootstrap_needed) {
-            console.log('🔧 Backend indicates manual bootstrap needed after registration...');
-            await ensureBootstrap();
-            console.log('✅ Manual bootstrap completed after registration');
-            
-            // Refresh del contexto después del bootstrap manual
-            await refreshUser(true);
-            console.log('✅ Auth context refreshed after manual bootstrap');
-          } else {
-            console.log('✅ Backend already handled bootstrap during registration');
-          }
+          // Refresh del contexto después del bootstrap
+          await refreshUser(true);
+          console.log('✅ Auth context refreshed after bootstrap');
         } catch (bootstrapError) {
-          console.warn('⚠️ Bootstrap check/execution failed (non-critical):', bootstrapError);
-          // No bloquear el registro si falla el bootstrap - el usuario ya está registrado
+          console.error('❌ Bootstrap failed during traditional registration:', bootstrapError);
+          setError('Error configurando cuenta. Por favor, intenta de nuevo.');
+          return;
         }
       }
   
@@ -850,9 +871,7 @@ const RegisterView: React.FC = () => {
       } catch (termsError) {
         console.error('⚠️ Error saving terms and conditions:', termsError);
         // No bloquear el registro si falla el guardado de términos
-      }
-
-      // Marcar que es un usuario nuevo para activar onboarding
+      }      // Marcar que es un usuario nuevo para activar onboarding
       localStorage.setItem('is_new_user', 'true');
       console.log('🎯 User marked as new for onboarding');
   

@@ -521,7 +521,7 @@
   border-color: var(--primary);
 }
 
-/* Estilos específicos para el DateTimePicker */
+/* Estilos específicos para el DateTimePicker SOLO en modo oscuro por defecto */
 :global(.mantine-DateTimePicker-input) {
   background: var(--card-bg) !important;
   border: 1px solid var(--border-color) !important;
@@ -537,7 +537,119 @@
   box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2) !important;
 }
 
-/* Estilos específicos para modo claro en DateTimePicker */
+/* ✅ MODO OSCURO - Asegurar que los estilos por defecto se mantengan */
+:global(.dark .mantine-DateTimePicker-input),
+:global([data-mantine-color-scheme="dark"] .mantine-DateTimePicker-input),
+:global(.mantine-DateTimePicker-input) {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ✅ CALENDARIO DROPDOWN EN MODO OSCURO */
+:global(.dark .mantine-DatePickerInput-dropdown),
+:global([data-mantine-color-scheme="dark"] .mantine-DatePickerInput-dropdown),
+:global(.mantine-DatePickerInput-dropdown) {
+  background: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-Calendar),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar) {
+  background: #141414 !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-Calendar-header),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-header) {
+  color: #ffffff !important;
+  background: #141414 !important;
+}
+
+:global(.dark .mantine-Calendar-monthPickerControl),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-monthPickerControl),
+:global(.dark .mantine-Calendar-yearPickerControl),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-yearPickerControl) {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+:global(.dark .mantine-Calendar-monthPickerControl:hover),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-monthPickerControl:hover),
+:global(.dark .mantine-Calendar-yearPickerControl:hover),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-yearPickerControl:hover) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-Calendar-day),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day) {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+:global(.dark .mantine-Calendar-day:hover),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day:hover) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-Calendar-day[data-today]),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day[data-today]) {
+  background: rgba(0, 255, 157, 0.2) !important;
+  color: #00ff9d !important;
+}
+
+:global(.dark .mantine-Calendar-day[data-selected]),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day[data-selected]) {
+  background: #00ff9d !important;
+  color: #0a0a0a !important;
+}
+
+:global(.dark .mantine-Calendar-weekday),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-weekday) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:global(.dark .mantine-Calendar-calendarHeaderControl),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-calendarHeaderControl) {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+:global(.dark .mantine-Calendar-calendarHeaderControl:hover),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-calendarHeaderControl:hover) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-TimeInput-dropdown),
+:global([data-mantine-color-scheme="dark"] .mantine-TimeInput-dropdown) {
+  background: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-TimeInput-timeWrapper),
+:global([data-mantine-color-scheme="dark"] .mantine-TimeInput-timeWrapper) {
+  background: #141414 !important;
+}
+
+:global(.dark .mantine-TimeInput-control),
+:global([data-mantine-color-scheme="dark"] .mantine-TimeInput-control) {
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: transparent !important;
+}
+
+:global(.dark .mantine-TimeInput-control:hover),
+:global([data-mantine-color-scheme="dark"] .mantine-TimeInput-control:hover) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+/* ✅ Estilos específicos SOLO para modo claro en DateTimePicker */
 :global(.light .mantine-DateTimePicker-input) {
   background: #ffffff !important;
   border: 1px solid rgba(0, 155, 119, 0.3) !important;
@@ -549,7 +661,7 @@
   box-shadow: 0 0 0 2px rgba(0, 204, 122, 0.2) !important;
 }
 
-/* Estilos para el dropdown del calendario SOLO en modo claro */
+/* ✅ Calendario dropdown - Solo afectar en modo claro */
 :global(.light .mantine-DatePickerInput-dropdown) {
   background: #ffffff !important;
   border: 1px solid rgba(0, 155, 119, 0.3) !important;
@@ -562,14 +674,17 @@
 
 :global(.light .mantine-Calendar-monthPickerControl) {
   color: #1a1a1a !important;
+  background: transparent !important;
 }
 
 :global(.light .mantine-Calendar-yearPickerControl) {
   color: #1a1a1a !important;
+  background: transparent !important;
 }
 
 :global(.light .mantine-Calendar-day) {
   color: #1a1a1a !important;
+  background: transparent !important;
 }
 
 :global(.light .mantine-Calendar-day[data-today]) {
@@ -584,13 +699,14 @@
 
 :global(.light .mantine-Calendar-day:hover) {
   background: rgba(0, 204, 122, 0.1) !important;
+  color: #1a1a1a !important;
 }
 
 :global(.light .mantine-Calendar-weekday) {
   color: rgba(26, 26, 26, 0.7) !important;
 }
 
-/* TimeInput dropdown SOLO en modo claro */
+/* ✅ TimeInput dropdown - Solo afectar en modo claro */
 :global(.light .mantine-TimeInput-dropdown) {
   background: #ffffff !important;
   border: 1px solid rgba(0, 155, 119, 0.3) !important;
@@ -604,10 +720,12 @@
 :global(.light .mantine-TimeInput-control) {
   color: #1a1a1a !important;
   border: 1px solid rgba(0, 155, 119, 0.2) !important;
+  background: transparent !important;
 }
 
 :global(.light .mantine-TimeInput-control:hover) {
   background: rgba(0, 204, 122, 0.1) !important;
+  color: #1a1a1a !important;
 }
 
 .stopoverSection {
@@ -1118,4 +1236,33 @@
     padding: 0.75rem;
     gap: 0.5rem;
   }
+}
+
+/* ========================================= */
+/* 🎯 CORRECCIÓN ESPECÍFICA - SOLO TEXTO DE FORMULARIOS EN MODO OSCURO */
+/* ========================================= */
+
+/* SOLO LABELS DE FORMULARIOS EN MODO OSCURO */
+:global(.dark) .mantine-TextInput-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-label,
+:global(.dark) .mantine-Select-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-Select-label,
+:global(.dark) .mantine-DateTimePicker-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-DateTimePicker-label,
+:global(.dark) .mantine-Textarea-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-Textarea-label {
+  color: #ffffff !important;
+}
+
+/* SOLO TEXTO EN INPUTS EN MODO OSCURO */
+:global(.dark) .mantine-TextInput-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-input,
+:global(.dark) .mantine-Select-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-Select-input,
+:global(.dark) .mantine-DateTimePicker-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-DateTimePicker-input,
+:global(.dark) .mantine-Textarea-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-Textarea-input {
+  color: #ffffff !important;
+  background: #141414 !important;
 }

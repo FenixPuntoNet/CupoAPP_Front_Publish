@@ -1832,3 +1832,119 @@
 :global(.light) .textMuted {
   color: rgba(26, 26, 26, 0.5) !important;
 }
+
+/* ========================================= */
+/* 🎯 CALENDARIO EN MODO OSCURO - RESERVAR */
+/* ========================================= */
+
+/* CALENDARIO DROPDOWN EN MODO OSCURO */
+:global(.dark .mantine-DatePickerInput-dropdown),
+:global([data-mantine-color-scheme="dark"] .mantine-DatePickerInput-dropdown) {
+  background: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-Calendar),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar) {
+  background: #141414 !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-Calendar-header),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-header) {
+  color: #ffffff !important;
+  background: #141414 !important;
+}
+
+:global(.dark .mantine-Calendar-monthPickerControl),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-monthPickerControl),
+:global(.dark .mantine-Calendar-yearPickerControl),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-yearPickerControl) {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+:global(.dark .mantine-Calendar-monthPickerControl:hover),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-monthPickerControl:hover),
+:global(.dark .mantine-Calendar-yearPickerControl:hover),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-yearPickerControl:hover) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-Calendar-day),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day) {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+:global(.dark .mantine-Calendar-day:hover),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day:hover) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+:global(.dark .mantine-Calendar-day[data-today]),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day[data-today]) {
+  background: rgba(0, 255, 157, 0.2) !important;
+  color: #00ff9d !important;
+}
+
+:global(.dark .mantine-Calendar-day[data-selected]),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-day[data-selected]) {
+  background: #00ff9d !important;
+  color: #0a0a0a !important;
+}
+
+:global(.dark .mantine-Calendar-weekday),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-weekday) {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:global(.dark .mantine-Calendar-calendarHeaderControl),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-calendarHeaderControl) {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+:global(.dark .mantine-Calendar-calendarHeaderControl:hover),
+:global([data-mantine-color-scheme="dark"] .mantine-Calendar-calendarHeaderControl:hover) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+/* ========================================= */
+/* 🎯 LETRAS BLANCAS SOLO EN MODO OSCURO - RESERVAR */
+/* ========================================= */
+
+/* LABELS DE FORMULARIOS SOLO EN MODO OSCURO */
+:global(.dark) .mantine-InputLabel-root,
+:global([data-mantine-color-scheme="dark"]) .mantine-InputLabel-root,
+:global(.dark) .mantine-TextInput-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-label,
+:global(.dark) .mantine-Select-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-Select-label,
+:global(.dark) .mantine-DateInput-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-DateInput-label {
+  color: #ffffff !important;
+}
+
+/* TEXTO EN INPUTS SOLO EN MODO OSCURO */
+:global(.dark) .mantine-TextInput-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-input,
+:global(.dark) .mantine-Select-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-Select-input,
+:global(.dark) .mantine-DateInput-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-DateInput-input {
+  color: #ffffff !important;
+  background: #141414 !important;
+}
+
+/* TEXTO EN GENERAL SOLO EN MODO OSCURO */
+:global(.dark) .mantine-Text-root,
+:global([data-mantine-color-scheme="dark"]) .mantine-Text-root,
+:global(.dark) .mantine-Title-root,
+:global([data-mantine-color-scheme="dark"]) .mantine-Title-root {
+  color: #ffffff !important;
+}

@@ -577,25 +577,51 @@ const LoginView: React.FC = () => {
   // Función para hacer bootstrap via backend
   const ensureBootstrap = async () => {
     try {
-      console.log('🔧 Ensuring user bootstrap via backend...');
+      console.log('🔧 [FRONTEND-BOOTSTRAP] Starting user bootstrap via backend...');
+      console.log('🔧 [FRONTEND-BOOTSTRAP] This will ensure wallet, profile, and terms are created');
+      
+      // ✅ VERIFICACIÓN: Comprobar que tenemos token válido antes del bootstrap
+      const currentToken = localStorage.getItem('auth_token');
+      console.log('🔑 [FRONTEND-BOOTSTRAP] Current auth token:', currentToken ? 'EXISTS' : 'MISSING');
+      console.log('🔑 [FRONTEND-BOOTSTRAP] Token length:', currentToken?.length || 0);
+      
       const res = await apiRequest('/auth/bootstrap', {
         method: 'POST',
-        body: JSON.stringify({}) // Enviar objeto vacío en lugar de undefined
+        body: JSON.stringify({
+          debug: true,
+          timestamp: Date.now(),
+          client: 'frontend-login'
+        })
       });
       
+      console.log('🔧 [FRONTEND-BOOTSTRAP] Raw bootstrap response:', JSON.stringify(res, null, 2));
+      
       if (!res.success) {
+        console.error('❌ [FRONTEND-BOOTSTRAP] Backend bootstrap failed:', res.error);
+        console.error('❌ [FRONTEND-BOOTSTRAP] Full error response:', res);
         throw new Error(res.error || 'Bootstrap falló');
       }
       
-      console.log('✅ Bootstrap completed successfully');
+      console.log('✅ [FRONTEND-BOOTSTRAP] Backend bootstrap completed successfully');
+      console.log('🔧 [FRONTEND-BOOTSTRAP] Bootstrap result:', {
+        wallet_created: res.wallet_created || res.walletCreated,
+        profile_created: res.profile_created || res.profileCreated,
+        terms_saved: res.terms_saved || res.termsSaved
+      });
       
-      // ✅ CRÍTICO: Force refresh del usuario para obtener datos actualizados (igual que Registro)
-      console.log('🔄 Forcing user refresh after bootstrap...');
+      // ✅ CRÍTICO: Force refresh del usuario para obtener datos actualizados
+      console.log('🔄 [FRONTEND-BOOTSTRAP] Forcing user refresh after bootstrap...');
       await refreshUser(true);
+      console.log('✅ [FRONTEND-BOOTSTRAP] User refresh completed');
       
       return res;
-    } catch (error) {
-      console.error('❌ Bootstrap error:', error);
+    } catch (error: any) {
+      console.error('❌ [FRONTEND-BOOTSTRAP] Bootstrap error:', error);
+      console.error('❌ [FRONTEND-BOOTSTRAP] Error details:', {
+        message: error?.message,
+        status: error?.status,
+        response: error?.response
+      });
       throw error;
     }
   };
@@ -676,26 +702,29 @@ const LoginView: React.FC = () => {
         console.log('✅ Usuario autenticado con Google:', userResponse);
         console.log('🔧 Backend auto-bootstrap status:', userResponse.auto_bootstrapped ? 'executed' : 'not needed');
         
+        // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para usuarios OAuth para asegurar wallet/profile
+        console.log('🔧 Executing bootstrap for OAuth user to ensure wallet/profile creation...');
+        try {
+          await ensureBootstrap();
+          console.log('✅ Bootstrap completed successfully');
+          
+          // Refresh después del bootstrap
+          await refreshUser(true);
+          console.log('✅ Auth context refreshed after bootstrap');
+        } catch (bootstrapError) {
+          console.error('❌ Bootstrap failed:', bootstrapError);
+          handleBackendError('Error configurando cuenta. Por favor, intenta de nuevo.', {
+            id: 'bootstrap-error',
+            autoClose: 5000
+          });
+          return;
+        }
+        
         // Verificar si es un usuario nuevo (necesita onboarding)
         const isNewUser = userResponse.bootstrap_needed || !userResponse.profile || userResponse.auto_bootstrapped;
         
         if (isNewUser) {
           console.log('🆕 Usuario nuevo detectado, dirigiendo a onboarding...');
-
-          // ✅ OPCIONAL: Solo si el backend indica que necesita bootstrap manual
-          if (userResponse.bootstrap_needed) {
-            console.log('🔧 Backend indicates manual bootstrap needed...');
-            try {
-              await ensureBootstrap();
-              console.log('✅ Manual bootstrap completed');
-              
-              // Refresh después del bootstrap manual
-              await refreshUser(true);
-              console.log('✅ Auth context refreshed after manual bootstrap');
-            } catch (bootstrapError) {
-              console.warn('⚠️ Manual bootstrap failed (non-critical):', bootstrapError);
-            }
-          }
 
           // Marcar como usuario nuevo para onboarding
           localStorage.setItem('is_new_user', 'true');
@@ -765,23 +794,29 @@ const LoginView: React.FC = () => {
         console.log('✅ Usuario autenticado con Apple:', userResponse);
         console.log('🔧 Backend auto-bootstrap status:', userResponse.auto_bootstrapped ? 'executed' : 'not needed');
         
+        // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para usuarios OAuth para asegurar wallet/profile
+        console.log('🔧 Executing bootstrap for Apple OAuth user to ensure wallet/profile creation...');
+        try {
+          await ensureBootstrap();
+          console.log('✅ Bootstrap completed successfully for Apple user');
+          
+          // Refresh después del bootstrap
+          await refreshUser(true);
+          console.log('✅ Auth context refreshed after Apple bootstrap');
+        } catch (bootstrapError) {
+          console.error('❌ Apple Bootstrap failed:', bootstrapError);
+          handleBackendError('Error configurando cuenta. Por favor, intenta de nuevo.', {
+            id: 'apple-bootstrap-error',
+            autoClose: 5000
+          });
+          return;
+        }
+        
         // Verificar si es un usuario nuevo (necesita onboarding)
         const isNewUser = userResponse.bootstrap_needed || !userResponse.profile || userResponse.auto_bootstrapped;
         
         if (isNewUser) {
           console.log('🆕 Usuario nuevo con Apple detectado, dirigiendo a onboarding...');
-
-          // Bootstrap manual si es necesario
-          if (userResponse.bootstrap_needed) {
-            console.log('🔧 Backend indicates manual bootstrap needed...');
-            try {
-              await ensureBootstrap();
-              console.log('✅ Manual bootstrap completed');
-              await refreshUser(true);
-            } catch (bootstrapError) {
-              console.warn('⚠️ Manual bootstrap failed (non-critical):', bootstrapError);
-            }
-          }
 
           // Marcar como usuario nuevo para onboarding
           localStorage.setItem('is_new_user', 'true');
@@ -961,14 +996,28 @@ const LoginView: React.FC = () => {
         return;
       }
 
-      // ✅ OPTIMIZADO: El backend ya ejecuta bootstrap automáticamente en /login
+      // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para asegurar wallet/profile
       if (result.token) {
-        console.log('🔑 Login successful with auth token (backend already handled bootstrap)');
+        console.log('🔑 Login successful with auth token');
         
-        // ✅ SIMPLIFICADO: Solo refresh del contexto (el backend ya hizo el bootstrap)
+        // Ejecutar bootstrap para asegurar wallet/profile/terms
+        try {
+          console.log('🔧 Executing bootstrap for traditional login to ensure wallet/profile...');
+          await ensureBootstrap();
+          console.log('✅ Bootstrap completed successfully after traditional login');
+        } catch (bootstrapError) {
+          console.error('❌ Bootstrap failed during traditional login:', bootstrapError);
+          handleBackendError('Error configurando cuenta. Por favor, intenta de nuevo.', {
+            id: 'login-bootstrap-error',
+            autoClose: 5000
+          });
+          return;
+        }
+        
+        // Refresh del contexto después del bootstrap
         try {
           await refreshUser(true);
-          console.log('✅ Auth context refreshed after login');
+          console.log('✅ Auth context refreshed after login and bootstrap');
         } catch (refreshError) {
           console.error('⚠️ Error refreshing auth context:', refreshError);
           // No es crítico - el usuario ya está autenticado

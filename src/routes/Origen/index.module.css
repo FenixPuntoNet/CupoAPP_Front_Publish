@@ -677,3 +677,30 @@
   border-radius: 5px;
   text-align: center;
 }
+
+/* ========================================= */
+/* 🎯 LETRAS BLANCAS SOLO EN MODO OSCURO - ORIGEN */
+/* ========================================= */
+
+/* LABELS DE FORMULARIOS SOLO EN MODO OSCURO */
+:global(.dark) .mantine-InputLabel-root,
+:global([data-mantine-color-scheme="dark"]) .mantine-InputLabel-root,
+:global(.dark) .mantine-TextInput-label,
+:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-label {
+  color: #ffffff !important;
+}
+
+/* TEXTO EN INPUTS SOLO EN MODO OSCURO */
+:global(.dark) .mantine-TextInput-input,
+:global([data-mantine-color-scheme="dark"]) .mantine-TextInput-input {
+  color: #ffffff !important;
+  background: #141414 !important;
+}
+
+/* TEXTO EN GENERAL SOLO EN MODO OSCURO */
+:global(.dark) .mantine-Text-root,
+:global([data-mantine-color-scheme="dark"]) .mantine-Text-root,
+:global(.dark) .mantine-Title-root,
+:global([data-mantine-color-scheme="dark"]) .mantine-Title-root {
+  color: #ffffff !important;
+}
