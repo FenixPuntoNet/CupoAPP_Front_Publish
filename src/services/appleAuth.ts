@@ -24,18 +24,30 @@ export interface AppleAuthResponse {
 
 /**
  * Detectar si estamos en una aplicación móvil
+ * ✅ MEJORADO: Detección específica para iPad y iOS
  */
 const isMobileApp = (): boolean => {
-  // Detectar Capacitor
+  // Detectar Capacitor (principal indicador)
   const isCapacitor = !!(window as any)?.Capacitor;
   if (isCapacitor) return true;
   
   // Detectar protocolo capacitor
   if (window?.location?.protocol === 'capacitor:') return true;
   
-  // Detectar user agent móvil con Capacitor
+  // ✅ CRÍTICO: Asegurar detección correcta de iPad en Capacitor
   const userAgent = window?.navigator?.userAgent;
-  return userAgent?.includes('Capacitor') || false;
+  const isCapacitorApp = userAgent?.includes('Capacitor') || false;
+  
+  // Log para debugging en producción
+  if (isCapacitorApp) {
+    console.log('📱 Mobile app detected:', {
+      userAgent,
+      isCapacitor,
+      platform: (window as any)?.Capacitor?.getPlatform?.() || 'unknown'
+    });
+  }
+  
+  return isCapacitorApp;
 };
 
 /**
@@ -88,9 +100,34 @@ export const signInWithApple = async (isRegistration = false): Promise<AppleAuth
     });
 
     if (isMobile) {
-      // ✅ PARA MÓVIL: Usar el sistema DeepLinkHandler existente
-      appleDebugger.log('mobile_flow_start', { isRegistration });
-      console.log('📱 Apple Sign-In móvil via DeepLinkHandler');
+      // ✅ PARA MÓVIL: Usar el sistema DeepLinkHandler existente con mejoras
+      appleDebugger.log('mobile_flow_start', { isRegistration, platform: 'iOS' });
+      console.log('📱 Apple Sign-In móvil via DeepLinkHandler (iPad/iPhone)');
+      
+      // ✅ TIMEOUT PARA EVITAR LOADING INFINITO
+      const OAUTH_TIMEOUT = 60000; // 60 segundos
+      let isCompleted = false;
+      
+      // ✅ TIMEOUT HANDLER
+      const timeoutId = setTimeout(() => {
+        if (!isCompleted) {
+          isCompleted = true;
+          appleDebugger.log('mobile_oauth_timeout', {
+            timeoutMs: OAUTH_TIMEOUT,
+            timestamp: Date.now()
+          });
+          console.error('❌ Apple OAuth timeout - cleaning up');
+          
+          // Limpiar estado y mostrar error
+          localStorage.removeItem('apple_oauth_pending');
+          localStorage.removeItem('apple_oauth_state');
+          
+          return {
+            success: false,
+            error: 'Apple Sign-In tomó demasiado tiempo. Por favor intenta nuevamente.'
+          };
+        }
+      }, OAUTH_TIMEOUT);
       
       // Importar el sistema de deep links existente
       const { DeepLinkHandler } = await import('@/utils/deepLinkHandler');
@@ -98,38 +135,55 @@ export const signInWithApple = async (isRegistration = false): Promise<AppleAuth
       // Crear handler con callbacks mejorados
       const deepLinkHandler = new DeepLinkHandler({
         onSuccess: (userData) => {
-          appleDebugger.log('mobile_oauth_success', {
-            hasUserData: !!userData,
-            userId: userData?.id,
-            hasToken: !!userData?.token
-          });
-          console.log('✅ Apple OAuth mobile success:', userData);
-          
-          // Guardar el token de éxito en localStorage para que lo detecte el listener
-          if (userData?.token || userData?.access_token) {
-            const tokenData = {
-              token: userData.token || userData.access_token,
-              user: userData,
-              isNewUser: userData.isNewUser || false,
-              timestamp: Date.now()
-            };
-            localStorage.setItem('apple_oauth_pending', JSON.stringify(tokenData));
-            appleDebugger.log('mobile_oauth_token_saved', {
-              hasToken: !!tokenData.token,
-              tokenLength: tokenData.token?.length || 0
+          if (!isCompleted) {
+            isCompleted = true;
+            clearTimeout(timeoutId);
+            
+            appleDebugger.log('mobile_oauth_success', {
+              hasUserData: !!userData,
+              userId: userData?.id,
+              hasToken: !!userData?.token,
+              platform: 'iOS'
             });
+            console.log('✅ Apple OAuth mobile success (iPad/iPhone):', userData);
+            
+            // Guardar el token de éxito en localStorage para que lo detecte el listener
+            if (userData?.token || userData?.access_token) {
+              const tokenData = {
+                token: userData.token || userData.access_token,
+                user: userData,
+                isNewUser: userData.isNewUser || false,
+                timestamp: Date.now()
+              };
+              localStorage.setItem('apple_oauth_pending', JSON.stringify(tokenData));
+              appleDebugger.log('mobile_oauth_token_saved', {
+                hasToken: !!tokenData.token,
+                tokenLength: tokenData.token?.length || 0,
+                platform: 'iOS'
+              });
+            }
           }
         },
         onError: (error) => {
-          appleDebugger.log('mobile_oauth_error', {
-            error: error?.toString(),
-            timestamp: Date.now()
-          });
-          console.error('❌ Apple OAuth mobile error:', error);
+          if (!isCompleted) {
+            isCompleted = true;
+            clearTimeout(timeoutId);
+            
+            appleDebugger.log('mobile_oauth_error', {
+              error: error?.toString(),
+              timestamp: Date.now(),
+              platform: 'iOS'
+            });
+            console.error('❌ Apple OAuth mobile error (iPad/iPhone):', error);
+            
+            // Limpiar estado corrupto
+            localStorage.removeItem('apple_oauth_pending');
+            localStorage.removeItem('apple_oauth_state');
+          }
         },
         onLoading: (loading) => {
-          appleDebugger.log('mobile_oauth_loading', { loading });
-          console.log('🔄 Apple OAuth loading state:', loading);
+          appleDebugger.log('mobile_oauth_loading', { loading, platform: 'iOS' });
+          console.log('🔄 Apple OAuth loading state (iPad/iPhone):', loading);
         }
       });
       
@@ -137,11 +191,12 @@ export const signInWithApple = async (isRegistration = false): Promise<AppleAuth
       localStorage.setItem('apple_oauth_state', JSON.stringify({
         page: isRegistration ? 'register' : 'login',
         timestamp: Date.now(),
-        platform: 'mobile'
+        platform: 'mobile-ios'
       }));
       
       appleDebugger.log('mobile_oauth_state_saved', {
-        page: isRegistration ? 'register' : 'login'
+        page: isRegistration ? 'register' : 'login',
+        platform: 'iOS'
       });
 
       // Obtener URL del backend
@@ -149,39 +204,69 @@ export const signInWithApple = async (isRegistration = false): Promise<AppleAuth
       
       appleDebugger.log('mobile_oauth_url_generated', { 
         authUrl,
-        urlLength: authUrl.length 
+        urlLength: authUrl.length,
+        platform: 'iOS'
       });
 
-      // Inicializar y iniciar el flujo
-      await deepLinkHandler.init();
-      await deepLinkHandler.startOAuthFlow(authUrl);
+      try {
+        // Inicializar y iniciar el flujo
+        await deepLinkHandler.init();
+        await deepLinkHandler.startOAuthFlow(authUrl);
+        
+        // Para móvil, retornamos inmediatamente - el resultado llega por callback
+        return { 
+          success: true, 
+          message: 'Apple OAuth flow initiated for iPad/iPhone - result will come via deep link' 
+        };
+      } catch (initError: any) {
+        isCompleted = true;
+        clearTimeout(timeoutId);
+        
+        appleDebugger.log('mobile_oauth_init_error', {
+          error: initError?.toString(),
+          message: initError?.message,
+          platform: 'iOS'
+        });
+        
+        console.error('❌ Error initializing Apple OAuth for iPad/iPhone:', initError);
+        
+        return {
+          success: false,
+          error: `Error iniciando Apple Sign-In: ${initError?.message || 'Error desconocido'}`
+        };
+      }
       
-      // Para móvil, retornamos inmediatamente - el resultado llega por callback
-      return { 
-        success: true, 
-        message: 'OAuth flow initiated - result will come via deep link' 
-      };
       
     } else {
-      // ✅ PARA WEB: Redirigir al backend directamente
+      // ✅ PARA WEB: Usar el mismo patrón que Google OAuth
       appleDebugger.log('web_flow_start', { isRegistration });
-      console.log('💻 Using web Apple OAuth flow');
+      console.log('💻 Using web Apple OAuth flow (same pattern as Google)');
       
-      // Obtener URL del backend para web
+      // Guardar estado para poder retomar después del OAuth (igual que Google)
+      localStorage.setItem('apple_oauth_state', JSON.stringify({
+        page: isRegistration ? 'register' : 'login',
+        timestamp: Date.now(),
+        platform: 'web'
+      }));
+      
+      // Obtener URL del backend para web con redirect correcto
       const baseUrl = 'https://cupo-backend.fly.dev/auth/login/apple';
       const redirectUri = `${window.location.origin}${isRegistration ? '/Registro' : '/Login'}`;
       
-      const webAuthUrl = `${baseUrl}?platform=web&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const webAuthUrl = `${baseUrl}?redirect=${encodeURIComponent(redirectUri)}&platform=web`;
       
       appleDebugger.log('web_oauth_redirect', {
         webAuthUrl,
-        redirectUri
+        redirectUri,
+        method: 'same_window_redirect'
       });
 
-      // Abrir en la misma ventana para web
+      console.log('🔗 Apple OAuth URL (same window):', webAuthUrl);
+      
+      // ✅ CRÍTICO: Usar window.location.href igual que Google para mantener misma pestaña
       window.location.href = webAuthUrl;
       
-      return { success: true, message: 'Redirecting to Apple OAuth...' };
+      return { success: true, message: 'Redirecting to Apple OAuth in same window...' };
     }
 
   } catch (error: any) {

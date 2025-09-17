@@ -262,6 +262,40 @@ const RegisterView: React.FC = () => {
         setLoading(false);
       };
       
+      // ✅ NUEVO: Listeners de fallback para Apple OAuth en Registro
+      const handleAppleOAuthSuccess = async (event: Event) => {
+        const customEvent = event as CustomEvent;
+        console.log('🎯 [FALLBACK] Apple OAuth registration success event received:', customEvent.detail);
+        
+        try {
+          setLoading(true);
+          const userResponse = customEvent.detail?.userResponse;
+          
+          if (userResponse?.id) {
+            // Refrescar usuario
+            await refreshUser(true);
+            
+            // Procesamiento específico de registro exitoso
+            await handleSuccessfulAppleAuth();
+          }
+        } catch (error) {
+          console.error('❌ Error processing Apple OAuth registration success fallback:', error);
+          cleanupOAuthState();
+        }
+      };
+      
+      const handleAppleOAuthError = (event: Event) => {
+        const customEvent = event as CustomEvent;
+        console.log('🎯 [FALLBACK] Apple OAuth registration error event received:', customEvent.detail);
+        
+        cleanupOAuthState();
+        setError(customEvent.detail?.error || 'Error en Apple Sign-In para registro');
+      };
+      
+      // Agregar listeners de fallback
+      window.addEventListener('appleOAuthSuccess', handleAppleOAuthSuccess);
+      window.addEventListener('appleOAuthError', handleAppleOAuthError);
+      
       // Timeout para evitar loading infinito (2 minutos máximo)
       loadingTimeout = setTimeout(() => {
         console.log('⏰ OAuth timeout reached - stopping loading state');
@@ -311,8 +345,8 @@ const RegisterView: React.FC = () => {
                   search: { from: 'onboarding' } 
                 });
               } else {
-                console.log('👤 Existing user detected, navigating to wallet');
-                navigate({ to: '/Wallet' });
+                console.log('👤 Existing user detected, navigating to home');
+                navigate({ to: '/home' });
               }
               
               return;
@@ -434,6 +468,11 @@ const RegisterView: React.FC = () => {
           
           return () => {
             cleanupOAuthState();
+            
+            // ✅ LIMPIAR LISTENERS DE FALLBACK
+            window.removeEventListener('appleOAuthSuccess', handleAppleOAuthSuccess);
+            window.removeEventListener('appleOAuthError', handleAppleOAuthError);
+            
             listener.remove();
           };
         }
@@ -635,38 +674,79 @@ const RegisterView: React.FC = () => {
       setLoading(true);
       console.log('🍎 Starting Apple OAuth registration via backend...');
       
-      // Detectar si es móvil para usar callbacks específicos
+      // ✅ MEJORADO: Detección más precisa de plataforma para iPad
       const isMobile = window?.navigator?.userAgent?.includes('Capacitor') || 
                        window?.location?.protocol === 'capacitor:' ||
                        !!(window as any)?.Capacitor;
       
+      const isIPad = /iPad/.test(navigator.userAgent);
+      const platform = isMobile ? (isIPad ? 'iPad' : 'Mobile') : 'Web';
+      
+      console.log('📱 Platform detected for Apple OAuth registration:', platform);
+      
       if (isMobile) {
-        // Para móvil: el DeepLinkHandler maneja el flujo completo
+        // ✅ MEJORADO: Manejo específico para móvil/iPad con timeout
         console.log('📱 Using mobile Apple OAuth flow with DeepLinkHandler');
         
-        const result = await signInWithApple(true); // true = registro
+        // Agregar timeout de seguridad a nivel de componente
+        const REGISTRATION_TIMEOUT = 180000; // 3 minutos para iPad
+        let hasTimedOut = false;
         
-        if (!result.success && result.error) {
-          setError(result.error);
+        const timeoutId = setTimeout(() => {
+          hasTimedOut = true;
           setLoading(false);
+          setError('Apple Sign-In tomó demasiado tiempo en iPad. Por favor intenta nuevamente.');
+          console.error('⏰ Apple OAuth registration timeout on iPad');
+        }, REGISTRATION_TIMEOUT);
+        
+        try {
+          const result = await signInWithApple(true); // true = registro
+          
+          if (!hasTimedOut) {
+            clearTimeout(timeoutId);
+            
+            if (!result.success && result.error) {
+              setError(`Error en Apple Sign-In (${platform}): ${result.error}`);
+              setLoading(false);
+            }
+            // Para móvil, el éxito se maneja a través del DeepLinkHandler
+          }
+        } catch (mobileError: any) {
+          if (!hasTimedOut) {
+            clearTimeout(timeoutId);
+            throw mobileError;
+          }
         }
         
-        // Para móvil, el éxito se maneja a través del DeepLinkHandler
-        // que llamará automáticamente cuando regrese del OAuth
       } else {
-        // Para web: flujo normal
+        // ✅ MEJORADO: Flujo web con mejor error handling
+        console.log('💻 Using web Apple OAuth flow');
         const result = await signInWithApple(true); // true = registro
         
         if (!result.success && result.error) {
-          setError(result.error);
+          setError(`Error en Apple Sign-In (Web): ${result.error}`);
           setLoading(false);
         }
         // Si success=true, el usuario fue redirigido a Apple
       }
       
     } catch (error: any) {
-      console.error('❌ Error iniciando Apple OAuth:', error);
-      setError(error?.message || 'No se pudo iniciar registro con Apple');
+      console.error('❌ Error iniciando Apple OAuth registration:', error);
+      
+      // ✅ MEJORADO: Error messages específicos para diferentes problemas
+      let errorMessage = 'No se pudo iniciar registro con Apple';
+      
+      if (error?.message?.includes('Capacitor')) {
+        errorMessage = 'Error de plataforma móvil. Por favor actualiza la app e intenta nuevamente.';
+      } else if (error?.message?.includes('timeout')) {
+        errorMessage = 'Apple Sign-In tomó demasiado tiempo. Verifica tu conexión e intenta nuevamente.';
+      } else if (error?.message?.includes('network')) {
+        errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+      } else if (error?.message) {
+        errorMessage = `Error en Apple Sign-In: ${error.message}`;
+      }
+      
+      setError(errorMessage);
       setLoading(false);
     }
   };

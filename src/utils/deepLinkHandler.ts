@@ -18,6 +18,7 @@ export class DeepLinkHandler {
   private options: DeepLinkHandlerOptions;
   private startTime: number = 0; // ✅ Agregar para tracking de tiempo
   private platform: string; // ✅ Agregar platform property
+  private isCompleted: boolean = false; // ✅ NUEVO: Control de completion
 
   constructor(options: DeepLinkHandlerOptions = {}) {
     this.options = options;
@@ -49,18 +50,39 @@ export class DeepLinkHandler {
   async startOAuthFlow(authUrl: string) {
     if (!this.App || !this.Browser) {
       logOAuthEvent('error', { error: 'Capacitor plugins not loaded' });
+      this.options.onError?.('Capacitor plugins not loaded');
       throw new Error('Capacitor plugins not loaded');
     }
 
     // ✅ Inicializar timestamp de inicio
     this.startTime = Date.now();
 
-    logOAuthEvent('start_flow', { authUrl });
+    logOAuthEvent('start_flow', { authUrl, platform: this.platform });
     console.log('🚀 Starting OAuth flow with URL:', authUrl);
+    console.log('📱 Platform detected:', this.platform);
     this.options.onLoading?.(true);
 
     // Limpiar listeners anteriores
     await this.cleanup();
+
+    // ✅ TIMEOUT DE SEGURIDAD PARA EVITAR LOADING INFINITO
+    const FLOW_TIMEOUT = 120000; // 2 minutos para iPad
+    
+    const timeoutId = setTimeout(async () => {
+      if (!this.isCompleted) {
+        console.error('⏰ OAuth flow timeout reached, cleaning up...');
+        logOAuthEvent('oauth_timeout', { 
+          timeoutMs: FLOW_TIMEOUT,
+          platform: this.platform,
+          elapsedTime: Date.now() - this.startTime 
+        });
+        
+        this.isCompleted = true;
+        await this.cleanup();
+        this.options.onLoading?.(false);
+        this.options.onError?.('Apple Sign-In tomó demasiado tiempo. Por favor intenta nuevamente.');
+      }
+    }, FLOW_TIMEOUT);
 
     try {
       // ✅ MEJORADO: Configurar listener ANTES de abrir el browser
@@ -186,14 +208,22 @@ export class DeepLinkHandler {
       // ✅ MEJORADO: Timeout más corto para OAuth móvil (2 minutos)
       const timeoutMs = 120000; // 2 minutos en lugar de 5
       setTimeout(async () => {
-        logOAuthEvent('timeout', { timeoutSeconds: timeoutMs / 1000 });
-        console.log('⏰ OAuth timeout reached');
-        await this.cleanup();
-        this.options.onError?.('Tiempo agotado - por favor intenta nuevamente');
-        this.options.onLoading?.(false);
+        if (!this.isCompleted) {
+          this.isCompleted = true;
+          clearTimeout(timeoutId);
+          logOAuthEvent('timeout', { timeoutSeconds: timeoutMs / 1000 });
+          console.log('⏰ OAuth timeout reached');
+          await this.cleanup();
+          this.options.onError?.('Tiempo agotado - por favor intenta nuevamente');
+          this.options.onLoading?.(false);
+        }
       }, timeoutMs);
 
     } catch (error) {
+      if (!this.isCompleted) {
+        this.isCompleted = true;
+        clearTimeout(timeoutId);
+      }
       logOAuthEvent('error', { error: error?.toString(), step: 'browser_open' });
       console.error('❌ Error opening browser:', error);
       await this.cleanup();
@@ -362,13 +392,51 @@ export class DeepLinkHandler {
         retryCount: retryCount || 0
       });
       console.log('✅ [DEEP LINK] Usuario verificado exitosamente:', userResponse.id);
+      
+      // ✅ MARCAR COMO COMPLETADO
+      this.isCompleted = true;
+      
+      // ✅ MEJORADO: Asegurar que el callback llegue al componente
+      console.log('🎯 [DEEP LINK] Calling onSuccess callback...');
       this.options.onSuccess?.(userResponse);
+      
+      // ✅ NUEVO: Fallback para asegurar que el componente React se entere
+      // En caso de que el callback no llegue, usar eventos del DOM
+      setTimeout(() => {
+        try {
+          console.log('🔄 [DEEP LINK] Dispatching success event as fallback...');
+          window.dispatchEvent(new CustomEvent('appleOAuthSuccess', {
+            detail: { userResponse, source: 'deep_link_fallback' }
+          }));
+        } catch (eventError) {
+          console.warn('⚠️ [DEEP LINK] Could not dispatch fallback event:', eventError);
+        }
+      }, 500);
 
     } catch (error) {
       logOAuthEvent('error', { error: error?.toString(), step: 'deep_link_processing' });
       console.error('❌ [DEEP LINK] Error procesando deep link:', error);
-      this.options.onError?.(error instanceof Error ? error.message : 'Error procesando OAuth');
+      
+      // ✅ MARCAR COMO COMPLETADO CON ERROR
+      this.isCompleted = true;
+      const errorMessage = error instanceof Error ? error.message : 'Error procesando OAuth';
+      
+      console.log('🎯 [DEEP LINK] Calling onError callback...');
+      this.options.onError?.(errorMessage);
+      
+      // ✅ NUEVO: Fallback para errores también
+      setTimeout(() => {
+        try {
+          console.log('🔄 [DEEP LINK] Dispatching error event as fallback...');
+          window.dispatchEvent(new CustomEvent('appleOAuthError', {
+            detail: { error: errorMessage, source: 'deep_link_fallback' }
+          }));
+        } catch (eventError) {
+          console.warn('⚠️ [DEEP LINK] Could not dispatch error fallback event:', eventError);
+        }
+      }, 500);
     } finally {
+      console.log('🎯 [DEEP LINK] Calling onLoading(false) callback...');
       this.options.onLoading?.(false);
     }
   }

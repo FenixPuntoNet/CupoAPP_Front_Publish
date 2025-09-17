@@ -71,6 +71,50 @@ const LoginView: React.FC = () => {
         setLoading(false);
       };
       
+      // ✅ NUEVO: Listeners de fallback para Apple OAuth
+      const handleAppleOAuthSuccess = async (event: Event) => {
+        const customEvent = event as CustomEvent;
+        console.log('🎯 [FALLBACK] Apple OAuth success event received:', customEvent.detail);
+        
+        try {
+          setLoading(true);
+          const userResponse = customEvent.detail?.userResponse;
+          
+          if (userResponse?.id) {
+            // Refrescar usuario
+            await refreshUser(true);
+            
+            showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
+            
+            // Limpiar estado
+            cleanupOAuthState();
+            
+            // Navegar
+            setTimeout(() => {
+              navigate({ to: '/home' });
+            }, 1000);
+          }
+        } catch (error) {
+          console.error('❌ Error processing Apple OAuth success fallback:', error);
+          cleanupOAuthState();
+        }
+      };
+      
+      const handleAppleOAuthError = (event: Event) => {
+        const customEvent = event as CustomEvent;
+        console.log('🎯 [FALLBACK] Apple OAuth error event received:', customEvent.detail);
+        
+        cleanupOAuthState();
+        handleBackendError(customEvent.detail?.error || 'Error en Apple Sign-In', {
+          id: 'apple-oauth-fallback-error',
+          autoClose: 8000
+        });
+      };
+      
+      // Agregar listeners de fallback
+      window.addEventListener('appleOAuthSuccess', handleAppleOAuthSuccess);
+      window.addEventListener('appleOAuthError', handleAppleOAuthError);
+      
       // Timeout para evitar loading infinito (2 minutos máximo)
       loadingTimeout = setTimeout(() => {
         console.log('⏰ OAuth timeout reached - stopping loading state');
@@ -117,12 +161,10 @@ const LoginView: React.FC = () => {
               // Limpiar estado
               cleanupOAuthState();
               
-              // Navegar al wallet
-              setTimeout(() => {
-                navigate({ to: '/Wallet' });
-              }, 1000);
-              
-              return;
+            // Navegar al Home en lugar de Wallet
+            setTimeout(() => {
+              navigate({ to: '/home' });
+            }, 1000);              return;
               
             } catch (error) {
               console.error('❌ Error processing Apple OAuth return from localStorage:', error);
@@ -182,8 +224,8 @@ const LoginView: React.FC = () => {
                 
                 // Navegación con delay para asegurar sincronización completa
                 setTimeout(() => {
-                  console.log('🚀 Navigating to /Wallet after Apple OAuth success');
-                  navigate({ to: '/Wallet' });
+                  console.log('🚀 Navigating to /home after Apple OAuth success');
+                  navigate({ to: '/home' });
                 }, 800);
                 
                 return;
@@ -250,8 +292,8 @@ const LoginView: React.FC = () => {
                     cleanupOAuthState();
                     
                     setTimeout(() => {
-                      console.log('🚀 Navigating to /Wallet after polling OAuth success');
-                      navigate({ to: '/Wallet' });
+                      console.log('🚀 Navigating to /home after polling OAuth success');
+                      navigate({ to: '/home' });
                     }, 800);
                     
                     return;
@@ -312,6 +354,11 @@ const LoginView: React.FC = () => {
           
           return () => {
             cleanupOAuthState();
+            
+            // ✅ LIMPIAR LISTENERS DE FALLBACK
+            window.removeEventListener('appleOAuthSuccess', handleAppleOAuthSuccess);
+            window.removeEventListener('appleOAuthError', handleAppleOAuthError);
+            
             listener.remove();
           };
         }
@@ -790,35 +837,65 @@ const LoginView: React.FC = () => {
       setLoading(true);
       console.log('🍎 Starting Apple OAuth login via backend...');
       
-      // Detectar si es móvil para usar callbacks específicos
+      // ✅ MEJORADO: Detección más precisa de plataforma para iPad
       const isMobile = window?.navigator?.userAgent?.includes('Capacitor') || 
                        window?.location?.protocol === 'capacitor:' ||
                        !!(window as any)?.Capacitor;
       
+      const isIPad = /iPad/.test(navigator.userAgent);
+      const platform = isMobile ? (isIPad ? 'iPad' : 'Mobile') : 'Web';
+      
+      console.log('📱 Platform detected for Apple OAuth:', platform);
+      
       if (isMobile) {
-        // Para móvil: el DeepLinkHandler maneja el flujo completo
+        // ✅ MEJORADO: Manejo específico para móvil/iPad con timeout
         console.log('📱 Using mobile Apple OAuth flow with DeepLinkHandler');
         
-        const result = await signInWithApple(false); // false = login
+        // Agregar timeout de seguridad a nivel de componente
+        const LOGIN_TIMEOUT = 180000; // 3 minutos para iPad
+        let hasTimedOut = false;
         
-        if (!result.success && result.error) {
-          handleBackendError(result.error, {
-            id: 'apple-oauth-init-error',
-            autoClose: 6000
-          });
+        const timeoutId = setTimeout(() => {
+          hasTimedOut = true;
           setLoading(false);
+          handleBackendError('Apple Sign-In tomó demasiado tiempo en iPad. Por favor intenta nuevamente.', {
+            id: 'apple-oauth-timeout',
+            autoClose: 8000
+          });
+          console.error('⏰ Apple OAuth timeout on iPad');
+        }, LOGIN_TIMEOUT);
+        
+        try {
+          const result = await signInWithApple(false); // false = login
+          
+          if (!hasTimedOut) {
+            clearTimeout(timeoutId);
+            
+            if (!result.success && result.error) {
+              handleBackendError(`Error en Apple Sign-In (${platform}): ${result.error}`, {
+                id: 'apple-oauth-init-error',
+                autoClose: 8000
+              });
+              setLoading(false);
+            }
+            // Para móvil, el éxito se maneja a través del DeepLinkHandler
+          }
+        } catch (mobileError: any) {
+          if (!hasTimedOut) {
+            clearTimeout(timeoutId);
+            throw mobileError;
+          }
         }
         
-        // Para móvil, el éxito se maneja a través del DeepLinkHandler
-        // que llamará automáticamente cuando regrese del OAuth
       } else {
-        // Para web: flujo normal
+        // ✅ MEJORADO: Flujo web con mejor error handling
+        console.log('💻 Using web Apple OAuth flow');
         const result = await signInWithApple(false); // false = login
         
         if (!result.success && result.error) {
-          handleBackendError(result.error, {
+          handleBackendError(`Error en Apple Sign-In (Web): ${result.error}`, {
             id: 'apple-oauth-init-error',
-            autoClose: 6000
+            autoClose: 8000
           });
           setLoading(false);
         }
@@ -827,9 +904,23 @@ const LoginView: React.FC = () => {
       
     } catch (error: any) {
       console.error('❌ Error iniciando Apple OAuth:', error);
-      handleBackendError(error?.message || 'No se pudo iniciar sesión con Apple', {
-        id: 'apple-oauth-init-error',
-        autoClose: 6000
+      
+      // ✅ MEJORADO: Error messages específicos para diferentes problemas
+      let errorMessage = 'No se pudo iniciar sesión con Apple';
+      
+      if (error?.message?.includes('Capacitor')) {
+        errorMessage = 'Error de plataforma móvil. Por favor actualiza la app e intenta nuevamente.';
+      } else if (error?.message?.includes('timeout')) {
+        errorMessage = 'Apple Sign-In tomó demasiado tiempo. Verifica tu conexión e intenta nuevamente.';
+      } else if (error?.message?.includes('network')) {
+        errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+      } else if (error?.message) {
+        errorMessage = `Error en Apple Sign-In: ${error.message}`;
+      }
+      
+      handleBackendError(errorMessage, {
+        id: 'apple-oauth-general-error',
+        autoClose: 10000
       });
       setLoading(false);
     }
