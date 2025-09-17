@@ -123,11 +123,19 @@ const PreviewInfo: React.FC<PreviewModalProps> = ({ isOpen, onClose, onConfirm, 
                                 {data.tripData.destination?.address}
                             </Text>
                         </div>
-                        {data.stopovers && data.stopovers.length > 0 && (
+                        {data.stopovers && data.stopovers.length > 0 && data.stopovers.filter(stopover => 
+                            stopover.location.mainText !== 'Sin SafePoint' && 
+                            !stopover.location.mainText.includes('sin safepoint') &&
+                            !stopover.location.mainText.includes('Sin SafePoint')
+                        ).length > 0 && (
                             <div className={styles.stopoverPreview}>
                                 <Text fw={500} mb="sm">Paradas</Text>
                                 <Group gap="md">
-                                    {data.stopovers.map((stopover, index) => (
+                                    {data.stopovers.filter(stopover => 
+                                        stopover.location.mainText !== 'Sin SafePoint' && 
+                                        !stopover.location.mainText.includes('sin safepoint') &&
+                                        !stopover.location.mainText.includes('Sin SafePoint')
+                                    ).map((stopover, index) => (
                                         <div key={index} className={styles.stopItem}>
                                             <MapPin size={16} className={styles.stopIcon} />
                                             <Text>
@@ -996,11 +1004,19 @@ const DetallesViajeView = () => {
                                 {tripData.destination?.address}
                             </Text>
                         </div>
-                        {stopovers && stopovers.length > 0 && (
+                        {stopovers && stopovers.length > 0 && stopovers.filter(stopover => 
+                            stopover.location.mainText !== 'Sin SafePoint' && 
+                            !stopover.location.mainText.includes('sin safepoint') &&
+                            !stopover.location.mainText.includes('Sin SafePoint')
+                        ).length > 0 && (
                             <div className={styles.stopoverSection}>
                                 <Text fw={500} mb="sm">Paradas</Text>
                                 <Group gap="md">
-                                    {stopovers.map((stopover, index) => (
+                                    {stopovers.filter(stopover => 
+                                        stopover.location.mainText !== 'Sin SafePoint' && 
+                                        !stopover.location.mainText.includes('sin safepoint') &&
+                                        !stopover.location.mainText.includes('Sin SafePoint')
+                                    ).map((stopover, index) => (
                                         <div key={index} className={styles.stopItem}>
                                             <MapPin size={16} className={styles.stopIcon} />
                                             <Text>

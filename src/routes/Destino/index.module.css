@@ -188,6 +188,15 @@
   letter-spacing: -0.1px;
 }
 
+/* Estilos específicos para modo claro en inputs */
+:global(.light) .input input {
+  color: #1f2937 !important;
+}
+
+:global(.light) .input input::placeholder {
+  color: rgba(31, 41, 55, 0.5) !important;
+}
+
 .searchLoader {
   display: flex;
   align-items: center;

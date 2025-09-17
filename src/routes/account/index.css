@@ -474,6 +474,20 @@
   text-shadow: none;
 }
 
+/* Asegurar que todos los textos de streaks se vean bien en modo claro */
+:global(.light) .streak-line .mantine-Text-root {
+  color: #1f2937 !important;
+  text-shadow: none;
+}
+
+:global(.light) .streak-section-title {
+  color: #059669 !important;
+}
+
+:global(.light) .referrals-streaks-space .mantine-Text-root {
+  color: #1f2937 !important;
+}
+
 .streak-progress-label span {
   color: #ffd700 !important;
   font-weight: 700;

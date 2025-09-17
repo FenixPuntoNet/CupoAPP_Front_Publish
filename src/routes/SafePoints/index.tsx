@@ -36,6 +36,7 @@ import {
 } from '../../types/PublicarViaje/TripDataManagement';
 import {
     getSafePointsByCategory,
+    getSafePointDetails,
     type SafePoint,
     type SafePointCategory,
     type SafePointProposalRequest
@@ -102,6 +103,9 @@ function SafePointsView() {
     const [currentStep, setCurrentStep] = useState<'origin' | 'destination'>('origin');
     const [originSafePoints, setOriginSafePoints] = useState<Set<number>>(new Set());
     const [destinationSafePoints, setDestinationSafePoints] = useState<Set<number>>(new Set());
+    
+    // ✅ NUEVO: Cache de SafePoints seleccionados para el resumen
+    const [selectedSafePointsCache, setSelectedSafePointsCache] = useState<Map<number, SafePoint>>(new Map());
     
     // Estados para SafePoints y UI
     const [safePoints, setSafePoints] = useState<SafePoint[]>([]);
@@ -208,89 +212,109 @@ function SafePointsView() {
     // Manejar selección de SafePoint según el paso actual
     const handleSafePointSelect = useCallback(async (safePoint: SafePoint) => {
         try {
-            // Asegurar que tenemos un borrador antes de seleccionar SafePoints
-            const origin = tripStore.getOrigin();
-            const destination = tripStore.getDestination();
-            
-            if (!origin || !destination) {
-                setError('Debes tener origen y destino configurados');
-                return;
-            }
+            console.log('🎯 Seleccionando SafePoint:', { id: safePoint.id, name: safePoint.name, step: currentStep });
 
-            // Crear/actualizar borrador si no existe
-            if (!draft) {
-                await createOrUpdateTripDraft(origin, destination);
-            }
+            // ✅ PASO 1: ACTUALIZAR ESTADO LOCAL INMEDIATAMENTE (sin await)
+            let newSelected: Set<number>;
+            let isRemoving = false;
 
-            // Actualizar estado local
             if (currentStep === 'origin') {
-                const newSelected = new Set(originSafePoints);
-                if (newSelected.has(safePoint.id)) {
+                newSelected = new Set(originSafePoints);
+                isRemoving = newSelected.has(safePoint.id);
+                
+                if (isRemoving) {
                     newSelected.delete(safePoint.id);
+                    // Remover de cache
+                    setSelectedSafePointsCache(prev => {
+                        const newCache = new Map(prev);
+                        newCache.delete(safePoint.id);
+                        return newCache;
+                    });
                 } else {
                     newSelected.add(safePoint.id);
-                    
-                    // Agregar al borrador - SOLO BACKEND, no recargar localStorage
-                    const result = await addSafePointToDraft({
-                        safepoint_id: safePoint.id,
-                        selection_type: 'pickup_selection',
-                        route_order: newSelected.size
+                    // Agregar a cache
+                    setSelectedSafePointsCache(prev => {
+                        const newCache = new Map(prev);
+                        newCache.set(safePoint.id, safePoint);
+                        return newCache;
                     });
-                    
-                    if (!result.success) {
-                        console.error('Error adding SafePoint to draft:', result.error);
-                        notifications.show({
-                            title: 'Error',
-                            message: 'No se pudo guardar la selección',
-                            color: 'red'
-                        });
-                        return;
-                    }
                 }
+                
                 setOriginSafePoints(newSelected);
+                console.log('✅ Estado local origen actualizado:', { selected: Array.from(newSelected), removing: isRemoving });
             } else {
-                const newSelected = new Set(destinationSafePoints);
-                if (newSelected.has(safePoint.id)) {
+                newSelected = new Set(destinationSafePoints);
+                isRemoving = newSelected.has(safePoint.id);
+                
+                if (isRemoving) {
                     newSelected.delete(safePoint.id);
+                    // Remover de cache
+                    setSelectedSafePointsCache(prev => {
+                        const newCache = new Map(prev);
+                        newCache.delete(safePoint.id);
+                        return newCache;
+                    });
                 } else {
                     newSelected.add(safePoint.id);
-                    
-                    // Agregar al borrador - SOLO BACKEND, no recargar localStorage
-                    const result = await addSafePointToDraft({
-                        safepoint_id: safePoint.id,
-                        selection_type: 'dropoff_selection',
-                        route_order: newSelected.size
+                    // Agregar a cache
+                    setSelectedSafePointsCache(prev => {
+                        const newCache = new Map(prev);
+                        newCache.set(safePoint.id, safePoint);
+                        return newCache;
                     });
-                    
-                    if (!result.success) {
-                        console.error('Error adding SafePoint to draft:', result.error);
-                        notifications.show({
-                            title: 'Error',
-                            message: 'No se pudo guardar la selección',
-                            color: 'red'
-                        });
-                        return;
-                    }
                 }
+                
                 setDestinationSafePoints(newSelected);
+                console.log('✅ Estado local destino actualizado:', { selected: Array.from(newSelected), removing: isRemoving });
             }
-            
-            // ✅ CORREGIDO: NO recargar datos del borrador aquí - evita el "refresh extraño"
-            // El estado local ya está actualizado arriba
-            
-            // Registrar interacción localmente
-            console.log('🔄 SafePoint seleccionado exitosamente:', {
+
+            // ✅ PASO 2: SINCRONIZAR CON BACKEND EN SEGUNDO PLANO (sin bloquear UI)
+            if (!isRemoving) {
+                // Solo sincronizar con backend cuando se AGREGA (no cuando se remueve)
+                const origin = tripStore.getOrigin();
+                const destination = tripStore.getDestination();
+                
+                if (origin && destination) {
+                    // Crear/actualizar borrador si no existe
+                    if (!draft) {
+                        await createOrUpdateTripDraft(origin, destination);
+                    }
+
+                    // Agregar al borrador en segundo plano
+                    addSafePointToDraft({
+                        safepoint_id: safePoint.id,
+                        selection_type: currentStep === 'origin' ? 'pickup_selection' : 'dropoff_selection',
+                        route_order: newSelected.size
+                    }).then((result) => {
+                        if (result.success) {
+                            console.log('✅ SafePoint guardado en backend:', safePoint.id);
+                        } else {
+                            console.warn('⚠️ Error guardando en backend (no afecta UI):', result.error);
+                            // No mostrar error al usuario - la selección ya está visible
+                        }
+                    }).catch((error) => {
+                        console.warn('⚠️ Error backend (no afecta UI):', error);
+                    });
+                } else {
+                    console.warn('⚠️ Sin origen/destino - selección solo local');
+                }
+            }
+
+            console.log('🎉 SafePoint seleccionado exitosamente:', {
                 step: currentStep,
                 safepoint_id: safePoint.id,
-                timestamp: new Date().toISOString(),
-                backend_saved: true
+                action: isRemoving ? 'removed' : 'added',
+                total_selected: newSelected.size
             });
             
         } catch (error) {
             console.error('❌ Error selecting SafePoint:', error);
-            setError('Error seleccionando SafePoint: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+            // Solo mostrar error si es crítico - no por problemas de backend
+            if (error instanceof Error && error.message.includes('origen y destino')) {
+                setError(error.message);
+            }
         }
-    }, [currentStep, originSafePoints, destinationSafePoints, draft, createOrUpdateTripDraft]);
+    }, [currentStep, originSafePoints, destinationSafePoints, draft, createOrUpdateTripDraft, addSafePointToDraft]);
 
     // Obtener icono de categoría
     // Función para obtener icono de categoría
@@ -341,21 +365,51 @@ function SafePointsView() {
                 if (draft?.draft_safepoint_selections) {
                     const originSelections = new Set<number>();
                     const destinationSelections = new Set<number>();
+                    const allSelectedIds = new Set<number>();
                     
                     draft.draft_safepoint_selections.forEach((selection: any) => {
                         if (selection.selection_type === 'pickup_selection') {
                             originSelections.add(selection.safepoint_id);
+                            allSelectedIds.add(selection.safepoint_id);
                         } else if (selection.selection_type === 'dropoff_selection') {
                             destinationSelections.add(selection.safepoint_id);
+                            allSelectedIds.add(selection.safepoint_id);
                         }
                     });
+                    
+                    // ✅ NUEVO: Cargar detalles de los SafePoints seleccionados para el cache
+                    if (allSelectedIds.size > 0) {
+                        console.log('🔍 Cargando detalles de SafePoints seleccionados:', Array.from(allSelectedIds));
+                        
+                        const cacheMap = new Map<number, SafePoint>();
+                        
+                        // Cargar detalles de cada SafePoint seleccionado
+                        const loadPromises = Array.from(allSelectedIds).map(async (id) => {
+                            try {
+                                const result = await getSafePointDetails(id);
+                                if (result.success && result.safepoint) {
+                                    cacheMap.set(id, result.safepoint);
+                                    console.log('✅ SafePoint cargado para cache:', { id, name: result.safepoint.name });
+                                } else {
+                                    console.warn('⚠️ No se pudo cargar SafePoint:', id);
+                                }
+                            } catch (error) {
+                                console.error('❌ Error cargando SafePoint:', id, error);
+                            }
+                        });
+                        
+                        await Promise.all(loadPromises);
+                        setSelectedSafePointsCache(cacheMap);
+                        console.log('✅ Cache de SafePoints inicializada:', cacheMap.size, 'elementos');
+                    }
                     
                     setOriginSafePoints(originSelections);
                     setDestinationSafePoints(destinationSelections);
                     
                     console.log('✅ Loaded SafePoint selections from draft:', {
                         origin: originSelections.size,
-                        destination: destinationSelections.size
+                        destination: destinationSelections.size,
+                        cache_size: allSelectedIds.size
                     });
                 }
                 
@@ -744,8 +798,11 @@ function SafePointsView() {
                         {currentStep === 'origin' ? (
                             // Mostrar solo selecciones de origen
                             Array.from(originSafePoints).map(id => {
-                                const safePoint = safePoints.find(sp => sp.id === id);
-                                if (!safePoint) return null;
+                                const safePoint = selectedSafePointsCache.get(id);
+                                if (!safePoint) {
+                                    console.warn('SafePoint no encontrado en cache:', id);
+                                    return null;
+                                }
                                 
                                 return (
                                     <div key={id} className={styles.selectedItem}>
@@ -761,6 +818,12 @@ function SafePointsView() {
                                                 const newSet = new Set(originSafePoints);
                                                 newSet.delete(id);
                                                 setOriginSafePoints(newSet);
+                                                // También remover de cache
+                                                setSelectedSafePointsCache(prev => {
+                                                    const newCache = new Map(prev);
+                                                    newCache.delete(id);
+                                                    return newCache;
+                                                });
                                             }}
                                         >
                                             ✕
@@ -779,8 +842,11 @@ function SafePointsView() {
                                     </div>
                                 )}
                                 {Array.from(destinationSafePoints).map(id => {
-                                    const safePoint = safePoints.find(sp => sp.id === id);
-                                    if (!safePoint) return null;
+                                    const safePoint = selectedSafePointsCache.get(id);
+                                    if (!safePoint) {
+                                        console.warn('SafePoint destino no encontrado en cache:', id);
+                                        return null;
+                                    }
                                     
                                     return (
                                         <div key={id} className={styles.selectedItem}>
@@ -796,6 +862,12 @@ function SafePointsView() {
                                                     const newSet = new Set(destinationSafePoints);
                                                     newSet.delete(id);
                                                     setDestinationSafePoints(newSet);
+                                                    // También remover de cache
+                                                    setSelectedSafePointsCache(prev => {
+                                                        const newCache = new Map(prev);
+                                                        newCache.delete(id);
+                                                        return newCache;
+                                                    });
                                                 }}
                                             >
                                                 ✕

@@ -537,6 +537,79 @@
   box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2) !important;
 }
 
+/* Estilos específicos para modo claro en DateTimePicker */
+:global(.light .mantine-DateTimePicker-input) {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 155, 119, 0.3) !important;
+  color: #1a1a1a !important;
+}
+
+:global(.light .mantine-DateTimePicker-input:focus) {
+  border-color: #00cc7a !important;
+  box-shadow: 0 0 0 2px rgba(0, 204, 122, 0.2) !important;
+}
+
+/* Estilos para el dropdown del calendario SOLO en modo claro */
+:global(.light .mantine-DatePickerInput-dropdown) {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 155, 119, 0.3) !important;
+  color: #1a1a1a !important;
+}
+
+:global(.light .mantine-Calendar-header) {
+  color: #1a1a1a !important;
+}
+
+:global(.light .mantine-Calendar-monthPickerControl) {
+  color: #1a1a1a !important;
+}
+
+:global(.light .mantine-Calendar-yearPickerControl) {
+  color: #1a1a1a !important;
+}
+
+:global(.light .mantine-Calendar-day) {
+  color: #1a1a1a !important;
+}
+
+:global(.light .mantine-Calendar-day[data-today]) {
+  background: rgba(0, 204, 122, 0.1) !important;
+  color: #00cc7a !important;
+}
+
+:global(.light .mantine-Calendar-day[data-selected]) {
+  background: #00cc7a !important;
+  color: #ffffff !important;
+}
+
+:global(.light .mantine-Calendar-day:hover) {
+  background: rgba(0, 204, 122, 0.1) !important;
+}
+
+:global(.light .mantine-Calendar-weekday) {
+  color: rgba(26, 26, 26, 0.7) !important;
+}
+
+/* TimeInput dropdown SOLO en modo claro */
+:global(.light .mantine-TimeInput-dropdown) {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 155, 119, 0.3) !important;
+  color: #1a1a1a !important;
+}
+
+:global(.light .mantine-TimeInput-timeWrapper) {
+  background: #ffffff !important;
+}
+
+:global(.light .mantine-TimeInput-control) {
+  color: #1a1a1a !important;
+  border: 1px solid rgba(0, 155, 119, 0.2) !important;
+}
+
+:global(.light .mantine-TimeInput-control:hover) {
+  background: rgba(0, 204, 122, 0.1) !important;
+}
+
 .stopoverSection {
   margin-top: 15px;
   margin-bottom: 15px;
