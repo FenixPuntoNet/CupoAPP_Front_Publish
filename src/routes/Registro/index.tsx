@@ -55,13 +55,21 @@ const RegisterView: React.FC = () => {
   const navigate = useNavigate();
   const { refreshUser } = useBackendAuth();
 
-  // Detectar regreso del OAuth (Google y Apple)
+  // Detectar regreso del OAuth (Google y Apple) SOLO en páginas de auth
   useEffect(() => {
     const checkOAuthReturn = async () => {
+      // ✅ CRÍTICO: Solo procesar OAuth si estamos en página de auth
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/Login/' && currentPath !== '/Login' && 
+          currentPath !== '/Registro/' && currentPath !== '/Registro') {
+        console.log('🚫 Not on auth page, skipping OAuth callback processing in Registro');
+        return;
+      }
+      
       // Si detectamos OAuth callback, activar loading inmediatamente
       if (isOAuthCallback) {
         setLoading(true);
-        console.log('🔄 OAuth callback detectado, iniciando procesamiento...');
+        console.log('🔄 OAuth callback detectado en Registro, iniciando procesamiento...');
       }
 
       // ✅ NUEVO: Verificar callback de Apple primero
@@ -241,14 +249,20 @@ const RegisterView: React.FC = () => {
     checkOAuthReturn();
   }, []);
 
-  // ✅ MEJORADO: Setup listeners anti-loop para OAuth móvil de Apple
+  // ✅ MEJORADO: Setup listeners anti-loop para OAuth móvil de Apple SOLO si estamos en proceso OAuth
   useEffect(() => {
     const isMobile = window?.navigator?.userAgent?.includes('Capacitor') || 
                      window?.location?.protocol === 'capacitor:' ||
                      !!(window as any)?.Capacitor;
     
-    if (isMobile) {
-      console.log('📱 Setting up anti-loop mobile listeners for Apple OAuth return (Registro)');
+    // ✅ CRÍTICO: Solo ejecutar si realmente estamos en proceso OAuth activo
+    const isActiveOAuthProcess = localStorage.getItem('apple_oauth_pending') || 
+                                 localStorage.getItem('apple_oauth_state') || 
+                                 localStorage.getItem('oauth_state') ||
+                                 isOAuthCallback;
+    
+    if (isMobile && isActiveOAuthProcess) {
+      console.log('📱 Setting up anti-loop mobile listeners for Apple OAuth return (Registro - ACTIVE PROCESS)');
       
       let oauthCheckInterval: NodeJS.Timeout | null = null;
       let loadingTimeout: NodeJS.Timeout | null = null;
@@ -336,17 +350,23 @@ const RegisterView: React.FC = () => {
               
               cleanupOAuthState();
               
-              // Si es un usuario nuevo, ir al completar registro con onboarding
-              if (tokenData.isNewUser) {
-                console.log('🆕 New user detected, navigating to complete registration');
-                localStorage.setItem('is_new_user', 'true');
-                navigate({ 
-                  to: "/CompletarRegistro", 
-                  search: { from: 'onboarding' } 
-                });
+              // ✅ VERIFICAR: Solo navegar si estamos en página de registro
+              const currentPath = window.location.pathname;
+              if (currentPath === '/Registro/' || currentPath === '/Registro') {
+                // Si es un usuario nuevo, ir al completar registro con onboarding
+                if (tokenData.isNewUser) {
+                  console.log('🆕 New user detected from Registro, navigating to complete registration');
+                  localStorage.setItem('is_new_user', 'true');
+                  navigate({ 
+                    to: "/CompletarRegistro", 
+                    search: { from: 'onboarding' } 
+                  });
+                } else {
+                  console.log('👤 Existing user detected from Registro, navigating to home');
+                  navigate({ to: '/home' });
+                }
               } else {
-                console.log('👤 Existing user detected, navigating to home');
-                navigate({ to: '/home' });
+                console.log('🚫 Skipping navigation - user already navigated away from Registro');
               }
               
               return;
@@ -477,8 +497,10 @@ const RegisterView: React.FC = () => {
           };
         }
       }
+    } else {
+      console.log('🚫 Skipping OAuth mobile listeners in Registro - no active OAuth process or not mobile');
     }
-  }, [refreshUser, navigate]);
+  }, [refreshUser, navigate, isOAuthCallback]);
 
   // Función para hacer bootstrap via backend (sin Supabase)
   const ensureBootstrap = async () => {

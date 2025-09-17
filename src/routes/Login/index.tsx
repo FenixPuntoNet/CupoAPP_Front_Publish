@@ -50,14 +50,20 @@ const LoginView: React.FC = () => {
   const { signIn, refreshUser } = useBackendAuth();
   const { handleValidationError, handleBackendError, showSuccess } = useErrorHandling();
 
-  // ✅ MEJORADO: Setup listeners anti-loop para OAuth móvil de Apple
+  // ✅ MEJORADO: Setup listeners anti-loop para OAuth móvil de Apple SOLO si estamos en proceso OAuth
   useEffect(() => {
     const isMobile = window?.navigator?.userAgent?.includes('Capacitor') || 
                      window?.location?.protocol === 'capacitor:' ||
                      !!(window as any)?.Capacitor;
     
-    if (isMobile) {
-      console.log('📱 Setting up anti-loop mobile listeners for Apple OAuth return');
+    // ✅ CRÍTICO: Solo ejecutar si realmente estamos en proceso OAuth activo
+    const isActiveOAuthProcess = localStorage.getItem('apple_oauth_pending') || 
+                                 localStorage.getItem('apple_oauth_state') || 
+                                 localStorage.getItem('oauth_state') ||
+                                 isOAuthCallback;
+    
+    if (isMobile && isActiveOAuthProcess) {
+      console.log('📱 Setting up anti-loop mobile listeners for Apple OAuth return (ACTIVE PROCESS)');
       
       let oauthCheckInterval: NodeJS.Timeout | null = null;
       let loadingTimeout: NodeJS.Timeout | null = null;
@@ -89,10 +95,16 @@ const LoginView: React.FC = () => {
             // Limpiar estado
             cleanupOAuthState();
             
-            // Navegar
-            setTimeout(() => {
-              navigate({ to: '/home' });
-            }, 1000);
+            // ✅ VERIFICAR: Solo navegar si estamos en página de login
+            const currentPath = window.location.pathname;
+            if (currentPath === '/Login/' || currentPath === '/Login') {
+              setTimeout(() => {
+                console.log('🚀 Navigating to /home from Login after Apple OAuth fallback success');
+                navigate({ to: '/home' });
+              }, 1000);
+            } else {
+              console.log('🚫 Skipping navigation - user already navigated away from Login');
+            }
           }
         } catch (error) {
           console.error('❌ Error processing Apple OAuth success fallback:', error);
@@ -129,6 +141,18 @@ const LoginView: React.FC = () => {
       const handleAppReturn = async () => {
         console.log('🔄 App returned, checking for Apple OAuth completion...');
         
+        // ✅ CRÍTICO: Verificar que el usuario no esté ya navegando en la app
+        const currentPath = window.location.pathname;
+        console.log('🛣️ Current path:', currentPath);
+        
+        // Si el usuario ya está en home u otra página protegida, no hacer nada
+        if (currentPath !== '/Login/' && currentPath !== '/Login' && 
+            currentPath !== '/Registro/' && currentPath !== '/Registro') {
+          console.log('🚫 User already navigating in app, skipping OAuth redirect');
+          cleanupOAuthState();
+          return;
+        }
+        
         // Evitar multiple checks simultáneos
         const isAlreadyChecking = localStorage.getItem('apple_oauth_checking');
         if (isAlreadyChecking) {
@@ -161,10 +185,17 @@ const LoginView: React.FC = () => {
               // Limpiar estado
               cleanupOAuthState();
               
-            // Navegar al Home en lugar de Wallet
-            setTimeout(() => {
-              navigate({ to: '/home' });
-            }, 1000);              return;
+            // ✅ VERIFICAR: Solo navegar si estamos en página de login
+            const currentPath = window.location.pathname;
+            if (currentPath === '/Login/' || currentPath === '/Login') {
+              setTimeout(() => {
+                console.log('🚀 Navigating to /home from Login after Apple OAuth success');
+                navigate({ to: '/home' });
+              }, 1000);
+            } else {
+              console.log('🚫 Skipping navigation - user already navigated away from Login');
+            }
+              return;
               
             } catch (error) {
               console.error('❌ Error processing Apple OAuth return from localStorage:', error);
@@ -222,11 +253,16 @@ const LoginView: React.FC = () => {
                 showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
                 cleanupOAuthState();
                 
-                // Navegación con delay para asegurar sincronización completa
-                setTimeout(() => {
-                  console.log('🚀 Navigating to /home after Apple OAuth success');
-                  navigate({ to: '/home' });
-                }, 800);
+                // ✅ VERIFICAR: Solo navegar si estamos en página de login
+                const currentPath = window.location.pathname;
+                if (currentPath === '/Login/' || currentPath === '/Login') {
+                  setTimeout(() => {
+                    console.log('🚀 Navigating to /home from Login after Apple OAuth deep link success');
+                    navigate({ to: '/home' });
+                  }, 800);
+                } else {
+                  console.log('🚫 Skipping navigation - user already navigated away from Login');
+                }
                 
                 return;
               }
@@ -291,10 +327,16 @@ const LoginView: React.FC = () => {
                     showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
                     cleanupOAuthState();
                     
-                    setTimeout(() => {
-                      console.log('🚀 Navigating to /home after polling OAuth success');
-                      navigate({ to: '/home' });
-                    }, 800);
+                    // ✅ VERIFICAR: Solo navegar si estamos en página de login
+                    const currentPath = window.location.pathname;
+                    if (currentPath === '/Login/' || currentPath === '/Login') {
+                      setTimeout(() => {
+                        console.log('🚀 Navigating to /home from Login after polling OAuth success');
+                        navigate({ to: '/home' });
+                      }, 800);
+                    } else {
+                      console.log('🚫 Skipping navigation - user already navigated away from Login');
+                    }
                     
                     return;
                   }
@@ -363,12 +405,22 @@ const LoginView: React.FC = () => {
           };
         }
       }
+    } else {
+      console.log('🚫 Skipping OAuth mobile listeners - no active OAuth process or not mobile');
     }
-  }, [refreshUser, handleBackendError, navigate]);
+  }, [refreshUser, handleBackendError, navigate, isOAuthCallback]);
 
-  // Detectar regreso del OAuth (Google y Apple)
+  // Detectar regreso del OAuth (Google y Apple) SOLO en páginas de auth
   useEffect(() => {
     const checkOAuthReturn = async () => {
+      // ✅ CRÍTICO: Solo procesar OAuth si estamos en página de auth
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/Login/' && currentPath !== '/Login' && 
+          currentPath !== '/Registro/' && currentPath !== '/Registro') {
+        console.log('🚫 Not on auth page, skipping OAuth callback processing');
+        return;
+      }
+      
       // Si detectamos OAuth callback, activar loading inmediatamente
       if (isOAuthCallback) {
         setLoading(true);

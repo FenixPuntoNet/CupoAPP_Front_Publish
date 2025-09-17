@@ -1979,14 +1979,6 @@
   color: #ffffff !important;
 }
 
-/* FORZAR TODOS LOS ELEMENTOS DE TEXTO EN ESTE CONTENEDOR */
-:global(html.dark) .container *,
-:global(html[data-mantine-color-scheme="dark"]) .container *,
-:global(body.dark) .container *,
-:global(body[data-mantine-color-scheme="dark"]) .container * {
-  color: #ffffff !important;
-}
-
 /* ASEGURAR QUE LOS PLACEHOLDERS TAMBIÉN SEAN VISIBLES */
 :global(html.dark) .mantine-TextInput-input::placeholder,
 :global(html[data-mantine-color-scheme="dark"]) .mantine-TextInput-input::placeholder,
