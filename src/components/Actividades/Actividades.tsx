@@ -7,7 +7,7 @@ import { showNotification } from '@mantine/notifications';
 import dayjs from 'dayjs';
 import RolSelector from './RolSelector';
 import TripFilter from './TripFilter';
-import Cupos from '../../routes/Cupos';
+import CuposContent from './CuposContent';
 import styles from './index.module.css';
 import TripCard from './TripCard';
 import { getCurrentUser } from '@/services/auth';
@@ -74,7 +74,14 @@ const Actividades: React.FC = () => {
     CUPOS: 'Cupos Creados',
   } as const;
   type ActivityType = 'Resumen de Actividades' | 'Viajes Publicados' | 'Cupos Creados' | null;
-  const [selectedActivity, setSelectedActivity] = useState<ActivityType>('Resumen de Actividades');
+  const [selectedActivity, setSelectedActivity] = useState<ActivityType>(() => {
+    // Verificar si venimos desde la ruta de Cupos basándonos en referrer
+    if (typeof window !== 'undefined' && window.document.referrer.includes('/Cupos')) {
+      console.log('🔗 [Actividades] Detected navigation from /Cupos, setting initial activity to Cupos Creados');
+      return 'Cupos Creados';
+    }
+    return 'Resumen de Actividades';
+  });
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
@@ -304,8 +311,10 @@ const Actividades: React.FC = () => {
   // Usar useCallback para evitar recrear la función en cada render
   const handleActivitySelect = useCallback((activity: string) => {
     console.log('🎯 [Actividades] handleActivitySelect called with:', activity);
+    console.log('🎯 [Actividades] Previous selectedActivity:', selectedActivity);
+    console.log('🎯 [Actividades] Setting new selectedActivity to:', activity);
     setSelectedActivity(activity as ActivityType);
-  }, []);
+  }, [selectedActivity]); // Agregamos selectedActivity como dependencia
 
   if (loading) {
     return (
@@ -326,9 +335,11 @@ const Actividades: React.FC = () => {
             ? <>Tus viajes, <span className={styles.userName}>{userProfile?.first_name || 'Cliente'}</span></>
             : selectedActivity === 'Resumen de Actividades'
             ? <>Tu resumen, <span className={styles.userName}>{userProfile?.first_name || 'Usuario'}</span></>
+            : selectedActivity === 'Cupos Creados'
+            ? <>Tus cupos, <span className={styles.userName}>{userProfile?.first_name || 'Usuario'}</span></>
             : 'Mis Actividades'}
         </Title>
-        <RolSelector onSelect={handleActivitySelect} />
+        <RolSelector onSelect={handleActivitySelect} selectedActivity={selectedActivity || undefined} />
       </div>
 
       {selectedActivity === 'Resumen de Actividades' && (
@@ -365,7 +376,7 @@ const Actividades: React.FC = () => {
       )}
 
       {selectedActivity === 'Cupos Creados' && userProfile?.user_id && (
-        <Cupos />
+        <CuposContent />
       )}
 
       {selectedActivity === 'Viajes Publicados' && userProfile?.user_type === 'PASSENGER' && (

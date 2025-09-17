@@ -153,6 +153,9 @@ const LoginView: React.FC = () => {
           return;
         }
         
+        // ✅ MEJORADO: Forzar limpieza de estados previos primero
+        localStorage.removeItem('apple_oauth_checking');
+        
         // Evitar multiple checks simultáneos
         const isAlreadyChecking = localStorage.getItem('apple_oauth_checking');
         if (isAlreadyChecking) {
@@ -161,8 +164,50 @@ const LoginView: React.FC = () => {
         }
         
         localStorage.setItem('apple_oauth_checking', 'true');
+        console.log('📱 Starting comprehensive OAuth return check...');
         
         try {
+          // ✅ NUEVA ESTRATEGIA 0: Verificación inmediata del estado actual
+          console.log('🔍 ESTRATEGIA 0: Verificación inmediata del estado de autenticación...');
+          const immediateToken = localStorage.getItem('auth_token');
+          console.log('🔑 Immediate token check:', immediateToken ? 'EXISTS' : 'MISSING');
+          
+          if (immediateToken && immediateToken !== 'null' && immediateToken !== 'undefined') {
+            console.log('🍎 Token found immediately, verifying with backend...');
+            setLoading(true);
+            
+            try {
+              const immediateUserResponse = await apiRequest('/auth/me', { method: 'GET' });
+              console.log('📱 Immediate user response:', immediateUserResponse ? 'SUCCESS' : 'FAILED');
+              
+              if (immediateUserResponse && immediateUserResponse.id) {
+                console.log('✅ IMMEDIATE: Apple OAuth already completed successfully!');
+                
+                // Refrescar contexto
+                await refreshUser(true);
+                
+                showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
+                cleanupOAuthState();
+                
+                // Navegar inmediatamente
+                const currentPath = window.location.pathname;
+                if (currentPath === '/Login/' || currentPath === '/Login') {
+                  setTimeout(() => {
+                    console.log('🚀 IMMEDIATE: Navigating to /home after immediate token verification');
+                    navigate({ to: '/home' });
+                  }, 500);
+                } else {
+                  console.log('🚫 IMMEDIATE: User already navigated away from Login');
+                }
+                
+                return; // Salir temprano si ya está autenticado
+              }
+            } catch (immediateError) {
+              console.log('⚠️ Immediate token verification failed:', immediateError);
+              // Continuar con otras estrategias
+            }
+          }
+          
           // ESTRATEGIA 1: Verificar token pendiente de Apple OAuth
           const pendingAppleAuth = localStorage.getItem('apple_oauth_pending');
           
@@ -382,17 +427,66 @@ const LoginView: React.FC = () => {
         }
       };
       
-      // Configurar listener para app state changes
+      // ✅ MEJORADO: Configurar múltiples listeners para detectar regreso de Apple OAuth
       if ((window as any).Capacitor) {
         const capacitor = (window as any).Capacitor;
         if (capacitor.Plugins && capacitor.Plugins.App) {
-          const listener = capacitor.Plugins.App.addListener('appStateChange', (state: any) => {
+          
+          // Listener principal para cambios de estado de la app
+          const stateListener = capacitor.Plugins.App.addListener('appStateChange', (state: any) => {
             console.log('📱 App state changed:', state);
             if (state.isActive) {
-              // Dar un momento para que el deep link se procese antes de verificar
-              setTimeout(handleAppReturn, 1500);
+              console.log('📱 App became active - checking for Apple OAuth completion...');
+              // ✅ OPTIMIZADO: Verificación inmediata y luego con delay
+              console.log('📱 Executing immediate handleAppReturn check');
+              handleAppReturn(); // Inmediato
+              
+              // También con delay por si acaso
+              setTimeout(() => {
+                console.log('📱 Executing delayed handleAppReturn after app became active');
+                handleAppReturn();
+              }, 1000); // Reducido a 1 segundo
+              
+              // Y un tercer intento después
+              setTimeout(() => {
+                console.log('📱 Executing final handleAppReturn check');
+                handleAppReturn();
+              }, 2500); // Reducido a 2.5 segundos
             }
           });
+
+          // ✅ NUEVO: Listener adicional para URLs (deep links directos)
+          let urlListener: any = null;
+          if (capacitor.Plugins.App.addListener) {
+            try {
+              urlListener = capacitor.Plugins.App.addListener('appUrlOpen', (data: any) => {
+                console.log('📱 Deep link received:', data);
+                console.log('📱 URL data:', JSON.stringify(data, null, 2));
+                
+                // Verificar si es un callback de Apple OAuth
+                if (data.url && (data.url.includes('apple') || data.url.includes('oauth'))) {
+                  console.log('🍎 Apple OAuth deep link detected, processing...');
+                  // ✅ OPTIMIZADO: Verificación inmediata y con delay
+                  console.log('📱 Executing immediate handleAppReturn after deep link');
+                  handleAppReturn(); // Inmediato
+                  
+                  setTimeout(() => {
+                    console.log('📱 Executing delayed handleAppReturn after deep link');
+                    handleAppReturn();
+                  }, 800);
+                }
+              });
+            } catch (error) {
+              console.log('⚠️ Could not set up URL listener:', error);
+            }
+          }
+
+          // ✅ NUEVO: Verificación adicional cuando se monta el componente (por si ya regresamos)
+          console.log('📱 Initial Apple OAuth state check...');
+          setTimeout(() => {
+            console.log('📱 Executing initial handleAppReturn check');
+            handleAppReturn();
+          }, 1000);
           
           return () => {
             cleanupOAuthState();
@@ -401,7 +495,13 @@ const LoginView: React.FC = () => {
             window.removeEventListener('appleOAuthSuccess', handleAppleOAuthSuccess);
             window.removeEventListener('appleOAuthError', handleAppleOAuthError);
             
-            listener.remove();
+            // ✅ LIMPIAR LISTENERS DE CAPACITOR
+            if (stateListener) {
+              stateListener.remove();
+            }
+            if (urlListener) {
+              urlListener.remove();
+            }
           };
         }
       }
@@ -625,6 +725,57 @@ const LoginView: React.FC = () => {
 
     checkOAuthReturn();
   }, []);
+
+  // ✅ NUEVO: Verificación inmediata del token de Apple al cargar el componente
+  useEffect(() => {
+    const immediateAppleTokenCheck = async () => {
+      console.log('🍎 [IMMEDIATE] Checking for existing Apple OAuth token...');
+      
+      // Solo verificar si no estamos ya en un proceso OAuth
+      if (loading || isOAuthCallback) {
+        console.log('🍎 [IMMEDIATE] OAuth process already active, skipping check');
+        return;
+      }
+      
+      // Verificar si hay un token válido inmediatamente
+      const authToken = localStorage.getItem('auth_token');
+      
+      if (authToken && authToken !== 'null' && authToken !== 'undefined') {
+        console.log('🍎 [IMMEDIATE] Found auth token, verifying validity...');
+        
+        try {
+          setLoading(true);
+          const userResponse = await apiRequest('/auth/me', { method: 'GET' });
+          
+          if (userResponse && userResponse.id) {
+            console.log('✅ [IMMEDIATE] Valid token found - user is authenticated!');
+            
+            // Refrescar contexto
+            await refreshUser(true);
+            
+            showSuccess('¡Bienvenido!', 'Sesión iniciada correctamente');
+            
+            // Navegar a home
+            setTimeout(() => {
+              console.log('🚀 [IMMEDIATE] Navigating to /home');
+              navigate({ to: '/home' });
+            }, 500);
+            
+            return;
+          }
+        } catch (error) {
+          console.log('⚠️ [IMMEDIATE] Token exists but invalid:', error);
+          // Token inválido, limpiar
+          localStorage.removeItem('auth_token');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    // Ejecutar verificación inmediata
+    immediateAppleTokenCheck();
+  }, []); // Solo ejecutar una vez al montar
 
   // Función para hacer bootstrap via backend
   const ensureBootstrap = async () => {
@@ -964,8 +1115,59 @@ const LoginView: React.FC = () => {
                 autoClose: 8000
               });
               setLoading(false);
+            } else {
+              // ✅ OPTIMIZADO: Iniciar verificación agresiva inmediatamente después del login
+              console.log('🍎 Apple OAuth initiated, starting aggressive token polling...');
+              
+              let pollAttempts = 0;
+              const maxAttempts = 40; // 2 minutos con intervalos de 3 segundos
+              
+              const aggressiveTokenPoll = setInterval(async () => {
+                pollAttempts++;
+                console.log(`🔍 [AGGRESSIVE] Checking for Apple token... attempt ${pollAttempts}/${maxAttempts}`);
+                
+                try {
+                  const authToken = localStorage.getItem('auth_token');
+                  
+                  if (authToken && authToken !== 'null' && authToken !== 'undefined') {
+                    console.log('✅ [AGGRESSIVE] Found auth token, verifying...');
+                    
+                    const userResponse = await apiRequest('/auth/me', { method: 'GET' });
+                    
+                    if (userResponse && userResponse.id) {
+                      clearInterval(aggressiveTokenPoll);
+                      clearTimeout(timeoutId);
+                      
+                      console.log('🎉 [AGGRESSIVE] Apple OAuth SUCCESS detected!');
+                      
+                      await refreshUser(true);
+                      showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
+                      setLoading(false);
+                      
+                      setTimeout(() => {
+                        navigate({ to: '/home' });
+                      }, 500);
+                      
+                      return;
+                    }
+                  }
+                  
+                  if (pollAttempts >= maxAttempts) {
+                    clearInterval(aggressiveTokenPoll);
+                    console.log('⚠️ [AGGRESSIVE] Token polling timeout reached');
+                  }
+                  
+                } catch (error) {
+                  console.log(`⚠️ [AGGRESSIVE] Poll attempt ${pollAttempts} failed:`, error);
+                  
+                  if (pollAttempts >= maxAttempts) {
+                    clearInterval(aggressiveTokenPoll);
+                  }
+                }
+              }, 3000); // Verificar cada 3 segundos
+              
             }
-            // Para móvil, el éxito se maneja a través del DeepLinkHandler
+            // Para móvil, el éxito se maneja a través del DeepLinkHandler Y el polling agresivo
           }
         } catch (mobileError: any) {
           if (!hasTimedOut) {

@@ -558,8 +558,13 @@ const DetallesViajeView = () => {
             return false;
         }
 
-        if (dayjs(dateTime).isBefore(dayjs(), 'minute')) {
-            setFormError('La fecha y hora deben ser desde hoy en adelante');
+        // ✅ CORRECCIÓN: Permitir desde ahora hacia adelante (no 1 día completo)
+        // Solo validar que no sea en el pasado (con margen de 1 minuto para procesamiento)
+        const now = dayjs();
+        const selectedDateTime = dayjs(dateTime);
+        
+        if (selectedDateTime.isBefore(now.subtract(1, 'minute'))) {
+            setFormError('La fecha y hora no pueden ser en el pasado');
             return false;
         }
 
@@ -1048,7 +1053,7 @@ const DetallesViajeView = () => {
 
                                 <DateTimePicker
                                     label="Fecha y hora del viaje"
-                                    description="Selecciona cuándo saldrás (solo fechas desde hoy en adelante)"
+                                    description="Selecciona cuándo saldrás (desde ahora hacia adelante)"
                                     placeholder="Selecciona fecha y hora"
                                     value={dateTime}
                                     onChange={handleDateTimeChange}
