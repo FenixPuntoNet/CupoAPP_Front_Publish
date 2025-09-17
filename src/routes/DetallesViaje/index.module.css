@@ -1264,5 +1264,81 @@
 :global(.dark) .mantine-Textarea-input,
 :global([data-mantine-color-scheme="dark"]) .mantine-Textarea-input {
   color: #ffffff !important;
-  background: #141414 !important;
+}
+
+/* ========================================= */
+/* 🌞 CORRECCIÓN ESPECÍFICA - MODO CLARO (NUEVA SECCIÓN) */
+/* ========================================= */
+
+/* LABELS DE FORMULARIOS EN MODO CLARO */
+:global(.light) .mantine-TextInput-label,
+:global([data-mantine-color-scheme="light"]) .mantine-TextInput-label,
+:global(.light) .mantine-Select-label,
+:global([data-mantine-color-scheme="light"]) .mantine-Select-label,
+:global(.light) .mantine-DateTimePicker-label,
+:global([data-mantine-color-scheme="light"]) .mantine-DateTimePicker-label,
+:global(.light) .mantine-Textarea-label,
+:global([data-mantine-color-scheme="light"]) .mantine-Textarea-label,
+:global(.light) .mantine-NumberInput-label,
+:global([data-mantine-color-scheme="light"]) .mantine-NumberInput-label {
+  color: #1a1a1a !important;
+  font-weight: 600 !important;
+}
+
+/* TEXTO EN INPUTS EN MODO CLARO */
+:global(.light) .mantine-TextInput-input,
+:global([data-mantine-color-scheme="light"]) .mantine-TextInput-input,
+:global(.light) .mantine-Select-input,
+:global([data-mantine-color-scheme="light"]) .mantine-Select-input,
+:global(.light) .mantine-DateTimePicker-input,
+:global([data-mantine-color-scheme="light"]) .mantine-DateTimePicker-input,
+:global(.light) .mantine-Textarea-input,
+:global([data-mantine-color-scheme="light"]) .mantine-Textarea-input,
+:global(.light) .mantine-NumberInput-input,
+:global([data-mantine-color-scheme="light"]) .mantine-NumberInput-input {
+  color: #1a1a1a !important;
+  background: #ffffff !important;
+  border-color: rgba(0, 155, 119, 0.3) !important;
+}
+
+/* PLACEHOLDER EN MODO CLARO */
+:global(.light) .mantine-TextInput-input::placeholder,
+:global([data-mantine-color-scheme="light"]) .mantine-TextInput-input::placeholder,
+:global(.light) .mantine-Select-input::placeholder,
+:global([data-mantine-color-scheme="light"]) .mantine-Select-input::placeholder,
+:global(.light) .mantine-DateTimePicker-input::placeholder,
+:global([data-mantine-color-scheme="light"]) .mantine-DateTimePicker-input::placeholder,
+:global(.light) .mantine-Textarea-input::placeholder,
+:global([data-mantine-color-scheme="light"]) .mantine-Textarea-input::placeholder,
+:global(.light) .mantine-NumberInput-input::placeholder,
+:global([data-mantine-color-scheme="light"]) .mantine-NumberInput-input::placeholder {
+  color: rgba(26, 26, 26, 0.5) !important;
+}
+
+/* TÍTULOS Y TEXTO GENERAL EN MODO CLARO */
+:global(.light) .container {
+  color: #1a1a1a !important;
+}
+
+:global(.light) .container * {
+  color: inherit;
+}
+
+/* ASEGURAR QUE LOS TÍTULOS SE VEAN BIEN EN MODO CLARO */
+:global(.light) .locationTitle,
+:global(.light) h1, 
+:global(.light) h2, 
+:global(.light) h3, 
+:global(.light) h4, 
+:global(.light) h5, 
+:global(.light) h6 {
+  color: #00cc7a !important;
+}
+
+/* TEXTO SECUNDARIO EN MODO CLARO */
+:global(.light) .locationAddress,
+:global(.light) p,
+:global(.light) span,
+:global(.light) div {
+  color: #1a1a1a !important;
 }
