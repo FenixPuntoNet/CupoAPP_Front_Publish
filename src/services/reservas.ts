@@ -198,6 +198,87 @@ export const bookTrip = async (
   seatsNeeded: number
 ): Promise<{ success: boolean; data?: BookingResult; error?: string }> => {
   try {
+    // ✅ CRITICAL DEBUG: Verificar autenticación antes de crear reserva
+    const currentToken = localStorage.getItem('auth_token');
+    console.log('🎫 [RESERVA-AUTH-DEBUG] About to create reservation...');
+    console.log('🎫 [RESERVA-AUTH-DEBUG] Auth token exists:', currentToken ? 'YES' : 'NO');
+    console.log('🎫 [RESERVA-AUTH-DEBUG] Token length:', currentToken ? currentToken.length : 0);
+    console.log('🎫 [RESERVA-AUTH-DEBUG] Token preview:', currentToken ? currentToken.substring(0, 50) + '...' : 'NULL');
+    
+    // ✅ CRÍTICO: Verificar que el usuario está realmente autenticado Y no desactivado
+    try {
+      const { apiRequest } = await import('@/config/api');
+      const userCheck = await apiRequest('/auth/me', { method: 'GET' });
+      console.log('🎫 [RESERVA-AUTH-DEBUG] User auth verification:', userCheck ? 'AUTHENTICATED' : 'NOT AUTHENTICATED');
+      console.log('🎫 [RESERVA-AUTH-DEBUG] User ID:', userCheck?.id);
+      
+      // ✅ NUEVO: Verificar estado de la cuenta
+      if (userCheck?.user_metadata?.account_deactivated === true) {
+        console.error('🚫 [RESERVA-AUTH-DEBUG] Account is DEACTIVATED');
+        
+        // ✅ INTENTAR REACTIVACIÓN AUTOMÁTICA
+        try {
+          console.log('🔄 [AUTO-REACTIVATE] Attempting automatic account reactivation...');
+          const reactivateResponse = await apiRequest('/auth/reactivate-account', {
+            method: 'POST',
+            body: JSON.stringify({
+              reason: 'auto_reactivation_for_booking',
+              restore_access: true
+            })
+          });
+          
+          if (reactivateResponse.success) {
+            console.log('✅ [AUTO-REACTIVATE] Account reactivated successfully');
+            // Continuar con la reserva
+          } else {
+            throw new Error('No se pudo reactivar automáticamente la cuenta.');
+          }
+          
+        } catch (reactivateError) {
+          console.error('❌ [AUTO-REACTIVATE] Failed:', reactivateError);
+          throw new Error('Tu cuenta está desactivada. Por favor, contacta soporte para reactivarla o intenta reactivarla desde el perfil.');
+        }
+      }
+      
+      if (userCheck?.user_metadata?.account_deleted === true) {
+        console.error('🚫 [RESERVA-AUTH-DEBUG] Account is DELETED');
+        
+        // ✅ INTENTAR RESTAURACIÓN AUTOMÁTICA
+        try {
+          console.log('🔄 [AUTO-RESTORE] Attempting automatic account restoration...');
+          const restoreResponse = await apiRequest('/auth/restore-account', {
+            method: 'POST',
+            body: JSON.stringify({
+              reason: 'auto_restoration_for_booking',
+              restore_access: true
+            })
+          });
+          
+          if (restoreResponse.success) {
+            console.log('✅ [AUTO-RESTORE] Account restored successfully');
+            // Continuar con la reserva
+          } else {
+            throw new Error('No se pudo restaurar automáticamente la cuenta.');
+          }
+          
+        } catch (restoreError) {
+          console.error('❌ [AUTO-RESTORE] Failed:', restoreError);
+          throw new Error('Tu cuenta está marcada como eliminada. Por favor, contacta soporte para restaurarla.');
+        }
+      }
+      
+      console.log('✅ [RESERVA-AUTH-DEBUG] Account status is ACTIVE');
+      
+    } catch (authError) {
+      console.error('🎫 [RESERVA-AUTH-DEBUG] Auth verification failed:', authError);
+      
+      // Si el error es específico de cuenta desactivada/eliminada, lanzarlo
+      if (authError instanceof Error && 
+          (authError.message.includes('desactivada') || authError.message.includes('eliminada'))) {
+        throw authError;
+      }
+    }
+    
     const requestData = {
       trip_id: tripId,
       passengers: passengers.map(p => ({

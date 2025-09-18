@@ -215,17 +215,34 @@ const LoginView: React.FC = () => {
             console.log('🍎 Detected pending Apple OAuth in localStorage, processing...');
             setLoading(true);
             
-            try {
-              const tokenData = JSON.parse(pendingAppleAuth);
-              
-              // Configurar token
-              const { setAuthToken } = await import('@/config/api');
-              setAuthToken(tokenData.token);
-              
-              // Refrescar usuario
-              await refreshUser();
-              
-              showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
+              try {
+                const tokenData = JSON.parse(pendingAppleAuth);
+                
+                console.log('🍎 [APPLE-DEBUG] Processing Apple OAuth from localStorage...');
+                console.log('🍎 [APPLE-DEBUG] Token data:', tokenData);
+                console.log('🍎 [APPLE-DEBUG] Token to save:', tokenData.token);
+                console.log('🍎 [APPLE-DEBUG] Token length:', tokenData.token ? tokenData.token.length : 0);
+                
+                // ✅ CRITICAL FIX: setAuthToken ahora hace el intercambio automáticamente
+                console.log('🔄 [APPLE-AUTO-EXCHANGE] Saving token (auto-exchange will happen)...');
+                
+                try {
+                  // setAuthToken ahora detecta tokens de Supabase y los intercambia automáticamente
+                  const { setAuthToken } = await import('@/config/api');
+                  await setAuthToken(tokenData.token);
+                  console.log('✅ [APPLE-AUTO-EXCHANGE] Token saved and exchanged (if needed)');
+                  
+                } catch (exchangeError) {
+                  console.error('❌ [APPLE-AUTO-EXCHANGE] Error during token save/exchange:', exchangeError);
+                  throw new Error('No se pudo validar Apple Sign-In con el servidor');
+                }
+                
+                // ✅ VERIFICACIÓN INMEDIATA: Comprobar que se guardó
+                const verifyToken = localStorage.getItem('auth_token');
+                console.log('🍎 [APPLE-DEBUG] Token verification after exchange:', verifyToken ? 'SUCCESS' : 'FAILED');
+                
+                // Refrescar usuario
+                await refreshUser();              showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
               
               // Limpiar estado
               cleanupOAuthState();
@@ -255,6 +272,56 @@ const LoginView: React.FC = () => {
             setLoading(true);
             
             try {
+              // ✅ NUEVO: Verificar si el token es de Supabase y necesita intercambio
+              console.log('🔍 [TOKEN-CHECK] Checking if token needs exchange...');
+              try {
+                // Decodificar el token para verificar el issuer
+                const tokenPayload = JSON.parse(atob(authToken.split('.')[1]));
+                console.log('🔍 [TOKEN-CHECK] Token issuer:', tokenPayload.iss);
+                
+                if (tokenPayload.iss && tokenPayload.iss.includes('supabase.co')) {
+                  console.log('🔄 [DEEP-LINK-EXCHANGE] Detected Supabase token, exchanging...');
+                  
+                  try {
+                    const exchangeResponse = await apiRequest('/auth/exchange-token', {
+                      method: 'POST',
+                      body: JSON.stringify({
+                        supabase_token: authToken,
+                        provider: 'google', // Asumir Google por defecto
+                        exchange_type: 'deep_link_callback'
+                      })
+                    });
+                    
+                    if (exchangeResponse.success && exchangeResponse.backend_token) {
+                      localStorage.setItem('auth_token', exchangeResponse.backend_token);
+                      console.log('✅ [DEEP-LINK-EXCHANGE] Token exchanged successfully');
+                    } else {
+                      throw new Error('Exchange failed');
+                    }
+                    
+                  } catch (exchangeError) {
+                    console.log('⚠️ [DEEP-LINK-EXCHANGE] Failed, trying fallback...');
+                    
+                    const backendAuthResponse = await apiRequest('/auth/oauth/callback', {
+                      method: 'POST',
+                      body: JSON.stringify({
+                        access_token: authToken,
+                        provider: 'google'
+                      })
+                    });
+                    
+                    if (backendAuthResponse.success && backendAuthResponse.access_token) {
+                      localStorage.setItem('auth_token', backendAuthResponse.access_token);
+                      console.log('✅ [DEEP-LINK-FALLBACK] Backend auth successful');
+                    }
+                  }
+                } else {
+                  console.log('✅ [TOKEN-CHECK] Token is already from backend, no exchange needed');
+                }
+              } catch (tokenDecodeError) {
+                console.log('⚠️ [TOKEN-CHECK] Could not decode token, proceeding normally');
+              }
+              
               // Verificar con el backend si el token es válido
               const userResponse = await apiRequest('/auth/me', { method: 'GET' });
               
@@ -641,9 +708,29 @@ const LoginView: React.FC = () => {
           
           // ✅ MÉTODO DIRECTO: Guardar el token directamente (como funcionaba antes)
           const { setAuthToken } = await import('@/config/api');
-          setAuthToken(accessToken);
           
-          console.log('🔑 Token guardado directamente en localStorage');
+          console.log('🔑 [OAUTH-DEBUG] Saving access token from OAuth callback...');
+          console.log('🔑 [OAUTH-DEBUG] Token to save:', accessToken);
+          console.log('🔑 [OAUTH-DEBUG] Token length:', accessToken.length);
+          
+          // ✅ CRITICAL FIX: setAuthToken ahora hace el intercambio automáticamente
+          console.log('🔄 [TOKEN-AUTO-EXCHANGE] Saving token (auto-exchange will happen)...');
+          
+          try {
+            // setAuthToken ahora detecta tokens de Supabase y los intercambia automáticamente
+            await setAuthToken(accessToken);
+            console.log('✅ [TOKEN-AUTO-EXCHANGE] Token saved and exchanged (if needed)');
+            
+          } catch (exchangeError) {
+            console.error('❌ [TOKEN-AUTO-EXCHANGE] Error during token save/exchange:', exchangeError);
+            throw new Error('No se pudo validar la autenticación con el servidor');
+          }
+          
+          console.log('🔑 Token processing completed');
+          
+          // ✅ VERIFICACIÓN INMEDIATA: Comprobar que se guardó
+          const verifyToken = localStorage.getItem('auth_token');
+          console.log('🔑 [OAUTH-DEBUG] Token verification after exchange:', verifyToken ? 'SUCCESS' : 'FAILED');
           
           // ✅ CRÍTICO: Refresh auth context inmediatamente después de guardar token
           try {

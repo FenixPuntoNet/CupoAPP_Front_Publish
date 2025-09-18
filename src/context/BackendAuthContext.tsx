@@ -40,6 +40,12 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       console.log('🔄 Refreshing user data...' + (forceRefresh ? ' (forced)' : ''));
       
+      // ✅ CRITICAL DEBUG: Verificar token antes de hacer request
+      const currentToken = localStorage.getItem('auth_token');
+      console.log('🔑 [AUTH-DEBUG] Current token in localStorage:', currentToken ? 'EXISTS' : 'MISSING');
+      console.log('🔑 [AUTH-DEBUG] Token length:', currentToken ? currentToken.length : 0);
+      console.log('🔑 [AUTH-DEBUG] Token preview:', currentToken ? currentToken.substring(0, 50) + '...' : 'NULL');
+      
       // Timeout para evitar que se quede colgado
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Timeout: Request took too long')), 10000)
@@ -83,6 +89,11 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         });
         
         console.log('✅ Auth refreshed - User:', user, 'HasProfile:', hasCompleteProfile, 'IsNewUser:', !!isFirstTime);
+        
+        // ✅ CRITICAL DEBUG: Verificar que el token sigue válido después del refresh
+        const tokenAfterRefresh = localStorage.getItem('auth_token');
+        console.log('🔑 [AUTH-DEBUG] Token after refresh:', tokenAfterRefresh ? 'STILL EXISTS' : 'WAS REMOVED');
+        
       } else {
         console.log('❌ No user data in response, clearing state');
         // Si no hay usuario, limpiar el estado
