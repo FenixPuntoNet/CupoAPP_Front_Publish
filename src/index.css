@@ -1,6 +1,8 @@
 /* Import modal styles */
 @import './styles/modals.css';
 
+@import url('https://fonts.googleapis.com/css2?family=Alan+Sans:wght@300..900&family=Onest:wght@100..900&family=TASA+Orbiter:wght@400..800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -68,6 +70,22 @@
     @apply bg-background text-foreground;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
+}
+
+body {
+  font-family: "Onest", sans-serif;
+}
+.font-onest {
+  font-family: "Onest", sans-serif;
+}
+.font-alan {
+  font-family: "Alan Sans", sans-serif;
+}
+button {
+  font-family: "Onest", sans-serif !important;
+}
+.debug {
+  border: 1px solid #af4;
 }
 
 /* Light mode specific styles */

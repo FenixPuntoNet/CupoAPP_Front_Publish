@@ -9,7 +9,8 @@
     "types": ["node", "google.maps", "@types/googlemaps"],
     "paths": {
       "@/*": ["./src/*"],
-      "$/*": ["./server/src/functions/*"]
+      "$/*": ["./server/src/functions/*"],
+      "&/*": ["./public/*"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],
     "skipLibCheck": true

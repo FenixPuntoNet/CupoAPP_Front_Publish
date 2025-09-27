@@ -26,7 +26,7 @@ config.telefuncUrl = "https://cupo-backend.fly.dev/_telefunc";
 
 // Theme configuration
 const theme = createTheme({
-  fontFamily: "Inter, sans-serif",
+  fontFamily: "Onest, sans-serif",
   colors: {
     brand: [
       "#e6fff2",
