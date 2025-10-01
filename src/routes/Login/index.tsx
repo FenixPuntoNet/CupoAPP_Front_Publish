@@ -241,7 +241,7 @@ const LoginView: React.FC = () => {
                 const verifyToken = localStorage.getItem('auth_token');
                 console.log('🍎 [APPLE-DEBUG] Token verification after exchange:', verifyToken ? 'SUCCESS' : 'FAILED');
                 
-                // Refrescar usuario
+                // Refrescar usuario  
                 await refreshUser();              showSuccess('¡Bienvenido!', 'Has iniciado sesión con Apple');
               
               // Limpiar estado

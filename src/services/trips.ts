@@ -72,8 +72,8 @@ const transformTripResponse = (trip: any): TripSearchResult => {
     dateTime: trip.dateTime || trip.date_time || '',
     seats: trip.available_seats || trip.seats || 0,
     pricePerSeat: trip.pricePerSeat || trip.price_per_seat || 0,
-    allowPets: trip.allowPets ?? (trip.allow_pets === 'Y') ?? false,
-    allowSmoking: trip.allowSmoking ?? (trip.allow_smoking === 'Y') ?? false,
+    allowPets: trip.allowPets ?? ((trip.allow_pets === 'Y') || false),
+    allowSmoking: trip.allowSmoking ?? ((trip.allow_smoking === 'Y') || false),
     selectedRoute: {
       duration: duration,
       distance: distance
