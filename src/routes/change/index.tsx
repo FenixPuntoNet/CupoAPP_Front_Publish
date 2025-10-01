@@ -13,6 +13,8 @@ import {
 import { getCurrentUser } from '@/services/auth';
 import "./index.css";
 
+import BackButton from '@/components/Buttons/backButton';
+
 type CartItem = ServiceRedeemItem & { quantity: number };
 
 const AccountView: React.FC = () => {
@@ -202,6 +204,10 @@ const RedeemStore: React.FC<RedeemStoreProps> = ({ userId }) => {
   }
 
   return (
+    <>
+    <div className='top mt-6 ml-4'>
+      <BackButton to='/perfil' />
+    </div>
     <div className="redeem-store-container dark-bg">
       <div style={{height: '40px'}} />
       <header className="redeem-header">
@@ -425,6 +431,7 @@ const RedeemStore: React.FC<RedeemStoreProps> = ({ userId }) => {
         ))}
       </div>
     </div>
+    </>
   );
 };
 

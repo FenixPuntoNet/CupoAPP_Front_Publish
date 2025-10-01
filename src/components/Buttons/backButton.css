@@ -1,0 +1,16 @@
+.backButton {
+  z-index: 3;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  color: #00ff9d;
+  overflow: hidden;
+  position: relative;
+  align-items: center;
+  border-radius: .5rem;
+  justify-content: center;
+  backdrop-filter: blur(12px);
+  background-color: #ffffff08;
+  border: 1px solid #00ff9d1a;
+  transition: all .4s cubic-bezier(.4, 0, .2, 1);
+}

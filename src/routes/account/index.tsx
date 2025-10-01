@@ -44,6 +44,8 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import type { Database } from '@/types/Database'
 import './index.css'
 
+import BackButton from '@/components/Buttons/backButton';
+
 type UserCard = Database['public']['Tables']['user_cards']['Row']
 type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 type WalletData = {
@@ -415,7 +417,7 @@ function AccountView() {
         <div className="bank-card-logo">
           <IconSparkles size={32} color="#fff" />
         </div>
-        <div style={{height: '70px'}} />
+        <div style={{ height: '70px' }} />
         <div className="card-uni-wallet-row">
           <div className="card-uni-wallet-main">
             <Group gap={8} align="center" mb={4}>
@@ -596,6 +598,9 @@ function AccountView() {
 
   return (
     <Container fluid className="account-container">
+      <div className='top p-4'>
+        <BackButton to="/perfil" />
+      </div>
       <Stack gap={20} align="center" py={24}>
         <div style={{ height: '10px' }} />
         <div className={`bank-card-3d${showCardBack ? ' show-back' : ''}`}>
@@ -608,7 +613,7 @@ function AccountView() {
             </div>
           </div>
         </div>
-        <div style={{height: '60px'}} />
+        <div style={{ height: '60px' }} />
         {/* Espacio de referidos y rachas */}
         <div className="referrals-streaks-space">
           <div className="referrals-streaks-header">
@@ -918,7 +923,7 @@ function AccountView() {
               position: 'absolute',
               right: 18,
               bottom: 18,
-              background: 'rgba(255,255,255,0.18)',
+              // background: 'rgba(255,255,255,0.18)',
               borderRadius: '50%',
               width: 44,
               height: 44,

@@ -17,7 +17,7 @@ import {
   Paper,
   Space,
 } from '@mantine/core';
-import { CheckCircle, XCircle, ArrowLeft, Gift } from 'lucide-react';
+import { CheckCircle, XCircle, Gift } from 'lucide-react';
 import { getCurrentUser } from '@/services/auth';
 import { 
   getRedeemedCoupons, 
@@ -25,6 +25,8 @@ import {
   getReferralInfo, 
   registerReferral 
 } from '@/services/cupones';
+
+import BackButton from '@/components/Buttons/backButton';
 
 const CuponesView = () => {
   const navigate = useNavigate();
@@ -187,9 +189,7 @@ const CuponesView = () => {
   return (
     <Container className={styles.container}>
       <Group className={styles.header} gap="xs">
-        <Button variant="subtle" onClick={() => navigate({ to: '/Perfil' })}>
-          <ArrowLeft size={20} />
-        </Button>
+        <BackButton to='/perfil' />
         <Title order={3}>Redimir Cupón / Referido</Title>
       </Group>
 

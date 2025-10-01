@@ -16,6 +16,29 @@
   box-shadow: inset 0 0 100px rgba(0, 204, 122, 0.02);
 }
 
+.container::before,
+.container::after {
+  content: '';
+  position: absolute;
+  width: 120vw;
+  height: 120vh;
+  top: -10vh;
+  left: -10vw;
+  z-index: 0;
+  animation: bgShift 20s linear infinite;
+  background: radial-gradient(
+    circle at center,
+    transparent 0%,
+    rgba(0, 255, 157, 0.03) 40%,
+    transparent 70%
+  );
+}
+
+.container::after {
+  animation-delay: -10s;
+  animation-duration: 15s;
+}
+
 .header {
   position: relative;
   display: flex;

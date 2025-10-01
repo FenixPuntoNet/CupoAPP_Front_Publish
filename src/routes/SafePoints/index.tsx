@@ -87,6 +87,8 @@ const categoryConfig: Record<MainSafePointCategory, {
     }
 };
 
+import BackButton from '@/components/Buttons/backButton';
+
 function SafePointsView() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
@@ -533,15 +535,14 @@ function SafePointsView() {
         <Container fluid className={styles.container}>
             <LoadingOverlay visible={isLoading} />
 
+            <div className='top p-4 flex items-center gap-4'>
+                <BackButton to="/publicarviaje" />
+                <p className='text-3xl tracking-tighter font-onest font-bold'>SafePoints</p>
+            </div>
+
             {/* Header Moderno */}
             <div className={styles.header}>
                 <div className={styles.headerLeft}>
-                    <UnstyledButton 
-                        onClick={() => navigate({ to: '/publicarviaje' })} 
-                        className={styles.backButton}
-                    >
-                        <ArrowLeft size={20} />
-                    </UnstyledButton>
                     <div>
                         <Title className={styles.headerTitle}>
                             {currentStep === 'origin' ? 'SafePoints de Origen' : 'SafePoints de Destino'}
@@ -625,14 +626,14 @@ function SafePointsView() {
                     </Button>
                 </div>
 
-                <div className={styles.categoryGrid}>
+                <div className={`${styles.categoryGrid} mt-4`}>
                     {/* Categoría "En la Ruta" - Solo Sin SafePoint */}
                     <div 
                         className={`${styles.categoryCard} ${viewMode === 'route' ? styles.active : ''}`}
                         onClick={() => handleRouteSelect()}
                     >
                         <div className={styles.categoryIcon}>🚫</div>
-                        <Text className={styles.categoryName}>En la Ruta</Text>
+                        <Text className={styles.categoryName}>En La Ruta</Text>
                         <Text className={styles.categoryCount}>
                             {viewMode === 'route' ? safePoints.length : 0} disponibles
                         </Text>
@@ -669,7 +670,7 @@ function SafePointsView() {
             {/* Toggle para Paradas de Pasajeros */}
             <div className={styles.passengerToggleContainer}>
                 <div className={styles.passengerToggleHeader}>
-                    <div>
+                    <div >
                         <Text className={styles.passengerToggleTitle}>
                             Paradas de Pasajeros
                         </Text>

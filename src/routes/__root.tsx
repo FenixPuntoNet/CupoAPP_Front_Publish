@@ -99,7 +99,7 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
           >
             <div className={styles.backgroundEffect} />
 
-            {showNavigation && (
+            {/* {showNavigation && (
               <AppShell.Header className={styles.header}>
                 <Group justify="space-between" className={styles.headerContent}>
                   <Image
@@ -121,7 +121,11 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
                   </Group>
                 </Group>
               </AppShell.Header>
-            )}
+            )} */}
+
+            {/* <div className="flex items-center justify-end">
+              <ThemeToggle />
+            </div> */}
 
             <AppShell.Main className={styles.main}>
               <Outlet />

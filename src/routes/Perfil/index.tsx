@@ -35,6 +35,8 @@ import {
   getDocumentsStatusNew 
 } from '@/services/vehicles'
 
+import BackButton from '@/components/Buttons/backButton';
+
 // Interfaces
 interface UserProfile {
   id: number | string;
@@ -657,7 +659,11 @@ const ProfileView: React.FC = () => {
       </Modal>
 
       {/* Espaciado superior extra para que el perfil no quede pegado arriba */}
-      <div className={styles.profileTopSpacer} />
+      {/* <div className={styles.profileTopSpacer} /> */}
+
+      <div className='top my-8'>
+        <BackButton to='/' />
+      </div>
 
       {renderUserSection()}
 

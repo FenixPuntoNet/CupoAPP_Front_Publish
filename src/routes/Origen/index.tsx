@@ -4,9 +4,10 @@ import { Container, TextInput, Text, Button, Title } from '@mantine/core';
 import { ArrowLeft, MapPin, Navigation, Search, Star, Clock } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useMaps } from '@/components/GoogleMapsProvider';
-import { ConditionalMap } from '@/components/ui/OptimizedMap';
+// import { ConditionalMap } from '@/components/ui/OptimizedMap';
 import { useOptimizedMaps } from '@/hooks/useOptimizedMaps';
 import styles from './index.module.css';
+import { GoogleMap, Marker } from '@react-google-maps/api';
 
 // Interfaces
 interface Suggestion {
@@ -46,6 +47,8 @@ function OrigenView() {
     'Centro de Cali - Plaza Caicedo'
   ]);
 
+  const mapRef = useRef<google.maps.Map | null>(null);
+
   // 🚀 Usar hooks optimizados para Google Maps
   const { 
     searchPlaces, 
@@ -59,7 +62,7 @@ function OrigenView() {
   useEffect(() => {
     if (loadError) {
       console.error('Google Maps load error:', loadError);
-      setError('Error cargando Google Maps. Por favor, reinica la app..');
+      setError('Error cargando Google Maps. Por favor, reinicia la app..');
     } else if (isLoaded) {
       console.log('✅ Google Maps loaded successfully');
       setError(null);
@@ -358,7 +361,7 @@ function OrigenView() {
           </div>
         )}
         
-        {showMap && (
+        {/* {showMap && (
           <ConditionalMap
             center={selectedLocation || currentLocation || { lat: 3.4516, lng: -76.5320 }}
             zoom={selectedLocation ? 16 : 13}
@@ -368,7 +371,7 @@ function OrigenView() {
               icon: {
                 path: google.maps.SymbolPath.CIRCLE,
                 scale: 10,
-                fillColor: '#00ff9d',
+                fillColor: '#ff3366',
                 fillOpacity: 1,
                 strokeColor: '#FFFFFF',
                 strokeWeight: 3,
@@ -377,8 +380,33 @@ function OrigenView() {
             onMapClick={handleMapClick}
             height="100%"
             width="100%"
-            triggerLoad={true} // Cargar inmediatamente cuando showMap=true
+            triggerLoad={true}
           />
+        )} */}
+
+        {showMap && (
+          <GoogleMap
+            center={selectedLocation || currentLocation || { lat: 3.4516, lng: -76.5320 }}
+            zoom={selectedLocation ? 16 : 13}
+            onClick={handleMapClick}
+            onLoad={(map: google.maps.Map) => {
+              mapRef.current = map;
+            }}
+          >
+            {selectedLocation && (
+              <Marker
+                position={selectedLocation}
+                icon={{
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 10,
+                  fillColor: '#ff3366',
+                  fillOpacity: 1,
+                  strokeColor: '#FFFFFF',
+                  strokeWeight: 3,
+                }}
+              />
+            )}
+          </GoogleMap>
         )}
       </div>
 

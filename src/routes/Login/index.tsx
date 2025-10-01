@@ -28,8 +28,11 @@ import styles from "./index.module.css";
 
 import { isMobileApp, startMobileOAuth } from "@/utils/deepLinkHandler";
 
+import BackButton from '@/components/Buttons/backButton';
+
 // Import debug tools for testing
 import "@/utils/appleOAuthTestTools";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface LoginFormValues {
   email: string;
@@ -1821,9 +1824,10 @@ const LoginView: React.FC = () => {
       )}
 
       <Group justify="flex-start" mb="xl">
-        <UnstyledButton component={Link} to="/" className={styles.backButton}>
-          <ArrowLeft size={24} />
-        </UnstyledButton>
+        <div className="flex items-center justify-between w-full">
+          <BackButton to='/' />
+          <ThemeToggle />
+        </div>
       </Group>
 
       <Box className={styles.logoSection}>
@@ -1833,12 +1837,11 @@ const LoginView: React.FC = () => {
             alt="Cupo Logo"
           />
         </Box>
-        <Text className={styles.title}>
+        {/* <Text className={styles.title}>
           Hola de nuevo, <span className={styles.userName}>Usuario</span>
-        </Text>
-        <Text className={styles.subtitle}>
-          Hoy es un gran día para viajar con nosotros.
-        </Text>
+        </Text> */}
+        <Text className={styles.title}>¡Hola de nuevo!</Text>
+        <Text className=''>Hoy es un gran día para viajar con nosotros.</Text>
       </Box>
 
       {/* Botones de OAuth */}
@@ -1874,7 +1877,6 @@ const LoginView: React.FC = () => {
           Continuar con Google
         </Button>
 
-        {/* ✅ NUEVO: Botón de Apple Sign-In */}
         <AppleSignInButton
           onClick={handleAppleLogin}
           loading={loading}
@@ -1892,7 +1894,7 @@ const LoginView: React.FC = () => {
         <Box className={styles.inputWrapper}>
           <Text className={styles.inputLabel}>Correo electrónico</Text>
           <TextInput
-            placeholder="ejemplo@correo.com"
+            placeholder="ejemplo@email.com"
             className={styles.input}
             size="lg"
             required
@@ -1934,22 +1936,23 @@ const LoginView: React.FC = () => {
           className={styles.loginButton}
           type="submit"
         >
-          Ingresar
+          Acceder
         </Button>
 
-        <UnstyledButton
-          className={styles.forgotPassword}
-          onClick={() => navigate({ to: "/RecuperarPasword/ForgotPassword" })}
-        >
-          Olvidé mi contraseña
-        </UnstyledButton>
-
-        <UnstyledButton
-          className={styles.recoverAccount}
-          onClick={() => setRecoverModalOpened(true)}
-        >
-          Recuperar cuenta desactivada
-        </UnstyledButton>
+        <div className="mt-10 flex flex-col items-center gap-4 text-center">
+          <UnstyledButton
+            className={styles.forgotPassword}
+            onClick={() => navigate({ to: "/RecuperarPasword/ForgotPassword" })}
+          >
+            Olvidé mi contraseña
+          </UnstyledButton>
+          <UnstyledButton
+            className={styles.forgotPassword}
+            onClick={() => setRecoverModalOpened(true)}
+          >
+            Recuperar cuenta desactivada
+          </UnstyledButton>
+        </div>
       </form>
 
       <RecoverAccountModal

@@ -9,7 +9,7 @@ import {
   Badge,
   Tabs,
 } from '@mantine/core';
-import { ArrowLeft, DollarSign, Lock } from 'lucide-react';
+import { DollarSign, Lock } from 'lucide-react';
 import { getCurrentWallet, getWalletTransactions } from '@/services/wallet';
 import styles from './index.module.css';
 
@@ -26,6 +26,8 @@ interface WalletTransaction {
   transaction_date: string | null;
   transaction_type: string;
 }
+
+import BackButton from '@/components/Buttons/backButton';
 
 const WalletDetailView: React.FC = () => {
   const navigate = useNavigate();
@@ -95,9 +97,8 @@ const WalletDetailView: React.FC = () => {
 
   return (
     <Container fluid className={styles.container}>
-      <div style={{height: '20px'}} />
       <div className={styles.walletHeader}>
-        <ArrowLeft size={24} onClick={() => navigate({ to: '/Perfil' })} className={styles.backButton} />
+        <BackButton to='/perfil' />
         <Title className={styles.walletTitle}>Detalle de Billetera</Title>
       </div>
 
@@ -108,18 +109,18 @@ const WalletDetailView: React.FC = () => {
               <DollarSign size={24} />
               <Title order={3}>Saldo Disponible</Title>
             </Group>
-            <Text size="xl" fw={700} className={styles.balanceAmount}>
+            <p className={styles.balanceAmount}>
               ${walletData.balance.toLocaleString()}
-            </Text>
+            </p>
           </div>
           <div className={styles.balanceSection}>
             <Group gap="xs">
               <Lock size={24} />
               <Title order={3}>Saldo Congelado</Title>
             </Group>
-            <Text size="xl" fw={700} className={styles.frozenAmount}>
+            <p className={styles.frozenAmount}>
               ${walletData.frozen_balance.toLocaleString()}
-            </Text>
+            </p>
           </div>
         </Group>
       </Card>

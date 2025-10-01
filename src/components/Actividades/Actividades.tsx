@@ -57,6 +57,8 @@ interface UserProfile {
   user_type: string;
 }
 
+import BackButton from '@/components/Buttons/backButton';
+
 const Actividades: React.FC = () => {
   const navigate = useNavigate();
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -328,15 +330,17 @@ const Actividades: React.FC = () => {
 
   return (
     <Container className={styles.container}>
-      <div style={{height: '30px'}} />
+      <div className='top'>
+        <BackButton to='/perfil' />
+      </div>
       <div className={styles.headerContainer}>
         <Title className={styles.title}>
           {selectedActivity === 'Viajes Publicados' && userProfile?.user_type === 'DRIVER'
-            ? <>Tus viajes, <span className={styles.userName}>{userProfile?.first_name || 'Cliente'}</span></>
+            ? <p>Tus viajes</p>
             : selectedActivity === 'Resumen de Actividades'
-            ? <>Tu resumen, <span className={styles.userName}>{userProfile?.first_name || 'Usuario'}</span></>
+            ? <p>Tu resumen</p>
             : selectedActivity === 'Cupos Creados'
-            ? <>Tus cupos, <span className={styles.userName}>{userProfile?.first_name || 'Usuario'}</span></>
+            ? <p>Tus cupos</p>
             : 'Mis Actividades'}
         </Title>
         <RolSelector onSelect={handleActivitySelect} selectedActivity={selectedActivity || undefined} />
