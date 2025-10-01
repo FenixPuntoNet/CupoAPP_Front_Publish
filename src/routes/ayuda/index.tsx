@@ -22,6 +22,8 @@ import {
 import { getCurrentUser } from '@/services/auth';
 import styles from './index.module.css';
 
+import BackButton from '@/components/Buttons/backButton';
+
 export const Route = createFileRoute('/ayuda/')({
   validateSearch: (search: Record<string, unknown>) => {
     return {
@@ -145,9 +147,7 @@ function AssistantChat() {
         <div style={{height: '30px'}} />
         <div className={styles.inner}>
           <Group mb="sm">
-            <ActionIcon variant="light" color="gray" onClick={() => navigate({ to: '/Perfil' })}>
-              <ArrowLeft size={20} />
-            </ActionIcon>
+            <BackButton to='/perfil' />
             <Title order={3}>Centro de Soporte</Title>
           </Group>
           <Paper withBorder radius="md" className={styles.chatBox}>
@@ -166,9 +166,7 @@ function AssistantChat() {
         <div style={{height: '30px'}} />
         <div className={styles.inner}>
           <Group mb="sm">
-            <ActionIcon variant="light" color="gray" onClick={() => navigate({ to: '/Perfil' })}>
-              <ArrowLeft size={20} />
-            </ActionIcon>
+            <BackButton to='/perfil' />
             <Title order={3}>Centro de Soporte</Title>
           </Group>
           <Paper withBorder radius="md" className={styles.chatBox}>
@@ -186,9 +184,7 @@ function AssistantChat() {
       <div style={{height: '30px'}} />
       <div className={styles.inner}>
         <Group mb="sm">
-          <ActionIcon variant="light" color="gray" onClick={() => navigate({ to: '/Perfil' })}>
-            <ArrowLeft size={20} />
-          </ActionIcon>
+          <BackButton to='/perfil' />
           <Title order={3}>Centro de Soporte</Title>
         </Group>
 

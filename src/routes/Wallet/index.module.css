@@ -22,30 +22,6 @@
   padding: 12px 0;
 }
 
-.backButton {
-  cursor: pointer;
-  color: #8F9BA8;
-  transition: color 0.3s ease;
-  padding: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-:global(.light) .backButton {
-  color: #6b7280;
-  background: rgba(16, 185, 129, 0.05);
-}
-
-.backButton:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-:global(.light) .backButton:hover {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
-}
-
 .walletTitle {
   font-size: 24px;
   color: #fff;
@@ -61,14 +37,13 @@
 
 /* Tarjeta de balance */
 .balanceCard {
-  background: linear-gradient(145deg, rgba(26, 27, 30, 0.9), rgba(20, 21, 23, 0.9));
+  border-radius: 16px;
+  margin-bottom: 16px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  transition: background 0.3s ease, border-color 0.3s ease;
+  transition: background .3s ease, border-color 0.3s ease;
+  background: linear-gradient(145deg, rgba(26, 27, 30, 0.9), rgba(20, 21, 23, 0.9));
 }
 
 :global(.light) .balanceCard {
@@ -91,12 +66,10 @@
 }
 
 .balanceSection {
-  flex: 1;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  padding: 16px;
-  transition: all 0.3s ease;
+  padding: 1rem;
+  border-radius: 1rem;
+  transition: all .3s ease;
+  background: #ffffff08;
 }
 
 :global(.light) .balanceSection {
@@ -115,21 +88,13 @@
 .balanceAmount {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #00F5A0, #00D9F5);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 10px rgba(0, 245, 160, 0.2);
+  font-family: "Onest", sans-serif;
 }
 
 .frozenAmount {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #7C3AED, #A78BFA);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 10px rgba(124, 58, 237, 0.2);
+  font-family: "Onest", sans-serif;
 }
 
 /* Sección de fondos congelados */

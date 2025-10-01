@@ -73,36 +73,27 @@ const HomeView = () => {
       icon: (
         <span className={styles.objectiveIconWrap}>
           <Target size={22} color="#fff" />
-          <Trophy size={10} color="#ffe066" style={{ position: 'absolute', right: -6, top: -6, background: 'transparent', borderRadius: '50%' }} />
+          <Trophy size={10} color="#00cc7a" style={{ position: 'absolute', right: -6, top: -6, background: 'transparent', borderRadius: '50%' }} />
         </span>
       ),
       title: "Objetivos & Retos",
       desc: "Cumple retos y gana UniCoins y premios exclusivos.",
       to: "/account",
-      color: "#3bffb7",
       badge: "Retos",
-      gradient: "linear-gradient(135deg, #1e293b 60%, #38bdf8 100%)",
-      shadow: "0 2px 16px #38bdf855",
     },
     {
       icon: <Coins size={22} color="#fff" />,
       title: "UniCoins",
       desc: "Gana UniCoins por tus viajes y participación.",
       to: "/account",
-      color: "#ffe066",
-      badge: "Wallet",
-      gradient: "linear-gradient(135deg, #1e293b 60%, #ffe066 100%)",
-      shadow: "0 2px 16px #ffe06655",
+      badge: "Wallet"
     },
     {
       icon: <Gift size={22} color="#fff" />,
       title: "Tienda de Recompensas",
       desc: "Canjea tus UniCoins por productos y experiencias.",
       to: "/change",
-      color: "#a259ff",
       badge: "Canjea",
-      gradient: "linear-gradient(135deg, #1e293b 60%, #a259ff 100%)",
-      shadow: "0 2px 16px #a259ff55",
     },
   ];
 
@@ -144,12 +135,11 @@ const HomeView = () => {
             <Title order={2} className={styles.sectionTitle}>
               <span className={styles.titleGlow}></span>
             </Title>
-            <div style={{height: '50px'}} />
-            <Text className={styles.sectionSubtitle}>
+            {/* <Text className={styles.sectionSubtitle}>
               Descubre por qué miles de personas eligen Cupo para sus viajes diarios.
-            </Text>
+            </Text> */}
           </div>
-          <FeatureCarousel features={features} />
+          {/* <FeatureCarousel features={features} /> */}
           
           
         </div>
@@ -158,10 +148,10 @@ const HomeView = () => {
 
 
       {/* 5. REWARDS */}
-      <Box className={styles.rewardsSection}>
+      <Box className="py-20">
         <div className={styles.rewardsHeader}>
           <Title order={2} className={styles.rewardsTitle}>
-            <span className={styles.rewardsHighlight}>¡Desbloquea tu experiencia Cupo!</span>
+            ¡Desbloquea tu experiencia Cupo!
           </Title>
           <Text className={styles.rewardsSubtitle}>
             <b>Participa, cumple objetivos y canjea tus UniCoins</b> por productos y experiencias únicas. <span className={styles.rewardsAccent}>¡Haz que cada viaje cuente!</span>
@@ -175,13 +165,6 @@ const HomeView = () => {
               radius="xl"
               p="md"
               key={item.title}
-              style={{
-                borderColor: item.color,
-                background: item.gradient,
-                boxShadow: item.shadow,
-                position: 'relative',
-                overflow: 'visible',
-              }}
             >
               <div className={styles.rewardIcon}>{item.icon}</div>
               <div className={styles.rewardCardContent}>
@@ -194,13 +177,6 @@ const HomeView = () => {
                 to={item.to}
                 variant="light"
                 size="xs"
-                style={{
-                  color: item.color,
-                  borderColor: item.color,
-                  background: "rgba(255,255,255,0.08)",
-                  fontWeight: 700,
-                }}
-                fullWidth
                 rightSection={<ArrowRight size={14} />}
               >
                 {item.badge}
@@ -211,7 +187,7 @@ const HomeView = () => {
       </Box>
 
       {/* CTA Section */}
-      <Box className={styles.ctaSection}>
+      <Box className="px-4">
         <Card className={styles.ctaCard}>
           <Title order={2} className={styles.ctaTitle}>
             ¿Listo para empezar?

@@ -7,6 +7,8 @@ import { getOrCreateTripChat } from '@/services/chat'
 import { showNotification } from '@mantine/notifications'
 import styles from './index.module.css'
 
+import BackButton from '@/components/Buttons/backButton';
+
 interface Chat {
   id: number
   trip_id: number | null
@@ -177,6 +179,9 @@ function ChatPage() {
 
   return (
     <div className={styles.chatApp}>
+      <div className='top p-4'>
+        <BackButton to='/perfil' />
+      </div>
       {/* Vista para móvil - Una sola vista a la vez */}
       {isMobile && (
         <>

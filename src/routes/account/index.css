@@ -1,10 +1,10 @@
 /* --- CONTENEDOR GENERAL --- */
 .account-container {
   min-height: 100vh;
-  background: linear-gradient(120deg, #191c22 0%, #23243a 100%);
+  background: none;
   padding-top: 24px;
   padding-bottom: 40px;
-  transition: background 0.3s ease;
+  transition: background .3s ease;
 }
 
 /* Light mode */
@@ -512,7 +512,7 @@
 .streak-line {
   width: 100%;
   box-sizing: border-box;
-  background: rgba(25, 28, 34, 0.9);
+  /* background: rgba(25, 28, 34, 0.9); */
   border-radius: 0.7rem;
   box-shadow: 0 2px 12px rgba(59, 210, 137, 0.15);
   padding: 0.8rem 0.8rem;

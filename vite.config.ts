@@ -1,16 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
-// ❌ quitamos el plugin que impone dist/client
 import { fileURLToPath } from "node:url";
-import { telefunc } from "telefunc/vite";
 
 export default defineConfig({
   plugins: [
     react(),
-    // @ts-expect-error
-    telefunc({
-      disableNamingConvention: true,
-    }),
   ],
   resolve: {
     alias: [

@@ -96,35 +96,9 @@
 
 /* Hero Section */
 .heroSection {
-  background: linear-gradient(135deg, rgba(16, 19, 26, 0.95) 0%, rgba(35, 35, 59, 0.95) 100%);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 32px 24px;
-  margin: 24px 0;
-  box-shadow: 0 10px 40px rgba(0, 255, 157, 0.2);
-  border: 1px solid rgba(0, 255, 157, 0.3);
-  position: relative;
   overflow: hidden;
-}
-
-:global(.light) .heroSection {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
-  box-shadow: 0 10px 40px rgba(16, 185, 129, 0.2);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.heroSection::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #00ff9d 0%, #00cc7a 100%);
-}
-
-:global(.light) .heroSection::before {
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  position: relative;
+  border-radius: 1.2rem;
 }
 
 .heroImageContainer {
@@ -238,7 +212,6 @@
 
 .input {
   width: 100%;
-  padding: 16px 16px 16px 48px;
   border: 2px solid rgba(0, 255, 157, 0.3);
   border-radius: 12px;
   font-size: 1rem;
@@ -268,6 +241,7 @@
 .input::placeholder {
   color: #64748b;
   transition: color 0.3s ease;
+  font-family: "Onest", sans-serif !important;
 }
 
 :global(.light) .input::placeholder {
@@ -284,6 +258,7 @@
   color: #e2e8f0 !important;
   transition: all 0.3s ease !important;
   backdrop-filter: blur(5px) !important;
+  font-family: "Onest", sans-serif !important;
 }
 
 :global(.light) .input input {
@@ -306,6 +281,7 @@
 .input input::placeholder {
   color: #64748b !important;
   transition: color 0.3s ease;
+  font-family: "Onest", sans-serif !important;
 }
 
 :global(.light) .input input::placeholder {

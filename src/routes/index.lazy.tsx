@@ -6,6 +6,8 @@ import { ThemeToggle } from "../components/ThemeToggle";
 import styles from "./indexlazy.module.css";
 // import { hello } from "$/hello.telefunc.ts";
 
+import AppLogo from '../assets/app_logo_asset_rdap.png';
+
 export const Route = createLazyFileRoute("/")({
   component: () => (
     <ThemeProvider>
@@ -53,26 +55,26 @@ function Index() {
   }, []); 
 
   return (
-    <div className={styles.container}>
-      <div style={{height: '30px'}} />
-      <div className={styles.backgroundEffect} />
-      <header className={styles.header}>
-      {/* <Button onClick={() => hello().then((v) => console.log(v))}>
-        Telefunc
-      </Button> */}
+    <div className={`${styles.container}`}>
+      {/* <header className={styles.header}>
         <div className={styles.logo}>
-          <div style={{height: '30px'}} />
           <span className={styles.logoIcon} />
-          <span className={styles.logoText}>cupo</span>
         </div>
         <div className={styles.headerButtons}>
           <div style={{height: '30px'}} />
           <ThemeToggle />
         </div>
-      </header>
+      </header> */}
+
+      <div className="top p-4 w-full flex items-center justify-end mt-[4dvh]">
+        <ThemeToggle />
+      </div>
 
       <main className={styles.main}>
         <div className={styles.content}>
+          <div className="logo">
+            <img src={AppLogo} alt="Cupo Logo" className="w-12" />
+          </div>
           <div className={styles.slideContent}>
             <h1
               className={`${styles.title} ${animatingText ? styles.fadeOut : styles.fadeIn}`}
@@ -98,9 +100,9 @@ function Index() {
           </div>
         </div>
 
-        <div className={styles.actionButtons}>
+        <div className='flex flex-col justify-center items-center gap-4 w-full max-w-[500px]'>
           <Link to="/Registro" className={styles.registerLink} onClick={handleRegisterClick}>
-            <Button className={styles.registerButton}>
+            <Button className={`font-onest ${styles.registerButton}`}>
               Crear cuenta
             </Button>
           </Link>
