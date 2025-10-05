@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState, useRef, useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   Box,
   TextInput,
@@ -22,7 +22,7 @@ import {
   saveToLocalStorage,
 } from "../../types/PublicarViaje/localStorageHelper";
 import styles from "./reservar.module.css";
-import { TripReservationModal } from "../Reservas/TripReservationModal";
+import { TripReservationModal } from "@/components/ReservationModals/TripReservationModal";
 import type { Trip } from "@/types/Trip";
 import { Drawer } from "@mantine/core";
 import { Rating } from "@mantine/core";
@@ -83,7 +83,6 @@ const ReservarView = () => {
   const [selectedDriver, setSelectedDriver] = useState<TripSearchResult | null>(
     null
   );
-  const navigate = useNavigate();
   const { searchPlaces, getDetails } = useMaps();
 
   const [formData, setFormData] = useState<SearchFormData>(() => {
@@ -436,11 +435,8 @@ const ReservarView = () => {
     setSelectedTrip(tripData);
     saveToLocalStorage("currentTrip", tripData);
     setReservationModalOpen(true);
-
-    // Opcional: navegar después de un breve delay
-    setTimeout(() => {
-      navigate({ to: "/Reservas" });
-    }, 100);
+    
+    // No navegamos automáticamente, permanecemos en la página con los resultados
   };
 
   // Función actualizada que usa el hook de protección

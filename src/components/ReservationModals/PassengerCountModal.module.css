@@ -1,0 +1,104 @@
+/* =============================================== */
+/* 🎨 PASSENGER COUNT MODAL STYLES - SIMPLE & CLEAN */
+/* =============================================== */
+
+.container {
+  padding: 24px;
+  background: var(--reservation-bg);
+  color: var(--reservation-text);
+}
+
+.title {
+  color: var(--reservation-text) !important;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.counterButton {
+  background: var(--reservation-card-bg) !important;
+  border: 1px solid var(--reservation-border) !important;
+  color: var(--reservation-text) !important;
+  transition: all 0.2s ease;
+}
+
+.counterButton:hover:not(:disabled) {
+  background: var(--reservation-accent) !important;
+  color: white !important;
+  border-color: var(--reservation-accent) !important;
+}
+
+.counterButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.counterText {
+  color: var(--reservation-accent) !important;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: center;
+}
+
+.passengerCard {
+  background: var(--reservation-card-bg) !important;
+  border-color: var(--reservation-border) !important;
+  padding: 16px !important;
+  border-radius: 8px;
+}
+
+.passengerLabel {
+  color: var(--reservation-text) !important;
+}
+
+.input .mantine-TextInput-input {
+  background: var(--reservation-bg) !important;
+  border: 1px solid var(--reservation-border) !important;
+  color: var(--reservation-text) !important;
+  border-radius: 6px;
+  transition: border-color 0.2s ease;
+}
+
+.input .mantine-TextInput-input:focus {
+  border-color: var(--reservation-accent) !important;
+}
+
+.input .mantine-TextInput-input::placeholder {
+  color: var(--reservation-text-secondary) !important;
+}
+
+.priceCard {
+  background: var(--reservation-card-bg) !important;
+  border-color: var(--reservation-border) !important;
+  margin-top: 20px;
+  padding: 16px !important;
+  border-radius: 8px;
+}
+
+.cancelButton {
+  background: transparent !important;
+  border: 1px solid var(--reservation-border) !important;
+  color: var(--reservation-text) !important;
+  border-radius: 6px;
+}
+
+.cancelButton:hover {
+  background: var(--reservation-card-bg) !important;
+}
+
+.nextButton {
+  background: var(--reservation-accent) !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 6px;
+}
+
+.nextButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.nextButton:disabled {
+  background: var(--reservation-text-secondary) !important;
+  opacity: 0.5;
+  cursor: not-allowed;
+}

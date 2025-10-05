@@ -1,0 +1,135 @@
+/* =============================================== */
+/* 🎨 SAFEPOINT SELECTOR STYLES - SIMPLE & CLEAN */
+/* =============================================== */
+
+.container {
+  padding: 20px;
+  background: var(--reservation-bg);
+  color: var(--reservation-text);
+  position: relative;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.content {
+  max-height: 60vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--reservation-border) transparent;
+}
+
+.content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: var(--reservation-border);
+  border-radius: 2px;
+}
+
+.title {
+  color: var(--reservation-text) !important;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.tripCard {
+  background: var(--reservation-card-bg) !important;
+  border-color: var(--reservation-border) !important;
+  padding: 16px !important;
+  border-radius: 8px;
+}
+
+.typeButton {
+  border-radius: 20px !important;
+  border: 1px solid var(--reservation-border) !important;
+  transition: all 0.2s ease !important;
+  font-size: 12px !important;
+  padding: 4px 12px !important;
+  height: 28px !important;
+}
+
+.typeButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.safePointCard {
+  transition: all 0.2s ease !important;
+  margin-bottom: 8px !important;
+}
+
+.safePointCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  border-color: var(--reservation-accent) !important;
+}
+
+.safePointCard:last-child {
+  margin-bottom: 0 !important;
+}
+
+.safepointCard {
+  background: var(--reservation-card-bg) !important;
+  border-color: var(--reservation-border) !important;
+  padding: 16px !important;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.safepointCard:hover {
+  border-color: var(--reservation-accent) !important;
+}
+
+.safepointCard.selected {
+  border-color: var(--reservation-accent) !important;
+  background: rgba(0, 255, 157, 0.05) !important;
+}
+
+.emptyCard {
+  background: var(--reservation-card-bg) !important;
+  border-color: var(--reservation-border) !important;
+  padding: 16px !important;
+  border-radius: 8px;
+}
+
+.summaryCard {
+  background: var(--reservation-card-bg) !important;
+  border-color: var(--reservation-border) !important;
+  padding: 16px !important;
+  border-radius: 8px;
+}
+
+.cancelButton {
+  background: transparent !important;
+  border: 1px solid var(--reservation-border) !important;
+  color: var(--reservation-text) !important;
+  border-radius: 6px;
+}
+
+.cancelButton:hover {
+  background: var(--reservation-card-bg) !important;
+}
+
+.confirmButton {
+  background: var(--reservation-accent) !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 6px;
+}
+
+.confirmButton:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.confirmButton:disabled {
+  background: var(--reservation-text-secondary) !important;
+  opacity: 0.5;
+  cursor: not-allowed;
+}

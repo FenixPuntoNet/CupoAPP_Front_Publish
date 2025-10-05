@@ -1,11 +1,45 @@
-/* Layout General del Modal */
-.modalContent {
-    padding: 16px; /* Reducido para móvil */
+/* =============================================== */
+/* 🎨 VARIABLES CSS PARA RESERVAS - MODO OSCURO Y CLARO */
+/* =============================================== */
+
+:root {
+  /* Colores principales */
+  --reservation-bg: rgba(20, 20, 20, 0.95);
+  --reservation-card-bg: rgba(40, 40, 40, 0.95);
+  --reservation-text: #ffffff;
+  --reservation-text-secondary: #b0b0b0;
+  --reservation-border: rgba(255, 255, 255, 0.1);
+  --reservation-accent: #00ff9d;
+  --reservation-accent-hover: #00cc7a;
+  --reservation-success: #37b24d;
+  --reservation-warning: #fab005;
+  --reservation-error: #fa5252;
 }
 
-:global(.light) .modalContent {
-    background-color: #ffffff;
-    color: #1f2937;
+:global(.light) {
+  /* Modo claro */
+  --reservation-bg: rgba(255, 255, 255, 0.95);
+  --reservation-card-bg: rgba(248, 249, 250, 0.95);
+  --reservation-text: #1a1a1a;
+  --reservation-text-secondary: #6c757d;
+  --reservation-border: rgba(0, 0, 0, 0.1);
+  --reservation-accent: #00cc7a;
+  --reservation-accent-hover: #00994d;
+  --reservation-success: #10b981;
+  --reservation-warning: #f59e0b;
+  --reservation-error: #ef4444;
+}
+
+/* =============================================== */
+/* 🎨 LAYOUT GENERAL DEL MODAL */
+/* =============================================== */
+.modalContent {
+    padding: 16px;
+    background: var(--reservation-bg);
+    color: var(--reservation-text);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--reservation-border);
 }
 
 @media (min-width: 768px) {
@@ -23,13 +57,10 @@
 }
 
 .modalTitle {
-    font-size: 18px; /* Reducido para móvil */
+    font-size: 18px;
     font-weight: 600;
-    color: #ffffff;
-}
-
-:global(.light) .modalTitle {
-    color: #1f2937;
+    color: var(--reservation-text);
+    margin-bottom: 8px;
 }
 
 @media (min-width: 768px) {

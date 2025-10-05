@@ -1,0 +1,40 @@
+/* =============================================== */
+/* 🎨 SAFEPOINT CHOICE MODAL STYLES - SIMPLE & CLEAN */
+/* =============================================== */
+
+.container {
+  padding: 24px;
+  background: var(--reservation-bg);
+  color: var(--reservation-text);
+}
+
+.title {
+  color: var(--reservation-text) !important;
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.optionCard {
+  background: var(--reservation-card-bg) !important;
+  border-color: var(--reservation-border) !important;
+  padding: 16px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.optionCard:hover {
+  border-color: var(--reservation-accent) !important;
+}
+
+.backButton {
+  background: transparent !important;
+  border: 1px solid var(--reservation-border) !important;
+  color: var(--reservation-text) !important;
+  border-radius: 6px;
+}
+
+.backButton:hover {
+  background: var(--reservation-card-bg) !important;
+}

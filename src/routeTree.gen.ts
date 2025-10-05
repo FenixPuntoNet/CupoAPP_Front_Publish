@@ -36,7 +36,6 @@ import { Route as CuponesIndexRouteImport } from './routes/Cupones/index'
 import { Route as CompletarRegistroIndexRouteImport } from './routes/CompletarRegistro/index'
 import { Route as ChatIndexRouteImport } from './routes/Chat/index'
 import { Route as ActividadesIndexRouteImport } from './routes/Actividades/index'
-import { Route as ReservasTripReservationModalRouteImport } from './routes/Reservas/TripReservationModal'
 import { Route as RecuperarPaswordForgotPasswordRouteImport } from './routes/RecuperarPasword/ForgotPassword'
 import { Route as CuposViewTicketRouteImport } from './routes/Cupos/ViewTicket'
 import { Route as CuposViewPassengersRouteImport } from './routes/Cupos/ViewPassengers'
@@ -176,12 +175,6 @@ const ActividadesIndexRoute = ActividadesIndexRouteImport.update({
   path: '/Actividades/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReservasTripReservationModalRoute =
-  ReservasTripReservationModalRouteImport.update({
-    id: '/Reservas/TripReservationModal',
-    path: '/Reservas/TripReservationModal',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const RecuperarPaswordForgotPasswordRoute =
   RecuperarPaswordForgotPasswordRouteImport.update({
     id: '/RecuperarPasword/ForgotPassword',
@@ -223,7 +216,6 @@ export interface FileRoutesByFullPath {
   '/Cupos/ViewPassengers': typeof CuposViewPassengersRoute
   '/Cupos/ViewTicket': typeof CuposViewTicketRoute
   '/RecuperarPasword/ForgotPassword': typeof RecuperarPaswordForgotPasswordRoute
-  '/Reservas/TripReservationModal': typeof ReservasTripReservationModalRoute
   '/Actividades': typeof ActividadesIndexRoute
   '/Chat': typeof ChatIndexRoute
   '/CompletarRegistro': typeof CompletarRegistroIndexRoute
@@ -258,7 +250,6 @@ export interface FileRoutesByTo {
   '/Cupos/ViewPassengers': typeof CuposViewPassengersRoute
   '/Cupos/ViewTicket': typeof CuposViewTicketRoute
   '/RecuperarPasword/ForgotPassword': typeof RecuperarPaswordForgotPasswordRoute
-  '/Reservas/TripReservationModal': typeof ReservasTripReservationModalRoute
   '/Actividades': typeof ActividadesIndexRoute
   '/Chat': typeof ChatIndexRoute
   '/CompletarRegistro': typeof CompletarRegistroIndexRoute
@@ -294,7 +285,6 @@ export interface FileRoutesById {
   '/Cupos/ViewPassengers': typeof CuposViewPassengersRoute
   '/Cupos/ViewTicket': typeof CuposViewTicketRoute
   '/RecuperarPasword/ForgotPassword': typeof RecuperarPaswordForgotPasswordRoute
-  '/Reservas/TripReservationModal': typeof ReservasTripReservationModalRoute
   '/Actividades/': typeof ActividadesIndexRoute
   '/Chat/': typeof ChatIndexRoute
   '/CompletarRegistro/': typeof CompletarRegistroIndexRoute
@@ -331,7 +321,6 @@ export interface FileRouteTypes {
     | '/Cupos/ViewPassengers'
     | '/Cupos/ViewTicket'
     | '/RecuperarPasword/ForgotPassword'
-    | '/Reservas/TripReservationModal'
     | '/Actividades'
     | '/Chat'
     | '/CompletarRegistro'
@@ -366,7 +355,6 @@ export interface FileRouteTypes {
     | '/Cupos/ViewPassengers'
     | '/Cupos/ViewTicket'
     | '/RecuperarPasword/ForgotPassword'
-    | '/Reservas/TripReservationModal'
     | '/Actividades'
     | '/Chat'
     | '/CompletarRegistro'
@@ -401,7 +389,6 @@ export interface FileRouteTypes {
     | '/Cupos/ViewPassengers'
     | '/Cupos/ViewTicket'
     | '/RecuperarPasword/ForgotPassword'
-    | '/Reservas/TripReservationModal'
     | '/Actividades/'
     | '/Chat/'
     | '/CompletarRegistro/'
@@ -437,7 +424,6 @@ export interface RootRouteChildren {
   CuposViewPassengersRoute: typeof CuposViewPassengersRoute
   CuposViewTicketRoute: typeof CuposViewTicketRoute
   RecuperarPaswordForgotPasswordRoute: typeof RecuperarPaswordForgotPasswordRoute
-  ReservasTripReservationModalRoute: typeof ReservasTripReservationModalRoute
   ActividadesIndexRoute: typeof ActividadesIndexRoute
   ChatIndexRoute: typeof ChatIndexRoute
   CompletarRegistroIndexRoute: typeof CompletarRegistroIndexRoute
@@ -650,13 +636,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ActividadesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/Reservas/TripReservationModal': {
-      id: '/Reservas/TripReservationModal'
-      path: '/Reservas/TripReservationModal'
-      fullPath: '/Reservas/TripReservationModal'
-      preLoaderRoute: typeof ReservasTripReservationModalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/RecuperarPasword/ForgotPassword': {
       id: '/RecuperarPasword/ForgotPassword'
       path: '/RecuperarPasword/ForgotPassword'
@@ -709,7 +688,6 @@ const rootRouteChildren: RootRouteChildren = {
   CuposViewPassengersRoute: CuposViewPassengersRoute,
   CuposViewTicketRoute: CuposViewTicketRoute,
   RecuperarPaswordForgotPasswordRoute: RecuperarPaswordForgotPasswordRoute,
-  ReservasTripReservationModalRoute: ReservasTripReservationModalRoute,
   ActividadesIndexRoute: ActividadesIndexRoute,
   ChatIndexRoute: ChatIndexRoute,
   CompletarRegistroIndexRoute: CompletarRegistroIndexRoute,

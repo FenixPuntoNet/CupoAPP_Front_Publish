@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@mantine/core';
-import { SafePointSelector } from './SafePointSelector';
+import { SafePointSelector } from '../SafePointSelector';
 import type { Trip } from '@/types/Trip';
 
 interface SafePointIntegrationProps {

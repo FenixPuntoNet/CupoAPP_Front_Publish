@@ -1,0 +1,79 @@
+/* =============================================== */
+/* 🎨 RESERVATION SUCCESS MODAL STYLES - BEAUTIFUL & COMPACT */
+/* =============================================== */
+
+.container {
+  padding: 16px;
+  background: var(--reservation-bg);
+  color: var(--reservation-text);
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.title {
+  color: var(--reservation-text) !important;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.tripCard {
+  background: var(--reservation-card-bg) !important;
+  border-color: var(--reservation-border) !important;
+  transition: all 0.3s ease;
+}
+
+.tripCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+.routeCard {
+  transition: all 0.3s ease;
+}
+
+.routeCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2) !important;
+}
+
+.paymentCard {
+  transition: all 0.3s ease;
+}
+
+.paymentCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2) !important;
+}
+
+/* Animaciones suaves para los avatares */
+.driverAvatar {
+  transition: all 0.3s ease;
+}
+
+.driverAvatar:hover {
+  transform: scale(1.05);
+}
+
+/* Efectos para badges y elementos pequeños */
+.priceTag {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsiveness mejorado */
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+  }
+}

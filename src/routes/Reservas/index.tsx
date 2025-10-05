@@ -7,7 +7,7 @@ import {
     Button
 } from '@mantine/core';
 import { getFromLocalStorage } from '../../types/PublicarViaje/localStorageHelper';
-import { TripReservationModal } from './TripReservationModal';
+import { TripReservationModal } from '@/components/ReservationModals/TripReservationModal';
 import styles from './index.module.css';
 
 import type { Trip } from '@/types/Trip';

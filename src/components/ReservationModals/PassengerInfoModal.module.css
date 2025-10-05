@@ -1,0 +1,136 @@
+/* =============================================== */
+/* 🎨 PASSENGER INFO MODAL STYLES */
+/* =============================================== */
+
+.container {
+  padding: 24px;
+  background: var(--reservation-bg);
+  color: var(--reservation-text);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.title {
+  color: var(--reservation-text) !important;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: var(--reservation-text-secondary) !important;
+}
+
+.progress {
+  background: var(--reservation-card-bg) !important;
+}
+
+.progress .mantine-Progress-bar {
+  background: var(--reservation-accent) !important;
+}
+
+.passengerCard {
+  background: var(--reservation-card-bg) !important;
+  border: 1px solid var(--reservation-border) !important;
+  margin-bottom: 16px;
+  padding: 20px !important;
+}
+
+.passengerTitle {
+  color: var(--reservation-text) !important;
+}
+
+.input {
+  background: var(--reservation-bg) !important;
+}
+
+.input .mantine-TextInput-label {
+  color: var(--reservation-text) !important;
+  font-weight: 500;
+}
+
+.input .mantine-TextInput-input {
+  background: var(--reservation-bg) !important;
+  border: 1px solid var(--reservation-border) !important;
+  color: var(--reservation-text) !important;
+  border-radius: 8px;
+}
+
+.input .mantine-TextInput-input:focus {
+  border-color: var(--reservation-accent) !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.1) !important;
+}
+
+.input .mantine-TextInput-input::placeholder {
+  color: var(--reservation-text-secondary) !important;
+}
+
+.validationSuccess {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.summaryCard {
+  background: var(--reservation-card-bg) !important;
+  border: 1px solid var(--reservation-border) !important;
+  margin-bottom: 16px;
+  padding: 16px !important;
+}
+
+.summaryTitle {
+  color: var(--reservation-text) !important;
+}
+
+.summaryText {
+  color: var(--reservation-text-secondary) !important;
+}
+
+.backButton {
+  background: transparent !important;
+  border: 1px solid var(--reservation-border) !important;
+  color: var(--reservation-text) !important;
+}
+
+.backButton:hover {
+  background: var(--reservation-card-bg) !important;
+}
+
+.nextButton {
+  background: var(--reservation-accent) !important;
+  border: none !important;
+  color: white !important;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.nextButton:hover:not(:disabled) {
+  background: var(--reservation-accent-hover) !important;
+  transform: translateY(-1px);
+}
+
+.nextButton:disabled {
+  background: var(--reservation-text-secondary) !important;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  
+  .passengerCard {
+    padding: 16px !important;
+  }
+  
+  .summaryCard {
+    padding: 12px !important;
+  }
+}
