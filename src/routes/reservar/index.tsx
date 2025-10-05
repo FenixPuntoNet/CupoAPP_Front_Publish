@@ -11,6 +11,7 @@ import {
   Container,
   Badge,
   Group,
+  ActionIcon,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { Calendar, User, Car, MapPin, Navigation } from "lucide-react";
@@ -23,7 +24,7 @@ import {
 import styles from "./reservar.module.css";
 import { TripReservationModal } from "../Reservas/TripReservationModal";
 import type { Trip } from "@/types/Trip";
-import { Modal } from "@mantine/core";
+import { Drawer } from "@mantine/core";
 import { Rating } from "@mantine/core";
 import {
   IconArrowUpRight,
@@ -34,6 +35,11 @@ import {
   IconList,
   IconX,
   IconAlertCircle,
+  IconRoute,
+  IconMapPin,
+  IconFlag,
+  IconExternalLink,
+  IconUsers,
 } from "@tabler/icons-react";
 import InteractiveMap from "@/components/InteractiveMap";
 // Servicios del backend
@@ -43,8 +49,9 @@ import { searchTrips, type TripSearchResult } from "@/services/trips";
 import { getAssumptions, ensureAssumptionsExist } from "@/services/config";
 import type { PlaceSuggestion } from "@/services/googleMaps";
 import { useReserveClick } from "@/hooks/useSingleClick";
-import { CompactSafePoints } from "@/components/TripSafePointsInfo/CompactSafePoints";
+
 import { DriverModal } from "@/components/DriverModal";
+import { SafePointsIcon } from "@/components/TripSafePointsInfo/SafePointsIcon";
 
 import BackButton from "@/components/Buttons/backButton";
 
@@ -854,88 +861,101 @@ const ReservarView = () => {
 
         {/* Results Section */}
         <Box className={styles.resultsSection}>
+          {/* Contador de viajes */}
+          {searchResults.length > 0 && (
+            <Box
+              style={{
+                background: 'rgba(34, 197, 94, 0.08)',
+                border: '1px solid rgba(34, 197, 94, 0.2)',
+                borderRadius: '8px',
+                padding: '3px 10px',
+                margin: '0 auto 3px auto',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <IconList size={12} style={{ color: '#22c55e' }} />
+              <Text size="xs" fw={500} style={{ color: '#22c55e', margin: 0 }}>
+                {searchResults.length} {searchResults.length === 1 ? 'viaje encontrado' : 'viajes encontrados'}
+              </Text>
+            </Box>
+          )}
+          
           {/* Search Message */}
           {searchMessage && (
-            <Card
-              className={styles.searchMessageCard}
-              shadow="sm"
-              radius="lg"
-              p="xl"
-              mb="xl"
+            <Box
+              style={{
+                background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%)',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                margin: '0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
+              }}
             >
-              <Group justify="center" mb="md">
-                {searchStatus === "exact" && (
-                  <IconCircleCheck size={32} className={styles.exactIcon} />
-                )}
-                {searchStatus === "close" && (
-                  <MapPin size={32} className={styles.closeIcon} />
-                )}
-                {searchStatus === "date" && (
-                  <IconCalendar size={32} className={styles.dateIcon} />
-                )}
-                {searchStatus === "all" && (
-                  <IconList size={32} className={styles.allIcon} />
-                )}
-                {searchStatus === "none" && (
-                  <IconX size={32} className={styles.noneIcon} />
-                )}
-              </Group>
-              <Text
-                size="lg"
-                ta="center"
-                fw={600}
-                className={`${styles.searchMessage} ${styles[`searchMessage--${searchStatus}`]}`}
-              >
-                {searchMessage}
-              </Text>
-
-              {/* Mensajes informativos basados en el tipo de búsqueda */}
+              {/* Icono pequeño */}
               {searchStatus === "exact" && (
-                <Text size="sm" ta="center" c="green" mt="sm" fw={500}>
-                  🎯 ¡Encontramos viajes exactos para tu ruta y fecha!
-                </Text>
+                <IconCircleCheck size={16} style={{ color: '#22c55e' }} />
               )}
               {searchStatus === "close" && (
-                <Text size="sm" ta="center" c="blue" mt="sm" fw={500}>
-                  📍 Viajes similares encontrados (origen o destino coinciden)
-                </Text>
+                <MapPin size={16} style={{ color: '#3b82f6' }} />
               )}
               {searchStatus === "date" && (
-                <Text size="sm" ta="center" c="orange" mt="sm" fw={500}>
-                  📅 Viajes disponibles para la fecha seleccionada
-                </Text>
+                <IconCalendar size={16} style={{ color: '#f59e0b' }} />
               )}
               {searchStatus === "all" && (
-                <Text size="sm" ta="center" c="indigo" mt="sm" fw={500}>
-                  🗂️ Todos los viajes disponibles - Ajusta tu búsqueda para
-                  mayor precisión
-                </Text>
+                <IconList size={16} style={{ color: '#6366f1' }} />
               )}
               {searchStatus === "none" && (
-                <Text size="sm" ta="center" c="dimmed" mt="sm">
-                  💡 Intenta cambiar las fechas o ubicaciones para encontrar más
-                  opciones
-                </Text>
+                <IconX size={16} style={{ color: '#ef4444' }} />
               )}
-            </Card>
+              
+              {/* Texto compacto pero informativo */}
+              <Text
+                size="xs"
+                fw={500}
+                style={{ 
+                  color: searchStatus === 'exact' ? '#22c55e' : 
+                         searchStatus === 'close' ? '#3b82f6' :
+                         searchStatus === 'date' ? '#f59e0b' :
+                         searchStatus === 'all' ? '#6366f1' : '#ef4444',
+                  margin: 0,
+                  textAlign: 'center'
+                }}
+              >
+                {searchStatus === "exact" && "🎯 ¡Encontramos viajes exactos para tu ruta y fecha!"}
+                {searchStatus === "close" && "📍 Viajes similares encontrados (origen o destino coinciden)"}
+                {searchStatus === "date" && "📅 Viajes disponibles para la fecha seleccionada"}
+                {searchStatus === "all" && "🗂️ Todos los viajes disponibles - Ajusta tu búsqueda para mayor precisión"}
+                {searchStatus === "none" && "❌ No encontramos viajes para tu búsqueda específica. Estos son todos los viajes disponibles."}
+              </Text>
+            </Box>
           )}
 
           {/* Error Message */}
           {formError && (
-            <Card
-              className={styles.errorCard}
-              shadow="sm"
-              radius="lg"
-              p="xl"
-              mb="xl"
+            <Box
+              style={{
+                background: 'rgba(239, 68, 68, 0.05)',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                borderRadius: '12px',
+                padding: '8px 16px',
+                margin: '0 0 6px 0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
             >
-              <Group justify="center" mb="md">
-                <IconAlertCircle size={32} className={styles.errorIcon} />
-              </Group>
-              <Text size="lg" ta="center" fw={600} c="red">
+              <IconAlertCircle size={16} style={{ color: '#ef4444' }} />
+              <Text size="xs" fw={500} style={{ color: '#ef4444', margin: 0 }}>
                 {formError}
               </Text>
-            </Card>
+            </Box>
           )}
 
           {searchResults.length > 0 ? (
@@ -990,18 +1010,26 @@ const ReservarView = () => {
                       })}
                     </Badge>
                   );
-                  // Mensaje breve según estado
-                  let msg = "";
-                  if (badge.status === "high")
-                    msg = "El precio está alto para esta ruta";
-                  else if (badge.status === "low")
-                    msg = "El precio está bajo para esta ruta";
-                  else msg = "Precio recomendado para la ruta";
+                  // Ícono profesional según estado del precio
+                  let priceIcon = null;
+                  let iconBgColor = "";
+                  if (badge.status === "high") {
+                    priceIcon = <IconArrowUpRight size={14} style={{ color: "#ffffff" }} />;
+                    iconBgColor = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
+                  } else if (badge.status === "low") {
+                    priceIcon = <IconArrowDownLeft size={14} style={{ color: "#ffffff" }} />;
+                    iconBgColor = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+                  } else {
+                    priceIcon = <IconCheck size={14} style={{ color: "#ffffff" }} />;
+                    iconBgColor = "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)";
+                  }
+                  
                   priceStatusMsg = (
-                    <div
-                      className={`${styles.priceStatusMsg} ${styles["priceStatusMsg--" + badge.color]}`}
+                    <div 
+                      className={styles.professionalPriceIcon}
+                      style={{ background: iconBgColor }}
                     >
-                      {msg}
+                      {priceIcon}
                     </div>
                   );
                 } else {
@@ -1023,45 +1051,143 @@ const ReservarView = () => {
                       })}
                     </Badge>
                   );
+                  priceStatusMsg = (
+                    <div 
+                      className={styles.professionalPriceIcon}
+                      style={{ 
+                        background: "linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)"
+                      }}
+                    >
+                      <div style={{ 
+                        width: 8, 
+                        height: 8, 
+                        borderRadius: "50%", 
+                        backgroundColor: "#ffffff",
+                        opacity: 0.8
+                      }} />
+                    </div>
+                  );
                 }
                 return (
                   <Card
                     key={trip.id}
-                    className={styles.tripCard}
+                    className={styles.compactTripCard}
                     shadow="md"
                     radius="lg"
-                    p="md"
+                    p="sm"
                   >
-                    {/* Header con fecha, precio y badge de coincidencia en una sola línea */}
-                    <Group justify="space-between" align="center" mb="sm">
-                      <Group align="center" gap="sm">
-                        <Text fw={600} size="md" className={styles.dateText}>
+                    {/* Badge de coincidencia a la izquierda */}
+                    <div className={styles.leftBadgeSection}>
+                      {matchInfo.badge}
+                    </div>
+
+                    {/* Header: Ruta principal con precio */}
+                    <Group justify="space-between" align="flex-start" mb="xs">
+                      <div className={styles.compactRouteHeader}>
+                        <Text 
+                          fw={700} 
+                          size="lg" 
+                          className={styles.compactRouteText}
+                          onClick={() => {
+                            setSelectedRouteInfo({
+                              origin: trip.origin,
+                              destination: trip.destination,
+                            });
+                            setShowRouteModal(true);
+                          }}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {trip.origin.split(',')[0]} → {trip.destination.split(',')[0]}
+                        </Text>
+                        <Text size="xs" c="dimmed" className={styles.compactSubroute}>
+                          {trip.origin.split(',').slice(1).join(',').trim()}
+                        </Text>
+                      </div>
+                      
+                      <div className={styles.priceSection}>
+                        {priceBadge}
+                        {/* Ícono de precio profesional */}
+                        {priceStatusMsg}
+                      </div>
+                    </Group>
+
+                    {/* Línea 2: Fecha y hora */}
+                    <Group justify="space-between" align="center" mb="xs">
+                      <Group align="center" gap="xs">
+                        <div className={styles.compactTimeIcon}>
+                          <IconCalendar size={14} />
+                        </div>
+                        <Text size="sm" c="dimmed">
                           {new Date(trip.dateTime).toLocaleString("es-ES", {
+                            weekday: "short",
                             day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
+                            month: "short",
+                            year: "2-digit",
                             hour: "2-digit",
                             minute: "2-digit",
                             hour12: true,
                           })}
                         </Text>
-                        {/* Badge de tipo de coincidencia al lado izquierdo */}
-                        {matchInfo.badge}
                       </Group>
-                      {/* Precio a la derecha */}
-                      {priceBadge}
+                      
                     </Group>
 
-                    {/* Mensaje de estado de precio - más compacto */}
-                    {priceStatusMsg && (
-                      <div style={{ marginBottom: "0.5rem" }}>
-                        {priceStatusMsg}
-                      </div>
-                    )}
+                    {/* Iconos compactos: SafePoints y Ver Ruta */}
+                    <Group justify="space-between" align="center" mb="xs">
+                      <Group align="center" gap="xs">
+                        <Group align="center" gap={4}>
+                          <IconUsers size={12} style={{ color: trip.seats > 0 ? "#22c55e" : "#ef4444" }} />
+                          <Text size="sm" fw={500} style={{ color: trip.seats > 0 ? "#22c55e" : "#ef4444" }}>
+                            {trip.seats} Disponibles
+                          </Text>
+                        </Group>
+                        <Text size="xs" c="dimmed">•</Text>
+                        <Text size="xs" c="dimmed">
+                          {4 - trip.seats} Ocupados
+                        </Text>
+                      </Group>
+                      <Group align="center" gap="xs">
+                        {/* SafePoints con el modal original integrado */}
+                        <SafePointsIcon 
+                          tripId={trip.id.toString()} 
+                          className={styles.safePointsIconButton}
+                          size="lg"
+                          showLabel={true}
+                        />
+                        {/* Botón Ver Ruta */}
+                        <Box style={{ textAlign: 'center' }}>
+                          <ActionIcon
+                            size="lg"
+                            variant="subtle"
+                            className={styles.routeViewIconButton}
+                            onClick={(e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              setSelectedRouteInfo({
+                                origin: trip.origin,
+                                destination: trip.destination,
+                              });
+                              setShowRouteModal(true);
+                            }}
+                            title="Ver ruta del viaje"
+                          >
+                            <IconRoute size={20} />
+                          </ActionIcon>
+                          <Text size="9px" c="dimmed" style={{ marginTop: '2px', lineHeight: 1 }}>
+                            Ruta
+                          </Text>
+                        </Box>
+                      </Group>
+                    </Group>
 
-                    {/* Información del conductor */}
+
+
+                    {/* Sección del conductor - compacta con verificación */}
                     <div
-                      className={styles.driverSection}
+                      className={`${styles.enhancedDriverSection} ${
+                        (trip.license && trip.license !== 'Sin verificar' && trip.license !== 'No disponible')
+                          ? styles.verifiedDriver 
+                          : styles.unverifiedDriver
+                      }`}
                       onClick={() => {
                         setSelectedDriver(trip);
                         setShowDriverModal(true);
@@ -1070,225 +1196,65 @@ const ReservarView = () => {
                     >
                       <img
                         src={trip.photo}
-                        alt="Foto del conductor"
-                        className={styles.driverPhoto}
+                        alt="Conductor"
+                        className={styles.enhancedDriverPhoto}
                         onError={(e) => {
                           e.currentTarget.src =
                             "https://tddaveymppuhweujhzwz.supabase.co/storage/v1/object/public/resourcers/Home/SinFotoPerfil.png";
                         }}
                       />
-                      <div className={styles.driverInfo}>
-                        <div className={styles.driverLabel}>Conductor</div>
-                        <div className={styles.driverName}>
-                          {trip.driverName || "No disponible"}
-                        </div>
-                        <div className={styles.driverRating}>
+                      <div className={styles.enhancedDriverInfo}>
+                        <Group align="center" justify="space-between" style={{ width: '100%', marginBottom: '2px' }}>
+                          <Text fw={600} size="md" lineClamp={1} className={styles.driverName}>
+                            {trip.driverName || "No disponible"}
+                          </Text>
+                          {(trip.license && trip.license !== 'Sin verificar' && trip.license !== 'No disponible') ? (
+                            <Badge 
+                              size="xs" 
+                              className={styles.verifiedBadge}
+                              leftSection={<IconCircleCheck size={10} />}
+                            >
+                              Verificado
+                            </Badge>
+                          ) : (
+                            <Badge 
+                              size="xs" 
+                              variant="outline"
+                              color="yellow"
+                              className={styles.unverifiedBadge}
+                            >
+                              Pendiente
+                            </Badge>
+                          )}
+                        </Group>
+                        <div className={styles.enhancedDriverRating}>
                           {trip.rating !== undefined ? (
-                            <Rating value={trip.rating} readOnly size="xs" />
+                            <Group align="center" gap={2}>
+                              <Rating value={trip.rating} readOnly size="xs" />
+                              <Text size="xs" c="dimmed" style={{ marginLeft: '2px' }}>
+                                {trip.rating.toFixed(1)}
+                              </Text>
+                            </Group>
                           ) : (
                             <Text c="gray" size="xs">
-                              Nuevo
+                              Sin calificaciones
                             </Text>
                           )}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Ruta de origen a destino con flecha bonita */}
-                    <div
-                      className={styles.tripRoute}
-                      onClick={() => {
-                        setSelectedRouteInfo({
-                          origin: trip.origin,
-                          destination: trip.destination,
-                        });
-                        setShowRouteModal(true);
-                      }}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          setSelectedRouteInfo({
-                            origin: trip.origin,
-                            destination: trip.destination,
-                          });
-                          setShowRouteModal(true);
-                        }
-                      }}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <div className={styles.routePoint}>
-                        <div className={styles.iconWrapper}>
-                          <MapPin size={20} className={styles.originIcon} />
-                        </div>
-                        <div className={styles.routeDetails}>
-                          <Text fw={600} className={styles.routeLabel}>
-                            Origen
-                          </Text>
-                          <Text fw={500} className={styles.routeAddress}>
-                            {trip.origin}
-                          </Text>
-                        </div>
-                      </div>
-
-                      {/* Flecha bonita que conecta origen y destino */}
-                      <div className={styles.routeLineWrapper}>
-                        <div className={styles.routeLine}></div>
-                      </div>
-
-                      <div className={styles.routePoint}>
-                        <div className={styles.iconWrapper}>
-                          <MapPin
-                            size={20}
-                            className={styles.destinationIcon}
-                          />
-                        </div>
-                        <div className={styles.routeDetails}>
-                          <Text fw={600} className={styles.routeLabel}>
-                            Destino
-                          </Text>
-                          <Text fw={500} className={styles.routeAddress}>
-                            {trip.destination}
-                          </Text>
-                        </div>
+                      <div className={styles.driverArrow}>
+                        <IconArrowUpRight size={16} />
                       </div>
                     </div>
-
-                    {/* SafePoints con título compacto */}
-                    <Card
-                      className={styles.safepointsCard}
-                      shadow="sm"
-                      radius="md"
-                      p="sm"
-                      mb="xs"
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          marginBottom: "0.25rem",
-                        }}
-                      >
-                        <MapPin size={14} style={{ color: "#22c55e" }} />
-                        <Text
-                          size="xs"
-                          fw={600}
-                          c="dimmed"
-                          style={{
-                            textTransform: "uppercase",
-                            letterSpacing: "0.5px",
-                          }}
-                        >
-                          Puntos de encuentro
-                        </Text>
-                      </div>
-                      <CompactSafePoints tripId={trip.id.toString()} />
-                    </Card>
-
-                    {/* Cupos disponibles - diseño oscuro y elegante */}
-                    <Card
-                      className={styles.availabilityCard}
-                      shadow="sm"
-                      radius="md"
-                      p="md"
-                      mb="sm"
-                      style={{
-                        backgroundColor:
-                          trip.seats > 0
-                            ? "rgba(34, 197, 94, 0.1)"
-                            : "rgba(239, 68, 68, 0.1)",
-                        border:
-                          trip.seats > 0
-                            ? "1px solid rgba(34, 197, 94, 0.3)"
-                            : "1px solid rgba(239, 68, 68, 0.3)",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      <Group justify="space-between" align="center">
-                        <Group align="center" gap="sm">
-                          <div
-                            style={{
-                              padding: "8px",
-                              borderRadius: "50%",
-                              backgroundColor:
-                                trip.seats > 0
-                                  ? "rgba(34, 197, 94, 0.2)"
-                                  : "rgba(239, 68, 68, 0.2)",
-                              border:
-                                trip.seats > 0
-                                  ? "2px solid #22c55e"
-                                  : "2px solid #ef4444",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            <User
-                              size={18}
-                              style={{
-                                color: trip.seats > 0 ? "#22c55e" : "#ef4444",
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <Text
-                              fw={600}
-                              size="sm"
-                              style={{
-                                color: trip.seats > 0 ? "#22c55e" : "#ef4444",
-                              }}
-                            >
-                              {trip.seats > 0 ? "Disponible" : "Sin cupos"}
-                            </Text>
-                            <Text
-                              size="xs"
-                              c="dimmed"
-                              style={{ marginTop: "2px" }}
-                            >
-                              {trip.seats > 0
-                                ? `${trip.seats} ${trip.seats === 1 ? "cupo disponible" : "cupos disponibles"}`
-                                : "No hay espacios libres"}
-                            </Text>
-                          </div>
-                        </Group>
-
-                        {/* Badge visual con el número */}
-                        <Badge
-                          size="lg"
-                          radius="xl"
-                          variant="light"
-                          style={{
-                            fontSize: "1rem",
-                            fontWeight: 700,
-                            minWidth: "40px",
-                            height: "40px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor:
-                              trip.seats > 0
-                                ? "rgba(34, 197, 94, 0.15)"
-                                : "rgba(239, 68, 68, 0.15)",
-                            color: trip.seats > 0 ? "#22c55e" : "#ef4444",
-                            border:
-                              trip.seats > 0
-                                ? "1px solid rgba(34, 197, 94, 0.4)"
-                                : "1px solid rgba(239, 68, 68, 0.4)",
-                          }}
-                        >
-                          {trip.seats}
-                        </Badge>
-                      </Group>
-                    </Card>
 
                     {/* Botón de reservar */}
                     <Button
                       fullWidth
-                      className={styles.reserveButton}
+                      className={styles.compactReserveButton}
                       onClick={() => handleReservation(trip)}
                       loading={reserveClick.isProcessing}
                       disabled={reserveClick.isProcessing}
+                      size="sm"
                     >
                       {reserveClick.isProcessing ? "Procesando..." : "Reservar"}
                     </Button>
@@ -1300,11 +1266,11 @@ const ReservarView = () => {
             <div className={styles.emptyState}>
               {isSearching ? (
                 <div className={styles.loadingState}>
-                  <IconCalendar size={48} className={styles.loadingIcon} />
-                  <Text size="lg" fw={600} ta="center" mt="md">
+                  <IconCalendar size={40} className={styles.loadingIcon} />
+                  <Text size="md" fw={600} ta="center" mt="sm">
                     Buscando viajes disponibles...
                   </Text>
-                  <Text size="sm" c="dimmed" ta="center" mt="xs">
+                  <Text size="xs" c="dimmed" ta="center" mt="xs">
                     Revisando todas las opciones para tu viaje
                   </Text>
                 </div>
@@ -1340,32 +1306,100 @@ const ReservarView = () => {
         )}
 
         {selectedRouteInfo && (
-          <Modal
+          <Drawer
             opened={showRouteModal}
             onClose={() => setShowRouteModal(false)}
             withCloseButton={false}
-            size="calc(100vw - 3rem)"
-            radius="xl"
-            overlayProps={{
-              color: "#000",
-              opacity: 0.8,
-              blur: 4,
+            size="70vh"
+            position="bottom"
+            classNames={{
+              content: styles.mapModalContent
             }}
-            centered
-            styles={{
-              body: { padding: 0 },
-              content: {
-                background: "transparent",
-                boxShadow: "none",
-              },
+            transitionProps={{
+              transition: 'slide-up',
+              duration: 400,
+              timingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
-            <InteractiveMap
-              origin={selectedRouteInfo.origin}
-              destination={selectedRouteInfo.destination}
-              onClose={() => setShowRouteModal(false)}
-            />
-          </Modal>
+            <div className={styles.mapModalContainer}>
+              {/* Header con información de la ruta */}
+              <div className={styles.mapModalHeader}>
+                <div className={styles.mapModalHeaderContent}>
+                  <div className={styles.mapModalTitle}>
+                    <IconRoute size={24} className={styles.mapModalIcon} />
+                    <div>
+                      <Text size="lg" fw={700} className={styles.mapModalTitleText}>
+                        Ruta del Viaje
+                      </Text>
+                      <Text size="xs" className={styles.mapModalSubtitle} style={{ marginTop: 2 }}>
+                        Toca el mapa para interactuar
+                      </Text>
+                    </div>
+                  </div>
+                  <button 
+                    className={styles.mapModalCloseButton}
+                    onClick={() => setShowRouteModal(false)}
+                    aria-label="Cerrar modal"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                {/* Información de origen y destino */}
+                <div className={styles.routeInfoSection}>
+                  <div className={styles.routeInfoItem}>
+                    <div className={styles.routeIconWrapper}>
+                      <IconMapPin size={16} className={styles.routeOriginIcon} />
+                    </div>
+                    <div className={styles.routeTextWrapper}>
+                      <Text size="xs" fw={500} className={styles.routeLabel}>
+                        Origen
+                      </Text>
+                      <Text size="sm" fw={600} className={styles.routeAddress}>
+                        {selectedRouteInfo.origin}
+                      </Text>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.routeInfoItem}>
+                    <div className={styles.routeIconWrapper}>
+                      <IconFlag size={16} className={styles.routeDestinationIcon} />
+                    </div>
+                    <div className={styles.routeTextWrapper}>
+                      <Text size="xs" fw={500} className={styles.routeLabel}>
+                        Destino
+                      </Text>
+                      <Text size="sm" fw={600} className={styles.routeAddress}>
+                        {selectedRouteInfo.destination}
+                      </Text>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Botón para abrir en Google Maps */}
+                <div className={styles.mapActionsSection}>
+                  <button 
+                    className={styles.openInGoogleMapsBtn}
+                    onClick={() => {
+                      const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(selectedRouteInfo.origin)}/${encodeURIComponent(selectedRouteInfo.destination)}`;
+                      window.open(mapsUrl, '_blank');
+                    }}
+                  >
+                    <IconExternalLink size={16} />
+                    <span>Abrir en Google Maps</span>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Contenedor del mapa - Ahora ocupa todo el espacio */}
+              <div className={styles.mapContentWrapper}>
+                <InteractiveMap
+                  origin={selectedRouteInfo.origin}
+                  destination={selectedRouteInfo.destination}
+                />
+              </div>
+            </div>
+          </Drawer>
         )}
 
         {selectedDriver && (

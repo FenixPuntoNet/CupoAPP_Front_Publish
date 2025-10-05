@@ -9,9 +9,7 @@ import {
   ScrollArea,
   Text,
   Group,
-  ActionIcon,
 } from '@mantine/core';
-import { ArrowLeft } from 'lucide-react';
 import { 
   getOrCreateAssistant, 
   getAssistantById, 

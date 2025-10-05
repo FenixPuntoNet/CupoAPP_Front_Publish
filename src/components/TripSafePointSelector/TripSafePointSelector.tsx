@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Modal,
+  Drawer,
   Stack,
   Text,
   Group,
@@ -103,54 +103,152 @@ const TripSafePointSelector: React.FC<TripSafePointSelectorProps> = ({
 
   if (loading) {
     return (
-      <Modal
+      <Drawer
         opened={isOpen}
         onClose={onClose}
-        title={
-          <Group gap="xs">
-            <IconMapPin size={20} color="#059669" />
-            <Text fw={600} c="#059669">Selecciona tus Puntos de Encuentro</Text>
-          </Group>
-        }
-        size="lg"
-        centered
-        overlayProps={{
-          color: '#000',
-          opacity: 0.7,
-          blur: 4,
+        title={null}
+        position="bottom"
+        size="85vh"
+        withCloseButton={false}
+        transitionProps={{
+          transition: 'slide-up',
+          duration: 400,
+          timingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
         }}
       >
-        <Group justify="center" gap="md" py="xl">
-          <Loader size="md" color="blue" />
-          <Text size="md" c="dimmed">Cargando puntos de encuentro...</Text>
+        <Group justify="center" gap="md" py="xl" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%)', padding: '24px', position: 'relative' }}>
+          {/* Botón de cierre personalizado */}
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              zIndex: 1003,
+              backgroundColor: 'rgba(239, 68, 68, 0.9)',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '50%',
+              width: '36px',
+              height: '36px',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.25s ease',
+              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 1)';
+              e.currentTarget.style.transform = 'scale(1.1)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.3)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.9)';
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = 'scale(0.95)';
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+          >
+            ✕
+          </button>
+          
+          {/* Header con título */}
+          <Group gap="xs" style={{ position: 'absolute', top: '16px', left: '24px' }}>
+            <IconMapPin size={20} color="white" />
+            <Text fw={600} style={{ color: 'white' }}>Cargando puntos de encuentro...</Text>
+          </Group>
+          
+          {/* Contenido centrado */}
+          <div style={{ marginTop: '40px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Loader size="md" color="white" />
+            <Text size="md" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Cargando puntos de encuentro...</Text>
+          </div>
         </Group>
-      </Modal>
+      </Drawer>
     );
   }
 
   return (
-    <Modal
+    <Drawer
       opened={isOpen}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <IconMapPin size={20} color="#059669" />
-          <Text fw={600} c="#059669">Selecciona tus Puntos de Encuentro</Text>
-        </Group>
-      }
-      size="lg"
-      centered
-      overlayProps={{
-        color: '#000',
-        opacity: 0.7,
-        blur: 4,
-      }}
-      closeButtonProps={{
-        size: 'lg',
-        color: 'gray'
+      title={null}
+      position="bottom"
+      size="85vh"
+      withCloseButton={false}
+      transitionProps={{
+        transition: 'slide-up',
+        duration: 400,
+        timingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
       }}
     >
-      <Stack gap="lg">
+      {/* Header con título */}
+      <div style={{ 
+        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%)', 
+        padding: '24px 24px 20px',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Botón de cierre personalizado */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            zIndex: 1003,
+            backgroundColor: 'rgba(239, 68, 68, 0.9)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '50%',
+            width: '36px',
+            height: '36px',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.25s ease',
+            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 1)';
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.3)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.9)';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = 'scale(0.95)';
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)';
+          }}
+        >
+          ✕
+        </button>
+        
+        <Group gap="xs" align="center" style={{ position: 'relative', zIndex: 1 }}>
+          <IconMapPin size={20} color="white" />
+          <Text fw={600} style={{ color: 'white' }}>Selecciona tus Puntos de Encuentro</Text>
+        </Group>
+      </div>
+
+      <Stack gap="lg" p="lg" style={{ maxHeight: 'calc(75vh - 120px)', overflowY: 'auto' }}>
         {error && (
           <Alert color="red" variant="light" icon={<IconInfoCircle size={16} />}>
             <Text size="sm">{error}</Text>
@@ -307,7 +405,7 @@ const TripSafePointSelector: React.FC<TripSafePointSelectorProps> = ({
           Los puntos de encuentro son opcionales. Podrás coordinar los detalles finales directamente con el conductor.
         </Text>
       </Stack>
-    </Modal>
+    </Drawer>
   );
 };
 

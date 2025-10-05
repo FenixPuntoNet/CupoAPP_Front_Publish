@@ -1,12 +1,15 @@
-import { Modal, Group, Text, Badge, Box, Stack, Avatar } from '@mantine/core';
+import { Drawer, Group, Text, Badge, Box, Stack, Avatar, Image, ActionIcon } from '@mantine/core';
 import { 
   Star, 
   Car, 
+  FileText, 
   Shield, 
-  FileText,
-  CheckCircle,
-  AlertCircle
+  Camera, 
+  CheckCircle, 
+  AlertCircle,
+  X
 } from 'lucide-react';
+import styles from './DriverModal.module.css';
 
 interface Vehicle {
   brand?: string | null;
@@ -48,20 +51,20 @@ export function DriverModal({
     
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <Star key={i} size={14} fill="var(--mantine-color-yellow-5)" color="var(--mantine-color-yellow-5)" />
+        <Star key={i} size={16} fill="currentColor" color="currentColor" className={styles.starFilled} />
       );
     }
     
     if (hasHalfStar) {
       stars.push(
-        <Star key="half" size={14} fill="var(--mantine-color-yellow-5)" color="var(--mantine-color-yellow-5)" style={{ opacity: 0.5 }} />
+        <Star key="half" size={16} fill="currentColor" color="currentColor" className={styles.starHalf} />
       );
     }
     
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
       stars.push(
-        <Star key={`empty-${i}`} size={14} color="var(--mantine-color-gray-4)" />
+        <Star key={`empty-${i}`} size={16} className={styles.starEmpty} />
       );
     }
     
@@ -70,215 +73,232 @@ export function DriverModal({
 
   const getDocumentStatus = (document: string | undefined) => {
     if (!document || document === 'Sin verificar' || document === 'No disponible') {
-      return { status: 'pending', color: 'orange', icon: <AlertCircle size={10} />, text: 'Pendiente' };
+      return { status: 'pending', color: 'orange', icon: <AlertCircle size={12} />, text: 'Pendiente' };
     }
-    return { status: 'verified', color: 'green', icon: <CheckCircle size={10} />, text: 'Ok' };
+    return { status: 'verified', color: 'green', icon: <CheckCircle size={12} />, text: 'Verificado' };
   };
 
   return (
-    <Modal
+    <Drawer
       opened={opened}
       onClose={onClose}
-      title={
-        <Group gap="xs">
-          <Car size={16} color="var(--mantine-color-cyan-6)" />
-          <Text size="sm" fw={600} style={{ color: 'white' }}>
-            Conductor
-          </Text>
-        </Group>
-      }
-      size="xs"
-      centered
-      withCloseButton={true}
-      styles={{
-        content: {
-          backgroundColor: 'rgba(20, 20, 20, 0.98)',
-          border: '1px solid rgba(0, 255, 157, 0.3)',
-          borderRadius: '8px',
-          maxHeight: '65vh',
-          overflow: 'hidden',
-          width: '360px !important',
-          maxWidth: '90vw'
-        },
-        header: {
-          backgroundColor: 'transparent',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-          paddingBottom: '6px',
-          marginBottom: '4px',
-          padding: '10px 14px 6px 14px'
-        },
-        close: {
-          color: 'white',
-          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '4px',
-          width: '24px',
-          height: '24px',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            color: 'white'
-          }
-        },
-        body: {
-          padding: '10px',
-          maxHeight: 'calc(65vh - 50px)',
-          overflowY: 'auto'
-        }
+      title={null}
+      position="bottom"
+      size="85vh"
+      withCloseButton={false}
+      classNames={{
+        content: styles.drawerContent
+      }}
+      transitionProps={{
+        transition: 'slide-up',
+        duration: 400,
+        timingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
       }}
     >
-      <Stack gap="xs">
-        {/* Información Personal del Conductor - Ultra Compacta */}
-        <Box
-          p="xs"
-          style={{
-            backgroundColor: 'rgba(59, 130, 246, 0.08)',
-            border: '1px solid rgba(59, 130, 246, 0.25)',
-            borderRadius: '6px'
-          }}
-        >
-          <Group gap="xs" align="center">
-            <Avatar
-              src={photo}
-              size={40}
-              style={{
-                border: '2px solid var(--mantine-color-blue-5)',
-                borderRadius: '50%'
-              }}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = 'https://via.placeholder.com/40x40/2563eb/ffffff?text=👤';
-              }}
-            />
+      {/* Botón X de cierre rojo profesional */}
+      <ActionIcon
+        onClick={onClose}
+        className={styles.closeButton}
+      >
+        <X size={18} strokeWidth={2.5} />
+      </ActionIcon>
+
+      <Box>
+        {/* Header con el gradiente mejorado */}
+        <Box className={styles.headerGradient}>
+          {/* Patrón de fondo sutil */}
+          <Box
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: `
+                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%)
+              `,
+              pointerEvents: 'none'
+            }}
+          />
+          
+          {/* Indicador de arrastre */}
+          <Box
+            style={{
+              position: 'absolute',
+              top: '8px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '50px',
+              height: '4px',
+              background: 'rgba(255, 255, 255, 0.4)',
+              borderRadius: '2px',
+              zIndex: 1
+            }}
+          />
+          
+          <Group align="center" gap="lg" style={{ position: 'relative', zIndex: 1 }}>
+            <Box style={{ position: 'relative' }}>
+              <Avatar
+                src={photo}
+                size={70}
+                className={styles.driverAvatar}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://tddaveymppuhweujhzwz.supabase.co/storage/v1/object/public/resourcers/Home/SinFotoPerfil.png';
+                }}
+              />
+              <Box
+                style={{
+                  position: 'absolute',
+                  bottom: -2,
+                  right: -2,
+                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  borderRadius: '50%',
+                  width: '22px',
+                  height: '22px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '3px solid white',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+                }}
+              >
+                <Shield size={10} color="white" />
+              </Box>
+            </Box>
             
             <Box flex={1}>
-              <Text size="sm" fw={600} style={{ color: 'white', marginBottom: '2px' }}>
+              <Text size="xl" fw={700} className={styles.primaryText} style={{ marginBottom: '6px' }}>
                 {driverName || 'Conductor'}
               </Text>
               
-              <Group gap="xs" mb="xs">
+              <Group gap="xs" mb="sm" className={styles.ratingStars}>
                 {renderStars(rating || 0)}
-                <Text size="xs" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  ({rating ? rating.toFixed(1) : '0.0'})
+                <Text size="md" fw={600} className={styles.primaryText}>
+                  {rating ? rating.toFixed(1) : '0.0'}
                 </Text>
               </Group>
               
-              <Badge 
-                size="xs" 
-                variant="light" 
-                color="blue"
-                leftSection={<Shield size={8} />}
-              >
-                Verificado
+              <Badge className={styles.verifiedBadge}>
+                Conductor Verificado
               </Badge>
             </Box>
           </Group>
         </Box>
 
-        {/* Vehículo y Documentación Unificados - Ultra Compacto */}
-        <Box
-          p="xs"
-          style={{
-            backgroundColor: 'rgba(34, 197, 94, 0.08)',
-            border: '1px solid rgba(34, 197, 94, 0.25)',
-            borderRadius: '6px'
-          }}
-        >
-          {/* Vehículo */}
-          <Group gap="xs" mb="xs">
-            <Car size={12} color="var(--mantine-color-green-6)" />
-            <Text size="xs" fw={600} style={{ color: 'white' }}>
-              Vehículo
-            </Text>
-          </Group>
-          
-          <Group gap="xs" mb="xs" align="center">
-            {vehicle?.photo_url && (
-              <Box
-                style={{
-                  width: '28px',
-                  height: '20px',
-                  borderRadius: '3px',
-                  overflow: 'hidden',
-                  border: '1px solid var(--mantine-color-green-5)',
-                  backgroundImage: `url(${vehicle.photo_url})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
-              />
+        <div className={styles.scrollContainer}>
+          <Stack gap="sm" p="lg">
+            {/* Foto del vehículo grande y prominente */}
+            {vehicle?.photo_url ? (
+              <Box mb="xs">
+                <Image
+                  src={vehicle.photo_url}
+                  alt="Vehículo"
+                  className={styles.vehiclePhoto}
+                  fallbackSrc="https://via.placeholder.com/400x200/1f2937/ffffff?text=Sin+Foto+del+Vehículo"
+                />
+              </Box>
+            ) : (
+              <Box mb="xs" className={styles.vehiclePhotoPlaceholder}>
+                <Camera size={32} color="rgba(255, 255, 255, 0.5)" />
+                <Text size="sm" fw={500} className={styles.secondaryText}>
+                  Sin foto disponible
+                </Text>
+              </Box>
             )}
-            
-            <Box flex={1}>
-              <Text size="xs" style={{ color: 'white' }}>
-                {vehicle?.brand && vehicle?.model 
-                  ? `${vehicle.brand} ${vehicle.model}` 
-                  : 'Vehículo'}
-              </Text>
-              <Group gap="xs">
-                <Badge size="xs" variant="filled" color="green">
-                  {vehicle?.plate || 'Sin placa'}
-                </Badge>
-                {vehicle?.year && (
-                  <Text size="xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                    {vehicle.year}
+
+            {/* Información del vehículo */}
+            <Box className={styles.driverInfoSection}>
+              <Group gap="xs" mb={8} align="center">
+                <Car size={12} className={styles.accentText} />
+                <Text size="xs" fw={600} className={styles.primaryText}>
+                  Información del Vehículo
+                </Text>
+              </Group>
+              
+              <Stack gap={3} mb="sm">
+                <Group justify="space-between" align="center">
+                  <Text size="xs" className={styles.secondaryText}>Marca/Modelo:</Text>
+                  <Text size="xs" fw={500} className={styles.primaryText}>
+                    {vehicle?.brand && vehicle?.model 
+                      ? `${vehicle.brand} ${vehicle.model}` 
+                      : 'No disponible'}
                   </Text>
+                </Group>
+                
+                <Group justify="space-between" align="center">
+                  <Text size="xs" className={styles.secondaryText}>Placa:</Text>
+                  <Badge size="xs" variant="gradient" gradient={{ from: '#00ff9d', to: '#00cc7a' }} style={{ color: 'black', fontWeight: 600 }}>
+                    {vehicle?.plate || 'Sin placa'}
+                  </Badge>
+                </Group>
+                
+                {(vehicle?.year || vehicle?.color) && (
+                  <Group justify="space-between" align="center">
+                    <Text size="xs" className={styles.secondaryText}>Detalles:</Text>
+                    <Text size="xs" className={styles.primaryText}>
+                      {vehicle?.year ? `${vehicle.year}` : ''} 
+                      {vehicle?.year && vehicle?.color ? ' • ' : ''}
+                      {vehicle?.color ? `${vehicle.color}` : ''}
+                    </Text>
+                  </Group>
                 )}
+              </Stack>
+            </Box>
+
+            {/* Documentación */}
+            <Box className={styles.documentsSection}>
+              <Group gap="xs" mb={6} align="center">
+                <FileText size={12} color="#a855f7" />
+                <Text size="xs" fw={600} className={styles.primaryText}>
+                  Documentos Verificados
+                </Text>
+              </Group>
+              
+              <Group gap={4} wrap="wrap">
+                <Badge 
+                  size="xs" 
+                  variant="light" 
+                  color={getDocumentStatus(license).color}
+                  leftSection={getDocumentStatus(license).icon}
+                  className={styles.documentBadge}
+                >
+                  Licencia
+                </Badge>
+                <Badge 
+                  size="xs" 
+                  variant="light" 
+                  color={getDocumentStatus(propertyCard).color}
+                  leftSection={getDocumentStatus(propertyCard).icon}
+                  className={styles.documentBadge}
+                >
+                  Propiedad
+                </Badge>
+                <Badge 
+                  size="xs" 
+                  variant="light" 
+                  color={getDocumentStatus(soat).color}
+                  leftSection={getDocumentStatus(soat).icon}
+                  className={styles.documentBadge}
+                >
+                  SOAT
+                </Badge>
               </Group>
             </Box>
-          </Group>
-          
-          {/* Documentación Compacta */}
-          <Group gap="xs" mb="xs">
-            <FileText size={12} color="var(--mantine-color-violet-6)" />
-            <Text size="xs" fw={600} style={{ color: 'white' }}>
-              Documentos
-            </Text>
-          </Group>
-          
-          <Group gap="xs">
-            <Badge 
-              size="xs" 
-              variant="light" 
-              color={getDocumentStatus(license).color}
-              leftSection={getDocumentStatus(license).icon}
-            >
-              Licencia
-            </Badge>
-            <Badge 
-              size="xs" 
-              variant="light" 
-              color={getDocumentStatus(propertyCard).color}
-              leftSection={getDocumentStatus(propertyCard).icon}
-            >
-              Propiedad
-            </Badge>
-            <Badge 
-              size="xs" 
-              variant="light" 
-              color={getDocumentStatus(soat).color}
-              leftSection={getDocumentStatus(soat).icon}
-            >
-              SOAT
-            </Badge>
-          </Group>
-        </Box>
 
-        {/* Verificación Ultra Compacta */}
-        <Group 
-          gap="xs" 
-          justify="center" 
-          p="xs" 
-          style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-            borderRadius: '4px',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          }}
-        >
-          <Shield size={10} color="var(--mantine-color-green-5)" />
-          <Text size="xs" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-            Verificado por CupoApp
-          </Text>
-        </Group>
-      </Stack>
-    </Modal>
+            {/* Footer de verificación */}
+            <Box className={styles.verificationFooter}>
+              <Group justify="center" gap={4}>
+                <Shield size={10} color="#22c55e" />
+                <Text size="xs" fw={500} style={{ color: '#22c55e' }}>
+                  Verificado por CupoApp
+                </Text>
+              </Group>
+            </Box>
+          </Stack>
+        </div>
+      </Box>
+    </Drawer>
   );
 }

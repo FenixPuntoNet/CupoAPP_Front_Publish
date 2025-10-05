@@ -4,10 +4,9 @@ import styles from './InteractiveMap.module.css';
 interface InteractiveMapProps {
   origin: string;
   destination: string;
-  onClose: () => void;
 }
 
-const InteractiveMap: React.FC<InteractiveMapProps> = ({ origin, destination, onClose }) => {
+const InteractiveMap: React.FC<InteractiveMapProps> = ({ origin, destination }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const directionsServiceRef = useRef<any>(null);
@@ -237,50 +236,18 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ origin, destination, on
       {isLoading && (
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
-          <p>Loading interactive map...</p>
+          <p>Cargando mapa interactivo...</p>
         </div>
       )}
       
       {error && (
         <div className={styles.errorOverlay}>
           <p>{error}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
+          <button onClick={() => window.location.reload()}>Reintentar</button>
         </div>
       )}
 
       <div ref={mapRef} className={styles.mapElement} />
-      
-      <button 
-        className={styles.closeButton} 
-        onClick={onClose}
-        aria-label="Close map"
-      >
-        ×
-      </button>
-
-      <div className={styles.mapInfo}>
-        <div className={styles.routeInfo}>
-          <div className={styles.routePoint}>
-            <span className={styles.routeLabel}>From:</span>
-            <span className={styles.routeText}>{origin}</span>
-          </div>
-          <div className={styles.routePoint}>
-            <span className={styles.routeLabel}>To:</span>
-            <span className={styles.routeText}>{destination}</span>
-          </div>
-        </div>
-      </div>
-
-      <button 
-        className={styles.openMapsButton}
-        onClick={() => {
-          const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(origin)}/${encodeURIComponent(destination)}`;
-          window.open(mapsUrl, '_blank');
-        }}
-        title="Abrir en Google Maps"
-      >
-        🗺️
-      </button>
     </div>
   );
 };

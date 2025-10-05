@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Text, Button, Group, Card, Avatar, Badge, Stack, Divider } from '@mantine/core';
+import { Drawer, Text, Button, Group, Card, Avatar, Badge, Stack, Divider } from '@mantine/core';
 import { IconCheck, IconCash, IconCreditCard, IconPhone, IconCar, IconCalendar, IconMapPin, IconUsers } from '@tabler/icons-react';
 import { useNavigate } from '@tanstack/react-router';
 import dayjs from 'dayjs';
@@ -56,78 +56,63 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
   };
 
   return (
-    <Modal
+    <Drawer
       opened={isOpen}
       onClose={onClose}
       title={null}
-      size="lg"
-      centered={false}
-      withCloseButton={true}
-      styles={{
-        content: {
-          background: 'linear-gradient(135deg, rgba(15, 15, 15, 0.98) 0%, rgba(25, 25, 25, 0.98) 100%)',
-          border: '1px solid rgba(0, 255, 157, 0.2)',
-          borderRadius: '20px 20px 0 0',
-          overflow: 'hidden',
-          backdropFilter: 'blur(20px)',
-          boxShadow: '0 -20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 255, 157, 0.1)',
-          maxHeight: '70vh',
-          height: 'auto',
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          margin: 0,
-          maxWidth: '100%',
-          width: '100%',
-          transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
-          transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        },
-        inner: {
-          padding: 0,
-          justifyContent: 'flex-end',
-          alignItems: 'flex-end',
-        },
-        header: {
-          display: 'none'
-        },
-        close: {
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          zIndex: 1000,
-          color: 'white',
-          backgroundColor: 'rgba(239, 68, 68, 0.9)',
-          border: '2px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '50%',
-          width: '40px',
-          height: '40px',
-          fontSize: '18px',
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.3s ease',
-          backdropFilter: 'blur(10px)',
-          '&:hover': {
-            backgroundColor: '#ef4444',
-            transform: 'scale(1.1)',
-            boxShadow: '0 4px 16px rgba(239, 68, 68, 0.4)',
-            borderColor: 'rgba(255, 255, 255, 0.3)'
-          }
-        },
-        body: {
-          padding: 0,
-          overflowY: 'auto',
-          maxHeight: 'calc(70vh - 20px)',
-        }
-      }}
+      position="bottom"
+      size="85vh"
+      withCloseButton={false}
       transitionProps={{
         transition: 'slide-up',
         duration: 400,
         timingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
       }}
     >
+      {/* Botón de cierre personalizado */}
+      <button
+        onClick={onClose}
+        style={{
+          position: 'absolute',
+          top: '12px',
+          right: '12px',
+          zIndex: 1003,
+          backgroundColor: 'rgba(239, 68, 68, 0.9)',
+          border: '2px solid rgba(255, 255, 255, 0.3)',
+          borderRadius: '50%',
+          width: '36px',
+          height: '36px',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.25s ease',
+          boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(10px)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 1)';
+          e.currentTarget.style.transform = 'scale(1.1)';
+          e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.3)';
+          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.9)';
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)';
+          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'scale(0.95)';
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'scale(1.1)';
+        }}
+      >
+        ✕
+      </button>
+
       {/* Header con gradiente */}
       <div
         style={{
@@ -180,25 +165,28 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
         </Group>
       </div>
 
-      <Stack gap="md" p="lg" style={{ maxHeight: 'calc(70vh - 120px)', overflowY: 'auto' }}>
+      <Stack gap="xl" p="xl">
         {/* Mensaje de éxito */}
-        <Card className={styles.successCard} p="md" radius="md">
+        <Card className={styles.successCard} p="lg" radius="md">
           {bookingResult ? (
             <>
-              <Text size="md" ta="center" fw={600} c="green" mb="xs">
+              <Text size="lg" ta="center" fw={600} c="green" mb="sm">
                 🎉 Tu reserva ha sido procesada exitosamente
               </Text>
-              <Text size="xs" ta="center" c="dimmed">
+              <Text size="sm" ta="center" c="dimmed">
                 Código de reserva: #{bookingResult.booking?.id}
+              </Text>
+              <Text size="sm" ta="center" c="dimmed">
+                Ya puedes coordinar los detalles del viaje con el conductor
               </Text>
             </>
           ) : (
             <>
-              <Text size="md" ta="center" fw={600} c="blue" mb="xs">
+              <Text size="lg" ta="center" fw={600} c="blue" mb="sm">
                 📋 Confirma los detalles de tu reserva
               </Text>
-              <Text size="xs" ta="center" c="dimmed">
-                Revisa la información y confirma para proceder
+              <Text size="sm" ta="center" c="dimmed">
+                Revisa la información y confirma para proceder con la reserva
               </Text>
             </>
           )}
@@ -410,7 +398,7 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
           Al confirmar aceptas los términos y condiciones del servicio
         </Text>
       </Stack>
-    </Modal>
+    </Drawer>
   );
 };
 

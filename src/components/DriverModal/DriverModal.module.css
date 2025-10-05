@@ -1,0 +1,371 @@
+/* =============================================== */
+/* 🎨 DRIVER MODAL - CLEAN & FUNCTIONAL DESIGN */
+/* =============================================== */
+
+/* Drawer Content - Dark Mode (Default) */
+.drawerContent {
+  background: linear-gradient(135deg, rgba(15, 15, 15, 0.98) 0%, rgba(25, 25, 25, 0.98) 100%) !important;
+  border: 1px solid rgba(0, 255, 157, 0.2) !important;
+  border-radius: 20px 20px 0 0 !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 255, 157, 0.1) !important;
+  color: #ffffff !important;
+}
+
+/* Drawer Content - Light Mode */
+:global(.light) .drawerContent {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%) !important;
+  border: 1px solid rgba(0, 155, 119, 0.3) !important;
+  box-shadow: 0 -20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 155, 119, 0.2) !important;
+  color: #1a1a1a !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+/* Header Gradient - Dark Mode */
+.headerGradient {
+  background: linear-gradient(135deg, rgba(0, 255, 157, 0.15) 0%, rgba(0, 0, 0, 0.9) 100%);
+  padding: 24px 24px 20px;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(0, 255, 157, 0.2);
+  backdrop-filter: blur(20px);
+}
+
+/* Header Gradient - Light Mode */
+:global(.light) .headerGradient {
+  background: linear-gradient(135deg, rgba(0, 155, 119, 0.08) 0%, rgba(255, 255, 255, 0.97) 100%);
+  border-bottom: 1px solid rgba(0, 155, 119, 0.3);
+}
+
+/* Close Button - Dark Mode */
+.closeButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1003;
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  color: #ff3b30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: rgba(255, 59, 48, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+}
+
+/* Close Button - Light Mode */
+:global(.light) .closeButton {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+:global(.light) .closeButton:hover {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+/* Content Sections */
+.contentSection {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 255, 157, 0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.contentSection:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(0, 255, 157, 0.25);
+  transform: translateY(-1px);
+}
+
+:global(.light) .contentSection {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 155, 119, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+:global(.light) .contentSection:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 155, 119, 0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Text Colors - Dark Mode */
+.primaryText {
+  color: #ffffff !important;
+}
+
+.secondaryText {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.accentText {
+  color: #00ff9d !important;
+}
+
+/* Text Colors - Light Mode */
+:global(.light) .primaryText {
+  color: #000000 !important;
+}
+
+:global(.light) .secondaryText {
+  color: rgba(0, 0, 0, 0.8) !important;
+}
+
+:global(.light) .accentText {
+  color: #047857 !important;
+}
+
+/* Driver Info Section */
+.driverInfoSection {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 255, 157, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(10px);
+}
+
+:global(.light) .driverInfoSection {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 155, 119, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Vehicle Info Card */
+.vehicleInfoCard {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 255, 157, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.vehicleInfoCard:hover {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(0, 255, 157, 0.2);
+}
+
+:global(.light) .vehicleInfoCard {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 155, 119, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .vehicleInfoCard:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 155, 119, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Documents Section */
+.documentsSection {
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 8px;
+}
+
+:global(.light) .documentsSection {
+  background: rgba(147, 51, 234, 0.05);
+  border-color: rgba(147, 51, 234, 0.15);
+}
+
+/* Footer Section - Verification Badge */
+.verificationFooter {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 163, 74, 0.1) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+  margin-top: 12px;
+}
+
+:global(.light) .verificationFooter {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(21, 128, 61, 0.08) 100%);
+  border-color: rgba(22, 163, 74, 0.2);
+}
+
+/* Avatar Styles */
+.driverAvatar {
+  border: 4px solid rgba(0, 255, 157, 0.3);
+  border-radius: 50%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.driverAvatar:hover {
+  border-color: rgba(0, 255, 157, 0.5);
+  transform: scale(1.02);
+}
+
+:global(.light) .driverAvatar {
+  border-color: rgba(0, 155, 119, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+:global(.light) .driverAvatar:hover {
+  border-color: rgba(0, 155, 119, 0.5);
+}
+
+/* Vehicle Photo Styles */
+.vehiclePhoto {
+  border-radius: 12px;
+  border: 2px solid rgba(0, 255, 157, 0.3);
+  object-fit: cover;
+  width: 100%;
+  height: 240px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.vehiclePhoto:hover {
+  border-color: rgba(0, 255, 157, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+}
+
+:global(.light) .vehiclePhoto {
+  border-color: rgba(0, 155, 119, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+:global(.light) .vehiclePhoto:hover {
+  border-color: rgba(0, 155, 119, 0.5);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Placeholder for missing vehicle photo */
+.vehiclePhotoPlaceholder {
+  height: 200px;
+  background: linear-gradient(135deg, rgba(75, 85, 99, 0.3) 0%, rgba(55, 65, 81, 0.3) 100%);
+  border-radius: 12px;
+  border: 2px dashed rgba(0, 255, 157, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.vehiclePhotoPlaceholder:hover {
+  border-color: rgba(0, 255, 157, 0.4);
+  background: linear-gradient(135deg, rgba(75, 85, 99, 0.4) 0%, rgba(55, 65, 81, 0.4) 100%);
+}
+
+:global(.light) .vehiclePhotoPlaceholder {
+  background: linear-gradient(135deg, rgba(203, 213, 225, 0.3) 0%, rgba(148, 163, 184, 0.3) 100%);
+  border-color: rgba(0, 155, 119, 0.2);
+}
+
+:global(.light) .vehiclePhotoPlaceholder:hover {
+  border-color: rgba(0, 155, 119, 0.4);
+  background: linear-gradient(135deg, rgba(203, 213, 225, 0.4) 0%, rgba(148, 163, 184, 0.4) 100%);
+}
+
+/* Rating Stars */
+.ratingStars {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+/* Star Styles - Dark Mode */
+.starFilled {
+  color: #fbbf24 !important;
+}
+
+.starHalf {
+  color: #fbbf24 !important;
+  opacity: 0.5;
+}
+
+.starEmpty {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Star Styles - Light Mode */
+:global(.light) .starFilled {
+  color: #f59e0b !important;
+}
+
+:global(.light) .starHalf {
+  color: #f59e0b !important;
+  opacity: 0.7;
+}
+
+:global(.light) .starEmpty {
+  color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Badge Styles */
+.documentBadge {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* Verified Badge */
+.verifiedBadge {
+  background: rgba(0, 255, 157, 0.2);
+  color: #00ff9d;
+  border: 1px solid rgba(0, 255, 157, 0.4);
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+:global(.light) .verifiedBadge {
+  background: rgba(0, 155, 119, 0.15);
+  color: #059669;
+  border-color: rgba(0, 155, 119, 0.3);
+}
+
+/* Scroll Container */
+.scrollContainer {
+  height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding-bottom: 40px;
+  scroll-behavior: smooth;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .headerGradient {
+    padding: 20px 16px 16px;
+  }
+  
+  .contentSection {
+    padding: 10px 12px;
+    margin: 6px 0;
+  }
+  
+  .vehiclePhoto {
+    height: 200px;
+  }
+  
+  .closeButton {
+    width: 32px;
+    height: 32px;
+    top: 8px;
+    right: 8px;
+  }
+}

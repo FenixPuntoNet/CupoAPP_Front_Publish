@@ -64,9 +64,10 @@
   background: rgba(20, 20, 20, 0.95) !important;
   border: 1px solid rgba(0, 255, 157, 0.2) !important;
   border-radius: 16px !important;
-  padding: 2rem !important;
+  padding: 1.5rem 2rem 1rem 2rem !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   transition: background 0.3s ease, border 0.3s ease;
+  margin-bottom: 0 !important;
 }
 
 :global(.light) .searchCard {
@@ -220,6 +221,7 @@
 
 .resultsSection {
   text-align: center;
+  margin-top: -25px;
 }
 
 .resultsTitle {
@@ -482,10 +484,10 @@
 /* Estilos para la sección de resultados */
 .tripsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
   margin-top: 2rem;
- }
+}
 /* Estilos para la tarjeta del viaje */
 .tripCard {
     border: 1px solid rgba(0, 255, 157, 0.2);
@@ -514,6 +516,491 @@
 
 :global(.light) .tripCard:hover {
     box-shadow: 0 8px 32px rgba(0, 204, 122, 0.2);
+}
+
+/* ===== ESTILOS PARA TARJETA COMPACTA ===== */
+.compactTripCard {
+  background: rgba(20, 20, 20, 0.95) !important;
+  border: 1px solid rgba(0, 255, 157, 0.15) !important;
+  border-radius: 16px !important;
+  padding: 0.75rem !important;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+:global(.light) .compactTripCard {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 204, 122, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 155, 119, 0.1);
+}
+
+.compactTripCard:hover {
+  border-color: rgba(0, 255, 157, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+:global(.light) .compactTripCard:hover {
+  border-color: rgba(0, 204, 122, 0.5) !important;
+}
+
+/* Header de ruta compacto */
+.compactRouteHeader {
+  flex: 1;
+  min-width: 0;
+}
+
+.compactRouteText {
+  color: white !important;
+  font-size: 1rem !important;
+  line-height: 1.3 !important;
+  margin-bottom: 2px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease;
+}
+
+.compactRouteText:hover {
+  color: #00ff9d !important;
+  text-decoration: underline;
+  transform: translateX(2px);
+}
+
+:global(.light) .compactRouteText {
+  color: #1a1a1a !important;
+}
+
+:global(.light) .compactRouteText:hover {
+  color: #00cc7a !important;
+}
+
+/* Botón de ver ruta compacto */
+.routeViewIconButton {
+  background: rgba(0, 255, 157, 0.1) !important;
+  color: #00ff9d !important;
+  border: 1px solid rgba(0, 255, 157, 0.2) !important;
+  border-radius: 6px !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  transition: all 0.2s ease !important;
+}
+
+.routeViewIconButton:hover {
+  background: rgba(0, 255, 157, 0.2) !important;
+  border-color: rgba(0, 255, 157, 0.4) !important;
+  transform: scale(1.05) !important;
+}
+
+:global(.light) .routeViewIconButton {
+  background: rgba(0, 155, 119, 0.1) !important;
+  color: #059669 !important;
+  border-color: rgba(0, 155, 119, 0.2) !important;
+}
+
+:global(.light) .routeViewIconButton:hover {
+  background: rgba(0, 155, 119, 0.15) !important;
+  border-color: rgba(0, 155, 119, 0.3) !important;
+}
+
+.compactSubroute {
+  font-size: 0.75rem !important;
+  line-height: 1.2 !important;
+  opacity: 0.7;
+}
+
+/* Icono de tiempo compacto */
+.compactTimeIcon {
+  color: #00ff9d;
+  display: flex;
+  align-items: center;
+}
+
+:global(.light) .compactTimeIcon {
+  color: #00cc7a;
+}
+
+/* Info del conductor compacta */
+.compactDriverInfo {
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease;
+}
+
+:global(.light) .compactDriverInfo {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.compactDriverInfo:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:global(.light) .compactDriverInfo:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.compactDriverPhoto {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(0, 255, 157, 0.3);
+}
+
+:global(.light) .compactDriverPhoto {
+  border-color: rgba(0, 204, 122, 0.4);
+}
+
+.compactRating {
+  margin-top: 2px;
+}
+
+/* SafePoints compactos */
+.compactSafepoints {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.compactSafepointsSection {
+  padding: 0.375rem 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border-left: 3px solid #00ff9d;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+}
+
+:global(.light) .compactSafepointsSection {
+  background: rgba(0, 0, 0, 0.02);
+  border-left-color: #00cc7a;
+}
+
+/* Botón de ver ruta más grande y prominente al lado de SafePoints */
+.routeViewIconButton {
+  background: rgba(34, 139, 34, 0.12) !important;
+  color: var(--forest-green) !important;
+  border: 2px solid rgba(34, 139, 34, 0.35) !important;
+  border-radius: 10px !important;
+  transition: all 0.2s ease !important;
+  flex-shrink: 0;
+  min-width: 44px !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(34, 139, 34, 0.15) !important;
+}
+
+/* Botón de SafePoints como icono compacto */
+.safePointsIconButton {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #3b82f6 !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  flex-shrink: 0;
+  min-width: 42px !important;
+  height: 42px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.safePointsIconButton:hover {
+  background: rgba(59, 130, 246, 0.15) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15) !important;
+}
+
+.routeViewIconButton:hover {
+  background: rgba(34, 139, 34, 0.2) !important;
+  border-color: rgba(34, 139, 34, 0.5) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 4px 15px rgba(34, 139, 34, 0.25) !important;
+}
+
+/* Sección de precio mejorada */
+.priceSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+/* Ícono de precio profesional */
+.professionalPriceIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  min-width: 24px;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: help;
+}
+
+:global(.light) .professionalPriceIcon {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.professionalPriceIcon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+:global(.light) .professionalPriceIcon:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Badge izquierdo de coincidencia */
+.leftBadgeSection {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.leftBadgeSection::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 255, 157, 0.3) 0%, transparent 100%);
+}
+
+:global(.light) .leftBadgeSection::after {
+  background: linear-gradient(90deg, rgba(0, 204, 122, 0.3) 0%, transparent 100%);
+}
+
+/* Símbolo de precio compacto */
+.compactPriceSymbol {
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 16px;
+}
+
+/* Badge superior de coincidencia */
+.topBadgeSection {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+/* Status de precio compacto - más pequeño y pegado al precio */
+.compactPriceStatus {
+  font-size: 0.65rem !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05) !important;
+  max-width: 120px;
+  line-height: 1.2;
+}
+
+:global(.light) .compactPriceStatus {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Sección del conductor mejorada */
+.enhancedDriverSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 157, 0.15);
+  transition: all 0.3s ease;
+  margin-bottom: 12px;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Conductor verificado - destacado */
+.verifiedDriver {
+  background: linear-gradient(135deg, rgba(0, 255, 65, 0.12), rgba(0, 230, 56, 0.08)) !important;
+  border: 2px solid rgba(0, 255, 65, 0.4) !important;
+  box-shadow: 
+    0 4px 15px rgba(0, 255, 65, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.verifiedDriver::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #00ff41, #00e638, #00d130);
+  animation: verifiedShimmer 2s ease-in-out infinite;
+}
+
+@keyframes verifiedShimmer {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.verifiedDriver:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 65, 0.18), rgba(0, 230, 56, 0.12)) !important;
+  border-color: rgba(0, 255, 65, 0.6) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 
+    0 8px 25px rgba(0, 255, 65, 0.3),
+    0 0 0 2px rgba(255, 255, 255, 0.2) inset !important;
+}
+
+/* Conductor no verificado - normal */
+.unverifiedDriver {
+  background: rgba(255, 193, 7, 0.05) !important;
+  border: 1px solid rgba(255, 193, 7, 0.2) !important;
+}
+
+.unverifiedDriver:hover {
+  background: rgba(255, 193, 7, 0.08) !important;
+  border-color: rgba(255, 193, 7, 0.3) !important;
+}
+
+/* Icono de verificado */
+.verifiedBadgeIcon {
+  color: #00ff9d !important;
+  filter: drop-shadow(0 0 4px rgba(0, 255, 157, 0.3));
+  animation: verifiedPulse 2s ease-in-out infinite;
+}
+
+@keyframes verifiedPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+:global(.light) .enhancedDriverSection {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 204, 122, 0.2);
+}
+
+:global(.light) .verifiedDriver {
+  background: rgba(0, 155, 119, 0.08) !important;
+  border: 1px solid rgba(0, 155, 119, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 155, 119, 0.1) !important;
+}
+
+:global(.light) .verifiedDriver:hover {
+  background: rgba(0, 155, 119, 0.12) !important;
+  border-color: rgba(0, 155, 119, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(0, 155, 119, 0.2) !important;
+}
+
+:global(.light) .unverifiedDriver {
+  background: rgba(245, 158, 11, 0.08) !important;
+  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+}
+
+:global(.light) .unverifiedDriver:hover {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+:global(.light) .verifiedBadgeIcon {
+  color: #059669 !important;
+  filter: drop-shadow(0 0 4px rgba(5, 150, 105, 0.3));
+}
+
+.enhancedDriverPhoto {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(0, 255, 157, 0.4);
+  flex-shrink: 0;
+}
+
+:global(.light) .enhancedDriverPhoto {
+  border-color: rgba(0, 204, 122, 0.5);
+}
+
+.enhancedDriverInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.enhancedDriverInfo .driverName {
+  color: white !important;
+  font-size: 1rem !important;
+  margin-bottom: 4px !important;
+}
+
+:global(.light) .enhancedDriverInfo .driverName {
+  color: #1a1a1a !important;
+}
+
+.enhancedDriverRating {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Ajustes específicos para las estrellas de rating */
+.enhancedDriverRating .mantine-Rating-root {
+  gap: 1px !important;
+}
+
+.enhancedDriverRating .mantine-Rating-starSymbol {
+  width: 12px !important;
+  height: 12px !important;
+  font-size: 12px !important;
+}
+
+.driverArrow {
+  color: rgba(0, 255, 157, 0.6);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+:global(.light) .driverArrow {
+  color: rgba(0, 204, 122, 0.7);
+}
+
+.enhancedDriverSection:hover .driverArrow {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+/* Botón de reservar compacto */
+.compactReserveButton {
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7a 100%) !important;
+  border: none !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  height: 44px !important;
+  font-size: 1rem !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3) !important;
+}
+
+.compactReserveButton:hover {
+  background: linear-gradient(135deg, #00cc7a 0%, #00a862 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(0, 255, 157, 0.4) !important;
+}
+
+.compactReserveButton:active {
+  transform: translateY(0) !important;
 }
 
 /* Tarjeta de SafePoints bonita */
@@ -1015,6 +1502,297 @@
   border-color: #10b981 !important;
   color: #ffffff !important;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* ==== MODAL DE MAPA MEJORADO - PANTALLA COMPLETA ==== */
+.mapModalContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.mapModalHeader {
+  background: linear-gradient(135deg, rgba(0, 255, 157, 0.1) 0%, rgba(0, 0, 0, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 255, 157, 0.2);
+  padding: 16px 20px 12px 20px;
+  flex-shrink: 0;
+}
+
+:global(.light) .mapModalHeader {
+  background: linear-gradient(135deg, rgba(0, 155, 119, 0.08) 0%, rgba(255, 255, 255, 0.97) 100%);
+  border-bottom: 1px solid rgba(0, 155, 119, 0.3);
+}
+
+.mapModalHeaderContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.mapModalTitle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.mapModalIcon {
+  color: #00ff9d;
+  margin-top: 2px;
+}
+
+:global(.light) .mapModalIcon {
+  color: #059669;
+}
+
+/* Map Modal Text Styles */
+.mapModalTitleText {
+  color: #ffffff !important;
+}
+
+:global(.light) .mapModalTitleText {
+  color: #1a1a1a !important;
+}
+
+.mapModalSubtitle {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+:global(.light) .mapModalSubtitle {
+  color: rgba(26, 26, 26, 0.7) !important;
+}
+
+.mapModalCloseButton {
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  color: #ff3b30;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.mapModalCloseButton:hover {
+  background: rgba(255, 59, 48, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+}
+
+.routeInfoSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 157, 0.15);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.routeInfoSection:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(0, 255, 157, 0.25);
+  transform: translateY(-1px);
+}
+
+:global(.light) .routeInfoSection {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+:global(.light) .routeInfoSection:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.routeInfoItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.routeInfoItem:first-child::after {
+  content: '';
+  position: absolute;
+  left: 14px;
+  bottom: -8px;
+  width: 2px;
+  height: 8px;
+  background: linear-gradient(to bottom, #00ff9d, #00d4aa);
+  border-radius: 1px;
+}
+
+:global(.light) .routeInfoItem:first-child::after {
+  background: linear-gradient(to bottom, #059669, #047857);
+}
+
+.routeIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(0, 255, 157, 0.1);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.routeIconWrapper:hover {
+  background: rgba(0, 255, 157, 0.15);
+  border-color: rgba(0, 255, 157, 0.4);
+  transform: scale(1.05);
+}
+
+:global(.light) .routeIconWrapper {
+  background: rgba(5, 150, 105, 0.08);
+  border-color: rgba(5, 150, 105, 0.2);
+}
+
+:global(.light) .routeIconWrapper:hover {
+  background: rgba(5, 150, 105, 0.12);
+  border-color: rgba(5, 150, 105, 0.3);
+}
+
+.routeOriginIcon {
+  color: #00ff9d;
+}
+
+.routeDestinationIcon {
+  color: #ff6b6b;
+}
+
+.routeTextWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.routeLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  opacity: 0.8;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.routeAddress {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  line-height: 1.3;
+  color: #ffffff !important;
+}
+
+:global(.light) .routeAddress {
+  color: #1a1a1a !important;
+}
+
+:global(.light) .routeLabel {
+  color: rgba(26, 26, 26, 0.7) !important;
+}
+
+/* Línea conectora integrada en routeInfoItem */
+
+.mapActionsSection {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.openInGoogleMapsBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #00ff9d 0%, #00d4aa 100%);
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 255, 157, 0.2);
+}
+
+.openInGoogleMapsBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3);
+  background: linear-gradient(135deg, #00d4aa 0%, #00ff9d 100%);
+}
+
+:global(.light) .openInGoogleMapsBtn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
+}
+
+:global(.light) .openInGoogleMapsBtn:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+.mapContentWrapper {
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  position: relative;
+}
+
+.mapContentWrapper > div {
+  height: 100% !important;
+  width: 100% !important;
+  border-radius: 0 !important;
+  overflow: hidden;
+  border: none;
+  box-shadow: none;
+  transition: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.mapContentWrapper > div:hover {
+  box-shadow: none;
+  transform: none;
+}
+
+:global(.light) .mapContentWrapper > div {
+  box-shadow: none;
+}
+
+:global(.light) .mapContentWrapper > div:hover {
+  box-shadow: none;
 }
 
 /* ==== MODAL DE MAPA SIMPLIFICADO ==== */
@@ -1977,6 +2755,19 @@
 :global(.dark) .mantine-Title-root,
 :global([data-mantine-color-scheme="dark"]) .mantine-Title-root {
   color: #ffffff !important;
+}
+
+/* Estilos de estrellas para rating */
+:global([data-mantine-color-scheme="light"]) .starFilled {
+  color: #f59e0b !important;
+}
+
+:global([data-mantine-color-scheme="light"]) .starHalf {
+  color: #f59e0b !important;
+}
+
+:global([data-mantine-color-scheme="light"]) .starEmpty {
+  color: #d1d5db !important;
 }
 
 /* ASEGURAR QUE LOS PLACEHOLDERS TAMBIÉN SEAN VISIBLES */

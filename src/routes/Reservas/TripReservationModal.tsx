@@ -6,11 +6,12 @@ import {
     Stack,
     Text,
     Badge,
-    Modal,
+    Drawer,
     NumberInput,
     TextInput,
     Button,
     Center,
+    Box,
 } from '@mantine/core';
 import { Clock, Navigation, User } from 'lucide-react';
 import { bookTrip } from '@/services/reservas';
@@ -20,7 +21,7 @@ import TripSafePointSelector from '@/components/TripSafePointSelector/TripSafePo
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 import { useNavigate } from '@tanstack/react-router';
-import ReservationSuccessModal from '@/components/ReservationSuccessModal';
+import ReservationSuccessModal from '@/routes/reservar/ReservationSuccessModal';
 
 import type { Trip } from '@/types/Trip';
 import type { TripSearchResult } from '@/services/trips';
@@ -187,107 +188,197 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
 
     return (
         <>
-            <Modal
+            <Drawer
                 opened={isOpen}
                 onClose={onClose}
-                title="Reservar Viaje"
-                size="lg"
-                centered
+                title={null}
+                size="85vh"
+                position="bottom"
                 closeOnClickOutside={false}
+                withCloseButton={false}
+                transitionProps={{
+                    transition: 'slide-up',
+                    duration: 400,
+                    timingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                }}
             >
-                <Stack gap="xl">
+                {/* Header con gradiente y título */}
+                <div
+                    style={{
+                        background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%)',
+                        padding: '24px 24px 20px',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}
+                >
+                    {/* Patrón de fondo sutil */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: `
+                                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%)
+                            `,
+                            pointerEvents: 'none'
+                        }}
+                    />
+                    
+                    {/* Indicador de arrastre */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '8px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: '50px',
+                            height: '4px',
+                            background: 'rgba(255, 255, 255, 0.4)',
+                            borderRadius: '2px',
+                            zIndex: 1
+                        }}
+                    />
+                    
+                    {/* Botón de cierre personalizado */}
+                    <button
+                        onClick={onClose}
+                        style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            zIndex: 1003,
+                            backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                            border: '2px solid rgba(255, 255, 255, 0.3)',
+                            borderRadius: '50%',
+                            width: '36px',
+                            height: '36px',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.25s ease',
+                            boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                            backdropFilter: 'blur(10px)',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 1)';
+                            e.currentTarget.style.transform = 'scale(1.1)';
+                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.3)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.9)';
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                        }}
+                        onMouseDown={(e) => {
+                            e.currentTarget.style.transform = 'scale(0.95)';
+                        }}
+                        onMouseUp={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.1)';
+                        }}
+                    >
+                        ✕
+                    </button>
+                    
+                    <Text 
+                        size="xl" 
+                        fw={700} 
+                        style={{ 
+                            color: 'white', 
+                            textAlign: 'center',
+                            position: 'relative',
+                            zIndex: 1 
+                        }}
+                    >
+                        Reservar Viaje
+                    </Text>
+                </div>
+
+                <Stack gap="md" p="lg" style={{ maxHeight: 'calc(70vh - 120px)', overflowY: 'auto' }}>
                     <Center>
-                        <Card className={styles.tripSummary} shadow="sm" withBorder>
-                            <Group gap="apart">
-                                <Text fw={500} size="lg">
+                        <Card className={styles.tripSummary} shadow="sm" withBorder p="md">
+                            <Group gap="apart" mb="sm">
+                                <Text fw={500} size="md">
                                     {dayjs(trip.dateTime).format('DD MMM YYYY, hh:mm A')}
                                 </Text>
-                                <Badge color="green" size="lg">
+                                <Badge color="green" size="md">
                                     ${trip.pricePerSeat.toLocaleString()} / asiento
                                 </Badge>
                             </Group>
 
-                            <div className={styles.routeInfo}>
-                                <Text c="dimmed" size="sm">
-                                    Origen
-                                </Text>
-                                <Text fw={500}>{trip.origin.address}</Text>
-                                <div className={styles.routeDivider} />
-                                <Text c="dimmed" size="sm">
-                                    Destino
-                                </Text>
-                                <Text fw={500}>{trip.destination.address}</Text>
-                            </div>
+                            <Group gap="xs" mb="sm">
+                                <Text size="xs" c="dimmed">Origen:</Text>
+                                <Text fw={500} size="sm">{trip.origin.address}</Text>
+                            </Group>
+                            <Group gap="xs" mb="sm">
+                                <Text size="xs" c="dimmed">Destino:</Text>
+                                <Text fw={500} size="sm">{trip.destination.address}</Text>
+                            </Group>
 
-                            <Group mt="md">
-                                <Badge leftSection={<Clock size={14} />}>
+                            <Group gap="xs">
+                                <Badge size="xs" leftSection={<Clock size={12} />}>
                                     {trip.selectedRoute.duration}
                                 </Badge>
-                                <Badge leftSection={<Navigation size={14} />}>
+                                <Badge size="xs" leftSection={<Navigation size={12} />}>
                                     {trip.selectedRoute.distance}
                                 </Badge>
-                                <Badge leftSection={<User size={14} />}>
+                                <Badge size="xs" leftSection={<User size={12} />}>
                                     {trip.seats} disponibles
                                 </Badge>
                             </Group>
                         </Card>
                     </Center>
-                        <Card className={styles.tripSummary} shadow="sm" withBorder>
-                          <Text fw={600} size="lg" mb="xs">Información del Conductor</Text>
-                          <Group gap="md" align="start">
+                        <Card className={styles.tripSummary} shadow="sm" withBorder p="md">
+                          <Group gap="md" align="start" mb="sm">
                             <img
                               src={trip.photo || 'https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/SinFotoPerfil.png'}
                               alt="Foto del conductor"
-                              width={60}
-                              height={60}
+                              width={50}
+                              height={50}
                               style={{ borderRadius: '50%', objectFit: 'cover', border: '2px solid #e0e0e0' }}
                             />
-                            <div>
-                              <Text fw={500}>{trip.driverName || 'No disponible'}</Text>
-                        
+                            <div style={{ flex: 1 }}>
+                              <Text fw={600} size="md">{trip.driverName || 'No disponible'}</Text>
                               {trip.license && (
-                                <>
-                                  <Text size="sm" c="dimmed">Licencia: {trip.license.license_number}</Text>
-                                  <Text size="sm" c="dimmed">Categoría: {trip.license.license_category}</Text>
-                                  <Text size="sm" c="yellow">
-                                    Válida hasta: {dayjs(trip.license.expiration_date).format('DD/MM/YYYY')}
-                                  </Text>
-                                  <Badge mt={4} color="green" variant="light">
-                                    VERIFICADO
-                                  </Badge>
-                                </>
+                                <Badge size="xs" color="green" variant="light">
+                                  VERIFICADO
+                                </Badge>
                               )}
                             </div>
                           </Group>
                         
-                          <div className={styles.routeDivider} />
-                        
-                          <Text fw={600} size="lg" mt="md" mb="xs">Vehículo</Text>
-                          <Group gap="md" align="start">
-                            <img
-                              src={trip.vehicle?.photo_url || 'https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/SinFotoAuto.png'}
-                              alt="Foto del vehículo"
-                              width={90}
-                              height={60}
-                              style={{ borderRadius: 8, objectFit: 'cover', border: '2px solid #eee' }}
-                            />
-                            <div>
-                              <Text fw={500}>{trip.vehicle?.brand} {trip.vehicle?.model} - {trip.vehicle?.plate}</Text>
+                          <Text fw={600} size="md" mb="sm">Vehículo</Text>
+                          <Group gap="md" align="flex-start">
+                            <Box style={{ width: '40%', flexShrink: 0 }}>
+                              <img
+                                src={trip.vehicle?.photo_url || 'https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/SinFotoAuto.png'}
+                                alt="Foto del vehículo"
+                                style={{ 
+                                  width: '100%', 
+                                  height: '80px', 
+                                  borderRadius: '8px', 
+                                  objectFit: 'cover', 
+                                  border: '2px solid rgba(0, 255, 157, 0.3)',
+                                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+                                }}
+                              />
+                            </Box>
+                            <Box style={{ flex: 1 }}>
+                              <Text fw={500} size="sm">{trip.vehicle?.brand} {trip.vehicle?.model}</Text>
+                              <Text size="xs" c="dimmed">Placa: {trip.vehicle?.plate}</Text>
                               {trip.vehicle?.color && (
-                                <Text size="sm" c="dimmed">Color: {trip.vehicle.color}</Text>
+                                <Text size="xs" c="dimmed">Color: {trip.vehicle.color}</Text>
                               )}
                               {trip.vehicle?.year && (
-                                <Text size="sm" c="dimmed">Año: {trip.vehicle.year}</Text>
+                                <Text size="xs" c="dimmed">Año: {trip.vehicle.year}</Text>
                               )}
-                              {trip.propertyCard?.passager_capacity && (
-                                <Text size="sm">Capacidad: {trip.propertyCard.passager_capacity} pasajeros</Text>
-                              )}
-                              {trip.soat && (
-                                <Text size="sm" c="yellow">
-                                  SOAT válido hasta: {dayjs(trip.soat.validity_to).format('DD/MM/YYYY')}
-                                </Text>
-                              )}
-                            </div>
+                            </Box>
                           </Group>
                         </Card>
 
@@ -300,6 +391,7 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                         min={1}
                         max={trip.seats}
                         required
+                        size="sm"
                         error={
                             passengersCount > trip.seats
                                 ? 'No hay suficientes asientos disponibles'
@@ -309,11 +401,11 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
 
                     {/* Campos de pasajeros */}
                     {passengers.length > 0 && (
-                        <Stack gap="md">
-                            <Text fw={500} size="md">Datos de los Pasajeros</Text>
+                        <Stack gap="sm">
+                            <Text fw={500} size="sm">Datos de los Pasajeros</Text>
                             {passengers.map((passenger, index) => (
-                                <Card key={index} className={styles.passengerCard} shadow="sm" withBorder>
-                                    <Text fw={500} mb="xs">Pasajero {index + 1}</Text>
+                                <Card key={index} className={styles.passengerCard} shadow="sm" withBorder p="sm">
+                                    <Text fw={500} mb="xs" size="sm">Pasajero {index + 1}</Text>
                                     <TextInput
                                         label="Nombre completo"
                                         placeholder="Ej: Juan Pérez"
@@ -322,10 +414,11 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                                             handlePassengerChange(index, 'fullName', e.currentTarget.value)
                                         }
                                         required
-                                        mb="sm"
+                                        mb="xs"
+                                        size="sm"
                                     />
                                     <TextInput
-                                        label="Número de identificación (solo números)"
+                                        label="Número de identificación"
                                         placeholder="Ej: 123456789"
                                         value={passenger.identificationNumber}
                                         onChange={(e) => {
@@ -338,6 +431,7 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                                         inputMode="numeric"
                                         maxLength={15}
                                         required
+                                        size="sm"
                                     />
                                 </Card>
                             ))}
@@ -346,7 +440,7 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
 
                     <Button
                         fullWidth
-                        size="lg"
+                        size="md"
                         onClick={handleConfirmReservation}
                         className={styles.confirmButton}
                         disabled={passengers.some(p => !p.fullName.trim() || !p.identificationNumber.trim())}
@@ -354,7 +448,7 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
                         Confirmar Reserva
                     </Button>
                 </Stack>
-            </Modal>
+            </Drawer>
             
             {/* Modal de éxito */}
             {showSuccessModal && (
