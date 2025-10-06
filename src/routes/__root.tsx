@@ -94,8 +94,19 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
           <AuthGuard>
           <AppShell
             header={{ height: showNavigation ? 60 : 0 }}
-            footer={{ height: 72 }}
+            footer={{ height: showNavigation ? 85 : 0 }}
             className={styles.appShell}
+            style={{ 
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100vw',
+              height: '100vh',
+              maxHeight: '100vh',
+              overflow: 'hidden'
+            }}
           >
             <div className={styles.backgroundEffect} />
 
@@ -127,7 +138,15 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
               <_ThemeToggle />
             </div> */}
 
-            <AppShell.Main className={styles.main}>
+            <AppShell.Main 
+              className={styles.main}
+              style={{
+                height: '100vh',
+                overflow: 'auto',
+                paddingBottom: showNavigation ? '85px' : '0px',
+                WebkitOverflowScrolling: 'touch'
+              }}
+            >
               <Outlet />
             </AppShell.Main>
 
