@@ -103,6 +103,24 @@ const ProfileView: React.FC = () => {
   const [averageRating, setAverageRating] = useState<number | null>(null);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [themeUpdateKey, setThemeUpdateKey] = useState(0); // Para forzar re-render
+
+  // Escuchar cambios de tema para actualizar los estilos
+  useEffect(() => {
+    const handleThemeChange = (event: CustomEvent) => {
+      // Forzar un pequeño re-render para actualizar los estilos
+      setThemeUpdateKey(prev => prev + 1);
+      
+      // Opcional: Log para debug
+      console.log('🎨 Theme changed to:', event.detail.theme);
+    };
+
+    window.addEventListener('cupo-theme-change', handleThemeChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('cupo-theme-change', handleThemeChange as EventListener);
+    };
+  }, []);
 
   // Nuevo: Botón de actualizar perfil
   const handleUpdateProfile = () => {
@@ -629,7 +647,7 @@ const ProfileView: React.FC = () => {
   }
 
   return (
-    <Container fluid className={styles.container}>
+    <Container fluid className={styles.container} key={`profile-${themeUpdateKey}`}>
       <Modal
         opened={isSuccessModalOpen}
         onClose={handleSuccessModalClose}

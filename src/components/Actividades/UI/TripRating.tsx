@@ -11,7 +11,7 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { getTripRating, submitRating } from '@/services/ratings';
-import styles from './index.module.css';
+import styles from '../index.module.css';
 
 interface TripRatingProps {
   tripId: number;

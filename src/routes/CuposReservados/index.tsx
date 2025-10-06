@@ -8,25 +8,18 @@ import {
   Group,
   Stack,
   Center,
-  Alert,
   SimpleGrid,
-  Avatar,
   ActionIcon,
-  Button,
-  Divider,
   ThemeIcon,
-  Loader
+  Loader,
+  Button
 } from '@mantine/core'
 import { showNotification } from '@mantine/notifications'
 import { useNavigate, useSearch, createFileRoute } from '@tanstack/react-router'
 import { 
   IconX, 
-  IconUser, 
-  IconIdBadge2, 
-  IconCalendar,
   IconMapPin,
   IconCheck,
-  IconAlertCircle,
   IconQrcode,
   IconUsers
 } from '@tabler/icons-react'
@@ -294,18 +287,18 @@ const CuposReservadosComponent: React.FC = () => {
   return (
     <Container className={styles.container} size="lg">
       {/* Header con información del viaje */}
-      <Group justify="space-between" mb="lg" className={styles.headerGroup}>
+      <Group justify="space-between" mb="md" className={styles.headerGroup}>
         <div>
           <Title order={2} className={styles.title}>
             Cupos Reservados {tripId ? `- Viaje ${tripId}` : ''}
           </Title>
           {tripInfo && (
             <Group gap="xs" mt="xs">
-              <Badge leftSection={<IconMapPin size={14} />} color="blue" variant="light">
+              <Badge leftSection={<IconMapPin size={14} />} color="blue" variant="light" size="sm">
                 {tripInfo.origin?.main_text || tripInfo.origin?.address || 'Origen'}
               </Badge>
-              <Text size="sm" c="dimmed">→</Text>
-              <Badge leftSection={<IconMapPin size={14} />} color="green" variant="light">
+              <Text size="xs" c="dimmed">→</Text>
+              <Badge leftSection={<IconMapPin size={14} />} color="green" variant="light" size="sm">
                 {tripInfo.destination?.main_text || tripInfo.destination?.address || 'Destino'}
               </Badge>
             </Group>
@@ -324,19 +317,19 @@ const CuposReservadosComponent: React.FC = () => {
 
       {/* Resumen de cupos con información de validación */}
       {summary && (
-        <SimpleGrid cols={{ base: 1, sm: 3, md: 3 }} mb="xl">
+        <SimpleGrid cols={{ base: 2, sm: 3 }} mb="lg">
           <Card className={styles.summaryCard}>
             <Group justify="space-between">
               <div>
-                <Text size="xs" tt="uppercase" fw={700} c="dimmed">
-                  Total Pasajeros
+                <Text size="xs" tt="uppercase" fw={600} c="dimmed">
+                  Total
                 </Text>
                 <Text size="xl" fw={700} c="blue">
                   {summary.total_passengers}
                 </Text>
               </div>
               <ThemeIcon color="blue" variant="light" size="lg">
-                <IconUsers size={20} />
+                <IconUsers size={18} />
               </ThemeIcon>
             </Group>
           </Card>
@@ -344,7 +337,7 @@ const CuposReservadosComponent: React.FC = () => {
           <Card className={styles.summaryCard}>
             <Group justify="space-between">
               <div>
-                <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                <Text size="xs" tt="uppercase" fw={600} c="dimmed">
                   Validados
                 </Text>
                 <Text size="xl" fw={700} c="green">
@@ -352,7 +345,7 @@ const CuposReservadosComponent: React.FC = () => {
                 </Text>
               </div>
               <ThemeIcon color="green" variant="light" size="lg">
-                <IconCheck size={20} />
+                <IconCheck size={18} />
               </ThemeIcon>
             </Group>
           </Card>
@@ -360,7 +353,7 @@ const CuposReservadosComponent: React.FC = () => {
           <Card className={styles.summaryCard}>
             <Group justify="space-between">
               <div>
-                <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+                <Text size="xs" tt="uppercase" fw={600} c="dimmed">
                   Pendientes
                 </Text>
                 <Text size="xl" fw={700} c="orange">
@@ -368,7 +361,7 @@ const CuposReservadosComponent: React.FC = () => {
                 </Text>
               </div>
               <ThemeIcon color="orange" variant="light" size="lg">
-                <IconQrcode size={20} />
+                <IconQrcode size={18} />
               </ThemeIcon>
             </Group>
           </Card>
@@ -389,213 +382,76 @@ const CuposReservadosComponent: React.FC = () => {
             </Stack>
           </Center>
         ) : bookings.length > 0 ? (
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+          <Stack gap="md">
+            <Text size="lg" fw={700} ta="center">
+              📋 Cupos Reservados ({bookings.length})
+            </Text>
+            
             {bookings.map((booking) => (
-              <Card key={booking.booking_id} className={styles.passengerCard} padding="lg">
-                {/* Header de la reserva */}
-                <Group justify="space-between" mb="md">
-                  <Badge
-                    color={booking.booking_status === 'payed' ? 'green' : 'yellow'}
-                    variant="filled"
-                    leftSection={booking.booking_status === 'payed' ? <IconCheck size={12} /> : <IconAlertCircle size={12} />}
-                  >
-                    {booking.booking_status === 'payed' ? 'PAGADO' : 'PENDIENTE'}
-                  </Badge>
-                  
-                  <Group gap="xs">
-                    {booking.total_price && (
-                      <Text size="sm" fw={700} c="blue">
-                        ${booking.total_price.toLocaleString()}
-                      </Text>
-                    )}
-                    {booking.seats_booked && (
-                      <Badge color="blue" variant="light">
-                        {booking.seats_booked} cupo{booking.seats_booked > 1 ? 's' : ''}
-                      </Badge>
-                    )}
-                  </Group>
-                </Group>
-
-                {/* Información de pasajeros con estado individual */}
-                <Stack gap="sm" mb="md">
-                  {booking.passengers.map((passenger, index) => (
-                    <div key={passenger.passenger_id}>
-                      <Group gap="sm">
-                        <Avatar 
-                          color={passenger.status === 'validated' ? 'green' : 'orange'} 
-                          radius="sm"
-                        >
-                          {passenger.status === 'validated' ? <IconCheck size={18} /> : <IconUser size={18} />}
-                        </Avatar>
-                        <div style={{ flex: 1 }}>
-                          <Group justify="space-between" align="center">
-                            <Text fw={600} size="sm">
-                              {passenger.full_name}
-                            </Text>
-                            <Badge 
-                              color={passenger.status === 'validated' ? 'green' : 'orange'}
-                              variant="filled"
-                              size="xs"
-                            >
-                              {passenger.status === 'validated' ? '✅ Validado' : '⏳ Pendiente'}
-                            </Badge>
-                          </Group>
-                          <Group gap="xs">
-                            <IconIdBadge2 size={14} />
-                            <Text size="xs" c="dimmed">
-                              {passenger.identification_number}
-                            </Text>
-                          </Group>
-                        </div>
-                      </Group>
-                      {index < booking.passengers.length - 1 && <Divider my="xs" />}
-                    </div>
-                  ))}
-                </Stack>
-
-                {/* Información adicional */}
-                {booking.booking_date && (
-                  <Group gap="xs" mb="sm">
-                    <IconCalendar size={14} />
-                    <Text size="xs" c="dimmed">
-                      Reservado: {new Date(booking.booking_date).toLocaleDateString()}
+              <Card key={booking.booking_id} className={styles.passengerCard}>
+                <Stack gap="sm">
+                  {/* Header simple */}
+                  <Group justify="space-between">
+                    <Text size="sm" fw={600} className={styles.passengerName}>
+                      Reserva #{String(booking.booking_id).slice(-6)}
                     </Text>
+                    <Badge color={booking.booking_status === 'payed' ? 'green' : 'yellow'} size="sm">
+                      {booking.booking_status === 'payed' ? 'PAGADO' : 'PENDIENTE'}
+                    </Badge>
                   </Group>
-                )}
 
-                {/* Botón de validación o estado */}
-                {(() => {
-                  // Verificar si tenemos pasajeros
-                  if (!booking.passengers || booking.passengers.length === 0) {
+                  {/* Lista compacta de pasajeros */}
+                  {booking.passengers.map((passenger) => {
+                    const needsValidation = passenger.status !== 'validated';
+                    
                     return (
-                      <Alert color="blue" variant="light" icon={<IconAlertCircle size={16} />}>
-                        <Text size="sm">ℹ️ Sin pasajeros registrados</Text>
-                        <Text size="xs" c="dimmed" mt="xs">
-                          Este cupo no tiene pasajeros asociados
-                        </Text>
-                      </Alert>
+                      <Group key={passenger.passenger_id} justify="space-between" align="center">
+                        <div style={{ flex: 1 }}>
+                          <Text size="sm" fw={600} className={styles.passengerName}>
+                            {passenger.full_name}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            ID: {passenger.identification_number}
+                          </Text>
+                        </div>
+                        
+                        {needsValidation ? (
+                          <Button
+                            size="xs"
+                            variant="filled"
+                            color="green"
+                            leftSection={<IconQrcode size={14} />}
+                            onClick={() => handleValidateCupo(booking.booking_id)}
+                            className={styles.validateButton}
+                          >
+                            Validar
+                          </Button>
+                        ) : (
+                          <Badge size="sm" color="green" variant="filled">
+                            ✓ Validado
+                          </Badge>
+                        )}
+                      </Group>
                     );
-                  }
-                  
-                  // 🔥 LÓGICA SIMPLIFICADA Y DIRECTA - FORZAR DETECCIÓN
-                  console.log(`🔥 [CuposReservados] ANALYZING Booking ${booking.booking_id}:`, {
-                    passengers: booking.passengers.map(p => ({
-                      name: p.full_name,
-                      rawStatus: p.status,
-                      statusType: typeof p.status,
-                      isValidated: p.status === 'validated' || p.status === 'VALIDADO'
-                    }))
-                  });
-                  
-                  // Contar directamente - cualquier status que NO sea explícitamente "validated" o "VALIDADO" es pendiente
-                  const validatedPassengers = booking.passengers.filter(p => 
-                    p.status === 'validated' || p.status === 'VALIDADO'
-                  );
-                  
-                  const pendingPassengers = booking.passengers.filter(p => 
-                    p.status !== 'validated' && p.status !== 'VALIDADO'
-                  );
-                  
-                  console.log(`🔥 [CuposReservados] COUNTS for Booking ${booking.booking_id}:`, {
-                    total: booking.passengers.length,
-                    validated: validatedPassengers.length,
-                    pending: pendingPassengers.length,
-                    validatedNames: validatedPassengers.map(p => p.full_name),
-                    pendingNames: pendingPassengers.map(p => p.full_name)
-                  });
-                  
-                  // Si TODOS están validados
-                  if (validatedPassengers.length === booking.passengers.length && booking.passengers.length > 0) {
-                    console.log(`✅ [CuposReservados] ALL VALIDATED for Booking ${booking.booking_id}`);
-                    return (
-                      <Alert color="green" variant="light" icon={<IconCheck size={16} />}>
-                        <Text size="sm" fw={600}>✅ Todos los pasajeros validados</Text>
-                        <Text size="xs" c="dimmed" mt="xs">
-                          Este cupo está completamente verificado y listo para el viaje
-                        </Text>
-                      </Alert>
-                    );
-                  }
-                  
-                  // Si hay CUALQUIER pasajero pendiente - MOSTRAR BOTÓN SIEMPRE
-                  if (pendingPassengers.length > 0) {
-                    console.log(`🚀 [CuposReservados] SHOWING VALIDATE BUTTON for Booking ${booking.booking_id} - ${pendingPassengers.length} pending`);
-                    return (
-                      <>
-                        <Alert color="yellow" variant="light" icon={<IconAlertCircle size={16} />} mb="sm">
-                          <Text size="sm">⏳ {pendingPassengers.length} pasajero{pendingPassengers.length > 1 ? 's' : ''} pendiente{pendingPassengers.length > 1 ? 's' : ''} de validación</Text>
-                        </Alert>
-                        <Button
-                          variant="light"
-                          color="green"
-                          fullWidth
-                          className={styles.validateButton}
-                          onClick={() => {
-                            console.log(`🎯 [CuposReservados] VALIDATE BUTTON CLICKED for booking: ${booking.booking_id}`);
-                            handleValidateCupo(booking.booking_id);
-                          }}
-                          leftSection={<IconQrcode size={16} />}
-                        >
-                          Validar Cupo
-                        </Button>
-                      </>
-                    );
-                  }
-                  
-                  // Caso por defecto - NUNCA debería llegar aquí
-                  console.error(`❌ [CuposReservados] UNEXPECTED STATE for Booking ${booking.booking_id}`);
-                  return (
-                    <>
-                      <Alert color="orange" variant="light" icon={<IconAlertCircle size={16} />} mb="sm">
-                        <Text size="sm">⚠️ Estado incierto - Forzando validación disponible</Text>
-                      </Alert>
-                      <Button
-                        variant="light"
-                        color="green"
-                        fullWidth
-                        onClick={() => handleValidateCupo(booking.booking_id)}
-                        leftSection={<IconQrcode size={16} />}
-                      >
-                        Validar Cupo (Forzado)
-                      </Button>
-                    </>
-                  );
-                })()}
+                  })}
+                </Stack>
               </Card>
             ))}
-          </SimpleGrid>
+          </Stack>
         ) : (
-          <Center>
-            <Stack align="center" gap="md">
-              <Alert color="blue" variant="light" icon={<IconAlertCircle size={16} />}>
-                <Text size="lg" className={styles.noTripsText}>
-                  No hay cupos registrados para este viaje.
+          <Center py="xl">
+            <Stack align="center" gap="lg">
+              <ThemeIcon size={80} color="gray" variant="light">
+                <IconQrcode size={40} />
+              </ThemeIcon>
+              <div style={{ textAlign: 'center' }}>
+                <Text size="xl" fw={700} c="dimmed" mb="sm">
+                  Sin cupos reservados
                 </Text>
-                {!tripId && (
-                  <Text size="sm" c="dimmed" mt="xs">
-                    No se pudo obtener el ID del viaje desde la URL.
-                  </Text>
-                )}
-                {tripId && (
-                  <Text size="sm" c="dimmed" mt="xs">
-                    El viaje {tripId} aún no tiene reservas de pasajeros.
-                  </Text>
-                )}
-                <Button 
-                  variant="light" 
-                  color="blue" 
-                  mt="md"
-                  onClick={() => {
-                    // Refrescar los datos
-                    setLoading(true);
-                    setTimeout(() => {
-                      window.location.reload();
-                    }, 500);
-                  }}
-                >
-                  Actualizar datos
-                </Button>
-              </Alert>
+                <Text size="md" c="dimmed">
+                  {!tripId ? 'No se pudo obtener el ID del viaje' : `El viaje ${tripId} aún no tiene reservas`}
+                </Text>
+              </div>
             </Stack>
           </Center>
         )}

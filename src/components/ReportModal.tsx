@@ -137,12 +137,12 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       }}
     >
       {success ? (
-        <div className="text-center py-6">
-          <IconCheck size={48} className="text-green-500 mx-auto mb-4" />
-          <Text size="lg" fw={600} className="text-green-600 mb-2">
+        <div className={styles.successState}>
+          <IconCheck size={48} className={styles.successIcon} />
+          <Text size="lg" fw={600} className={styles.successTitle}>
             Reporte enviado exitosamente
           </Text>
-          <Text size="sm" className="text-gray-600">
+          <Text size="sm" className={styles.successMessage}>
             Nuestro equipo revisará tu reporte en las próximas 24 horas
           </Text>
         </div>
@@ -158,9 +158,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             </Alert>
           )}
 
-          <div className="space-y-4">
-            <div>
-              <Text size="sm" fw={500} className="mb-2">
+          <div className={styles.formContainer}>
+            <div className={styles.fieldContainer}>
+              <Text size="sm" fw={500} className={styles.fieldLabel}>
                 Razón del reporte *
               </Text>
               <Select
@@ -172,8 +172,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               />
             </div>
 
-            <div>
-              <Text size="sm" fw={500} className="mb-2">
+            <div className={styles.fieldContainer}>
+              <Text size="sm" fw={500} className={styles.fieldLabel}>
                 Descripción adicional (opcional)
               </Text>
               <Textarea
@@ -184,7 +184,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 maxLength={500}
                 className={styles.textarea}
               />
-              <Text size="xs" className="text-gray-500 mt-1">
+              <Text size="xs" className={styles.characterCount}>
                 {description.length}/500 caracteres
               </Text>
             </div>
@@ -195,7 +195,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               </Alert>
             )}
 
-            <Group justify="flex-end" gap="sm" className="mt-6">
+            <Group justify="flex-end" gap="sm" className={styles.buttonGroup}>
               <Button
                 variant="outline"
                 onClick={handleClose}

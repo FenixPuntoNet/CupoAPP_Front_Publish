@@ -7,11 +7,11 @@
   color: #ffffff !important;
 }
 
-:global(.light) .modalContent {
+:global([data-mantine-color-scheme="light"]) .modalContent {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-  border: 1px solid rgba(220, 38, 38, 0.4) !important;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 0 20px rgba(220, 38, 38, 0.1) !important;
-  color: #000000 !important;
+  border: 1px solid rgba(220, 38, 38, 0.3) !important;
+  box-shadow: 0 25px 50px rgba(220, 38, 38, 0.15), 0 0 20px rgba(220, 38, 38, 0.1) !important;
+  color: #1a1a1a !important;
 }
 
 .modalHeader {
@@ -21,7 +21,7 @@
   border-radius: 16px 16px 0 0 !important;
 }
 
-:global(.light) .modalHeader {
+:global([data-mantine-color-scheme="light"]) .modalHeader {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
   border-bottom: 1px solid rgba(220, 38, 38, 0.3) !important;
 }
@@ -32,8 +32,9 @@
   font-size: 1.25rem !important;
 }
 
-:global(.light) .modalHeader .mantine-Modal-title {
-  color: #000000 !important;
+:global([data-mantine-color-scheme="light"]) .modalHeader .mantine-Modal-title {
+  color: #dc2626 !important;
+  font-weight: 700 !important;
 }
 
 .modalBody {
@@ -42,17 +43,17 @@
   color: #ffffff !important;
 }
 
-:global(.light) .modalBody {
+:global([data-mantine-color-scheme="light"]) .modalBody {
   color: #000000 !important;
 }
 
-/* Estilos del texto */
+/* Colores simples para texto */
 .modalBody .mantine-Text-root {
   color: #ffffff !important;
   line-height: 1.6 !important;
 }
 
-:global(.light) .modalBody .mantine-Text-root {
+:global([data-mantine-color-scheme="light"]) .modalBody .mantine-Text-root {
   color: #000000 !important;
 }
 
@@ -60,8 +61,8 @@
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
-:global(.light) .modalBody .mantine-Text-root[data-size="sm"] {
-  color: rgba(0, 0, 0, 0.7) !important;
+:global([data-mantine-color-scheme="light"]) .modalBody .mantine-Text-root[data-size="sm"] {
+  color: #000000 !important;
 }
 
 /* Botón de bloqueo */
@@ -101,8 +102,8 @@
   transition: all 0.2s ease !important;
 }
 
-:global(.light) .cancelButton {
-  border: 1px solid rgba(0, 0, 0, 0.3) !important;
+:global([data-mantine-color-scheme="light"]) .cancelButton {
+  border: 1px solid rgba(26, 26, 26, 0.3) !important;
   color: #000000 !important;
 }
 
@@ -111,9 +112,9 @@
   border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-:global(.light) .cancelButton:hover {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border-color: rgba(0, 0, 0, 0.5) !important;
+:global([data-mantine-color-scheme="light"]) .cancelButton:hover {
+  background: rgba(26, 26, 26, 0.05) !important;
+  border-color: rgba(26, 26, 26, 0.5) !important;
 }
 
 /* Alerta de advertencia */
@@ -139,18 +140,18 @@
   font-weight: 600 !important;
 }
 
-/* Información del usuario */
+/* Información del usuario - CORREGIDO PARA MODO OSCURO */
 .userInfo {
-  background: rgba(26, 26, 26, 0.9) !important;
+  background: rgba(45, 45, 45, 0.95) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   border-radius: 8px !important;
   padding: 16px !important;
   margin-bottom: 16px !important;
 }
 
-:global(.light) .userInfo {
-  background: rgba(255, 255, 255, 0.9) !important;
-  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+:global([data-mantine-color-scheme="light"]) .userInfo {
+  background: rgba(248, 250, 252, 0.9) !important;
+  border: 1px solid rgba(26, 26, 26, 0.15) !important;
 }
 
 .userInfo .mantine-Text-root {
@@ -158,7 +159,7 @@
   font-weight: 600 !important;
 }
 
-:global(.light) .userInfo .mantine-Text-root {
+:global([data-mantine-color-scheme="light"]) .userInfo .mantine-Text-root {
   color: #000000 !important;
 }
 
@@ -167,8 +168,8 @@
   font-weight: 600 !important;
 }
 
-:global(.light) .userInfo .mantine-Text-root[data-size="lg"] {
-  color: #000000 !important;
+:global([data-mantine-color-scheme="light"]) .userInfo .mantine-Text-root[data-size="lg"] {
+  color: #dc2626 !important;
 }
 
 /* Nota alternativa con mejor contraste */
@@ -181,7 +182,7 @@
   backdrop-filter: blur(10px);
 }
 
-:global(.light) .alternativeNote {
+:global([data-mantine-color-scheme="light"]) .alternativeNote {
   background: rgba(59, 130, 246, 0.08) !important;
   border: 1px solid rgba(59, 130, 246, 0.25) !important;
 }
@@ -192,7 +193,7 @@
   line-height: 1.5 !important;
 }
 
-:global(.light) .alternativeText {
+:global([data-mantine-color-scheme="light"]) .alternativeText {
   color: #000000 !important;
 }
 
@@ -201,7 +202,7 @@
   font-weight: 700 !important;
 }
 
-:global(.light) .alternativeText strong {
+:global([data-mantine-color-scheme="light"]) .alternativeText strong {
   color: #1d4ed8 !important;
 }
 
@@ -234,4 +235,28 @@
   .modalBody {
     padding: 16px !important;
   }
+}
+
+/* ESTILOS SÚPER ESPECÍFICOS SOLO PARA ESTE MODAL */
+.modalContent[data-mantine-color-scheme="light"] .mantine-Text-root,
+.modalContent[data-mantine-color-scheme="light"] p,
+.modalContent[data-mantine-color-scheme="light"] span:not(.mantine-Alert-icon),
+.modalContent[data-mantine-color-scheme="light"] li {
+  color: #000000 !important;
+}
+
+.modalContent[data-mantine-color-scheme="light"] .userInfo .mantine-Text-root {
+  color: #000000 !important;
+}
+
+.modalContent[data-mantine-color-scheme="light"] .userInfo .mantine-Text-root[data-size="lg"] {
+  color: #dc2626 !important;
+}
+
+/* MODO OSCURO */
+.modalContent .mantine-Text-root,
+.modalContent p,
+.modalContent span:not(.mantine-Alert-icon),
+.modalContent li {
+  color: #ffffff !important;
 }

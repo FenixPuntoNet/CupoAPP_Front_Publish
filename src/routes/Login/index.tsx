@@ -10,8 +10,8 @@ import {
   UnstyledButton,
   LoadingOverlay,
 } from "@mantine/core";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "@mantine/form";
 import { RecoverAccountModal } from "@/components/RecoverAccountModal";
 import AppleSignInButton from "@/components/AppleSignInButton";

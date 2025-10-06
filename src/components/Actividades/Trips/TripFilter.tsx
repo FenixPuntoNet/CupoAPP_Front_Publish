@@ -1,15 +1,14 @@
 import type React from 'react';
 import { Select, Text } from '@mantine/core';
-import { DateTimePicker } from '@mantine/dates';
-import styles from './SrylesComponents/TripFilter.module.css';
-import type { Trip } from './Actividades';
+import { DatePickerInput } from '@mantine/dates';
+import { IconCalendar } from '@tabler/icons-react';
+import styles from './TripFilter.module.css';
+import type { Trip } from '../Actividades';
 
 interface TripFilterProps {
   trips: Trip[];
   filterValue: string | null;
   onFilterChange: (value: string | null) => void;
-  statusFilter: string | null;
-  onStatusFilterChange: (value: string | null) => void;
   dateFilter: Date | null;
   onDateFilterChange: (date: Date | null) => void;
 }
@@ -18,8 +17,6 @@ const TripFilter: React.FC<TripFilterProps> = ({
   trips,
   filterValue,
   onFilterChange,
-  statusFilter,
-  onStatusFilterChange,
   dateFilter,
   onDateFilterChange,
 }) => {
@@ -44,28 +41,17 @@ const TripFilter: React.FC<TripFilterProps> = ({
         className={styles.filterSelect}
       />
 
-      <Select
-        placeholder="Estado del viaje"
-        value={statusFilter}
-        onChange={onStatusFilterChange}
-        data={[
-          { value: 'active', label: 'Activo' }, // Estado inicial del viaje
-          { value: 'started', label: 'En progreso' }, // Viaje iniciado por el conductor
-          { value: 'finished', label: 'Finalizado' }, // Viaje completado
-          { value: 'canceled', label: 'Cancelado' }, // Viaje cancelado
-        ]}
-        clearable
-        className={styles.filterSelect}
-      />
-
-
-      <DateTimePicker
-        placeholder="Fecha de viaje"
+      <DatePickerInput
+        placeholder="Seleccionar fecha"
         value={dateFilter}
         onChange={onDateFilterChange}
-        clearable
         locale="es"
         className={styles.filterSelect}
+        firstDayOfWeek={1}
+        weekdayFormat="short"
+        clearable
+        leftSection={<IconCalendar size={16} />}
+        popoverProps={{ withinPortal: true }}
       />
     </div>
   );

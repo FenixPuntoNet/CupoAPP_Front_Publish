@@ -1,6 +1,6 @@
-import { useState } from 'react';
+// import { useState } from 'react';
 import { Button } from '@mantine/core';
-import { SafePointSelector } from '../SafePointSelector';
+// import { SafePointSelector } from '../SafePointSelector';
 import type { Trip } from '@/types/Trip';
 
 interface SafePointIntegrationProps {
@@ -8,10 +8,10 @@ interface SafePointIntegrationProps {
   onSafePointsSelected?: (pickup: any, dropoff: any) => void;
 }
 
-export function SafePointIntegration({ trip, onSafePointsSelected }: SafePointIntegrationProps) {
-  const [safePointModalOpen, setSafePointModalOpen] = useState(false);
+export function SafePointIntegration({ trip: _trip, onSafePointsSelected: _onSafePointsSelected }: SafePointIntegrationProps) {
+  // const [safePointModalOpen, setSafePointModalOpen] = useState(false);
 
-  const handleSafePointSelection = (pickupPoint: any, dropoffPoint: any) => {
+  /* const handleSafePointSelection = (pickupPoint: any, dropoffPoint: any) => {
     console.log('✅ SafePoints seleccionados:', {
       pickup: pickupPoint,
       dropoff: dropoffPoint
@@ -22,24 +22,27 @@ export function SafePointIntegration({ trip, onSafePointsSelected }: SafePointIn
     
     // Cerrar modal
     setSafePointModalOpen(false);
-  };
+  }; */
 
   return (
     <>
       <Button
         variant="outline"
-        onClick={() => setSafePointModalOpen(true)}
+        onClick={() => {
+          // setSafePointModalOpen(true)
+          console.log('SafePoints modal disabled temporarily');
+        }}
         fullWidth
       >
         Seleccionar Puntos de Recogida y Descenso
       </Button>
 
-      <SafePointSelector
+      {/* <SafePointSelector
         trip={trip}
         isOpen={safePointModalOpen}
         onClose={() => setSafePointModalOpen(false)}
         onSafePointsSelected={handleSafePointSelection}
-      />
+      /> */}
     </>
   );
 }

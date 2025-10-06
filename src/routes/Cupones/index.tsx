@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import styles from './index.module.css';
 import { useEffect, useState } from 'react';
 import {
@@ -29,7 +29,7 @@ import {
 import BackButton from '@/components/Buttons/backButton';
 
 const CuponesView = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [codeInput, setCodeInput] = useState('');
   const [referralInput, setReferralInput] = useState('');

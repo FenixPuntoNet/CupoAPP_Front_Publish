@@ -1,7 +1,8 @@
 import type React from 'react';
 import { useState, useEffect } from 'react';
-import { Button, Group } from '@mantine/core';
-import styles from './SrylesComponents/RolSelector.module.css';
+import { Text } from '@mantine/core';
+import { IconChartBar, IconTicket, IconCar } from '@tabler/icons-react';
+import styles from './RolSelector.module.css';
 import { getCurrentUser } from '@/services/auth';
 
 interface RolSelectorProps {
@@ -69,31 +70,60 @@ const RolSelector: React.FC<RolSelectorProps> = ({ onSelect, selectedActivity })
         setSelectedOption(option);
         onSelect(option);
     };
+    const options = [
+        {
+            key: 'Resumen de Actividades',
+            label: 'Resumen',
+            icon: IconChartBar,
+            disabled: false
+        },
+        {
+            key: 'Cupos Creados',
+            label: 'Mis Cupos',
+            icon: IconTicket,
+            disabled: false
+        },
+        {
+            key: 'Viajes Publicados',
+            label: 'Mis Viajes',
+            icon: IconCar,
+            disabled: userType === 'PASSENGER'
+        }
+    ];
+
     return (
-        <Group gap="md" mt="md">
-            <Button 
-                onClick={() => handleOptionSelect('Resumen de Actividades')}
-                className={`${styles.button} ${selectedOption === 'Resumen de Actividades' ? styles.selected : ''}`}
-                disabled={false} // ✅ EXPLÍCITAMENTE habilitado
-            >
-                📊 Resumen
-            </Button>
-            <Button 
-                onClick={() => handleOptionSelect('Cupos Creados')}
-                className={`${styles.button} ${selectedOption === 'Cupos Creados' ? styles.selected : ''}`}
-                disabled={false} // ✅ EXPLÍCITAMENTE habilitado
-            >
-                🎫 Cupos Reservados
-            </Button>
-            <Button 
-                onClick={() => handleOptionSelect('Viajes Publicados')}
-                className={`${styles.button} ${selectedOption === 'Viajes Publicados' ? styles.selected : ''}`}
-                disabled={userType === 'PASSENGER'} // ✅ Solo deshabilitar para PASSENGER
-                style={userType === 'PASSENGER' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-            >
-                🚗 Viajes Publicados
-            </Button>
-        </Group>
+        <div className={styles.segmentedContainer}>
+            <div className={styles.segmentedControl}>
+                {/* Sliding background indicator */}
+                <div 
+                    className={styles.segmentedIndicator}
+                    style={{
+                        transform: `translateX(${options.findIndex(opt => opt.key === selectedOption) * 100}%)`,
+                        width: `${100 / options.length}%`
+                    }}
+                />
+                
+                {/* Option buttons */}
+                {options.map((option) => {
+                    const Icon = option.icon;
+                    return (
+                        <button
+                            key={option.key}
+                            className={`${styles.segmentedOption} ${
+                                selectedOption === option.key ? styles.segmentedSelected : ''
+                            } ${option.disabled ? styles.segmentedDisabled : ''}`}
+                            onClick={() => !option.disabled && handleOptionSelect(option.key)}
+                            disabled={option.disabled}
+                        >
+                            <Icon size={16} className={styles.segmentedIcon} />
+                            <Text size="sm" fw={500} className={styles.segmentedLabel}>
+                                {option.label}
+                            </Text>
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
     );
 };
 

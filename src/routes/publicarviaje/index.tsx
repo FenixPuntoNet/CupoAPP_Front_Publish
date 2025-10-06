@@ -42,10 +42,10 @@ import {
   tripStore,
 } from "../../types/PublicarViaje/TripDataManagement";
 import { calculateSuggestedPrice } from "@/services/config";
-import { publishTrip } from "@/services/viajes";
+// import { publishTrip } from "@/services/viajes";
 import { getMyVehicle } from "@/services/vehicles";
-import { useTripDraft } from "@/hooks/useTripDraft";
-import { ConditionalMap } from "@/components/ui/OptimizedMap";
+// import { useTripDraft } from "@/hooks/useTripDraft";
+// import { ConditionalMap } from "@/components/ui/OptimizedMap";
 import { useOptimizedMaps } from "@/hooks/useOptimizedMaps";
 import styles from "./index.module.css";
 import { notifications } from "@mantine/notifications";
@@ -528,7 +528,7 @@ function ReservarView() {
   }, [navigate, routes, selectedRouteIndex]);
 
   // Función de utilidad para preparar datos del viaje
-  const prepareTripData = useCallback(() => {
+  /* const prepareTripData = useCallback(() => {
     if (!routes[selectedRouteIndex]) return null;
 
     const selectedRoute = routes[selectedRouteIndex];
@@ -558,7 +558,7 @@ function ReservarView() {
       estimated_duration: selectedRoute.duration,
       estimated_distance: selectedRoute.distance,
     };
-  }, [routes, selectedRouteIndex]);
+  }, [routes, selectedRouteIndex]); */
 
   // Función para manejar el cierre del modal
   const handleModalClose = () => {

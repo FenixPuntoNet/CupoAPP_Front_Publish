@@ -1,0 +1,224 @@
+/* ChatModal.module.css */
+.modalContent {
+  background: var(--mantine-color-dark-7) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(52, 211, 153, 0.2) !important;
+  max-height: 85vh !important;
+  overflow: hidden !important;
+}
+
+[data-mantine-color-scheme="light"] .modalContent {
+  background: var(--mantine-color-gray-0) !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+
+.modalHeader {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.2) !important;
+  padding: 16px 20px 12px 20px !important;
+}
+
+.modalTitle {
+  color: #34D399 !important;
+  font-weight: 700 !important;
+  font-size: 1.2rem !important;
+}
+
+.chatContainer {
+  display: flex;
+  flex-direction: column;
+  height: 70vh;
+  max-height: 70vh;
+  overflow: hidden;
+}
+
+.chatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.2);
+  background: rgba(52, 211, 153, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+[data-mantine-color-scheme="light"] .chatHeader {
+  background: rgba(52, 211, 153, 0.08);
+  border-bottom: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.chatInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chatIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #34D399;
+}
+
+.chatDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chatTitle {
+  color: var(--mantine-color-gray-0) !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+[data-mantine-color-scheme="light"] .chatTitle {
+  color: var(--mantine-color-dark-8) !important;
+}
+
+.participantsInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mantine-color-gray-3);
+}
+
+[data-mantine-color-scheme="light"] .participantsInfo {
+  color: var(--mantine-color-dark-6);
+}
+
+.participantsText {
+  color: inherit !important;
+  font-size: 0.85rem !important;
+  margin: 0 !important;
+}
+
+.bookingInfo {
+  text-align: right;
+}
+
+.bookingId {
+  color: var(--mantine-color-gray-3) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+}
+
+[data-mantine-color-scheme="light"] .bookingId {
+  color: var(--mantine-color-dark-6) !important;
+}
+
+.chatWrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Ajustes para el ChatBox dentro del modal */
+.chatWrapper :global(.chatContainer) {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.chatWrapper :global(.messagesArea) {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  /* PERMITIR que el ChatBox controle su propio padding */
+  background: var(--mantine-color-dark-8) !important;
+  /* NO sobreescribir height ni position */
+}
+
+[data-mantine-color-scheme="light"] .chatWrapper :global(.messagesArea) {
+  background: var(--mantine-color-gray-1) !important;
+}
+
+.chatWrapper :global(.inputArea) {
+  /* PERMITIR que el ChatBox controle su posición */
+  border-top: 1px solid rgba(52, 211, 153, 0.2) !important;
+  background: var(--mantine-color-dark-7) !important;
+  /* NO sobreescribir position ni padding específico */
+}
+
+[data-mantine-color-scheme="light"] .chatWrapper :global(.inputArea) {
+  background: var(--mantine-color-gray-0) !important;
+  border-top: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+
+/* Solo mantener estilos básicos de colores - NO interferir con layout */
+.chatWrapper :global(.inputContainer) {
+  background: var(--mantine-color-dark-6) !important;
+  border: 1px solid rgba(52, 211, 153, 0.2) !important;
+}
+
+[data-mantine-color-scheme="light"] .chatWrapper :global(.inputContainer) {
+  background: white !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+
+.chatWrapper :global(.messageInput) {
+  color: var(--mantine-color-gray-0) !important;
+}
+
+[data-mantine-color-scheme="light"] .chatWrapper :global(.messageInput) {
+  color: var(--mantine-color-dark-8) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chatContainer {
+    height: 60vh;
+    max-height: 60vh;
+  }
+  
+  .chatHeader {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .chatInfo {
+    width: 100%;
+  }
+  
+  .bookingInfo {
+    text-align: left;
+    width: 100%;
+  }
+  
+  .chatWrapper :global(.messagesArea) {
+    padding: 12px 16px !important;
+  }
+  
+  .chatWrapper :global(.inputArea) {
+    padding: 12px 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .chatContainer {
+    height: 55vh;
+    max-height: 55vh;
+  }
+  
+  .chatTitle {
+    font-size: 0.9rem !important;
+  }
+  
+  .participantsText {
+    font-size: 0.8rem !important;
+  }
+  
+  .bookingId {
+    font-size: 0.75rem !important;
+  }
+}

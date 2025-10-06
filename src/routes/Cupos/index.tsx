@@ -12,11 +12,12 @@ import {
 import { showNotification } from '@mantine/notifications';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { getMisCupos } from '@/services/cupos';
-import { TripRating } from '@/components/Actividades/TripRating';
+import { TripRating } from '@/components/Actividades/UI/TripRating';
 import { useBackendAuth } from '@/context/BackendAuthContext';
 import UserSafePointsDisplay from '@/components/Cupos/UserSafePointsDisplay';
+import { TicketModal, BookingDetailsModal, ChatModal } from '@/components/Cupos/Modals';
 
 
 interface CuposProps {}
@@ -46,19 +47,17 @@ const Cupos: React.FC<CuposProps> = () => {
   const { user } = useBackendAuth();
   const [bookings, setBookings] = useState<BookingConductor[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  // Redirigir automáticamente a Actividades con la sección de Cupos seleccionada
-  useEffect(() => {
-    console.log('🔀 [Cupos] Redirecting to Actividades with Cupos Creados selected');
-    navigate({
-      to: '/Actividades'
-    });
-  }, [navigate]);
 
   const [ratingModal, setRatingModal] = useState(false);
   const [selectedTripId, setSelectedTripId] = useState<number | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+
+  // Estados para los nuevos modales
+  const [ticketModalOpened, setTicketModalOpened] = useState(false);
+  const [bookingDetailsModalOpened, setBookingDetailsModalOpened] = useState(false);
+  const [chatModalOpened, setChatModalOpened] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string>('');
+  const [selectedChatTripId, setSelectedChatTripId] = useState<number | null>(null);
 
   // Obtener userId del contexto de autenticación
   const userId = user?.id || '';
@@ -303,6 +302,28 @@ const Cupos: React.FC<CuposProps> = () => {
           userId={userId}
         />
       )}
+
+      {/* Modales para Ticket y Detalles */}
+      <TicketModal
+        opened={ticketModalOpened}
+        onClose={() => setTicketModalOpened(false)}
+        bookingId={selectedBookingId}
+      />
+      
+      <BookingDetailsModal
+        opened={bookingDetailsModalOpened}
+        onClose={() => setBookingDetailsModalOpened(false)}
+        bookingId={selectedBookingId}
+      />
+
+      {/* Modal de Chat */}
+      <ChatModal
+        opened={chatModalOpened}
+        onClose={() => setChatModalOpened(false)}
+        tripId={selectedChatTripId || 0}
+        bookingId={selectedBookingId}
+      />
+
       {bookings.length === 0 ? (
         <Text className={styles.noTripsText}>Aún no has comprado ningún cupo.</Text>
       ) : (
@@ -350,11 +371,9 @@ const Cupos: React.FC<CuposProps> = () => {
                   <Button
                     size="xs"
                     onClick={() => {
-                      console.log('🔍 [Cupos] Navigating to ViewBookingDetails with booking_id:', booking.booking_id);
-                      navigate({
-                        to: '/Cupos/ViewBookingDetails',
-                        search: { booking_id: booking.booking_id.toString() },
-                      });
+                      console.log('🔍 [Cupos] Opening BookingDetailsModal with booking_id:', booking.booking_id);
+                      setSelectedBookingId(booking.booking_id.toString());
+                      setBookingDetailsModalOpened(true);
                     }}
                     style={{
                       backgroundColor: 'transparent',
@@ -369,17 +388,9 @@ const Cupos: React.FC<CuposProps> = () => {
                   <Button
                     size="xs"
                     onClick={() => {
-                      // Simplemente navegar sin verificar pasajeros ya que ViewTicket lo manejará
-                      console.log('🎫 [Cupos] Navigating to ViewTicket for booking:', booking.booking_id);
-                      console.log('🔍 [Cupos] Booking data:', booking);
-                      console.log('🔍 [Cupos] Passengers data:', booking.passengers);
-                      
-                      navigate({
-                        to: '/Cupos/ViewTicket',
-                        search: {
-                          booking_id: booking.booking_id.toString(),
-                        },
-                      });
+                      console.log('🎫 [Cupos] Opening TicketModal for booking:', booking.booking_id);
+                      setSelectedBookingId(booking.booking_id.toString());
+                      setTicketModalOpened(true);
                     }}
                     style={{
                       backgroundColor: 'transparent',
@@ -394,11 +405,11 @@ const Cupos: React.FC<CuposProps> = () => {
                   <Button
                     size="xs"
                     onClick={() => {
-                      console.log('🚗 [Cupos] Navigating to Chat - Full booking data:', booking);
-                      console.log('🚗 [Cupos] trip_id:', booking.trip_id);
-                      console.log('🚗 [Cupos] trip_id type:', typeof booking.trip_id);
-                      console.log('🚗 [Cupos] trip_id is null?', booking.trip_id === null);
-                      console.log('🚗 [Cupos] trip_id is undefined?', booking.trip_id === undefined);
+                      console.log('� [Cupos] Opening Chat Modal - Full booking data:', booking);
+                      console.log('� [Cupos] trip_id:', booking.trip_id);
+                      console.log('� [Cupos] trip_id type:', typeof booking.trip_id);
+                      console.log('� [Cupos] trip_id is null?', booking.trip_id === null);
+                      console.log('� [Cupos] trip_id is undefined?', booking.trip_id === undefined);
                       
                       if (!booking.trip_id || booking.trip_id === null || booking.trip_id === undefined || booking.trip_id === 0) {
                         console.error('❌ [Cupos] trip_id is invalid:', booking.trip_id);
@@ -411,10 +422,14 @@ const Cupos: React.FC<CuposProps> = () => {
                         return;
                       }
                       
-                      navigate({
-                        to: '/Chat',
-                        search: { trip_id: booking.trip_id.toString() },
-                      });
+                      // Abrir el modal de chat
+                      console.log('🚀 [CUPOS] CHAT BUTTON CLICKED - SETTING STATES');
+                      console.log('🚀 [CUPOS] Trip ID:', booking.trip_id);
+                      console.log('🚀 [CUPOS] Booking ID:', booking.booking_id);
+                      setSelectedChatTripId(booking.trip_id);
+                      setSelectedBookingId(booking.booking_id.toString());
+                      setChatModalOpened(true);
+                      console.log('🚀 [CUPOS] MODAL SHOULD BE OPENING NOW!');
                     }}
                     style={{
                       backgroundColor: 'transparent',
@@ -424,7 +439,7 @@ const Cupos: React.FC<CuposProps> = () => {
                       padding: '5px 10px',
                     }}
                   >
-                    Ir al Chat
+                    Chat del Viaje
                   </Button>
                   {booking.booking_status === 'completed' && (
                     <Button

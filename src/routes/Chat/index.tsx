@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { ChatBox } from '@/components/Actividades/ChatBox'
-import { ChatList } from '@/components/Actividades/ChatList'
+import { ChatList } from '@/components/Actividades/Chat/ChatList'
+import { ChatModal } from '@/components/Actividades/Chat/ChatModal'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { getCurrentUser } from '@/services/auth'
 import { getOrCreateTripChat } from '@/services/chat'
@@ -24,7 +24,7 @@ function ChatPage() {
   const navigate = useNavigate()
   const [userId, setUserId] = useState<string | null>(null)
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
-  const [currentView, setCurrentView] = useState<'list' | 'chat'>('list')
+  const [modalOpened, setModalOpened] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const { trip_id } = Route.useSearch()
@@ -87,14 +87,12 @@ function ChatPage() {
       if (!result.success) {
         console.error('❌ [ChatPage] Chat not available for trip:', tripId, 'Error:', result.error);
         
-        // Con el sistema corregido, mostrar mensaje más específico
         showNotification({
           title: 'Chat en proceso',
           message: 'El chat de este viaje se está inicializando. Intenta nuevamente en unos segundos.',
           color: 'blue',
         });
         
-        // Intentar cargar la lista de chats por si el chat ya existe pero no se detectó
         console.warn('⚠️ [ChatPage] Chat not found for trip, but system should be working now');
         return
       }
@@ -110,36 +108,32 @@ function ChatPage() {
       const chatInfo: Chat = {
         id: result.data.chat_id,
         trip_id: tripId,
-        origin: `Viaje #${tripId}`, // Información básica por ahora
-        destination: 'Chat grupal', // Se puede mejorar obteniendo datos del viaje
+        origin: `Viaje #${tripId}`,
+        destination: 'Chat grupal',
         last_message: 'Chat del viaje disponible',
         last_message_time: 'Ahora',
-        member_count: 0, // Se actualizará cuando se carguen los mensajes
+        member_count: 0,
         is_active: true
       }
 
       console.log('📱 [ChatPage] Setting selected chat:', chatInfo);
       setSelectedChat(chatInfo)
-      setCurrentView('chat')
+      setModalOpened(true) // SIEMPRE abrir modal
     } catch (error) {
       console.error('❌ [ChatPage] Error opening chat for trip:', tripId, error)
-      
-      // No bloquear la experiencia del usuario, pero informar del problema
-      console.warn('⚠️ [ChatPage] Chat system may still be initializing. The chat will be available once you publish trips or make reservations.');
     }
   }
 
-  // Manejar selección de chat
+  // Manejar selección de chat - SIEMPRE abre modal
   const handleSelectChat = (chat: Chat) => {
     console.log('📱 Seleccionando chat:', chat.id)
     setSelectedChat(chat)
-    setCurrentView('chat')
+    setModalOpened(true) // SIEMPRE abrir modal
   }
 
-  // Manejar regreso a lista
-  const handleBackToList = () => {
-    console.log('📱 Regresando a lista')
-    setCurrentView('list')
+  // Cerrar modal
+  const handleCloseModal = () => {
+    setModalOpened(false)
     setSelectedChat(null)
   }
 
@@ -179,68 +173,33 @@ function ChatPage() {
 
   return (
     <div className={styles.chatApp}>
-      <div className='top p-4'>
-        <BackButton to='/perfil' />
-      </div>
-      {/* Vista para móvil - Una sola vista a la vez */}
-      {isMobile && (
-        <>
-          {/* Lista de chats en móvil */}
-          {currentView === 'list' && (
-            <div className={styles.mobileView}>
-              <div className={styles.mobileHeader}>
-                <div className={styles.headerContent}>
-                  <h1 className={styles.headerTitle}>💬 Chats</h1>
-                  <p className={styles.headerSubtitle}>
-                    Conversaciones de viajes
-                  </p>
-                </div>
-              </div>
-              <div className={styles.mobileContent}>
-                <ChatList 
-                  onSelectChat={handleSelectChat}
-                  currentUserId={userId}
-                />
-              </div>
+      {/* Vista móvil */}
+      {isMobile ? (
+        <div className={styles.mobileView}>
+          <div className={styles.mobileHeader}>
+            <div className='top p-4' style={{position: 'absolute', top: 0, left: 0, zIndex: 100}}>
+              <BackButton to='/perfil' />
             </div>
-          )}
-
-          {/* Chat individual en móvil */}
-          {currentView === 'chat' && selectedChat && (
-            <div className={styles.mobileView}>
-              <div className={styles.mobileChatHeader}>
-                <button 
-                  className={styles.backButton}
-                  onClick={handleBackToList}
-                  aria-label="Volver a chats"
-                >
-                  <span className={styles.backIcon}>←</span>
-                </button>
-                <div className={styles.chatHeaderInfo}>
-                  <h2 className={styles.chatTitle}>
-                    {selectedChat.origin} → {selectedChat.destination}
-                  </h2>
-                  <p className={styles.chatSubtitle}>
-                    👥 {selectedChat.member_count} miembros • En línea
-                  </p>
-                </div>
-              </div>
-              <div className={styles.mobileChatContent}>
-                <ChatBox 
-                  chatId={selectedChat.id} 
-                  currentUserId={userId} 
-                />
-              </div>
+            <div className={styles.headerContent}>
+              <h1 className={styles.headerTitle}>💬 Chats</h1>
+              <p className={styles.headerSubtitle}>Conversaciones de viajes</p>
             </div>
-          )}
-        </>
-      )}
-
-      {/* Vista para desktop - Ambas vistas al mismo tiempo */}
-      {!isMobile && (
+          </div>
+          <div className={styles.mobileContent}>
+            <ChatList 
+              onSelectChat={handleSelectChat}
+              currentUserId={userId}
+            />
+          </div>
+        </div>
+      ) : (
+        /* Vista desktop */
         <div className={styles.desktopView}>
-          {/* Panel izquierdo - Lista de chats */}
-          <div className={styles.desktopSidebar}>
+          <div className='top p-4' style={{position: 'absolute', top: 0, left: 0, zIndex: 100}}>
+            <BackButton to='/perfil' />
+          </div>
+          {/* Panel principal - Lista de chats */}
+          <div className={styles.desktopSidebar} style={{width: '100%', maxWidth: 'none'}}>
             <div className={styles.desktopSidebarHeader}>
               <h1 className={styles.sidebarTitle}>💬 Chats</h1>
               <p className={styles.sidebarSubtitle}>
@@ -254,39 +213,17 @@ function ChatPage() {
               />
             </div>
           </div>
-
-          {/* Panel derecho - Chat seleccionado */}
-          <div className={styles.desktopMain}>
-            {selectedChat ? (
-              <>
-                <div className={styles.desktopChatHeader}>
-                  <div className={styles.chatHeaderInfo}>
-                    <h2 className={styles.chatTitle}>
-                      {selectedChat.origin} → {selectedChat.destination}
-                    </h2>
-                    <p className={styles.chatSubtitle}>
-                      👥 {selectedChat.member_count} miembros • En línea
-                    </p>
-                  </div>
-                </div>
-                <div className={styles.desktopChatContent}>
-                  <ChatBox 
-                    chatId={selectedChat.id} 
-                    currentUserId={userId} 
-                  />
-                </div>
-              </>
-            ) : (
-              <div className={styles.desktopEmptyState}>
-                <div className={styles.emptyStateIcon}>💬</div>
-                <h2 className={styles.emptyStateTitle}>Selecciona un chat</h2>
-                <p className={styles.emptyStateDescription}>
-                  Elige una conversación para comenzar a chatear
-                </p>
-              </div>
-            )}
-          </div>
         </div>
+      )}
+
+      {/* Modal de Chat - Para ambas vistas */}
+      {selectedChat && userId && (
+        <ChatModal
+          opened={modalOpened}
+          onClose={handleCloseModal}
+          chat={selectedChat}
+          currentUserId={userId}
+        />
       )}
     </div>
   )

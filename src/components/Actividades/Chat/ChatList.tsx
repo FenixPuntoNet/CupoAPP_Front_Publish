@@ -71,7 +71,7 @@ export function ChatList({ onSelectChat, currentUserId }: ChatListProps) {
 
   if (chats.length === 0) {
     return (
-            <div className={styles.emptyContainer}>
+      <div className={styles.emptyContainer}>
         <div className={styles.emptyIcon}>💬</div>
         <h3>No hay chats disponibles</h3>
         <p>Los chats se crean automáticamente cuando:</p>
@@ -80,7 +80,7 @@ export function ChatList({ onSelectChat, currentUserId }: ChatListProps) {
           <li>🎫 Reservas un cupo como pasajero</li>
         </ul>
         <button onClick={fetchChats} className={styles.refreshButton}>
-          Actualizar chats
+          🔄 Actualizar chats
         </button>
         <p>Únete a un viaje para comenzar a chatear</p>
       </div>

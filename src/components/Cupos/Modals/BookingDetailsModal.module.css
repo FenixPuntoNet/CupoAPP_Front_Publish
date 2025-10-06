@@ -1,0 +1,235 @@
+/* BookingDetailsModal.module.css */
+.modalContent {
+  background: var(--mantine-color-dark-7) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(52, 211, 153, 0.2) !important;
+  max-height: 85vh !important;
+  overflow: hidden !important;
+}
+
+[data-mantine-color-scheme="light"] .modalContent {
+  background: var(--mantine-color-gray-0) !important;
+  border: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+
+.modalHeader {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.2) !important;
+  padding: 16px 20px 12px 20px !important;
+}
+
+.modalTitle {
+  color: #34D399 !important;
+  font-weight: 700 !important;
+  font-size: 1.2rem !important;
+}
+
+.detailsContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.compactSection {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  color: #059669 !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(5, 150, 105, 0.4);
+}
+
+[data-mantine-color-scheme="light"] .sectionTitle {
+  color: #059669 !important;
+  border-bottom: 1px solid rgba(5, 150, 105, 0.4);
+}
+
+[data-mantine-color-scheme="dark"] .sectionTitle {
+  color: #34D399 !important;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-mantine-color-scheme="light"] .detailRow {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.inlineFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-mantine-color-scheme="light"] .inlineFields {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.halfField {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detailLabel {
+  color: var(--mantine-color-gray-3) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  min-width: auto;
+}
+
+[data-mantine-color-scheme="light"] .detailLabel {
+  color: var(--mantine-color-dark-6) !important;
+}
+
+.detailValue {
+  color: var(--mantine-color-gray-0) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  text-align: left;
+  word-break: break-word;
+}
+
+[data-mantine-color-scheme="light"] .detailValue {
+  color: var(--mantine-color-dark-8) !important;
+}
+
+.detailRow .detailValue {
+  text-align: right;
+}
+
+.priceValue {
+  color: #34D399 !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+}
+
+.statusBadge {
+  font-size: 0.7rem !important;
+  padding: 2px 8px !important;
+  font-weight: 600 !important;
+  width: fit-content;
+}
+
+.vehicleGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.vehicleCompactGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.longText {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .detailsContainer {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 12px 16px;
+    max-height: 75vh;
+  }
+  
+  .detailRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 4px 0;
+  }
+  
+  .inlineFields {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .halfField {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .detailLabel {
+    font-size: 0.75rem !important;
+    min-width: unset;
+  }
+  
+  .detailValue {
+    font-size: 0.75rem !important;
+    text-align: left;
+    width: 100%;
+  }
+  
+  .halfField .detailValue {
+    text-align: right;
+  }
+  
+  .vehicleGrid,
+  .vehicleCompactGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .longText {
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  .detailsContainer {
+    padding: 8px 12px;
+    gap: 12px;
+  }
+  
+  .sectionTitle {
+    font-size: 0.8rem !important;
+    margin-bottom: 6px;
+  }
+  
+  .compactSection {
+    margin-bottom: 0;
+  }
+  
+  .inlineFields {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

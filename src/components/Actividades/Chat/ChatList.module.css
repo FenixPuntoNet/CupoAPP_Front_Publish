@@ -198,6 +198,51 @@
   filter: drop-shadow(0 0 15px rgba(0, 255, 157, 0.3));
 }
 
+.refreshButton {
+  background: linear-gradient(135deg, rgba(0, 255, 157, 0.8), rgba(0, 255, 157, 0.6));
+  color: #0a0a0a;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 1rem 0;
+  box-shadow: 0 4px 15px rgba(0, 255, 157, 0.3);
+}
+
+.refreshButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 255, 157, 0.4);
+}
+
+.refreshButton:active {
+  transform: translateY(0);
+}
+
+:global(.light) .refreshButton {
+  background: linear-gradient(135deg, rgba(0, 204, 122, 0.8), rgba(0, 204, 122, 0.6));
+  color: white;
+}
+
+.emptyContainer ul {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  text-align: left;
+}
+
+.emptyContainer li {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:global(.light) .emptyContainer li {
+  color: rgba(26, 26, 26, 0.7);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .chatList {

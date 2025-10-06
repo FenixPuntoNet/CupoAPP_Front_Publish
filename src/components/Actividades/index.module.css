@@ -443,3 +443,108 @@ background-size: 1000px 100%;
     align-items: flex-start;
   }
 }
+
+/* 🎯 STATUS SELECTOR - Estilos mejorados y más profesionales */
+.statusSelectorContainer {
+  margin: 24px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.statusSelectorContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 157, 0.6), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.statusSelectorContainer:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(0, 255, 157, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 255, 157, 0.15);
+}
+
+.statusSelectorContainer:hover::before {
+  opacity: 1;
+}
+
+.sectionLabel {
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.sectionLabel::before {
+  content: "🎯";
+  font-size: 18px;
+  filter: drop-shadow(0 0 8px rgba(0, 255, 157, 0.6));
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Modo claro */
+:global(.light) .statusSelectorContainer {
+  background: rgba(248, 250, 252, 0.95);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+:global(.light) .statusSelectorContainer:hover {
+  background: rgba(248, 250, 252, 1);
+  border-color: rgba(0, 122, 85, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 122, 85, 0.12);
+}
+
+:global(.light) .statusSelectorContainer::before {
+  background: linear-gradient(90deg, transparent, rgba(0, 122, 85, 0.6), transparent);
+}
+
+:global(.light) .sectionLabel {
+  color: rgba(15, 23, 42, 0.9) !important;
+}
+
+:global(.light) .sectionLabel::before {
+  filter: drop-shadow(0 0 8px rgba(0, 122, 85, 0.4));
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .statusSelectorContainer {
+    margin: 16px 0;
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .sectionLabel {
+    font-size: 13px;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+  
+  .sectionLabel::before {
+    font-size: 16px;
+  }
+}

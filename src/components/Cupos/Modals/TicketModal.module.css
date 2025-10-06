@@ -1,0 +1,309 @@
+/* TicketModal.module.css */
+.modalContent {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  max-height: 85vh !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+}
+
+.modalHeader {
+  display: none !important;
+}
+
+.modalTitle {
+  display: none !important;
+}
+
+.ticketContainer {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+
+.ticketCard {
+  background: white;
+  width: 380px;
+  border-radius: 24px 24px 12px 12px;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.2),
+    0 0 0 2px rgba(52, 211, 153, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.ticketBody {
+  padding: 35px 25px 25px 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  background: white;
+  position: relative;
+}
+
+.ticketHeader {
+  background: linear-gradient(135deg, #34D399 0%, #059669 100%);
+  padding: 20px;
+  text-align: center;
+  position: relative;
+}
+
+.ticketHeader::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 10px solid #059669;
+}
+
+.ticketTitle {
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ticketBody {
+  padding: 35px 25px 25px 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  background: white;
+  position: relative;
+}
+
+[data-mantine-color-scheme="dark"] .ticketBody {
+  background: white;
+}
+
+/* Perforaciones laterales del ticket */
+.ticketBody::before,
+.ticketBody::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  background: #e9ecef;
+  border-radius: 50%;
+  border: 2px solid #ced4da;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.ticketBody::before {
+  left: -12px;
+}
+
+.ticketBody::after {
+  right: -12px;
+}
+
+.qrSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.qrWrapper {
+  background: white;
+  padding: 18px;
+  border-radius: 18px;
+  border: 4px solid #34D399;
+  box-shadow: 0 10px 25px rgba(52, 211, 153, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qrCode {
+  width: 160px !important;
+  height: 160px !important;
+}
+
+.pinSection {
+  text-align: center;
+  background: #ffffff;
+  padding: 18px 30px;
+  border-radius: 14px;
+  border: 3px dashed #34D399;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 
+    inset 0 2px 4px rgba(52, 211, 153, 0.1),
+    0 0 0 1px rgba(52, 211, 153, 0.2);
+}
+
+.pinLabel {
+  color: #000000 !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 3px !important;
+  margin-bottom: 10px !important;
+  text-shadow: none !important;
+}
+
+/* Forzar el color para todos los modos */
+[data-mantine-color-scheme="light"] .pinLabel,
+[data-mantine-color-scheme="dark"] .pinLabel {
+  color: #000000 !important;
+}
+
+.pinCode {
+  color: #059669 !important;
+  font-weight: 900 !important;
+  font-size: 2.4rem !important;
+  letter-spacing: 8px !important;
+  font-family: 'Courier New', monospace !important;
+  line-height: 1 !important;
+  text-shadow: 0 2px 4px rgba(5, 150, 105, 0.4) !important;
+}
+
+/* Forzar el color para todos los modos */
+[data-mantine-color-scheme="light"] .pinCode,
+[data-mantine-color-scheme="dark"] .pinCode {
+  color: #059669 !important;
+}
+
+.closeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid #34D399 !important;
+  border-radius: 50% !important;
+  width: 42px !important;
+  height: 42px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #34D399 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.2) !important;
+}
+
+.closeButton:hover {
+  background: white !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 6px 18px rgba(52, 211, 153, 0.3) !important;
+}
+
+[data-mantine-color-scheme="dark"] .closeButton {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid #34D399 !important;
+  color: #34D399 !important;
+}
+
+.downloadButton {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 45px !important;
+  height: 45px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #34D399 0%, #059669 100%) !important;
+  box-shadow: 0 4px 15px rgba(52, 211, 153, 0.4) !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: white !important;
+}
+
+.downloadButton:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 6px 20px rgba(52, 211, 153, 0.6) !important;
+}
+
+.downloadButton:disabled {
+  opacity: 0.7 !important;
+  cursor: wait !important;
+  transform: none !important;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ticketCard {
+    width: 320px;
+  }
+  
+  .ticketBody {
+    padding: 28px 18px 18px 18px;
+    gap: 22px;
+  }
+  
+  .qrCode {
+    width: 140px !important;
+    height: 140px !important;
+  }
+  
+  .qrWrapper {
+    padding: 15px;
+  }
+  
+  .pinCode {
+    font-size: 2rem !important;
+    letter-spacing: 6px !important;
+  }
+  
+  .pinSection {
+    padding: 15px 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ticketCard {
+    width: 300px;
+  }
+  
+  .ticketBody {
+    padding: 25px 15px 15px 15px;
+    gap: 20px;
+  }
+  
+  .qrCode {
+    width: 120px !important;
+    height: 120px !important;
+  }
+  
+  .qrWrapper {
+    padding: 12px;
+  }
+  
+  .pinCode {
+    font-size: 1.8rem !important;
+    letter-spacing: 5px !important;
+  }
+  
+  .ticketTitle {
+    font-size: 1.3rem !important;
+  }
+  
+  .pinSection {
+    padding: 12px 20px;
+  }
+}

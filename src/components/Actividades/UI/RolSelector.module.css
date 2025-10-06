@@ -1,0 +1,367 @@
+/* Segmented Control Design - Modern & Elegant */
+
+.rolSelectorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 80px;
+  padding: 1.5rem 1rem;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.segmentedContainer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.segmentedControl {
+  position: relative;
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(0, 255, 157, 0.15);
+  border-radius: 16px;
+  padding: 6px;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+:global(.light) .segmentedControl {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(0, 204, 122, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.segmentedIndicator {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  bottom: 6px;
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7a 100%);
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
+  z-index: 1;
+}
+
+:global(.light) .segmentedIndicator {
+  background: linear-gradient(135deg, #009b77 0%, #00875a 100%);
+  box-shadow: 0 2px 8px rgba(0, 155, 119, 0.3);
+}
+
+.segmentedOption {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  min-height: 60px;
+}
+
+.segmentedOption:hover:not(.segmentedDisabled) {
+  background: rgba(0, 255, 157, 0.05);
+}
+
+:global(.light) .segmentedOption:hover:not(.segmentedDisabled) {
+  background: rgba(0, 204, 122, 0.08);
+}
+
+.segmentedSelected {
+  color: #000000 !important;
+}
+
+.segmentedSelected .segmentedIcon {
+  color: #000000 !important;
+}
+
+.segmentedSelected .segmentedLabel {
+  color: #000000 !important;
+}
+
+:global(.light) .segmentedSelected {
+  color: #ffffff !important;
+}
+
+:global(.light) .segmentedSelected .segmentedIcon {
+  color: #ffffff !important;
+}
+
+:global(.light) .segmentedSelected .segmentedLabel {
+  color: #ffffff !important;
+}
+
+.segmentedIcon {
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+:global(.light) .segmentedIcon {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.segmentedLabel {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.2px !important;
+  transition: all 0.3s ease !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+}
+
+:global(.light) .segmentedLabel {
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.segmentedDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.segmentedDisabled .segmentedIcon,
+.segmentedDisabled .segmentedLabel {
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+:global(.light) .segmentedDisabled .segmentedIcon,
+:global(.light) .segmentedDisabled .segmentedLabel {
+  color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* =============================================== */
+/* 🎯 STATUS SELECTOR - Estilos específicos para el selector de estado */
+/* =============================================== */
+
+/* Contenedor específico para StatusSelector */
+.statusSelectorSpecific {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+/* Control principal más ancho y espacioso */
+.statusSelectorSpecific .segmentedControl {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(0, 255, 157, 0.25);
+  border-radius: 24px;
+  padding: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px);
+  width: 100%;
+  min-height: 64px;
+}
+
+:global(.light) .statusSelectorSpecific .segmentedControl {
+  background: rgba(248, 250, 252, 0.98);
+  border: 2px solid rgba(0, 122, 85, 0.3);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.1);
+}
+
+/* Opciones más espaciosas */
+.statusSelectorSpecific .segmentedOption {
+  padding: 12px 8px;
+  min-height: 52px;
+  gap: 6px;
+  border-radius: 18px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.statusSelectorSpecific .segmentedOption:hover:not(.segmentedSelected):not(.segmentedDisabled) {
+  background: rgba(0, 255, 157, 0.1);
+  transform: translateY(-1px);
+}
+
+:global(.light) .statusSelectorSpecific .segmentedOption:hover:not(.segmentedSelected):not(.segmentedDisabled) {
+  background: rgba(0, 122, 85, 0.12);
+}
+
+/* Labels más legibles */
+.statusSelectorSpecific .segmentedLabel {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.4px !important;
+  line-height: 1.1 !important;
+}
+
+/* Indicador mejorado */
+.statusSelectorSpecific .segmentedIndicator {
+  border-radius: 18px;
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7a 40%, #00b366 100%);
+  box-shadow: 0 4px 16px rgba(0, 255, 157, 0.5);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+}
+
+:global(.light) .statusSelectorSpecific .segmentedIndicator {
+  background: linear-gradient(135deg, #10b981 0%, #059669 40%, #047857 100%);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.5);
+}
+
+/* Estados seleccionados más visibles */
+.statusSelectorSpecific .segmentedSelected {
+  color: #000000 !important;
+}
+
+.statusSelectorSpecific .segmentedSelected .segmentedIcon {
+  color: #000000 !important;
+  transform: scale(1.1);
+}
+
+.statusSelectorSpecific .segmentedSelected .segmentedLabel {
+  color: #000000 !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+:global(.light) .statusSelectorSpecific .segmentedSelected {
+  color: #ffffff !important;
+}
+
+:global(.light) .statusSelectorSpecific .segmentedSelected .segmentedIcon {
+  color: #ffffff !important;
+}
+
+:global(.light) .statusSelectorSpecific .segmentedSelected .segmentedLabel {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Animación de pulso mejorada */
+.statusSelectorSpecific .segmentedControl:hover .segmentedIndicator {
+  animation: statusPulse 2s infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { 
+    box-shadow: 0 4px 16px rgba(0, 255, 157, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 6px 24px rgba(0, 255, 157, 0.7);
+    transform: scale(1.02);
+  }
+}
+
+:global(.light) .statusSelectorSpecific .segmentedControl:hover .segmentedIndicator {
+  animation: statusPulseLight 2s infinite;
+}
+
+@keyframes statusPulseLight {
+  0%, 100% { 
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.7);
+    transform: scale(1.02);
+  }
+}
+
+/* Responsive mejorado */
+@media (max-width: 768px) {
+  .statusSelectorSpecific .segmentedControl {
+    min-height: 56px;
+    border-radius: 20px;
+    padding: 4px;
+  }
+  
+  .statusSelectorSpecific .segmentedOption {
+    padding: 10px 6px;
+    min-height: 48px;
+    gap: 4px;
+    border-radius: 16px;
+  }
+  
+  .statusSelectorSpecific .segmentedLabel {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.2px !important;
+  }
+  
+  .statusSelectorSpecific .segmentedIndicator {
+    border-radius: 16px;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .statusSelectorSpecific .segmentedLabel {
+    font-size: 0.65rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .segmentedContainer {
+    max-width: 350px;
+    padding: 0.6rem;
+  }
+
+  .segmentedOption {
+    padding: 8px 4px;
+    min-height: 50px;
+    gap: 2px;
+  }
+
+  .segmentedLabel {
+    font-size: 0.7rem !important;
+  }
+
+  .segmentedControl {
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  .segmentedIndicator {
+    border-radius: 8px;
+    top: 4px;
+    left: 4px;
+    bottom: 4px;
+  }
+}
+
+/* Animation for active state */
+@keyframes segmentedPulse {
+  0% {
+    box-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(0, 255, 157, 0.4);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
+  }
+}
+
+.segmentedControl:hover .segmentedIndicator {
+  animation: segmentedPulse 2s ease-in-out infinite;
+}
+
+/* Legacy styles cleanup - keeping for backward compatibility if needed */
+.groupContainer,
+.button,
+.selected {
+  display: none;
+}

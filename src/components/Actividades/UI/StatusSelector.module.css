@@ -1,0 +1,148 @@
+/* StatusSelector.module.css */
+.statusSelector {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.buttonGroup {
+    display: flex;
+    background: var(--mantine-color-gray-1);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 3px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[data-mantine-color-scheme="dark"] .buttonGroup {
+    background: var(--mantine-color-dark-6);
+}
+
+.statusButton {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 6px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--mantine-color-gray-6);
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 50px;
+}
+
+[data-mantine-color-scheme="dark"] .statusButton {
+    color: var(--mantine-color-dark-2);
+}
+
+.statusButton:hover {
+    background: var(--mantine-color-gray-0);
+    color: var(--mantine-color-gray-7);
+}
+
+[data-mantine-color-scheme="dark"] .statusButton:hover {
+    background: var(--mantine-color-dark-5);
+    color: var(--mantine-color-dark-1);
+}
+
+.statusButton.selected {
+    background: var(--mantine-color-green-6) !important;
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(34, 139, 34, 0.3);
+}
+
+[data-mantine-color-scheme="dark"] .statusButton.selected {
+    background: var(--mantine-color-green-7) !important;
+    color: white !important;
+}
+
+.statusButton.selected:hover {
+    background: var(--mantine-color-green-7) !important;
+}
+
+[data-mantine-color-scheme="dark"] .statusButton.selected:hover {
+    background: var(--mantine-color-green-8) !important;
+}
+
+.statusButton span {
+    font-size: 9px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.statusButton svg {
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .buttonGroup {
+        gap: 2px;
+        padding: 3px;
+    }
+    
+    .statusButton {
+        padding: 8px 4px;
+        min-height: 48px;
+        gap: 3px;
+    }
+    
+    .statusButton span {
+        font-size: 8px;
+    }
+    
+    .statusButton svg {
+        width: 12px !important;
+        height: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .buttonGroup {
+        gap: 1px;
+        padding: 2px;
+        border-radius: 10px;
+    }
+    
+    .statusButton {
+        padding: 6px 2px;
+        min-height: 44px;
+        gap: 2px;
+        border-radius: 6px;
+    }
+    
+    .statusButton span {
+        font-size: 7px;
+        font-weight: 600;
+    }
+    
+    .statusButton svg {
+        width: 10px !important;
+        height: 10px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .statusButton {
+        padding: 5px 1px;
+        min-height: 40px;
+    }
+    
+    .statusButton span {
+        font-size: 6px;
+    }
+    
+    .statusButton svg {
+        width: 9px !important;
+        height: 9px !important;
+    }
+}

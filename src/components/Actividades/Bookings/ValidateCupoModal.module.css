@@ -1,0 +1,213 @@
+/* Modal de validación compacto */
+.modalContent {
+  padding: 0.75rem;
+}
+
+.successIcon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7a 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: 700;
+  animation: successPulse 0.6s ease-out;
+}
+
+.scanningIndicator {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  animation: scanPulse 1.5s ease-in-out infinite;
+}
+
+.qrPlaceholder {
+  padding: 2rem;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  background: rgba(0, 0, 0, 0.02);
+  transition: all 0.3s ease;
+}
+
+.qrPlaceholder:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* Nuevos estilos para las tarjetas de opciones */
+.optionCard {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.optionCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.15) 100%);
+}
+
+.optionCard:active {
+  transform: translateY(0);
+}
+
+.optionCard:nth-child(2) {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+  border-color: rgba(147, 51, 234, 0.2);
+}
+
+.optionCard:nth-child(2):hover {
+  border-color: rgba(147, 51, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(147, 51, 234, 0.15);
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+}
+
+.optionIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-right: 1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.optionCard:nth-child(2) .optionIcon {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+}
+
+.optionContent {
+  flex: 1;
+}
+
+.optionTitle {
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+  font-size: 1.1rem;
+}
+
+.optionDescription {
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.optionArrow {
+  font-size: 1.5rem;
+  color: #9ca3af;
+  font-weight: bold;
+  margin-left: 1rem;
+  transition: all 0.3s ease;
+}
+
+.optionCard:hover .optionArrow {
+  color: #3b82f6;
+  transform: translateX(4px);
+}
+
+.optionCard:nth-child(2):hover .optionArrow {
+  color: #9333ea;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scanPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Animaciones suaves */
+.modalContent > * {
+  transition: all 0.2s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modalContent {
+    padding: 0.5rem;
+  }
+  
+  .qrPlaceholder {
+    padding: 1.5rem;
+  }
+  
+  .optionCard {
+    padding: 1rem;
+  }
+  
+  .optionIcon {
+    width: 50px;
+    height: 50px;
+    margin-right: 0.75rem;
+  }
+  
+  .optionTitle {
+    font-size: 1rem;
+  }
+  
+  .optionDescription {
+    font-size: 0.875rem;
+  }
+}
+
+/* Tema oscuro */
+:global(.dark) .optionTitle {
+  color: #f9fafb;
+}
+
+:global(.dark) .optionDescription {
+  color: #d1d5db;
+}
+
+:global(.dark) .optionCard {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.15) 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+:global(.dark) .optionCard:nth-child(2) {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+  border-color: rgba(147, 51, 234, 0.3);
+}

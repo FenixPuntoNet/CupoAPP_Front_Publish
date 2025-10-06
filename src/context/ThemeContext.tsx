@@ -37,17 +37,52 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     if (theme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
+      // Forzar actualización de variables CSS custom
+      root.setAttribute('data-mantine-color-scheme', 'dark');
     } else {
       root.classList.add('light');
       root.classList.remove('dark');
+      // Forzar actualización de variables CSS custom
+      root.setAttribute('data-mantine-color-scheme', 'light');
     }
     
     // Guardar preferencia
     localStorage.setItem('cupo-theme', theme);
+    
+    // Dispatch un evento personalizado para que los componentes puedan reaccionar
+    const themeChangeEvent = new CustomEvent('cupo-theme-change', { 
+      detail: { theme } 
+    });
+    window.dispatchEvent(themeChangeEvent);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setTheme(prev => {
+      const newTheme = prev === 'dark' ? 'light' : 'dark';
+      
+      // Pequeño retraso para permitir que React actualice el estado
+      setTimeout(() => {
+        // Forzar un refresh suave de los estilos
+        const root = document.documentElement;
+        
+        // Temporalmente ocultar el contenido para evitar el parpadeo
+        root.style.opacity = '0.98';
+        root.style.transition = 'opacity 0.15s ease';
+        
+        // Después de un pequeño retraso, restaurar la visibilidad
+        setTimeout(() => {
+          root.style.opacity = '1';
+          
+          // Limpiar las propiedades de estilo después de la transición
+          setTimeout(() => {
+            root.style.removeProperty('opacity');
+            root.style.removeProperty('transition');
+          }, 150);
+        }, 50);
+      }, 10);
+      
+      return newTheme;
+    });
   };
 
   const mantineColorScheme: MantineColorScheme = theme;

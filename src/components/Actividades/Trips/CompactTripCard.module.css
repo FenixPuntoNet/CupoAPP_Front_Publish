@@ -1,0 +1,282 @@
+/* Compact Trip Card - Ultra Minimalist Design */
+
+.compactCard {
+  background: rgba(20, 20, 20, 0.98);
+  border-radius: 14px;
+  border: 1.5px solid rgba(0, 255, 157, 0.15);
+  padding: 12px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+:global(.light) .compactCard {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1.5px solid rgba(0, 204, 122, 0.2);
+}
+
+.compactCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 255, 157, 0.3);
+  box-shadow: 0 8px 25px rgba(0, 255, 157, 0.15);
+}
+
+:global(.light) .compactCard:hover {
+  border-color: rgba(0, 204, 122, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 204, 122, 0.15);
+}
+
+/* Header compacto */
+.compactHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 6px;
+}
+
+.statusBadge {
+  font-size: 0.7rem !important;
+  height: 20px !important;
+  min-width: auto !important;
+}
+
+.alertBadge {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.65rem !important;
+  height: 18px !important;
+  padding: 0 6px !important;
+  animation: pulse 2s infinite;
+}
+
+.priceChip {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7a 100%);
+  color: #000;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+:global(.light) .priceChip {
+  background: linear-gradient(135deg, #009b77 0%, #00875a 100%);
+  color: #fff;
+}
+
+/* Ruta súper compacta */
+.routeCompact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 6px 0;
+}
+
+.routePoint {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.originDot {
+  width: 8px;
+  height: 8px;
+  background: #00ff9d;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+:global(.light) .originDot {
+  background: #009b77;
+}
+
+.destDot {
+  width: 8px;
+  height: 8px;
+  background: #ff6b6b;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.routeArrow {
+  color: rgba(0, 255, 157, 0.6);
+  flex-shrink: 0;
+}
+
+:global(.light) .routeArrow {
+  color: rgba(0, 204, 122, 0.7);
+}
+
+.routeText {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.75rem !important;
+  line-height: 1.2 !important;
+}
+
+:global(.light) .routeText {
+  color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Grid de información compacta */
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  margin-bottom: 8px;
+  padding: 6px 0;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.infoItem svg {
+  color: rgba(0, 255, 157, 0.6);
+  flex-shrink: 0;
+}
+
+:global(.light) .infoItem svg {
+  color: rgba(0, 204, 122, 0.7);
+}
+
+.infoItem .mantine-Text-root {
+  font-size: 0.7rem !important;
+  line-height: 1.2 !important;
+}
+
+/* Status de pasajeros */
+.passengerStatus {
+  margin-bottom: 8px;
+}
+
+.passengerStatus .mantine-Badge-root {
+  font-size: 0.65rem !important;
+  height: 18px !important;
+}
+
+/* Acciones compactas */
+.actionsCompact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.primaryAction {
+  height: 28px !important;
+  font-size: 0.75rem !important;
+  border-radius: 8px !important;
+}
+
+.secondaryActions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.secondaryActions .mantine-ActionIcon-root {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .compactCard {
+    padding: 10px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .routeCompact {
+    gap: 6px;
+  }
+
+  .routeText {
+    font-size: 0.7rem !important;
+  }
+
+  .priceChip {
+    padding: 2px 6px;
+    font-size: 0.65rem;
+  }
+
+  .primaryAction {
+    height: 26px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .secondaryActions .mantine-ActionIcon-root {
+    width: 26px !important;
+    height: 26px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .compactCard {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+
+  .compactHeader {
+    margin-bottom: 6px;
+  }
+
+  .routeCompact {
+    margin-bottom: 6px;
+    padding: 4px 0;
+  }
+
+  .infoGrid {
+    margin-bottom: 6px;
+    padding: 4px 0;
+  }
+
+  .actionsCompact {
+    gap: 4px;
+  }
+}
+
+/* Animaciones */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Estados especiales */
+.compactCard[data-status="finished"] {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.compactCard[data-status="canceled"] {
+  border-color: rgba(239, 68, 68, 0.3);
+  opacity: 0.8;
+}
+
+.compactCard[data-status="started"] {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.02);
+}
+
+:global(.light) .compactCard[data-status="started"] {
+  background: rgba(245, 158, 11, 0.05);
+}

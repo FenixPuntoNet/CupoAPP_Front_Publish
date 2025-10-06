@@ -5,11 +5,11 @@ import { Container, Title, Text, LoadingOverlay, Button } from '@mantine/core';
 import { useNavigate } from '@tanstack/react-router';
 import { showNotification } from '@mantine/notifications';
 import dayjs from 'dayjs';
-import RolSelector from './RolSelector';
-import TripFilter from './TripFilter';
-import CuposContent from './CuposContent';
+import { RolSelector, StatusSelector } from './UI';
+import { TripFilter } from './Trips';
+import { CuposContent } from './Bookings';
 import styles from './index.module.css';
-import TripCard from './TripCard';
+import { TripCard } from './Trips';
 import { getCurrentUser } from '@/services/auth';
 import { 
   getActivitySummary, 
@@ -18,6 +18,7 @@ import {
   type ActivitySummary
 } from '@/services/actividades';
 import { getMyTrips, type TripDetails } from '@/services/viajes';
+import { sortTripsByPriority } from './utils/tripSorting';
 
 export interface Trip {
   id: number;
@@ -210,7 +211,10 @@ const Actividades: React.FC = () => {
         }));
 
         setTrips(transformedTrips);
-        setFilteredTrips(transformedTrips);
+        
+        // 🚀 APLICAR ORDENAMIENTO INTELIGENTE INMEDIATAMENTE
+        const sortedTrips = sortTripsByPriority(transformedTrips);
+        setFilteredTrips(sortedTrips);
 
       } catch (error) {
         console.error('❌ [Actividades] Error loading trips:', error);
@@ -291,7 +295,16 @@ const Actividades: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log('🔄 [Actividades] Applying filters and sorting...', {
+      tripsCount: trips.length,
+      filterValue,
+      statusFilter,
+      dateFilter
+    });
+    
     let filtered = [...trips];
+    
+    // Aplicar filtros
     if (filterValue) {
       filtered = filtered.filter(
         (trip) =>
@@ -307,7 +320,19 @@ const Actividades: React.FC = () => {
         dayjs(trip.date_time).isSame(dateFilter, 'day')
       );
     }
-    setFilteredTrips(filtered);
+
+    // 🚀 SIEMPRE APLICAR ORDENAMIENTO INTELIGENTE POR PRIORIDAD
+    const sortedTrips = sortTripsByPriority(filtered);
+    
+    console.log('✅ [Actividades] Trips sorted by priority:', {
+      total: sortedTrips.length,
+      withNotifications: sortedTrips.filter((t: Trip) => (t.seats_reserved || 0) > 0 && t.status === 'active').length,
+      active: sortedTrips.filter((t: Trip) => t.status === 'active').length,
+      started: sortedTrips.filter((t: Trip) => t.status === 'started').length,
+      finished: sortedTrips.filter((t: Trip) => t.status === 'finished').length
+    });
+    
+    setFilteredTrips(sortedTrips);
   }, [trips, filterValue, statusFilter, dateFilter]);
 
   // Usar useCallback para evitar recrear la función en cada render
@@ -360,11 +385,19 @@ const Actividades: React.FC = () => {
                 trips={trips}
                 filterValue={filterValue || ''}
                 onFilterChange={setFilterValue}
-                statusFilter={statusFilter}
-                onStatusFilterChange={setStatusFilter}
                 dateFilter={dateFilter}
                 onDateFilterChange={setDateFilter}
               />
+              
+              {/* 🎯 SELECTOR DE ESTADO DE VIAJES - BACANO */}
+              <div className={styles.statusSelectorContainer}>
+                <Text className={styles.sectionLabel}>Estado del viaje:</Text>
+                <StatusSelector
+                  onSelect={setStatusFilter}
+                  selectedStatus={statusFilter}
+                />
+              </div>
+              
               <div className={styles.tripListContainer}>
                 {filteredTrips.map((trip, ) => (
                   <TripCard

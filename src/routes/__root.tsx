@@ -5,21 +5,21 @@ import {
   MantineProvider,
   Text,
   UnstyledButton,
-  Button,
-  Box,
+  Button as _Button,
+  Box,  
   createTheme,
   Image,
 } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import '@mantine/dates/styles.css';
-import { Search, PlusCircle, Car, User } from "lucide-react";
+import { Search, PlusCircle, History, User } from "lucide-react";
 import { config } from "telefunc/client";
 import styles from "./root.module.css";
 import { BackendAuthProvider } from '@/context/BackendAuthContext';
 import { AuthGuard } from '@/components/AuthGuard';
 import { GoogleMapsProvider } from '@/components/GoogleMapsProvider';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { ThemeToggle as _ThemeToggle } from '@/components/ThemeToggle';
 
 // Configure telefunc to use external backend
 config.telefuncUrl = "https://cupo-backend.fly.dev/_telefunc";
@@ -50,7 +50,7 @@ const navItems = [
   { icon: Search, label: "Buscar", to: "/reservar" },
   { icon: PlusCircle, label: "Publicar", to: "/publicarviaje" },
   { icon: "logo", label: "", to: "/home" },
-  { icon: Car, label: "Actividades", to: "/Actividades" },
+  { icon: History, label: "Actividades", to: "/Actividades" },
   { icon: User, label: "Menú", to: "/perfil" },
 ];
 
@@ -108,8 +108,8 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
                     className={styles.logoImage}
                   />
                   <Group gap="sm">
-                    <ThemeToggle />
-                    <Button
+                    <_ThemeToggle />
+                    <_Button
                       className={styles.registerButton}
                       component="a"
                       href="https://www.cupo.lat"
@@ -117,14 +117,14 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
                       rel="noopener noreferrer"
                     >
                       <span>Más información</span>
-                    </Button>
+                    </_Button>
                   </Group>
                 </Group>
               </AppShell.Header>
             )} */}
 
             {/* <div className="flex items-center justify-end">
-              <ThemeToggle />
+              <_ThemeToggle />
             </div> */}
 
             <AppShell.Main className={styles.main}>

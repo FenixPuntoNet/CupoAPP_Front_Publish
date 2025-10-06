@@ -1,4 +1,4 @@
-import { apiRequest } from '@/config/api';
+import { apiRequest, clearApiCache } from '@/config/api';
 
 // Debug function to test chat API
 export async function debugChatAPI(): Promise<{ success: boolean; data?: any; error?: string }> {
@@ -225,6 +225,11 @@ export async function sendChatMessage(chatId: number, request: SendMessageReques
     
     if (response && response.message) {
       console.log('✅ [sendChatMessage] Message sent successfully');
+      
+      // 🔥 IMPORTANTE: Limpiar cache para que los mensajes nuevos aparezcan
+      console.log('🧹 [sendChatMessage] Clearing API cache to show new messages');
+      clearApiCache();
+      
       return { 
         success: true, 
         data: { message: response.message } 
@@ -275,9 +280,18 @@ export async function getOrCreateTripChat(tripId: number): Promise<{ success: bo
     console.log('💬 [getOrCreateTripChat] Getting chat for trip:', tripId);
     console.log('💡 [getOrCreateTripChat] Using the new automatic chat system - chats are created when trips are published');
     
+    // Validar tripId
+    if (!tripId || tripId <= 0) {
+      return { 
+        success: false, 
+        error: 'ID de viaje inválido' 
+      };
+    }
+    
     // Con el nuevo sistema automático, solo necesitamos obtener el chat existente
     const response = await apiRequest(`/chat/trip/${tripId}`, {
-      method: 'POST'
+      method: 'POST',
+      body: JSON.stringify({}) // Enviar body JSON vacío explícitamente para compatibilidad con Fastify
     });
     
     console.log('📡 [getOrCreateTripChat] Backend response:', response);
@@ -300,40 +314,29 @@ export async function getOrCreateTripChat(tripId: number): Promise<{ success: bo
   } catch (error) {
     console.error('❌ [getOrCreateTripChat] Error:', error);
     
-    // Handle server errors gracefully
+    // Mejorar el manejo de errores específicos
     if (error instanceof Error) {
-      if (error.message.includes('500')) {
+      if (error.message.includes('400')) {
         return { 
           success: false, 
-          error: 'Error del servidor al obtener chat del viaje. Contacta a soporte.'
+          error: `El viaje ${tripId} no existe, no está publicado, o no tiene chat disponible. Solo los viajes confirmados pueden tener chat.` 
         };
-      }
-      
-      if (error.message.includes('401')) {
+      } else if (error.message.includes('404')) {
         return { 
           success: false, 
-          error: 'Tu sesión ha expirado. Por favor, vuelve a iniciar sesión.'
+          error: `Viaje ${tripId} no encontrado.` 
         };
-      }
-      
-      if (error.message.includes('403')) {
+      } else if (error.message.includes('403')) {
         return { 
           success: false, 
-          error: 'No tienes permisos para acceder al chat de este viaje.'
-        };  
-      }
-      
-      if (error.message.includes('404')) {
-        return { 
-          success: false, 
-          error: 'No se encontró el viaje especificado o no tienes un chat asignado aún.'
+          error: 'No tienes permisos para acceder a este chat.' 
         };
       }
     }
     
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Error de conexión al obtener chat del viaje' 
+      error: error instanceof Error ? error.message : 'Error desconocido al obtener el chat' 
     };
   }
 }

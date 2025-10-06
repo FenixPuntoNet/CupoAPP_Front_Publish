@@ -11,24 +11,32 @@ import {
   Space,
 } from '@mantine/core';
 import {
-  Car,
-  Globe,
-  PiggyBank,
-  Users,
-  MapPin,
-  Leaf,
-  Trophy,
-  Gift,
-  Coins,
-  ArrowRight,
+  // Car,
+  // Globe,
+  // PiggyBank,
+  // Users,
+  // MapPin,
+  // Leaf,
+  Shield as _Shield,
+  // ChevronRight,
+  // Star,
+  // MessageCircle,
+  // TrendingUp,
+  // Phone,
+  // Zap,
+  // Calendar,
   Target,
+  Trophy,
+  Coins,
+  Gift,
+  ArrowRight,
 } from 'lucide-react';
 import styles from './home.module.css';
-import { FeatureCarousel } from '../../components/ui/home/FeatureCarousel';
+// import { FeatureCarousel } from '../../components/ui/home/FeatureCarousel';
 
 const HomeView = () => {
   // Características principales
-  const features = [
+  /* const features = [
     {
       icon: Car,
       title: "Viajes compartidos",
@@ -60,14 +68,12 @@ const HomeView = () => {
       color: "#9d00ff",
     },
     {
-      icon: Leaf,
-      title: "Eco-friendly",
-      description: "Reduce tu huella de carbono compartiendo vehículo.",
-      color: "#00ff9d",
+      icon: _Shield,
+      title: "Viajes seguros",
+      description: "Sistema de verificación y seguimiento en tiempo real.",
+      color: "#ff5722",
     },
-  ];
-
-  // NUEVO: Bloque visual para explicar el sistema de objetivos, recompensas y UniCoins
+  ]; */  // NUEVO: Bloque visual para explicar el sistema de objetivos, recompensas y UniCoins
   const rewards = [
     {
       icon: (

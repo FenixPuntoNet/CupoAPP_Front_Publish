@@ -1,0 +1,870 @@
+/* Compact Trip Card - Ultra Minimalist Design inspired by search results */
+
+.compactTripCard {
+  background: rgba(20, 20, 20, 0.98);
+  border-radius: 16px;
+  border: 1.5px solid rgba(0, 255, 157, 0.15);
+  padding: 12px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 255, 157, 0.08);
+}
+
+:global(.light) .compactTripCard {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1.5px solid rgba(0, 204, 122, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 204, 122, 0.08);
+}
+
+.compactTripCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 255, 157, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 255, 157, 0.15);
+}
+
+:global(.light) .compactTripCard:hover {
+  border-color: rgba(0, 204, 122, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 204, 122, 0.15);
+}
+
+/* Header compacto con mejor separación visual */
+.compactHeader {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.headerRight {
+  flex-shrink: 0;
+}
+
+/* Estilos específicos para pendientes - más compacto */
+.pendingBadge {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  font-size: 0.65rem !important;
+  height: 22px !important;
+  padding: 0 6px !important;
+  animation: pendingPulse 2s infinite;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  background: linear-gradient(45deg, rgba(255, 152, 0, 0.9), rgba(255, 193, 7, 0.9)) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 193, 7, 0.8) !important;
+  box-shadow: 0 0 6px rgba(255, 152, 0, 0.4) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+/* Estilos mejorados para status badge */
+.statusBadge {
+  font-size: 0.7rem !important;
+  height: 24px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  border: 1.5px solid transparent !important;
+  transition: all 0.3s ease !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.statusBadge[data-status="activo"] {
+  background: linear-gradient(45deg, rgba(76, 175, 80, 0.9), rgba(139, 195, 74, 0.9)) !important;
+  color: white !important;
+  border-color: rgba(139, 195, 74, 0.8) !important;
+}
+
+.statusBadge[data-status="pendiente"] {
+  background: linear-gradient(45deg, rgba(255, 152, 0, 0.9), rgba(255, 193, 7, 0.9)) !important;
+  color: white !important;
+  border-color: rgba(255, 193, 7, 0.8) !important;
+}
+
+.statusBadge[data-status="completado"] {
+  background: linear-gradient(45deg, rgba(33, 150, 243, 0.9), rgba(3, 169, 244, 0.9)) !important;
+  color: white !important;
+  border-color: rgba(3, 169, 244, 0.8) !important;
+}
+
+.alertBadge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem !important;
+  height: 22px !important;
+  padding: 0 6px !important;
+  animation: alertPulse 2s infinite;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+  background: linear-gradient(45deg, rgba(255, 167, 38, 0.9), rgba(255, 107, 53, 0.9)) !important;
+  color: white !important;
+  border: 1.5px solid rgba(255, 193, 78, 0.8) !important;
+  box-shadow: 0 0 8px rgba(255, 167, 38, 0.4) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.priceChip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7a 100%);
+  color: #000;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  min-width: auto;
+}
+
+:global(.light) .priceChip {
+  background: linear-gradient(135deg, #009b77 0%, #00875a 100%);
+  color: #fff;
+}
+
+/* Ruta compacta */
+.routeSection {
+  margin-bottom: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 255, 157, 0.1);
+}
+
+:global(.light) .routeSection {
+  border-bottom: 1px solid rgba(0, 204, 122, 0.15);
+}
+
+.routePoint {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.originDot {
+  width: 8px;
+  height: 8px;
+  background: #00ff9d;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+:global(.light) .originDot {
+  background: #009b77;
+}
+
+.destDot {
+  width: 8px;
+  height: 8px;
+  background: #ff6b6b;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.routeArrow {
+  color: rgba(0, 255, 157, 0.6);
+  flex-shrink: 0;
+}
+
+:global(.light) .routeArrow {
+  color: rgba(0, 204, 122, 0.7);
+}
+
+.routeText {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.75rem !important;
+  line-height: 1.2 !important;
+  font-weight: 500 !important;
+}
+
+:global(.light) .routeText {
+  color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Info compacta */
+.infoCompact {
+  margin-bottom: 10px;
+  padding: 6px 0;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.infoItem svg {
+  color: rgba(0, 255, 157, 0.6);
+  flex-shrink: 0;
+}
+
+:global(.light) .infoItem svg {
+  color: rgba(0, 204, 122, 0.7);
+}
+
+.infoItem .mantine-Text-root {
+  font-size: 0.7rem !important;
+  line-height: 1.2 !important;
+}
+
+/* Status pasajeros compacto */
+.passengerStatusCompact {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.passengerStatusCompact .mantine-Badge-root {
+  font-size: 0.65rem !important;
+  height: 20px !important;
+  border-radius: 6px !important;
+}
+
+/* Botón principal compacto */
+.primaryActionCompact {
+  margin-bottom: 8px;
+}
+
+/* Botón principal compacto mejorado */
+.primaryActionCompact {
+  margin-bottom: 12px;
+}
+
+.primaryActionCompact .actionButtonContainer {
+  gap: 6px;
+}
+
+/* Acciones secundarias compactas mejoradas */
+.secondaryActionsCompact {
+  border-top: 1px solid rgba(0, 255, 157, 0.1);
+  padding: 12px 8px 8px 8px;
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 0 0 14px 14px;
+  margin: 8px -12px -12px -12px;
+}
+
+:global(.light) .secondaryActionsCompact {
+  border-top: 1px solid rgba(0, 204, 122, 0.15);
+  background: rgba(0, 0, 0, 0.01);
+}
+
+/* Contenedores para botones con etiquetas - MEJORADO */
+.actionButtonContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 4px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.actionButtonContainer:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:global(.light) .actionButtonContainer:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.actionLabel {
+  font-size: 0.7rem !important;
+  line-height: 1.2 !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+  font-weight: 500 !important;
+  margin-top: 2px !important;
+}
+
+:global(.light) .actionLabel {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Grid para acciones secundarias - MEJORADO */
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 12px;
+  width: 100%;
+  justify-items: center;
+  padding: 4px 0;
+}
+
+/* Botón principal mejorado */
+.mainActionBtn {
+  height: 36px !important;
+  font-size: 0.8rem !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  padding: 0 12px !important;
+}
+
+.mainActionBtn:hover {
+  transform: translateY(-1px) !important;
+}
+
+/* Iconos de acción mejorados - MÁS GRANDES */
+.actionIcon {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+  flex-shrink: 0 !important;
+  border: 2px solid transparent !important;
+}
+
+.actionIcon:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Responsive mejorado */
+@media (max-width: 600px) {
+  .compactTripCard {
+    padding: 10px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+  }
+
+  .routeSection {
+    margin-bottom: 8px;
+    padding: 6px 0;
+  }
+
+  .infoCompact {
+    margin-bottom: 8px;
+  }
+
+  .infoItem .mantine-Text-root {
+    font-size: 0.65rem !important;
+  }
+
+  .routeText {
+    font-size: 0.7rem !important;
+  }
+
+  .priceChip {
+    padding: 3px 6px;
+    font-size: 0.65rem;
+  }
+
+  .mainActionBtn {
+    height: 34px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .actionIcon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .actionGrid {
+    grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
+    gap: 8px;
+  }
+
+  .actionLabel {
+    font-size: 0.65rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .compactTripCard {
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+  }
+
+  .compactHeader {
+    margin-bottom: 8px;
+  }
+
+  .routeSection {
+    margin-bottom: 6px;
+    padding: 4px 0;
+  }
+
+  .infoCompact {
+    margin-bottom: 6px;
+  }
+
+  .primaryActionCompact {
+    margin-bottom: 8px;
+  }
+
+  .secondaryActionsCompact {
+    padding: 10px 6px 6px 6px;
+    margin: 6px -8px -8px -8px;
+  }
+
+  .actionGrid {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 6px;
+  }
+
+  .actionIcon {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .mainActionBtn {
+    height: 32px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .actionLabel {
+    font-size: 0.6rem !important;
+  }
+}
+
+/* Animaciones */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Animaciones */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes alertPulse {
+  0% {
+    background: linear-gradient(45deg, rgba(255, 167, 38, 0.9), rgba(255, 107, 53, 0.9));
+    transform: scale(1);
+    box-shadow: 0 0 12px rgba(255, 167, 38, 0.4);
+  }
+  50% {
+    background: linear-gradient(45deg, rgba(255, 193, 78, 0.95), rgba(255, 140, 90, 0.95));
+    transform: scale(1.05);
+    box-shadow: 0 0 16px rgba(255, 167, 38, 0.6);
+  }
+  100% {
+    background: linear-gradient(45deg, rgba(255, 167, 38, 0.9), rgba(255, 107, 53, 0.9));
+    transform: scale(1);
+    box-shadow: 0 0 12px rgba(255, 167, 38, 0.4);
+  }
+}
+
+@keyframes pendingPulse {
+  0% {
+    background: linear-gradient(45deg, rgba(255, 152, 0, 0.9), rgba(255, 193, 7, 0.9));
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
+  }
+  50% {
+    background: linear-gradient(45deg, rgba(255, 183, 77, 0.95), rgba(255, 213, 79, 0.95));
+    transform: scale(1.03);
+    box-shadow: 0 0 12px rgba(255, 152, 0, 0.7);
+  }
+  100% {
+    background: linear-gradient(45deg, rgba(255, 152, 0, 0.9), rgba(255, 193, 7, 0.9));
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
+  }
+}
+
+.tripCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 255, 157, 0.3),
+      transparent
+  );
+}
+
+.tripCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 255, 157, 0.15);
+  border-color: rgba(0, 255, 157, 0.2);
+}
+
+:global(.light) .tripCard:hover {
+  box-shadow: 0 8px 32px rgba(0, 155, 119, 0.2);
+  border-color: rgba(0, 155, 119, 0.3);
+}
+
+/* Header Styles */
+.tripHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tripActionsIcons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Content Styles */
+.tripTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(0, 255, 157, 0.9);
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.5px;
+}
+
+:global(.light) .tripTitle {
+  color: rgba(0, 155, 119, 0.9);
+}
+
+.tripText {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+:global(.light) .tripText {
+  color: rgba(0, 0, 0, 0.8);
+}
+
+/* Badge Styles */
+.tripBadge {
+  background: rgba(0, 255, 157, 0.1) !important;
+  border: 1px solid rgba(0, 255, 157, 0.2) !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  font-size: 0.8rem !important;
+}
+
+.tripBadge[data-active="true"] {
+  background: linear-gradient(
+      135deg,
+      rgba(0, 255, 157, 0.2),
+      rgba(0, 204, 122, 0.2)
+  ) !important;
+  border-color: rgba(0, 255, 157, 0.3) !important;
+}
+
+/* Info Group Styles */
+.tripInfoGroup {
+  margin: 1.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.tripInfoGroup > :global(.mantine-Badge-root) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease;
+}
+
+.tripInfoGroup > :global(.mantine-Badge-root):hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  transform: translateY(-2px);
+}
+
+/* Summary Styles */
+.tripSummary {
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin: 1rem 0;
+  padding: 0.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:global(.light) .tripSummary {
+  color: rgba(0, 0, 0, 0.7);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Cupos info section */
+.cuposStatus {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:global(.light) .cuposStatus {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.cuposInfo {
+  margin-bottom: 0.5rem;
+}
+
+.cuposLabel {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cuposCount {
+  font-size: 1.3rem;
+  margin-top: 0.2rem;
+}
+
+.validatedText {
+  margin-top: 0.3rem;
+  font-weight: 600;
+}
+
+.cuposBadge {
+  padding: 0.5rem 1rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
+.actionHint {
+  text-align: center;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+.tripActions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.tripActions button {
+  flex: 1;
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  padding: 0.6rem 1.2rem !important;   /* Menos padding horizontal, más vertical */
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  font-weight: 500 !important;
+  min-height: 40px !important;         /* <--- Esto asegura que el texto nunca se corta */
+  font-size: 1rem !important;          /* Asegura legibilidad en móviles */
+  line-height: 1.2 !important;         /* Corrige alineación vertical */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:global(.light) .tripActions button {
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  color: #000000 !important;
+}
+
+@media (max-width: 768px) {
+  .tripActions button {
+    width: 100%;
+    min-height: 44px !important;       /* Un poco más alto en móviles */
+    font-size: 1.05rem !important;
+    padding: 0.7rem 1rem !important;
+  }
+}
+.tripActions button:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(0, 255, 157, 0.3) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.1) !important;
+}
+
+:global(.light) .tripActions button:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 155, 119, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(0, 155, 119, 0.1) !important;
+}
+
+.tripActions button:active {
+  transform: translateY(0) !important;
+}
+
+/* Specific Button Styles */
+/* Cupos Comprados Button */
+.tripActions button:nth-child(1) {
+  background: linear-gradient(45deg, #00cc7a, #00ff9d) !important;
+   border-color: transparent !important;
+   color: black !important;
+}
+
+.tripActions button:nth-child(1):hover {
+   border-color: rgba(0, 255, 157, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3) !important;
+}
+
+/* Active Cupos Button when passengers are waiting */
+.cuposButtonActive {
+  background: linear-gradient(45deg, #ff9500, #ffb74d) !important;
+  color: white !important;
+  font-weight: bold !important;
+  animation: pulse 2s infinite !important;
+  box-shadow: 0 4px 16px rgba(255, 149, 0, 0.4) !important;
+  border: 2px solid rgba(255, 183, 77, 0.6) !important;
+}
+
+.cuposButtonActive:hover {
+  background: linear-gradient(45deg, #ff8f00, #ffcc80) !important;
+  box-shadow: 0 6px 20px rgba(255, 149, 0, 0.6) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* Pulse animation for active cupos button */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(255, 149, 0, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(255, 149, 0, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(255, 149, 0, 0.4);
+  }
+}
+
+
+/* Empezar Viaje Button */
+.tripActions button:nth-child(2) {
+  background: linear-gradient(45deg, #2196f3, #0b7dd5) !important;
+  color: white !important;
+   border-color: transparent !important;
+}
+
+.tripActions button:nth-child(2):hover {
+ border-color: rgba(0, 123, 255, 0.3) !important;
+box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3) !important;
+}
+
+/* Edit button specific styles */
+.tripActionsIcons > :global(.mantine-ActionIcon-root):nth-child(1):hover {
+border-color: rgba(66, 153, 225, 0.5) !important;
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.1) !important;
+}
+
+/* Delete button specific styles */
+.tripActionsIcons > :global(.mantine-ActionIcon-root):nth-child(2):hover {
+border-color: rgba(245, 101, 101, 0.5) !important;
+box-shadow: 0 4px 12px rgba(245, 101, 101, 0.1) !important;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tripCard {
+      padding: 1rem;
+  }
+
+  .tripInfoGroup {
+      gap: 0.5rem;
+  }
+
+  .tripInfoGroup > :global(.mantine-Badge-root) {
+      padding: 0.4rem 0.8rem !important;
+      font-size: 0.75rem !important;
+  }
+
+  .tripActions {
+      flex-direction: column;
+  }
+
+  .tripActions button {
+      width: 100%;
+  }
+}
+
+/* Animation for new cards */
+@keyframes cardEntrance {
+  from {
+      opacity: 0;
+      transform: translateY(20px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+.tripCard {
+  animation: cardEntrance 0.5s ease-out;
+}
+
+/* Result Modal Styles */
+.resultModalBox {
+  background: rgba(0, 255, 157, 0.08);
+  border-radius: 18px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 255, 157, 0.15);
+  border: 1.5px solid rgba(0, 255, 157, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 320px;
+}
+
+.resultModalBox b {
+  color: #00cc7a;
+}
+
+.resultModalBox .mantine-Button-root {
+  margin-top: 2rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border-radius: 12px;
+}
+
+.resultModalBox .mantine-Text-root {
+  margin-bottom: 0.5rem;
+}

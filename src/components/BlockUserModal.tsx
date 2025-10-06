@@ -103,7 +103,7 @@ export const BlockUserModal: React.FC<BlockUserModalProps> = ({
           </Alert>
 
           <div className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <div className={styles.userInfo}>
               <Text size="sm" fw={500} className="mb-2">
                 Al bloquear a este usuario:
               </Text>
