@@ -28,35 +28,63 @@
   overflow-x: hidden;
 }
 
+/* Mejoras para modo claro */
+[data-mantine-color-scheme="light"] .container {
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+  color: #fff;
+}
+
 /* Header simple y moderno */
 .header {
-  background: rgba(10, 10, 10, 0.95);
-  border-bottom: 1px solid var(--primary-light);
-  position: fixed;
+  position: relative;
   top: 0;
-  left: 0;
   width: 100%;
   z-index: 1000;
-  backdrop-filter: blur(10px);
-  padding: 1rem;
-  height: 70px;
+  padding: 1rem 1.25rem 0.75rem 1.25rem;
+  min-height: 65px;
+  max-height: 65px;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 12px;
   box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Mejoras para modo claro - header */
+[data-mantine-color-scheme="light"] .header {
+  background: transparent;
+  border-bottom: none;
+}
+
+[data-mantine-color-scheme="dark"] .header {
+  background: rgba(10, 10, 10, 0.95);
+  border-bottom: 1px solid rgba(0, 255, 157, 0.1);
 }
 
 .backButton {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary) !important;
-  background: var(--primary-light) !important;
-  border: none !important;
-  border-radius: 12px !important;
-  transition: all var(--animation-duration) ease !important;
+  transition: all var(--animation-duration) ease;
+  backdrop-filter: blur(10px);
+  padding: 0;
+}
+
+/* Mejoras para modo claro - botón back */
+[data-mantine-color-scheme="light"] .backButton {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  text-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
 }
 
 .backButton:hover {
@@ -65,17 +93,33 @@
 }
 
 .headerTitle {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-primary) !important;
-  letter-spacing: -0.02em;
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+/* Mejoras para modo claro - título header */
+[data-mantine-color-scheme="light"] .headerTitle {
+  color: white !important;
+  text-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.9),
+    2px 2px 6px rgba(0, 0, 0, 0.7);
+  font-weight: 800;
+  -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.4);
+}
+
+[data-mantine-color-scheme="dark"] .headerTitle {
+  color: #fff !important;
 }
 
 /* Contenido principal */
 .content {
   flex: 1;
-  padding: 90px 1rem 1rem 1rem;
+  padding: 0 1rem 1rem 1rem;
   max-width: 900px !important;
   margin: 0 auto;
   width: 100%;
@@ -92,8 +136,19 @@
   transition: all var(--animation-duration) ease;
 }
 
+/* Mejoras para modo claro - cards */
+[data-mantine-color-scheme="light"] .routeCardCompact {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
 .routeCardCompact:hover {
   border-color: var(--primary);
+}
+
+[data-mantine-color-scheme="light"] .routeCardCompact:hover {
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .routePoints {
@@ -115,6 +170,12 @@
   flex-shrink: 0;
 }
 
+/* Mejoras para modo claro - iconos */
+[data-mantine-color-scheme="light"] .routeIcon {
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+}
+
 .routeInfo {
   min-width: 0;
 }
@@ -128,6 +189,13 @@
   margin: 0;
 }
 
+/* Mejoras para modo claro - labels */
+[data-mantine-color-scheme="light"] .routeLabel {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 700;
+}
+
 .routeText {
   color: var(--text-primary) !important;
   font-size: 0.9rem;
@@ -138,11 +206,24 @@
   text-overflow: ellipsis;
 }
 
+/* Mejoras para modo claro - texto ruta */
+[data-mantine-color-scheme="light"] .routeText {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+}
+
 .routeArrow {
   color: var(--primary);
   font-size: 1.25rem;
   font-weight: bold;
   flex-shrink: 0;
+}
+
+/* Mejoras para modo claro - flecha */
+[data-mantine-color-scheme="light"] .routeArrow {
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
 }
 
 .routeStatsCompact {
@@ -186,15 +267,32 @@
   transition: all var(--animation-duration) ease;
 }
 
+/* Mejoras para modo claro - compact cards */
+[data-mantine-color-scheme="light"] .compactCard {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
 .compactCard:hover {
   border-color: var(--primary);
   transform: translateY(-1px);
+}
+
+[data-mantine-color-scheme="light"] .compactCard:hover {
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .compactIcon {
   color: var(--primary);
   flex-shrink: 0;
   margin-top: 0.125rem;
+}
+
+/* Mejoras para modo claro - iconos compactos */
+[data-mantine-color-scheme="light"] .compactIcon {
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
 }
 
 .compactLabel {
@@ -206,6 +304,13 @@
   margin: 0 0 0.25rem 0;
 }
 
+/* Mejoras para modo claro - labels compactos */
+[data-mantine-color-scheme="light"] .compactLabel {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+}
+
 .compactValue {
   color: var(--text-primary) !important;
   font-size: 0.9rem;
@@ -213,10 +318,22 @@
   margin: 0;
 }
 
+/* Mejoras para modo claro - valores compactos */
+[data-mantine-color-scheme="light"] .compactValue {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 700;
+}
+
 .compactSubvalue {
   color: var(--text-secondary) !important;
   font-size: 0.7rem;
   margin: 0;
+}
+
+[data-mantine-color-scheme="light"] .compactSubvalue {
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 /* Fila de información extra */
@@ -239,9 +356,22 @@
   transition: all var(--animation-duration) ease;
 }
 
+/* Mejoras para modo claro - info cards */
+[data-mantine-color-scheme="light"] .infoCardCompact,
+[data-mantine-color-scheme="light"] .preferencesCardCompact {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
 .infoCardCompact:hover,
 .preferencesCardCompact:hover {
   border-color: var(--primary);
+}
+
+[data-mantine-color-scheme="light"] .infoCardCompact:hover,
+[data-mantine-color-scheme="light"] .preferencesCardCompact:hover {
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .infoIcon,
@@ -251,12 +381,27 @@
   margin-top: 0.125rem;
 }
 
+/* Mejoras para modo claro - iconos info */
+[data-mantine-color-scheme="light"] .infoIcon,
+[data-mantine-color-scheme="light"] .preferencesIcon {
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+}
+
 .infoTitle,
 .preferencesTitle {
   color: var(--text-primary) !important;
   font-size: 0.8rem;
   font-weight: 600;
   margin: 0 0 0.25rem 0;
+}
+
+/* Mejoras para modo claro - títulos info */
+[data-mantine-color-scheme="light"] .infoTitle,
+[data-mantine-color-scheme="light"] .preferencesTitle {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 700;
 }
 
 .infoText {
@@ -295,6 +440,13 @@
   gap: 1rem;
 }
 
+/* Mejoras para modo claro - resumen financiero */
+[data-mantine-color-scheme="light"] .financialSummary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
 .earningsSection {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   border-radius: 10px;
@@ -302,6 +454,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* Mejoras para modo claro - sección ganancias */
+[data-mantine-color-scheme="light"] .earningsSection {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
 .earningsHeader {
@@ -325,10 +482,23 @@
   margin: 0;
 }
 
+/* Mejoras para modo claro - títulos earnings */
+[data-mantine-color-scheme="light"] .earningsTitle {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 800;
+}
+
 .earningsSubtitle {
   color: rgba(0, 0, 0, 0.7) !important;
   font-size: 0.75rem;
   margin: 0;
+}
+
+/* Mejoras para modo claro - subtítulos earnings */
+[data-mantine-color-scheme="light"] .earningsSubtitle {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .earningsAmount {
@@ -338,6 +508,13 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+/* Mejoras para modo claro - cantidad earnings */
+[data-mantine-color-scheme="light"] .earningsAmount {
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  font-weight: 900;
+}
+
 .costsSection {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-color);
@@ -345,11 +522,25 @@
   padding: 1rem;
 }
 
+/* Mejoras para modo claro - sección costos */
+[data-mantine-color-scheme="light"] .costsSection {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
 .costsTitle {
   color: var(--text-primary) !important;
   font-size: 0.9rem;
   font-weight: 600;
   margin: 0 0 0.75rem 0;
+}
+
+/* Mejoras para modo claro - título costos */
+[data-mantine-color-scheme="light"] .costsTitle {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 700;
 }
 
 .costsList {
@@ -366,6 +557,12 @@
   font-size: 0.8rem;
 }
 
+/* Mejoras para modo claro - items de costo */
+[data-mantine-color-scheme="light"] .costItem {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
 .costItemTotal {
   display: flex;
   justify-content: space-between;
@@ -375,6 +572,14 @@
   font-weight: 700;
   padding-top: 0.5rem;
   border-top: 1px solid var(--border-color);
+}
+
+/* Mejoras para modo claro - total de costos */
+[data-mantine-color-scheme="light"] .costItemTotal {
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 800;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Sección de publicación compacta */
@@ -397,6 +602,14 @@
   transition: all var(--animation-duration) ease !important;
   box-shadow: var(--shadow-md) !important;
   margin-bottom: 0.75rem;
+}
+
+/* Mejoras para modo claro - botón publicar */
+[data-mantine-color-scheme="light"] .publishButton {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 800 !important;
 }
 
 .publishButton:hover {
@@ -485,7 +698,7 @@
 /* Responsive optimizado - mantiene compacto */
 @media (max-width: 768px) {
   .content {
-    padding: 90px 0.75rem 1rem 0.75rem;
+    padding: 0 0.75rem 1rem 0.75rem;
   }
   
   /* Mantener grid de 4 columnas en tablet */
@@ -519,7 +732,7 @@
 
 @media (max-width: 480px) {
   .content {
-    padding: 90px 0.5rem 1rem 0.5rem;
+    padding: 0 0.5rem 1rem 0.5rem;
   }
   
   /* Solo en móvil muy pequeño cambiar a 2 columnas */

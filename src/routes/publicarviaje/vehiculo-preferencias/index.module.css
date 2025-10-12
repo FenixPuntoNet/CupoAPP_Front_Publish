@@ -84,6 +84,17 @@
   }
 }
 
+/* Mejoras para modo claro con Mantine */
+[data-mantine-color-scheme="light"] .title {
+  color: white !important;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.7),
+    2px 2px 6px rgba(0, 0, 0, 0.8);
+  font-weight: 800;
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.4);
+}
+
 [data-mantine-color-scheme="dark"] .title {
   color: #fff !important;
 }
@@ -165,6 +176,17 @@
     font-weight: 800;
     -webkit-text-stroke: 0.3px rgba(0, 0, 0, 0.5);
   }
+}
+
+/* Mejoras para modo claro con Mantine */
+[data-mantine-color-scheme="light"] .sectionTitle {
+  color: white !important;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.95),
+    0 0 6px rgba(0, 0, 0, 0.8),
+    1px 1px 4px rgba(0, 0, 0, 0.9);
+  font-weight: 800;
+  -webkit-text-stroke: 0.3px rgba(0, 0, 0, 0.5);
 }
 
 [data-mantine-color-scheme="dark"] .sectionTitle {

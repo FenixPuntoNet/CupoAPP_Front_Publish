@@ -15,6 +15,12 @@
   background: linear-gradient(135deg, #0a0a0a 0%, #18181b 100%);
 }
 
+/* Mejoras para modo claro */
+[data-mantine-color-scheme="light"] .container {
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+  color: #fff;
+}
+
 /* Header SIMPLE - SOLO BOTÓN DE VOLVER */
 .header {
   position: relative;
@@ -51,6 +57,15 @@
   padding: 0;
 }
 
+/* Mejoras para modo claro - botón de regresar */
+[data-mantine-color-scheme="light"] .backButton {
+  color: white !important;
+  text-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
+}
+
 .backButton:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
@@ -71,17 +86,15 @@
   text-align: center;
 }
 
-/* Mejoras FUERTES para modo claro */
-@media (prefers-color-scheme: light) {
-  .title {
-    color: white !important;
-    text-shadow: 
-      0 2px 4px rgba(0, 0, 0, 0.8),
-      0 0 8px rgba(0, 0, 0, 0.6),
-      2px 2px 6px rgba(0, 0, 0, 0.7);
-    font-weight: 800;
-    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
-  }
+/* Mejoras ESPECÍFICAS para modo claro */
+[data-mantine-color-scheme="light"] .title {
+  color: white !important;
+  text-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.9),
+    0 1px 4px rgba(0, 0, 0, 0.8),
+    2px 2px 6px rgba(0, 0, 0, 0.7);
+  font-weight: 800;
+  -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.4);
 }
 
 [data-mantine-color-scheme="dark"] .title {
@@ -135,17 +148,14 @@
   margin: 0;
 }
 
-/* Mejoras FUERTES para modo claro */
-@media (prefers-color-scheme: light) {
-  .sectionTitle {
-    color: white !important;
-    text-shadow: 
-      0 2px 4px rgba(0, 0, 0, 0.9),
-      0 0 6px rgba(0, 0, 0, 0.7),
-      1px 1px 4px rgba(0, 0, 0, 0.8);
-    font-weight: 800;
-    -webkit-text-stroke: 0.3px rgba(0, 0, 0, 0.4);
-  }
+/* Mejoras ESPECÍFICAS para modo claro - títulos de sección */
+[data-mantine-color-scheme="light"] .sectionTitle {
+  color: white !important;
+  text-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.8);
+  font-weight: 700;
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
 }
 
 [data-mantine-color-scheme="dark"] .sectionTitle {
@@ -172,6 +182,16 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+}
+
+/* Mejoras para modo claro - botón de asientos */
+[data-mantine-color-scheme="light"] .seatsButton {
+  color: white !important;
+  font-weight: 700;
+  text-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
 }
 
 .seatsButton:hover {
@@ -204,17 +224,14 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Mejoras EXTREMAS para modo claro */
-@media (prefers-color-scheme: light) {
-  .seatsNumber {
-    color: white !important;
-    text-shadow: 
-      0 3px 6px rgba(0, 0, 0, 0.9),
-      0 0 10px rgba(0, 0, 0, 0.8),
-      2px 2px 8px rgba(0, 0, 0, 0.7);
-    font-weight: 900;
-    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.5);
-  }
+/* Mejoras ESPECÍFICAS para modo claro - números de asientos */
+[data-mantine-color-scheme="light"] .seatsNumber {
+  color: white !important;
+  text-shadow: 
+    0 3px 8px rgba(0, 0, 0, 1),
+    0 1px 4px rgba(0, 0, 0, 0.9);
+  font-weight: 900;
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.4);
 }
 
 [data-mantine-color-scheme="dark"] .seatsNumber {
@@ -227,6 +244,15 @@
   text-align: center;
 }
 
+/* Mejoras para modo claro - etiquetas */
+[data-mantine-color-scheme="light"] .seatsLabel {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+}
+
 [data-mantine-color-scheme="dark"] .seatsLabel {
   color: rgba(255, 255, 255, 0.7) !important;
 }
@@ -236,6 +262,15 @@
   color: rgba(255, 255, 255, 0.8) !important;
   text-align: center;
   margin: 0;
+}
+
+/* Mejoras para modo claro - texto de ayuda */
+[data-mantine-color-scheme="light"] .seatsHelp {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
 }
 
 [data-mantine-color-scheme="dark"] .seatsHelp {
@@ -283,6 +318,15 @@
   justify-content: center;
   margin-top: 0.5rem;
   margin-bottom: 0;
+  min-height: 40px; /* Altura mínima para evitar cortes */
+  align-items: center; /* Centrar verticalmente */
+}
+
+/* Mejoras para modo claro - contenedor del badge */
+[data-mantine-color-scheme="light"] .priceStatusBadgeContainer {
+  background: transparent;
+  padding: 0.4rem;
+  min-height: 40px;
 }
 
 .priceStatusCompact {
@@ -293,6 +337,30 @@
   text-align: center !important;
   line-height: 1.2 !important;
   max-width: none !important;
+}
+
+/* Mejoras para modo claro - badge de estado del precio */
+[data-mantine-color-scheme="light"] .priceStatusCompact {
+  font-weight: 600 !important;
+  color: inherit !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+  min-height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Estilos globales para badges en modo claro dentro de esta página */
+[data-mantine-color-scheme="light"] :global(.mantine-Badge-root) {
+  color: inherit !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Estilos específicos por color de badge en modo claro */
+[data-mantine-color-scheme="light"] :global(.mantine-Badge-root[data-variant="light"]) {
+  color: inherit !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
+  font-weight: 600 !important;
 }
 
 /* Selector de precio similar a asientos */
@@ -317,6 +385,16 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+}
+
+/* Mejoras para modo claro - botón de precio */
+[data-mantine-color-scheme="light"] .priceButton {
+  color: white !important;
+  font-weight: 700;
+  text-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
 }
 
 .priceButton:hover {
@@ -385,12 +463,21 @@
 
 /* Número del precio grande y bonito */
 .priceNumber {
-  font-size: 2.5rem;
-  font-weight: 900;
-  line-height: 1;
-  text-align: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.5rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
   transition: all 0.3s ease;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Mejoras para modo claro - números de precio */
+[data-mantine-color-scheme="light"] .priceNumber {
+  color: white !important;
+  font-weight: 800;
+  text-shadow: 
+    0 3px 10px rgba(0, 0, 0, 1),
+    0 1px 5px rgba(0, 0, 0, 0.8);
+  -webkit-text-stroke: 1.5px rgba(0, 0, 0, 0.4);
 }
 
 /* Estados del precio con colores dinámicos más prominentes */
@@ -400,14 +487,41 @@
   animation: pulse-price 2s ease-in-out infinite;
 }
 
+/* Mejoras para modo claro - precio óptimo */
+[data-mantine-color-scheme="light"] .priceOptimal {
+  color: #10d164 !important;
+  text-shadow: 
+    0 3px 8px rgba(0, 0, 0, 1),
+    0 0 15px rgba(16, 209, 100, 0.7);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.3);
+}
+
 .priceHigh {
   color: #ff8c00 !important;
   text-shadow: 0 0 20px rgba(255, 140, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* Mejoras para modo claro - precio alto */
+[data-mantine-color-scheme="light"] .priceHigh {
+  color: #ff8c00 !important;
+  text-shadow: 
+    0 3px 8px rgba(0, 0, 0, 1),
+    0 0 15px rgba(255, 140, 0, 0.7);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.3);
+}
+
 .priceLow {
   color: #00bcd4 !important;
   text-shadow: 0 0 20px rgba(0, 188, 212, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Mejoras para modo claro - precio bajo */
+[data-mantine-color-scheme="light"] .priceLow {
+  color: #00bcd4 !important;
+  text-shadow: 
+    0 3px 8px rgba(0, 0, 0, 1),
+    0 0 15px rgba(0, 188, 212, 0.7);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes pulse-price {
@@ -505,6 +619,15 @@
   font-weight: 500;
 }
 
+/* Mejoras para modo claro - etiqueta total */
+[data-mantine-color-scheme="light"] .totalLabel {
+  color: rgba(255, 255, 255, 0.95) !important;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.8);
+  font-weight: 600;
+}
+
 [data-mantine-color-scheme="dark"] .totalLabel {
   color: rgba(255, 255, 255, 0.7) !important;
 }
@@ -518,17 +641,14 @@
   margin-bottom: 0.25rem;
 }
 
-/* Mejoras BRUTALES para modo claro */
-@media (prefers-color-scheme: light) {
-  .totalAmount {
-    color: white !important;
-    text-shadow: 
-      0 3px 6px rgba(0, 0, 0, 0.95),
-      0 0 12px rgba(0, 0, 0, 0.8),
-      2px 2px 8px rgba(0, 0, 0, 0.9);
-    font-weight: 900;
-    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.6);
-  }
+/* Mejoras ESPECÍFICAS para modo claro - total amount */
+[data-mantine-color-scheme="light"] .totalAmount {
+  color: white !important;
+  text-shadow: 
+    0 3px 8px rgba(0, 0, 0, 1),
+    0 1px 4px rgba(0, 0, 0, 0.9);
+  font-weight: 900;
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.5);
 }
 
 [data-mantine-color-scheme="dark"] .totalAmount {
@@ -539,6 +659,15 @@
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.6) !important;
   margin: 0;
+}
+
+/* Mejoras para modo claro - breakdown */
+[data-mantine-color-scheme="light"] .totalBreakdown {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.7);
+  font-weight: 500;
 }
 
 [data-mantine-color-scheme="dark"] .totalBreakdown {
@@ -557,6 +686,16 @@
   transition: all 0.3s ease !important;
   box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3) !important;
   flex-shrink: 0;
+}
+
+/* Mejoras para modo claro - botón continuar */
+[data-mantine-color-scheme="light"] .continueButtonCompact {
+  color: white !important;
+  font-weight: 700 !important;
+  text-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.2);
 }
 
 .continueButtonCompact:hover {
@@ -696,6 +835,16 @@
   color: white !important;
   font-weight: 600;
   font-size: 1.2rem;
+}
+
+/* Mejoras para modo claro - título del modal */
+[data-mantine-color-scheme="light"] .modalTitle {
+  color: white !important;
+  font-weight: 700;
+  text-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
 }
 
 [data-mantine-color-scheme="dark"] .modalTitle {
