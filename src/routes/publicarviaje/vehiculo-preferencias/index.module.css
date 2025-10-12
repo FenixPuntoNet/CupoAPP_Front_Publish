@@ -118,6 +118,25 @@
   margin-bottom: 1.5rem;
 }
 
+/* Header de preferencias más compacto */
+.section:has(.compactPreferencesGrid) .sectionHeader {
+  margin-bottom: 1rem;
+}
+
+/* Sección de preferencias más compacta */
+.section:has(.compactPreferencesGrid) {
+  padding: 1rem 1.5rem 1.25rem 1.5rem;
+}
+
+/* Sección de vehículo más compacta */
+.section:has(.vehicleSelect) .sectionHeader {
+  margin-bottom: 1rem;
+}
+
+.section:has(.vehicleSelect) {
+  padding: 1rem 1.5rem 1.25rem 1.5rem;
+}
+
 .sectionIcon {
   color: white;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
@@ -152,18 +171,58 @@
   color: #fff !important;
 }
 
-/* Selector de vehículo */
+/* Selector de vehículo COMPACTO */
 .vehicleSelect {
-  margin-bottom: 1rem;
+  margin-bottom: 0;
+}
+
+/* Contenedor flex para el selector y botón */
+.vehicleSelectContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.vehicleSelectContainer .vehicleSelect {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
 }
 
 :global(.vehicleSelect .mantine-Select-input) {
   background: rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   color: white !important;
-  border-radius: 12px !important;
-  font-size: 1.1rem !important;
-  padding: 1rem !important;
+  border-radius: 10px !important;
+  font-size: 1rem !important;
+  padding: 0.75rem 1rem !important;
+  height: 44px !important;
+}
+
+/* Botón lateral para agregar vehículo */
+.addVehicleButtonSide {
+  background: linear-gradient(135deg, #10b981, #065f46) !important;
+  color: white !important;
+  border: none !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0;
+  transition: all 0.2s ease !important;
+}
+
+.addVehicleButtonSide:hover {
+  background: linear-gradient(135deg, #059669, #064e3b) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
 }
 
 :global(.vehicleSelect .mantine-Select-input::placeholder) {
@@ -181,14 +240,44 @@
 }
 
 .vehicleHelp {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.8) !important;
   text-align: center;
-  margin: 0;
+  margin: 0 0 0.75rem 0;
+  line-height: 1.3;
 }
 
 [data-mantine-color-scheme="dark"] .vehicleHelp {
   color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Contenedor de registro de vehículo */
+.vehicleRegistration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.registerButton {
+  height: 42px !important;
+  font-size: 0.9rem !important;
+  padding: 0.5rem 1.25rem !important;
+  border-radius: 10px !important;
+}
+
+.addVehicleButton {
+  height: 32px !important;
+  font-size: 0.8rem !important;
+  padding: 0.25rem 0.75rem !important;
+  border-radius: 8px !important;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.addVehicleButton:hover {
+  opacity: 1;
+  transform: translateY(-1px);
 }
 
 /* Grid de preferencias */
@@ -292,40 +381,129 @@
   color: rgba(255, 255, 255, 0.6) !important;
 }
 
-/* Información adicional */
-.additionalInfoTextarea {
-  margin-bottom: 0.5rem;
+/* INFORMACIÓN ADICIONAL - CARD NUEVA Y SÚPER COMPACTA */
+.infoCard {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.5rem;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  transition: all 0.3s ease;
 }
 
-:global(.additionalInfoTextarea .mantine-Textarea-input) {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  color: white !important;
-  border-radius: 12px !important;
+.infoCard:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+[data-mantine-color-scheme="dark"] .infoCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+}
+
+.infoCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.infoCardIcon {
   font-size: 1rem !important;
-  padding: 1rem !important;
-  resize: vertical !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
-:global(.additionalInfoTextarea .mantine-Textarea-input::placeholder) {
-  color: rgba(255, 255, 255, 0.6) !important;
+.infoCardTitle {
+  color: white !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  margin: 0;
 }
 
-:global(.additionalInfoTextarea .mantine-Textarea-input:focus) {
-  border-color: #22c55e !important;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important;
+/* Mejoras EXTREMAS para modo claro */
+@media (prefers-color-scheme: light) {
+  .infoCardTitle {
+    color: white !important;
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.9),
+      0 0 6px rgba(0, 0, 0, 0.7),
+      1px 1px 3px rgba(0, 0, 0, 0.8);
+    font-weight: 700 !important;
+    -webkit-text-stroke: 0.2px rgba(0, 0, 0, 0.4);
+  }
 }
 
-[data-mantine-color-scheme="dark"] :global(.additionalInfoTextarea .mantine-Textarea-input) {
+[data-mantine-color-scheme="dark"] .infoCardTitle {
+  color: #10b981 !important;
+}
+
+.miniTextarea {
+  margin: 0;
+}
+
+:global(.miniTextarea .mantine-Textarea-input) {
   background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem !important;
+  padding: 0.35rem 0.5rem !important;
+  resize: none !important;
+  line-height: 1.3 !important;
+  transition: all 0.3s ease !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  height: 36px !important;
 }
 
-.characterCount {
-  font-size: 0.8rem;
+:global(.miniTextarea .mantine-Textarea-input::placeholder) {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-style: italic !important;
+  font-size: 0.8rem !important;
+}
+
+:global(.miniTextarea .mantine-Textarea-input:focus) {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-mantine-color-scheme="dark"] :global(.miniTextarea .mantine-Textarea-input) {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-mantine-color-scheme="dark"] :global(.miniTextarea .mantine-Textarea-input:focus) {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.miniCounter {
   color: rgba(255, 255, 255, 0.6) !important;
+  font-weight: 500 !important;
+  font-size: 0.65rem !important;
   text-align: right;
   margin: 0;
+  margin-top: -0.125rem;
+  padding: 0;
+}
+
+/* Mejoras para modo claro */
+@media (prefers-color-scheme: light) {
+  .miniCounter {
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    font-weight: 600 !important;
+  }
+}
+
+[data-mantine-color-scheme="dark"] .miniCounter {
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* Sección de publicación */
@@ -574,5 +752,280 @@
   .publishButton {
     height: 50px !important;
     font-size: 1rem !important;
+  }
+}
+
+/* Estilos específicos para el modal de vehículo */
+.vehicleModal .modalHeader {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+}
+
+.vehicleModal .modalTitle {
+  color: white !important;
+  font-weight: 700;
+}
+
+/* Estilos para los inputs del modal de vehículo */
+:global(.vehicleModal .mantine-TextInput-input),
+:global(.vehicleModal .mantine-NumberInput-input),
+:global(.vehicleModal .mantine-Select-input) {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+:global(.vehicleModal .mantine-TextInput-input:focus),
+:global(.vehicleModal .mantine-NumberInput-input:focus),
+:global(.vehicleModal .mantine-Select-input:focus) {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+:global(.vehicleModal .mantine-TextInput-label),
+:global(.vehicleModal .mantine-NumberInput-label),
+:global(.vehicleModal .mantine-Select-label) {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+[data-mantine-color-scheme="dark"] :global(.vehicleModal .mantine-TextInput-input),
+[data-mantine-color-scheme="dark"] :global(.vehicleModal .mantine-NumberInput-input),
+[data-mantine-color-scheme="dark"] :global(.vehicleModal .mantine-Select-input) {
+  background: #1f2937;
+  border-color: #374151;
+  color: white;
+}
+
+[data-mantine-color-scheme="dark"] :global(.vehicleModal .mantine-TextInput-input:focus),
+[data-mantine-color-scheme="dark"] :global(.vehicleModal .mantine-NumberInput-input:focus),
+[data-mantine-color-scheme="dark"] :global(.vehicleModal .mantine-Select-input:focus) {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+[data-mantine-color-scheme="dark"] :global(.vehicleModal .mantine-TextInput-label),
+[data-mantine-color-scheme="dark"] :global(.vehicleModal .mantine-NumberInput-label),
+[data-mantine-color-scheme="dark"] :global(.vehicleModal .mantine-Select-label) {
+  color: #d1d5db;
+}
+
+/* PREFERENCIAS COMPACTAS - 2 FILAS Y MÚLTIPLES COLUMNAS */
+.compactPreferencesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 480px) {
+  .compactPreferencesGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+}
+
+.compactPreferenceItem {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 0.5rem 0.3rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  text-align: center;
+  min-height: 65px;
+  position: relative;
+  overflow: hidden;
+}
+
+.compactPreferenceItem:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.compactPreferenceActive {
+  background: rgba(34, 197, 94, 0.25) !important;
+  border-color: rgba(34, 197, 94, 0.6) !important;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+}
+
+.compactPreferenceActive:hover {
+  background: rgba(34, 197, 94, 0.35) !important;
+  border-color: rgba(34, 197, 94, 0.7) !important;
+  transform: translateY(-2px);
+}
+
+[data-mantine-color-scheme="dark"] .compactPreferenceItem {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-mantine-color-scheme="dark"] .compactPreferenceActive {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.compactPreferenceIcon {
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.compactPreferenceActive .compactPreferenceIcon {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  transform: scale(1.05);
+}
+
+[data-mantine-color-scheme="dark"] .compactPreferenceIcon {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+[data-mantine-color-scheme="dark"] .compactPreferenceActive .compactPreferenceIcon {
+  background: rgba(16, 185, 129, 0.3);
+  color: white;
+}
+
+.compactPreferenceLabel {
+  font-size: 0.7rem !important;
+  font-weight: 600 !important;
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  line-height: 1.1;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Mejoras EXTREMAS para modo claro */
+@media (prefers-color-scheme: light) {
+  .compactPreferenceLabel {
+    color: white !important;
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.95),
+      0 0 6px rgba(0, 0, 0, 0.8),
+      1px 1px 4px rgba(0, 0, 0, 0.9);
+    font-weight: 800 !important;
+    -webkit-text-stroke: 0.2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+[data-mantine-color-scheme="dark"] .compactPreferenceLabel {
+  color: #fff !important;
+}
+
+.compactPreferenceActive .compactPreferenceLabel {
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Animación de selección */
+.compactPreferenceActive::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 10px;
+  height: 10px;
+  background: #22c55e;
+  border-radius: 50%;
+  border: 1.5px solid white;
+  animation: checkmark 0.3s ease-in-out;
+}
+
+[data-mantine-color-scheme="dark"] .compactPreferenceActive::before {
+  background: #10b981;
+}
+
+/* Sección de continuar */
+.continueSection {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 0.75rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-top: 0.75rem;
+}
+
+[data-mantine-color-scheme="dark"] .continueSection {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.continueButton {
+  width: 100%;
+  height: 42px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  color: white !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+.continueButton:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4) !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+}
+
+.continueButton:disabled,
+.continueButtonDisabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%) !important;
+  box-shadow: 0 2px 6px rgba(156, 163, 175, 0.2) !important;
+}
+
+.continueButton:disabled:hover,
+.continueButtonDisabled:hover {
+  transform: none !important;
+  box-shadow: 0 2px 6px rgba(156, 163, 175, 0.2) !important;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%) !important;
+}
+
+[data-mantine-color-scheme="dark"] .continueButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-mantine-color-scheme="dark"] .continueButton:hover {
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4) !important;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }

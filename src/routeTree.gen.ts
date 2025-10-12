@@ -39,6 +39,7 @@ import { Route as CuposViewBookingDetailsRouteImport } from './routes/Cupos/View
 import { Route as ActividadesActividadesPageRouteImport } from './routes/Actividades/ActividadesPage'
 import { Route as PublicarviajeVehiculoPreferenciasIndexRouteImport } from './routes/publicarviaje/vehiculo-preferencias/index'
 import { Route as PublicarviajeRutasIndexRouteImport } from './routes/publicarviaje/rutas/index'
+import { Route as PublicarviajeResumenConfirmacionIndexRouteImport } from './routes/publicarviaje/resumen-confirmacion/index'
 import { Route as PublicarviajePuntosDescensoIndexRouteImport } from './routes/publicarviaje/puntos-descenso/index'
 import { Route as PublicarviajePuntoRecogidaIndexRouteImport } from './routes/publicarviaje/punto-recogida/index'
 import { Route as PublicarviajeFechaHoraIndexRouteImport } from './routes/publicarviaje/fecha-hora/index'
@@ -199,6 +200,12 @@ const PublicarviajeRutasIndexRoute = PublicarviajeRutasIndexRouteImport.update({
   path: '/publicarviaje/rutas/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicarviajeResumenConfirmacionIndexRoute =
+  PublicarviajeResumenConfirmacionIndexRouteImport.update({
+    id: '/publicarviaje/resumen-confirmacion/',
+    path: '/publicarviaje/resumen-confirmacion/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const PublicarviajePuntosDescensoIndexRoute =
   PublicarviajePuntosDescensoIndexRouteImport.update({
     id: '/publicarviaje/puntos-descenso/',
@@ -291,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/publicarviaje/fecha-hora': typeof PublicarviajeFechaHoraIndexRoute
   '/publicarviaje/punto-recogida': typeof PublicarviajePuntoRecogidaIndexRoute
   '/publicarviaje/puntos-descenso': typeof PublicarviajePuntosDescensoIndexRoute
+  '/publicarviaje/resumen-confirmacion': typeof PublicarviajeResumenConfirmacionIndexRoute
   '/publicarviaje/rutas': typeof PublicarviajeRutasIndexRoute
   '/publicarviaje/vehiculo-preferencias': typeof PublicarviajeVehiculoPreferenciasIndexRoute
 }
@@ -331,6 +339,7 @@ export interface FileRoutesByTo {
   '/publicarviaje/fecha-hora': typeof PublicarviajeFechaHoraIndexRoute
   '/publicarviaje/punto-recogida': typeof PublicarviajePuntoRecogidaIndexRoute
   '/publicarviaje/puntos-descenso': typeof PublicarviajePuntosDescensoIndexRoute
+  '/publicarviaje/resumen-confirmacion': typeof PublicarviajeResumenConfirmacionIndexRoute
   '/publicarviaje/rutas': typeof PublicarviajeRutasIndexRoute
   '/publicarviaje/vehiculo-preferencias': typeof PublicarviajeVehiculoPreferenciasIndexRoute
 }
@@ -372,6 +381,7 @@ export interface FileRoutesById {
   '/publicarviaje/fecha-hora/': typeof PublicarviajeFechaHoraIndexRoute
   '/publicarviaje/punto-recogida/': typeof PublicarviajePuntoRecogidaIndexRoute
   '/publicarviaje/puntos-descenso/': typeof PublicarviajePuntosDescensoIndexRoute
+  '/publicarviaje/resumen-confirmacion/': typeof PublicarviajeResumenConfirmacionIndexRoute
   '/publicarviaje/rutas/': typeof PublicarviajeRutasIndexRoute
   '/publicarviaje/vehiculo-preferencias/': typeof PublicarviajeVehiculoPreferenciasIndexRoute
 }
@@ -414,6 +424,7 @@ export interface FileRouteTypes {
     | '/publicarviaje/fecha-hora'
     | '/publicarviaje/punto-recogida'
     | '/publicarviaje/puntos-descenso'
+    | '/publicarviaje/resumen-confirmacion'
     | '/publicarviaje/rutas'
     | '/publicarviaje/vehiculo-preferencias'
   fileRoutesByTo: FileRoutesByTo
@@ -454,6 +465,7 @@ export interface FileRouteTypes {
     | '/publicarviaje/fecha-hora'
     | '/publicarviaje/punto-recogida'
     | '/publicarviaje/puntos-descenso'
+    | '/publicarviaje/resumen-confirmacion'
     | '/publicarviaje/rutas'
     | '/publicarviaje/vehiculo-preferencias'
   id:
@@ -494,6 +506,7 @@ export interface FileRouteTypes {
     | '/publicarviaje/fecha-hora/'
     | '/publicarviaje/punto-recogida/'
     | '/publicarviaje/puntos-descenso/'
+    | '/publicarviaje/resumen-confirmacion/'
     | '/publicarviaje/rutas/'
     | '/publicarviaje/vehiculo-preferencias/'
   fileRoutesById: FileRoutesById
@@ -535,6 +548,7 @@ export interface RootRouteChildren {
   PublicarviajeFechaHoraIndexRoute: typeof PublicarviajeFechaHoraIndexRoute
   PublicarviajePuntoRecogidaIndexRoute: typeof PublicarviajePuntoRecogidaIndexRoute
   PublicarviajePuntosDescensoIndexRoute: typeof PublicarviajePuntosDescensoIndexRoute
+  PublicarviajeResumenConfirmacionIndexRoute: typeof PublicarviajeResumenConfirmacionIndexRoute
   PublicarviajeRutasIndexRoute: typeof PublicarviajeRutasIndexRoute
   PublicarviajeVehiculoPreferenciasIndexRoute: typeof PublicarviajeVehiculoPreferenciasIndexRoute
 }
@@ -744,6 +758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicarviajeRutasIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/publicarviaje/resumen-confirmacion/': {
+      id: '/publicarviaje/resumen-confirmacion/'
+      path: '/publicarviaje/resumen-confirmacion'
+      fullPath: '/publicarviaje/resumen-confirmacion'
+      preLoaderRoute: typeof PublicarviajeResumenConfirmacionIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/publicarviaje/puntos-descenso/': {
       id: '/publicarviaje/puntos-descenso/'
       path: '/publicarviaje/puntos-descenso'
@@ -848,6 +869,8 @@ const rootRouteChildren: RootRouteChildren = {
   PublicarviajeFechaHoraIndexRoute: PublicarviajeFechaHoraIndexRoute,
   PublicarviajePuntoRecogidaIndexRoute: PublicarviajePuntoRecogidaIndexRoute,
   PublicarviajePuntosDescensoIndexRoute: PublicarviajePuntosDescensoIndexRoute,
+  PublicarviajeResumenConfirmacionIndexRoute:
+    PublicarviajeResumenConfirmacionIndexRoute,
   PublicarviajeRutasIndexRoute: PublicarviajeRutasIndexRoute,
   PublicarviajeVehiculoPreferenciasIndexRoute:
     PublicarviajeVehiculoPreferenciasIndexRoute,
