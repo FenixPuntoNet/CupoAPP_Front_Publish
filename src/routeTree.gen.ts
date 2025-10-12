@@ -24,11 +24,7 @@ import { Route as RegistroIndexRouteImport } from './routes/Registro/index'
 import { Route as RegistrarVehiculoIndexRouteImport } from './routes/RegistrarVehiculo/index'
 import { Route as RecuperarPaswordIndexRouteImport } from './routes/RecuperarPasword/index'
 import { Route as PerfilIndexRouteImport } from './routes/Perfil/index'
-import { Route as ParadasIndexRouteImport } from './routes/Paradas/index'
-import { Route as OrigenIndexRouteImport } from './routes/Origen/index'
 import { Route as LoginIndexRouteImport } from './routes/Login/index'
-import { Route as DetallesViajeIndexRouteImport } from './routes/DetallesViaje/index'
-import { Route as DestinoIndexRouteImport } from './routes/Destino/index'
 import { Route as DateSelectedIndexRouteImport } from './routes/DateSelected/index'
 import { Route as CuposReservadosIndexRouteImport } from './routes/CuposReservados/index'
 import { Route as CuposIndexRouteImport } from './routes/Cupos/index'
@@ -41,6 +37,16 @@ import { Route as CuposViewTicketRouteImport } from './routes/Cupos/ViewTicket'
 import { Route as CuposViewPassengersRouteImport } from './routes/Cupos/ViewPassengers'
 import { Route as CuposViewBookingDetailsRouteImport } from './routes/Cupos/ViewBookingDetails'
 import { Route as ActividadesActividadesPageRouteImport } from './routes/Actividades/ActividadesPage'
+import { Route as PublicarviajeVehiculoPreferenciasIndexRouteImport } from './routes/publicarviaje/vehiculo-preferencias/index'
+import { Route as PublicarviajeRutasIndexRouteImport } from './routes/publicarviaje/rutas/index'
+import { Route as PublicarviajePuntosDescensoIndexRouteImport } from './routes/publicarviaje/puntos-descenso/index'
+import { Route as PublicarviajePuntoRecogidaIndexRouteImport } from './routes/publicarviaje/punto-recogida/index'
+import { Route as PublicarviajeFechaHoraIndexRouteImport } from './routes/publicarviaje/fecha-hora/index'
+import { Route as PublicarviajeAsientosPrecioIndexRouteImport } from './routes/publicarviaje/asientos-precio/index'
+import { Route as PublicarviajeParadasIndexRouteImport } from './routes/publicarviaje/Paradas/index'
+import { Route as PublicarviajeOrigenIndexRouteImport } from './routes/publicarviaje/Origen/index'
+import { Route as PublicarviajeDetallesViajeIndexRouteImport } from './routes/publicarviaje/DetallesViaje/index'
+import { Route as PublicarviajeDestinoIndexRouteImport } from './routes/publicarviaje/Destino/index'
 import { Route as CuposReservadosValidarCupoBookingIdRouteImport } from './routes/CuposReservados/ValidarCupo.$bookingId'
 
 const IndexLazyRouteImport = createFileRoute('/')()
@@ -115,29 +121,9 @@ const PerfilIndexRoute = PerfilIndexRouteImport.update({
   path: '/Perfil/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ParadasIndexRoute = ParadasIndexRouteImport.update({
-  id: '/Paradas/',
-  path: '/Paradas/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrigenIndexRoute = OrigenIndexRouteImport.update({
-  id: '/Origen/',
-  path: '/Origen/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
   id: '/Login/',
   path: '/Login/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DetallesViajeIndexRoute = DetallesViajeIndexRouteImport.update({
-  id: '/DetallesViaje/',
-  path: '/DetallesViaje/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DestinoIndexRoute = DestinoIndexRouteImport.update({
-  id: '/Destino/',
-  path: '/Destino/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DateSelectedIndexRoute = DateSelectedIndexRouteImport.update({
@@ -202,6 +188,65 @@ const ActividadesActividadesPageRoute =
     path: '/Actividades/ActividadesPage',
     getParentRoute: () => rootRouteImport,
   } as any)
+const PublicarviajeVehiculoPreferenciasIndexRoute =
+  PublicarviajeVehiculoPreferenciasIndexRouteImport.update({
+    id: '/publicarviaje/vehiculo-preferencias/',
+    path: '/publicarviaje/vehiculo-preferencias/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PublicarviajeRutasIndexRoute = PublicarviajeRutasIndexRouteImport.update({
+  id: '/publicarviaje/rutas/',
+  path: '/publicarviaje/rutas/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicarviajePuntosDescensoIndexRoute =
+  PublicarviajePuntosDescensoIndexRouteImport.update({
+    id: '/publicarviaje/puntos-descenso/',
+    path: '/publicarviaje/puntos-descenso/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PublicarviajePuntoRecogidaIndexRoute =
+  PublicarviajePuntoRecogidaIndexRouteImport.update({
+    id: '/publicarviaje/punto-recogida/',
+    path: '/publicarviaje/punto-recogida/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PublicarviajeFechaHoraIndexRoute =
+  PublicarviajeFechaHoraIndexRouteImport.update({
+    id: '/publicarviaje/fecha-hora/',
+    path: '/publicarviaje/fecha-hora/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PublicarviajeAsientosPrecioIndexRoute =
+  PublicarviajeAsientosPrecioIndexRouteImport.update({
+    id: '/publicarviaje/asientos-precio/',
+    path: '/publicarviaje/asientos-precio/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PublicarviajeParadasIndexRoute =
+  PublicarviajeParadasIndexRouteImport.update({
+    id: '/publicarviaje/Paradas/',
+    path: '/publicarviaje/Paradas/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PublicarviajeOrigenIndexRoute =
+  PublicarviajeOrigenIndexRouteImport.update({
+    id: '/publicarviaje/Origen/',
+    path: '/publicarviaje/Origen/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PublicarviajeDetallesViajeIndexRoute =
+  PublicarviajeDetallesViajeIndexRouteImport.update({
+    id: '/publicarviaje/DetallesViaje/',
+    path: '/publicarviaje/DetallesViaje/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PublicarviajeDestinoIndexRoute =
+  PublicarviajeDestinoIndexRouteImport.update({
+    id: '/publicarviaje/Destino/',
+    path: '/publicarviaje/Destino/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CuposReservadosValidarCupoBookingIdRoute =
   CuposReservadosValidarCupoBookingIdRouteImport.update({
     id: '/CuposReservados/ValidarCupo/$bookingId',
@@ -223,11 +268,7 @@ export interface FileRoutesByFullPath {
   '/Cupos': typeof CuposIndexRoute
   '/CuposReservados': typeof CuposReservadosIndexRoute
   '/DateSelected': typeof DateSelectedIndexRoute
-  '/Destino': typeof DestinoIndexRoute
-  '/DetallesViaje': typeof DetallesViajeIndexRoute
   '/Login': typeof LoginIndexRoute
-  '/Origen': typeof OrigenIndexRoute
-  '/Paradas': typeof ParadasIndexRoute
   '/Perfil': typeof PerfilIndexRoute
   '/RecuperarPasword': typeof RecuperarPaswordIndexRoute
   '/RegistrarVehiculo': typeof RegistrarVehiculoIndexRoute
@@ -242,6 +283,16 @@ export interface FileRoutesByFullPath {
   '/publicarviaje': typeof PublicarviajeIndexRoute
   '/reservar': typeof ReservarIndexRoute
   '/CuposReservados/ValidarCupo/$bookingId': typeof CuposReservadosValidarCupoBookingIdRoute
+  '/publicarviaje/Destino': typeof PublicarviajeDestinoIndexRoute
+  '/publicarviaje/DetallesViaje': typeof PublicarviajeDetallesViajeIndexRoute
+  '/publicarviaje/Origen': typeof PublicarviajeOrigenIndexRoute
+  '/publicarviaje/Paradas': typeof PublicarviajeParadasIndexRoute
+  '/publicarviaje/asientos-precio': typeof PublicarviajeAsientosPrecioIndexRoute
+  '/publicarviaje/fecha-hora': typeof PublicarviajeFechaHoraIndexRoute
+  '/publicarviaje/punto-recogida': typeof PublicarviajePuntoRecogidaIndexRoute
+  '/publicarviaje/puntos-descenso': typeof PublicarviajePuntosDescensoIndexRoute
+  '/publicarviaje/rutas': typeof PublicarviajeRutasIndexRoute
+  '/publicarviaje/vehiculo-preferencias': typeof PublicarviajeVehiculoPreferenciasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexLazyRoute
@@ -257,11 +308,7 @@ export interface FileRoutesByTo {
   '/Cupos': typeof CuposIndexRoute
   '/CuposReservados': typeof CuposReservadosIndexRoute
   '/DateSelected': typeof DateSelectedIndexRoute
-  '/Destino': typeof DestinoIndexRoute
-  '/DetallesViaje': typeof DetallesViajeIndexRoute
   '/Login': typeof LoginIndexRoute
-  '/Origen': typeof OrigenIndexRoute
-  '/Paradas': typeof ParadasIndexRoute
   '/Perfil': typeof PerfilIndexRoute
   '/RecuperarPasword': typeof RecuperarPaswordIndexRoute
   '/RegistrarVehiculo': typeof RegistrarVehiculoIndexRoute
@@ -276,6 +323,16 @@ export interface FileRoutesByTo {
   '/publicarviaje': typeof PublicarviajeIndexRoute
   '/reservar': typeof ReservarIndexRoute
   '/CuposReservados/ValidarCupo/$bookingId': typeof CuposReservadosValidarCupoBookingIdRoute
+  '/publicarviaje/Destino': typeof PublicarviajeDestinoIndexRoute
+  '/publicarviaje/DetallesViaje': typeof PublicarviajeDetallesViajeIndexRoute
+  '/publicarviaje/Origen': typeof PublicarviajeOrigenIndexRoute
+  '/publicarviaje/Paradas': typeof PublicarviajeParadasIndexRoute
+  '/publicarviaje/asientos-precio': typeof PublicarviajeAsientosPrecioIndexRoute
+  '/publicarviaje/fecha-hora': typeof PublicarviajeFechaHoraIndexRoute
+  '/publicarviaje/punto-recogida': typeof PublicarviajePuntoRecogidaIndexRoute
+  '/publicarviaje/puntos-descenso': typeof PublicarviajePuntosDescensoIndexRoute
+  '/publicarviaje/rutas': typeof PublicarviajeRutasIndexRoute
+  '/publicarviaje/vehiculo-preferencias': typeof PublicarviajeVehiculoPreferenciasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -292,11 +349,7 @@ export interface FileRoutesById {
   '/Cupos/': typeof CuposIndexRoute
   '/CuposReservados/': typeof CuposReservadosIndexRoute
   '/DateSelected/': typeof DateSelectedIndexRoute
-  '/Destino/': typeof DestinoIndexRoute
-  '/DetallesViaje/': typeof DetallesViajeIndexRoute
   '/Login/': typeof LoginIndexRoute
-  '/Origen/': typeof OrigenIndexRoute
-  '/Paradas/': typeof ParadasIndexRoute
   '/Perfil/': typeof PerfilIndexRoute
   '/RecuperarPasword/': typeof RecuperarPaswordIndexRoute
   '/RegistrarVehiculo/': typeof RegistrarVehiculoIndexRoute
@@ -311,6 +364,16 @@ export interface FileRoutesById {
   '/publicarviaje/': typeof PublicarviajeIndexRoute
   '/reservar/': typeof ReservarIndexRoute
   '/CuposReservados/ValidarCupo/$bookingId': typeof CuposReservadosValidarCupoBookingIdRoute
+  '/publicarviaje/Destino/': typeof PublicarviajeDestinoIndexRoute
+  '/publicarviaje/DetallesViaje/': typeof PublicarviajeDetallesViajeIndexRoute
+  '/publicarviaje/Origen/': typeof PublicarviajeOrigenIndexRoute
+  '/publicarviaje/Paradas/': typeof PublicarviajeParadasIndexRoute
+  '/publicarviaje/asientos-precio/': typeof PublicarviajeAsientosPrecioIndexRoute
+  '/publicarviaje/fecha-hora/': typeof PublicarviajeFechaHoraIndexRoute
+  '/publicarviaje/punto-recogida/': typeof PublicarviajePuntoRecogidaIndexRoute
+  '/publicarviaje/puntos-descenso/': typeof PublicarviajePuntosDescensoIndexRoute
+  '/publicarviaje/rutas/': typeof PublicarviajeRutasIndexRoute
+  '/publicarviaje/vehiculo-preferencias/': typeof PublicarviajeVehiculoPreferenciasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -328,11 +391,7 @@ export interface FileRouteTypes {
     | '/Cupos'
     | '/CuposReservados'
     | '/DateSelected'
-    | '/Destino'
-    | '/DetallesViaje'
     | '/Login'
-    | '/Origen'
-    | '/Paradas'
     | '/Perfil'
     | '/RecuperarPasword'
     | '/RegistrarVehiculo'
@@ -347,6 +406,16 @@ export interface FileRouteTypes {
     | '/publicarviaje'
     | '/reservar'
     | '/CuposReservados/ValidarCupo/$bookingId'
+    | '/publicarviaje/Destino'
+    | '/publicarviaje/DetallesViaje'
+    | '/publicarviaje/Origen'
+    | '/publicarviaje/Paradas'
+    | '/publicarviaje/asientos-precio'
+    | '/publicarviaje/fecha-hora'
+    | '/publicarviaje/punto-recogida'
+    | '/publicarviaje/puntos-descenso'
+    | '/publicarviaje/rutas'
+    | '/publicarviaje/vehiculo-preferencias'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -362,11 +431,7 @@ export interface FileRouteTypes {
     | '/Cupos'
     | '/CuposReservados'
     | '/DateSelected'
-    | '/Destino'
-    | '/DetallesViaje'
     | '/Login'
-    | '/Origen'
-    | '/Paradas'
     | '/Perfil'
     | '/RecuperarPasword'
     | '/RegistrarVehiculo'
@@ -381,6 +446,16 @@ export interface FileRouteTypes {
     | '/publicarviaje'
     | '/reservar'
     | '/CuposReservados/ValidarCupo/$bookingId'
+    | '/publicarviaje/Destino'
+    | '/publicarviaje/DetallesViaje'
+    | '/publicarviaje/Origen'
+    | '/publicarviaje/Paradas'
+    | '/publicarviaje/asientos-precio'
+    | '/publicarviaje/fecha-hora'
+    | '/publicarviaje/punto-recogida'
+    | '/publicarviaje/puntos-descenso'
+    | '/publicarviaje/rutas'
+    | '/publicarviaje/vehiculo-preferencias'
   id:
     | '__root__'
     | '/'
@@ -396,11 +471,7 @@ export interface FileRouteTypes {
     | '/Cupos/'
     | '/CuposReservados/'
     | '/DateSelected/'
-    | '/Destino/'
-    | '/DetallesViaje/'
     | '/Login/'
-    | '/Origen/'
-    | '/Paradas/'
     | '/Perfil/'
     | '/RecuperarPasword/'
     | '/RegistrarVehiculo/'
@@ -415,6 +486,16 @@ export interface FileRouteTypes {
     | '/publicarviaje/'
     | '/reservar/'
     | '/CuposReservados/ValidarCupo/$bookingId'
+    | '/publicarviaje/Destino/'
+    | '/publicarviaje/DetallesViaje/'
+    | '/publicarviaje/Origen/'
+    | '/publicarviaje/Paradas/'
+    | '/publicarviaje/asientos-precio/'
+    | '/publicarviaje/fecha-hora/'
+    | '/publicarviaje/punto-recogida/'
+    | '/publicarviaje/puntos-descenso/'
+    | '/publicarviaje/rutas/'
+    | '/publicarviaje/vehiculo-preferencias/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -431,11 +512,7 @@ export interface RootRouteChildren {
   CuposIndexRoute: typeof CuposIndexRoute
   CuposReservadosIndexRoute: typeof CuposReservadosIndexRoute
   DateSelectedIndexRoute: typeof DateSelectedIndexRoute
-  DestinoIndexRoute: typeof DestinoIndexRoute
-  DetallesViajeIndexRoute: typeof DetallesViajeIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
-  OrigenIndexRoute: typeof OrigenIndexRoute
-  ParadasIndexRoute: typeof ParadasIndexRoute
   PerfilIndexRoute: typeof PerfilIndexRoute
   RecuperarPaswordIndexRoute: typeof RecuperarPaswordIndexRoute
   RegistrarVehiculoIndexRoute: typeof RegistrarVehiculoIndexRoute
@@ -450,6 +527,16 @@ export interface RootRouteChildren {
   PublicarviajeIndexRoute: typeof PublicarviajeIndexRoute
   ReservarIndexRoute: typeof ReservarIndexRoute
   CuposReservadosValidarCupoBookingIdRoute: typeof CuposReservadosValidarCupoBookingIdRoute
+  PublicarviajeDestinoIndexRoute: typeof PublicarviajeDestinoIndexRoute
+  PublicarviajeDetallesViajeIndexRoute: typeof PublicarviajeDetallesViajeIndexRoute
+  PublicarviajeOrigenIndexRoute: typeof PublicarviajeOrigenIndexRoute
+  PublicarviajeParadasIndexRoute: typeof PublicarviajeParadasIndexRoute
+  PublicarviajeAsientosPrecioIndexRoute: typeof PublicarviajeAsientosPrecioIndexRoute
+  PublicarviajeFechaHoraIndexRoute: typeof PublicarviajeFechaHoraIndexRoute
+  PublicarviajePuntoRecogidaIndexRoute: typeof PublicarviajePuntoRecogidaIndexRoute
+  PublicarviajePuntosDescensoIndexRoute: typeof PublicarviajePuntosDescensoIndexRoute
+  PublicarviajeRutasIndexRoute: typeof PublicarviajeRutasIndexRoute
+  PublicarviajeVehiculoPreferenciasIndexRoute: typeof PublicarviajeVehiculoPreferenciasIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -552,39 +639,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PerfilIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/Paradas/': {
-      id: '/Paradas/'
-      path: '/Paradas'
-      fullPath: '/Paradas'
-      preLoaderRoute: typeof ParadasIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/Origen/': {
-      id: '/Origen/'
-      path: '/Origen'
-      fullPath: '/Origen'
-      preLoaderRoute: typeof OrigenIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/Login/': {
       id: '/Login/'
       path: '/Login'
       fullPath: '/Login'
       preLoaderRoute: typeof LoginIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/DetallesViaje/': {
-      id: '/DetallesViaje/'
-      path: '/DetallesViaje'
-      fullPath: '/DetallesViaje'
-      preLoaderRoute: typeof DetallesViajeIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/Destino/': {
-      id: '/Destino/'
-      path: '/Destino'
-      fullPath: '/Destino'
-      preLoaderRoute: typeof DestinoIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/DateSelected/': {
@@ -671,6 +730,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ActividadesActividadesPageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/publicarviaje/vehiculo-preferencias/': {
+      id: '/publicarviaje/vehiculo-preferencias/'
+      path: '/publicarviaje/vehiculo-preferencias'
+      fullPath: '/publicarviaje/vehiculo-preferencias'
+      preLoaderRoute: typeof PublicarviajeVehiculoPreferenciasIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicarviaje/rutas/': {
+      id: '/publicarviaje/rutas/'
+      path: '/publicarviaje/rutas'
+      fullPath: '/publicarviaje/rutas'
+      preLoaderRoute: typeof PublicarviajeRutasIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicarviaje/puntos-descenso/': {
+      id: '/publicarviaje/puntos-descenso/'
+      path: '/publicarviaje/puntos-descenso'
+      fullPath: '/publicarviaje/puntos-descenso'
+      preLoaderRoute: typeof PublicarviajePuntosDescensoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicarviaje/punto-recogida/': {
+      id: '/publicarviaje/punto-recogida/'
+      path: '/publicarviaje/punto-recogida'
+      fullPath: '/publicarviaje/punto-recogida'
+      preLoaderRoute: typeof PublicarviajePuntoRecogidaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicarviaje/fecha-hora/': {
+      id: '/publicarviaje/fecha-hora/'
+      path: '/publicarviaje/fecha-hora'
+      fullPath: '/publicarviaje/fecha-hora'
+      preLoaderRoute: typeof PublicarviajeFechaHoraIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicarviaje/asientos-precio/': {
+      id: '/publicarviaje/asientos-precio/'
+      path: '/publicarviaje/asientos-precio'
+      fullPath: '/publicarviaje/asientos-precio'
+      preLoaderRoute: typeof PublicarviajeAsientosPrecioIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicarviaje/Paradas/': {
+      id: '/publicarviaje/Paradas/'
+      path: '/publicarviaje/Paradas'
+      fullPath: '/publicarviaje/Paradas'
+      preLoaderRoute: typeof PublicarviajeParadasIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicarviaje/Origen/': {
+      id: '/publicarviaje/Origen/'
+      path: '/publicarviaje/Origen'
+      fullPath: '/publicarviaje/Origen'
+      preLoaderRoute: typeof PublicarviajeOrigenIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicarviaje/DetallesViaje/': {
+      id: '/publicarviaje/DetallesViaje/'
+      path: '/publicarviaje/DetallesViaje'
+      fullPath: '/publicarviaje/DetallesViaje'
+      preLoaderRoute: typeof PublicarviajeDetallesViajeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicarviaje/Destino/': {
+      id: '/publicarviaje/Destino/'
+      path: '/publicarviaje/Destino'
+      fullPath: '/publicarviaje/Destino'
+      preLoaderRoute: typeof PublicarviajeDestinoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/CuposReservados/ValidarCupo/$bookingId': {
       id: '/CuposReservados/ValidarCupo/$bookingId'
       path: '/CuposReservados/ValidarCupo/$bookingId'
@@ -695,11 +824,7 @@ const rootRouteChildren: RootRouteChildren = {
   CuposIndexRoute: CuposIndexRoute,
   CuposReservadosIndexRoute: CuposReservadosIndexRoute,
   DateSelectedIndexRoute: DateSelectedIndexRoute,
-  DestinoIndexRoute: DestinoIndexRoute,
-  DetallesViajeIndexRoute: DetallesViajeIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
-  OrigenIndexRoute: OrigenIndexRoute,
-  ParadasIndexRoute: ParadasIndexRoute,
   PerfilIndexRoute: PerfilIndexRoute,
   RecuperarPaswordIndexRoute: RecuperarPaswordIndexRoute,
   RegistrarVehiculoIndexRoute: RegistrarVehiculoIndexRoute,
@@ -715,6 +840,17 @@ const rootRouteChildren: RootRouteChildren = {
   ReservarIndexRoute: ReservarIndexRoute,
   CuposReservadosValidarCupoBookingIdRoute:
     CuposReservadosValidarCupoBookingIdRoute,
+  PublicarviajeDestinoIndexRoute: PublicarviajeDestinoIndexRoute,
+  PublicarviajeDetallesViajeIndexRoute: PublicarviajeDetallesViajeIndexRoute,
+  PublicarviajeOrigenIndexRoute: PublicarviajeOrigenIndexRoute,
+  PublicarviajeParadasIndexRoute: PublicarviajeParadasIndexRoute,
+  PublicarviajeAsientosPrecioIndexRoute: PublicarviajeAsientosPrecioIndexRoute,
+  PublicarviajeFechaHoraIndexRoute: PublicarviajeFechaHoraIndexRoute,
+  PublicarviajePuntoRecogidaIndexRoute: PublicarviajePuntoRecogidaIndexRoute,
+  PublicarviajePuntosDescensoIndexRoute: PublicarviajePuntosDescensoIndexRoute,
+  PublicarviajeRutasIndexRoute: PublicarviajeRutasIndexRoute,
+  PublicarviajeVehiculoPreferenciasIndexRoute:
+    PublicarviajeVehiculoPreferenciasIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

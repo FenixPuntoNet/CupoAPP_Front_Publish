@@ -1,9 +1,13 @@
 .container {
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height para móviles */
   background: linear-gradient(135deg, #0a0a0a 0%, #18181b 100%);
   color: #fff;
   position: relative;
   overflow-x: hidden;
+  padding-top: env(safe-area-inset-top); /* Respetar notch */
+  display: flex;
+  flex-direction: column;
 }
 
 :global(.light) .container {
@@ -40,20 +44,19 @@
 .header {
   background: rgba(10, 10, 10, 0.95);
   border-bottom: 1px solid rgba(0, 255, 157, 0.1);
-  position: fixed;
+  position: relative;
   top: 0;
-  left: 0;
   width: 100%;
   z-index: 1000;
   backdrop-filter: blur(10px);
-  padding-top: calc(env(safe-area-inset-top) + 40px);
-  height: calc(60px + env(safe-area-inset-top) + 40px);
+  padding: 1rem 1.25rem 0.75rem 1.25rem;
+  min-height: 65px;
+  max-height: 65px;
   display: flex;
   align-items: center;
   gap: 12px;
   box-sizing: border-box;
-  padding-left: 16px;
-  padding-right: 16px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 600px) {

@@ -18,13 +18,13 @@ import {
     type TripLocation,
     type TripStopover,
     type StopData 
-} from '../../types/PublicarViaje/TripDataManagement';
+} from '../../../types/PublicarViaje/TripDataManagement';
 import { 
     createLocationForStopover, 
     convertTripLocationToLocationData,
     searchLocationsForStopovers,
     savePendingStopover
-} from '../../services/paradas';
+} from '../../../services/paradas';
 import styles from './index.module.css';
 
 // ==================== INTERFACES LOCALES ====================
@@ -476,7 +476,7 @@ function ParadasView() {
                     stopovers: [],
                     currentStep: 'details',
                 });
-                navigate({ to: '/DetallesViaje' });
+                navigate({ to: '/publicarviaje/DetallesViaje' });
                 return;
             }
 
@@ -559,7 +559,7 @@ function ParadasView() {
                 currentStep: 'details',
             });
 
-            navigate({ to: '/DetallesViaje' });
+            navigate({ to: '/publicarviaje/DetallesViaje' });
             
         } catch (error) {
             console.error('❌ Error confirmando paradas:', error);
@@ -578,7 +578,7 @@ function ParadasView() {
             <LoadingOverlay visible={isLoading} />
 
             <div className={styles.header}>
-                <UnstyledButton component={Link} to="/PublicarViaje" className={styles.backButton}>
+                <UnstyledButton component={Link} to="/publicarviaje/rutas" className={styles.backButton}>
                     <ArrowLeft size={24} />
                 </UnstyledButton>
                 <Title className={styles.headerTitle}>Añade ciudades de paso</Title>
@@ -677,7 +677,7 @@ function ParadasView() {
     );
 }
 
-export const Route = createFileRoute('/Paradas/')({
+export const Route = createFileRoute('/publicarviaje/Paradas/')({
     component: ParadasView,
 });
 

@@ -38,7 +38,7 @@ import {
 import type { MantineTheme, } from '@mantine/core';
 import { DateTimePicker, } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
-import { tripStore, type TripData, type TripStopover } from '../../types/PublicarViaje/TripDataManagement';
+import { tripStore, type TripData, type TripStopover } from '../../../types/PublicarViaje/TripDataManagement';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import styles from './index.module.css';
@@ -46,11 +46,11 @@ import { getCurrentUser } from '@/services/auth';
 import { publishTrip } from '@/services/viajes';
 import { getCurrentWallet, checkBalanceForTripPublish } from '@/services/wallet';
 import { getUserVehicles } from '@/services/vehicles';
-import { useAssumptions } from '../../hooks/useAssumptions';
+import { useAssumptions } from '../../../hooks/useAssumptions';
 import { 
     calculateTripPriceViaBackend as calculatePriceViaBackend, 
     type PriceCalculationResult 
-} from '../../services/config';
+} from '../../../services/config';
 
 interface FormattedNumberInputProps extends Omit<NumberInputProps, 'onChange'> {
     onChange: (value: number) => void;
@@ -520,7 +520,7 @@ const DetallesViajeView = () => {
         };
         fetchVehicles();
         if (!storedData.selectedRoute || !storedData.origin || !storedData.destination) {
-            navigate({ to: '/publicarviaje' });
+            navigate({ to: '/publicarviaje/Origen' });
         }
     }, [navigate]);
 
@@ -978,14 +978,13 @@ const DetallesViajeView = () => {
             <LoadingOverlay visible={loading} />
             <div className={styles.header}>
                 <UnstyledButton
-                    onClick={() => navigate({ to: '/publicarviaje' })}
+                    onClick={() => navigate({ to: '/publicarviaje/rutas' })}
                     className={styles.backButton}
                 >
                     <ArrowLeft size={24} />
                 </UnstyledButton>
                 <Title className={styles.headerTitle}>Detalles del viaje</Title>
             </div>
-
             <Container size="sm" className={styles.content}>
                 <Card className={styles.routeCard}>
                     <Stack gap="md">
@@ -1370,10 +1369,10 @@ const DetallesViajeView = () => {
                 />
             </Container>
         </Container>
-    );
+    )
 }
 
-export const Route = createFileRoute('/DetallesViaje/')({
+export const Route = createFileRoute('/publicarviaje/DetallesViaje/')({
     component: DetallesViajeView,
 });
 

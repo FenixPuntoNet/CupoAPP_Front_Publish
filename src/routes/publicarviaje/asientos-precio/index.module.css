@@ -1,0 +1,826 @@
+/* Estilos para la página de asientos y precio - DISEÑO VERDE ELEGANTE */
+.container {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+  color: #fff;
+  position: relative;
+  overflow-x: hidden;
+  padding-top: env(safe-area-inset-top);
+  display: flex;
+  flex-direction: column;
+}
+
+[data-mantine-color-scheme="dark"] .container {
+  background: linear-gradient(135deg, #0a0a0a 0%, #18181b 100%);
+}
+
+/* Header SIMPLE - SOLO BOTÓN DE VOLVER */
+.header {
+  position: relative;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  padding: 1rem 1.25rem 0.75rem 1.25rem;
+  min-height: 65px;
+  max-height: 65px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+[data-mantine-color-scheme="dark"] .header {
+  background: rgba(10, 10, 10, 0.95);
+  border-bottom: 1px solid rgba(0, 255, 157, 0.1);
+}
+
+.backButton {
+  width: 45px;
+  height: 45px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  padding: 0;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+[data-mantine-color-scheme="dark"] .backButton {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Título de la página */
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+/* Mejoras FUERTES para modo claro */
+@media (prefers-color-scheme: light) {
+  .title {
+    color: white !important;
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.8),
+      0 0 8px rgba(0, 0, 0, 0.6),
+      2px 2px 6px rgba(0, 0, 0, 0.7);
+    font-weight: 800;
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
+  }
+}
+
+[data-mantine-color-scheme="dark"] .title {
+  color: #fff !important;
+}
+
+/* Contenido principal */
+.mainContent {
+  flex: 1;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Secciones */
+.section {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-mantine-color-scheme="dark"] .section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.sectionIcon {
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+[data-mantine-color-scheme="dark"] .sectionIcon {
+  color: #10b981;
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 0;
+}
+
+/* Mejoras FUERTES para modo claro */
+@media (prefers-color-scheme: light) {
+  .sectionTitle {
+    color: white !important;
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.9),
+      0 0 6px rgba(0, 0, 0, 0.7),
+      1px 1px 4px rgba(0, 0, 0, 0.8);
+    font-weight: 800;
+    -webkit-text-stroke: 0.3px rgba(0, 0, 0, 0.4);
+  }
+}
+
+[data-mantine-color-scheme="dark"] .sectionTitle {
+  color: #fff !important;
+}
+
+/* Selector de asientos */
+.seatsSelector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.seatsButton {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.seatsButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(1.05);
+}
+
+.seatsButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-mantine-color-scheme="dark"] .seatsButton {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.seatsDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 100px;
+}
+
+.seatsNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Mejoras EXTREMAS para modo claro */
+@media (prefers-color-scheme: light) {
+  .seatsNumber {
+    color: white !important;
+    text-shadow: 
+      0 3px 6px rgba(0, 0, 0, 0.9),
+      0 0 10px rgba(0, 0, 0, 0.8),
+      2px 2px 8px rgba(0, 0, 0, 0.7);
+    font-weight: 900;
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.5);
+  }
+}
+
+[data-mantine-color-scheme="dark"] .seatsNumber {
+  color: #10b981 !important;
+}
+
+.seatsLabel {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-align: center;
+}
+
+[data-mantine-color-scheme="dark"] .seatsLabel {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.seatsHelp {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-align: center;
+  margin: 0;
+}
+
+[data-mantine-color-scheme="dark"] .seatsHelp {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Divider personalizado */
+.divider {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  margin: 0.25rem 0 !important;
+}
+
+[data-mantine-color-scheme="dark"] .divider {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Sección de precio integrada */
+.priceSection {
+  margin-top: 0;
+}
+
+.priceCurrency {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 2;
+  margin-top: -0.5rem;
+}
+
+[data-mantine-color-scheme="dark"] .priceCurrency {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Sección de precio integrada */
+.priceSection {
+  margin-top: 1.5rem;
+}
+
+/* Badge de estado del precio - FUERA de la card, más compacto */
+.priceStatusBadgeContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+.priceStatusCompact {
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+  padding: 0.4rem 0.8rem !important;
+  border-radius: 8px !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+  max-width: none !important;
+}
+
+/* Selector de precio similar a asientos */
+.priceSelector {
+  display: flex;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+.priceButton {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.priceButton:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(1.05);
+}
+
+.priceButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-mantine-color-scheme="dark"] .priceButton {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Display de precio bonito y elegante */
+.priceDisplayBeautiful {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  min-height: 60px;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.priceDisplayBeautiful:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.priceDisplayBeautiful::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.03) 50%, transparent 70%);
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+[data-mantine-color-scheme="dark"] .priceDisplayBeautiful {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.priceDisplayContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* Número del precio grande y bonito */
+.priceNumber {
+  font-size: 2.5rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  transition: all 0.3s ease;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Estados del precio con colores dinámicos más prominentes */
+.priceOptimal {
+  color: #10d164 !important;
+  text-shadow: 0 0 20px rgba(16, 209, 100, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
+  animation: pulse-price 2s ease-in-out infinite;
+}
+
+.priceHigh {
+  color: #ff8c00 !important;
+  text-shadow: 0 0 20px rgba(255, 140, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.priceLow {
+  color: #00bcd4 !important;
+  text-shadow: 0 0 20px rgba(0, 188, 212, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes pulse-price {
+  0%, 100% { 
+    transform: scale(1);
+    text-shadow: 0 0 20px rgba(16, 209, 100, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+  50% { 
+    transform: scale(1.02);
+    text-shadow: 0 0 25px rgba(16, 209, 100, 0.7), 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Meta información del precio */
+.priceMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 0.8;
+}
+
+.priceCurrency {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+}
+
+[data-mantine-color-scheme="dark"] .priceCurrency {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.editIcon {
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+
+.priceDisplayBeautiful:hover .editIcon {
+  color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.1);
+}
+
+/* Input para edición rápida */
+.priceEditInput {
+  width: 100% !important;
+}
+
+:global(.priceEditInput .mantine-NumberInput-input) {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+  border-radius: 12px !important;
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+  padding: 0.5rem !important;
+  text-align: center !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+:global(.priceEditInput .mantine-NumberInput-input:focus) {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2) !important;
+}
+
+/* Información de precio dinámico */
+
+/* Resumen compacto */
+.compactSummary {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 1.25rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0;
+}
+
+[data-mantine-color-scheme="dark"] .compactSummary {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.totalDisplay {
+  flex: 1;
+}
+
+.totalLabel {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8) !important;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+[data-mantine-color-scheme="dark"] .totalLabel {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.totalAmount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+/* Mejoras BRUTALES para modo claro */
+@media (prefers-color-scheme: light) {
+  .totalAmount {
+    color: white !important;
+    text-shadow: 
+      0 3px 6px rgba(0, 0, 0, 0.95),
+      0 0 12px rgba(0, 0, 0, 0.8),
+      2px 2px 8px rgba(0, 0, 0, 0.9);
+    font-weight: 900;
+    -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.6);
+  }
+}
+
+[data-mantine-color-scheme="dark"] .totalAmount {
+  color: #10b981 !important;
+}
+
+.totalBreakdown {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6) !important;
+  margin: 0;
+}
+
+[data-mantine-color-scheme="dark"] .totalBreakdown {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.continueButtonCompact {
+  height: 55px;
+  padding: 0 2rem !important;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border: none !important;
+  border-radius: 15px !important;
+  color: white !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3) !important;
+  flex-shrink: 0;
+}
+
+.continueButtonCompact:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4) !important;
+}
+
+.continueButtonCompact:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+[data-mantine-color-scheme="dark"] .continueButtonCompact {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-mantine-color-scheme="dark"] .continueButtonCompact:hover {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Responsive para grid - ya no necesario */
+
+/* Responsive general */
+@media (max-width: 768px) {
+  .mainContent {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+  
+  .section {
+    padding: 1rem;
+  }
+  
+  .seatsSelector {
+    gap: 1.5rem;
+  }
+  
+  .seatsNumber {
+    font-size: 2rem;
+  }
+  
+  .priceSelector {
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .priceDisplayBeautiful {
+    min-width: 160px;
+    min-height: 80px;
+    padding: 1rem;
+  }
+  
+  .priceNumber {
+    font-size: 2rem;
+  }
+  
+  .priceInfo {
+    padding: 1.5rem;
+    margin-top: 1rem;
+  }
+  
+  .priceStatus {
+    font-size: 0.85rem !important;
+    padding: 0.6rem 1.2rem !important;
+  }
+  
+  .priceInfo {
+    padding: 0.75rem;
+  }
+  
+  .compactSummary {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  
+  .totalAmount {
+    font-size: 1.8rem;
+  }
+  
+  .continueButtonCompact {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .priceSelector {
+    gap: 0.75rem;
+    padding: 1.5rem;
+  }
+  
+  .priceDisplayBeautiful {
+    min-width: 140px;
+    min-height: 70px;
+    padding: 0.75rem;
+  }
+  
+  .priceNumber {
+    font-size: 1.8rem;
+  }
+  
+  .priceInfo {
+    padding: 2rem;
+    margin-top: 1.5rem;
+  }
+  
+  .priceStatus {
+    font-size: 0.8rem !important;
+    padding: 0.5rem 1rem !important;
+    text-align: center !important;
+  }
+  
+  .totalAmount {
+    font-size: 1.6rem;
+  }
+  
+  .compactSummary {
+    padding: 1rem;
+  }
+}
+
+/* Estilos del Modal de Edición de Precio */
+.modalHeader {
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+[data-mantine-color-scheme="dark"] .modalHeader {
+  background: linear-gradient(135deg, #0a0a0a 0%, #18181b 100%);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.modalTitle {
+  color: white !important;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+[data-mantine-color-scheme="dark"] .modalTitle {
+  color: #10b981 !important;
+}
+
+.modalBody {
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 0 0 16px 16px;
+}
+
+[data-mantine-color-scheme="dark"] .modalBody {
+  background: rgba(10, 10, 10, 0.95);
+  color: white;
+}
+
+.modalPriceContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 0;
+}
+
+.modalPriceInput {
+  width: 100% !important;
+  max-width: 300px;
+}
+
+:global(.modalPriceInput .mantine-NumberInput-input) {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 2px solid rgba(16, 185, 129, 0.3) !important;
+  color: #065f46 !important;
+  border-radius: 16px !important;
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  padding: 1.5rem 3rem 1.5rem 3rem !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+}
+
+:global(.modalPriceInput .mantine-NumberInput-input:focus) {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2) !important;
+  transform: scale(1.02) !important;
+}
+
+[data-mantine-color-scheme="dark"] :global(.modalPriceInput .mantine-NumberInput-input) {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 2px solid rgba(16, 185, 129, 0.3) !important;
+  color: #10b981 !important;
+}
+
+.modalCurrency {
+  color: rgba(6, 95, 70, 0.7) !important;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+[data-mantine-color-scheme="dark"] .modalCurrency {
+  color: rgba(16, 185, 129, 0.8) !important;
+}
+
+.modalSuggestion {
+  text-align: center;
+  color: rgba(6, 95, 70, 0.8) !important;
+  font-weight: 500;
+  padding: 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+[data-mantine-color-scheme="dark"] .modalSuggestion {
+  color: rgba(16, 185, 129, 0.9) !important;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.modalCancelButton {
+  color: rgba(107, 114, 128, 1) !important;
+  background: transparent !important;
+  border: 1px solid rgba(107, 114, 128, 0.3) !important;
+  border-radius: 12px !important;
+  padding: 0.75rem 2rem !important;
+  font-weight: 500 !important;
+}
+
+.modalCancelButton:hover {
+  background: rgba(107, 114, 128, 0.1) !important;
+}
+
+.modalSaveButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  color: white !important;
+  padding: 0.75rem 2rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.modalSaveButton:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+.modalSaveButton:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Responsive para modal */
+@media (max-width: 768px) {
+  .modalBody {
+    padding: 1.5rem;
+  }
+  
+  .modalPriceContainer {
+    padding: 1.5rem 0;
+  }
+  
+  :global(.modalPriceInput .mantine-NumberInput-input) {
+    font-size: 1.5rem !important;
+    padding: 1.25rem 2.5rem 1.25rem 2.5rem !important;
+  }
+}

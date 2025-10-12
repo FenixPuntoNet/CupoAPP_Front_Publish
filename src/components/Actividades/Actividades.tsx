@@ -427,7 +427,7 @@ const Actividades: React.FC = () => {
         userProfile?.user_type === 'DRIVER' && (
           <Container className={styles.container}>
             <Text className={styles.noTripsText}>No tienes viajes publicados.</Text>
-            <Button className={styles.publishButton} component="a" href="/publicarviaje">
+            <Button className={styles.publishButton} component="a" href="/publicarviaje/Origen">
               Publica tu primer viaje
             </Button>
           </Container>

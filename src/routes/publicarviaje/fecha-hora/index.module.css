@@ -1,0 +1,684 @@
+/* Estilos para la página de fecha y hora - DISEÑO VERDE ELEGANTE */
+.container {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height para móviles */
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top); /* Respetar notch */
+}
+
+[data-mantine-color-scheme="dark"] .container {
+  background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+  color: #ecfdf5;
+}
+
+/* Header SIMPLE - SOLO BOTÓN DE VOLVER */
+.header {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  flex-shrink: 0;
+}
+
+[data-mantine-color-scheme="dark"] .header {
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-2px);
+}
+
+[data-mantine-color-scheme="dark"] .backButton {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Sección del título SEPARADA COMO LAS OTRAS PÁGINAS */
+.titleSection {
+  padding: 2rem 1rem 1.5rem 1rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+/* FORZAR TODOS LOS TEXTOS EN BLANCO EN MODO CLARO */
+:not([data-mantine-color-scheme="dark"]) .titleSection * {
+  color: white !important;
+}
+
+[data-mantine-color-scheme="dark"] .titleSection {
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.mainTitle {
+  font-size: 2rem !important; /* MÁS GRANDE */
+  font-weight: 700 !important;
+  color: #ffffff !important; /* FORZAR BLANCO ABSOLUTO */
+  margin: 0 0 0.5rem 0 !important;
+  line-height: 1.1 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* FORZAR BLANCO EN MODO CLARO */
+:not([data-mantine-color-scheme="dark"]) .mainTitle {
+  color: #ffffff !important; /* BLANCO ABSOLUTO PARA MODO CLARO */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-mantine-color-scheme="dark"] .mainTitle {
+  color: white !important; /* Blanco para modo oscuro */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.subtitle {
+  font-size: 1rem !important;
+  color: rgba(255, 255, 255, 0.9) !important; /* BLANCO SEMI-TRANSPARENTE PARA CONTRASTE */
+  font-weight: 400 !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* FORZAR BLANCO EN MODO CLARO */
+:not([data-mantine-color-scheme="dark"]) .subtitle {
+  color: rgba(255, 255, 255, 0.9) !important; /* BLANCO SEMI-TRANSPARENTE PARA MODO CLARO */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-mantine-color-scheme="dark"] .subtitle {
+  color: rgba(236, 253, 245, 0.85) !important; /* Verde claro para modo oscuro */
+}
+
+/* Contenido principal */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+/* Tarjeta del selector de fecha y hora con mejor contraste de texto */
+.dateTimeCard {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 253, 245, 0.95) 100%);
+  border: 2px solid rgba(16, 185, 129, 0.2);
+  border-radius: 20px;
+  padding: 2rem;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Forzar textos oscuros en las tarjetas */
+.dateTimeCard .mantine-Text-root {
+  color: #1f2937 !important; /* Negro para máximo contraste */
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+}
+
+.dateTimeCard .mantine-Stack-root .mantine-Text-root {
+  color: #111827 !important; /* Aún más oscuro para los títulos */
+  font-weight: 700 !important;
+}
+
+/* Estilo específico para los títulos de sección */
+.sectionTitle {
+  color: #111827 !important; /* Negro absoluto para máximo contraste */
+  font-weight: 700 !important;
+  font-size: 1.125rem !important;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9) !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Estilo específico para los labels de los sliders */
+.sliderLabel {
+  color: #111827 !important; /* Negro absoluto */
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+}
+
+.dateTimeCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(16, 185, 129, 0.2), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: #10b981;
+}
+
+[data-mantine-color-scheme="dark"] .dateTimeCard {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(236, 253, 245, 0.88) 100%);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.iconSection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+.calendarIcon {
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+[data-mantine-color-scheme="dark"] .iconSection {
+  background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+}
+
+.pickerSection {
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Estilos del DatePicker y TimeInput */
+.datePicker {
+  width: 100%;
+}
+
+.timeInput {
+  width: 100%;
+  max-width: 200px;
+}
+
+/* Global styles para el DatePicker - NÚMEROS OSCUROS Y VISIBLES */
+:global(.mantine-DatePicker-input) {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(16, 185, 129, 0.3) !important;
+  border-radius: 12px !important;
+  color: #1f2937 !important;
+  font-size: 1.1rem !important;
+  font-weight: 500 !important;
+  padding: 0.75rem 1rem !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+}
+
+:global(.mantine-DatePicker-input:focus) {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Calendario - Números oscuros y bien visibles con mejor contraste */
+:global(.mantine-DatePicker-calendar) {
+  background: white !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important; /* Sombra más fuerte */
+  border: 2px solid #10b981 !important; /* Borde más fuerte */
+}
+
+/* FORZAR ESTILOS EN TODO EL ENCABEZADO DEL CALENDARIO */
+:global(.mantine-DatePicker-calendarHeader) {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 12px !important;
+  margin-bottom: 0.5rem !important;
+}
+
+:global(.mantine-DatePicker-calendarHeader *) {
+  color: #111827 !important; /* Negro absoluto para TODO en el encabezado */
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.9) !important;
+}
+
+:global(.mantine-DatePicker-day) {
+  color: #111827 !important; /* NEGRO MÁS OSCURO PARA LOS NÚMEROS */
+  font-weight: 600 !important; /* Más peso para mejor contraste */
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+:global(.mantine-DatePicker-day:hover) {
+  background: rgba(16, 185, 129, 0.15) !important; /* Fondo más visible al hover */
+  color: #065f46 !important;
+  font-weight: 700 !important;
+}
+
+:global(.mantine-DatePicker-day[data-selected]) {
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%) !important;
+  color: white !important;
+  font-weight: 700 !important; /* Más peso para el día seleccionado */
+}
+
+:global(.mantine-DatePicker-day[data-today]) {
+  background: rgba(16, 185, 129, 0.25) !important; /* Fondo más fuerte para hoy */
+  color: #065f46 !important;
+  font-weight: 700 !important;
+  border: 2px solid #10b981 !important; /* Borde para destacar más */
+}
+
+:global(.mantine-DatePicker-day[data-weekend]) {
+  color: #dc2626 !important; /* Rojo más fuerte para fines de semana */
+  font-weight: 600 !important;
+}
+
+:global(.mantine-DatePicker-day[data-outside]) {
+  color: #6b7280 !important; /* Gris más visible para días fuera del mes */
+  font-weight: 400 !important;
+}
+
+:global(.mantine-DatePicker-monthsListCell),
+:global(.mantine-DatePicker-yearsListCell) {
+  color: #1f2937 !important;
+}
+
+:global(.mantine-DatePicker-monthsListCell:hover),
+:global(.mantine-DatePicker-yearsListCell:hover) {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #065f46 !important;
+}
+
+:global(.mantine-DatePicker-monthsListCell[data-selected]),
+:global(.mantine-DatePicker-yearsListCell[data-selected]) {
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%) !important;
+  color: white !important;
+}
+
+/* Encabezados del calendario con mejor contraste */
+:global(.mantine-DatePicker-weekday) {
+  color: #111827 !important; /* Negro más oscuro para los días de la semana */
+  font-weight: 700 !important; /* Más peso para mejor contraste */
+  font-size: 0.875rem !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ARREGLAR ESPECÍFICAMENTE EL TÍTULO DEL MES Y AÑO */
+:global(.mantine-DatePicker-monthLevelLabel),
+:global(.mantine-DatePicker-yearLevelLabel) {
+  color: #111827 !important; /* Negro más oscuro */
+  font-weight: 800 !important; /* Extra bold para máximo contraste */
+  font-size: 1.1rem !important; /* Ligeramente más grande */
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.9) !important; /* Sombra más fuerte */
+}
+
+/* ARREGLAR EL BOTÓN QUE CONTIENE EL TÍTULO DEL MES */
+:global(.mantine-DatePicker-calendarHeaderLevel) {
+  color: #111827 !important; /* Negro absoluto */
+  font-weight: 800 !important; /* Extra bold */
+  font-size: 1.1rem !important;
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.1) !important; /* Fondo ligero para destacar */
+  border-radius: 8px !important;
+}
+
+:global(.mantine-DatePicker-calendarHeaderLevel:hover) {
+  color: #065f46 !important; /* Verde oscuro al hover */
+  background: rgba(255, 255, 255, 0.2) !important;
+  font-weight: 800 !important;
+}
+
+/* Botones de navegación del calendario con mejor contraste */
+:global(.mantine-DatePicker-calendarHeaderControl) {
+  color: #111827 !important; /* Negro más oscuro */
+  border: 2px solid #10b981 !important; /* Borde más fuerte */
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+:global(.mantine-DatePicker-calendarHeaderControl:hover) {
+  background: rgba(16, 185, 129, 0.15) !important; /* Fondo más visible */
+  color: #065f46 !important;
+  font-weight: 700 !important;
+}
+
+/* Time Display - Gran reloj digital con mejor contraste */
+.timeDisplay {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #065f46; /* Verde más oscuro para mejor contraste */
+  text-align: center;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.95); /* Fondo más opaco */
+  border: 3px solid #10b981;
+  border-radius: 16px;
+  letter-spacing: 0.1em;
+  font-family: 'Courier New', monospace;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  min-width: 200px;
+}
+
+/* Sección de slider de tiempo con mejor contraste */
+.timeSliderSection {
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+}
+
+/* Mejorar contraste de los labels de los sliders */
+.timeSliderSection .mantine-Text-root {
+  color: #1f2937 !important; /* Negro para mejor contraste */
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8) !important; /* Sombra blanca para resaltar */
+}
+
+/* Sliders de tiempo */
+.timeSlider {
+  width: 100%;
+  height: 8px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.2);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.timeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  transition: all 0.2s ease;
+}
+
+.timeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+}
+
+.timeSlider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.timeSlider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+}
+
+/* Etiquetas del slider con mejor contraste */
+.sliderLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #374151; /* Gris más oscuro para mejor legibilidad */
+  font-weight: 600; /* Más peso para mayor contraste */
+}
+
+/* Botones de acción para el selector de tiempo con mejor contraste */
+.timeActions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 1rem;
+}
+
+.backToDateButton {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.95); /* Fondo más opaco */
+  border: 2px solid #6b7280; /* Borde más oscuro */
+  border-radius: 12px;
+  color: #1f2937; /* Texto más oscuro */
+  font-size: 0.9rem;
+  font-weight: 700; /* Más peso para mejor contraste */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8); /* Sombra para resaltar */
+}
+
+.backToDateButton:hover {
+  background: rgba(243, 244, 246, 0.95); /* Fondo gris claro al hover */
+  border-color: #374151;
+  color: #111827; /* Aún más oscuro al hover */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.confirmTimeButton {
+  flex: 2;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.confirmTimeButton:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+/* Grid de botones de hora (mantener para compatibilidad) */
+.timeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.timeButton {
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.timeButton:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+  color: #065f46;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.timeButtonSelected {
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%) !important;
+  border-color: #065f46 !important;
+  color: white !important;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3) !important;
+}
+
+.timeButtonSelected:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+.timeButtonSelected:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Tarjeta de preview con mejor contraste */
+.previewCard {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.3); /* Borde más fuerte */
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(15px);
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+[data-mantine-color-scheme="dark"] .previewCard {
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.clockIcon {
+  color: white; /* Blanco puro para mejor contraste */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); /* Sombra más fuerte */
+}
+
+.previewTitle {
+  color: white !important; /* Blanco puro */
+  font-weight: 700 !important; /* Más peso */
+  font-size: 1rem !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important; /* Sombra más fuerte */
+}
+
+.previewDate {
+  color: white !important; /* Blanco puro */
+  font-size: 1.25rem !important;
+  font-weight: 700 !important; /* Más peso */
+  margin-bottom: 0.5rem !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7) !important; /* Sombra más fuerte */
+}
+
+.previewTime {
+  color: white !important; /* Blanco puro */
+  font-size: 1.1rem !important;
+  font-weight: 600 !important; /* Más peso */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important; /* Sombra más fuerte */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .content {
+    padding: 1.5rem 1rem;
+    gap: 1rem;
+  }
+  
+  .dateTimeCard {
+    padding: 1.5rem;
+  }
+  
+  .iconSection {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .calendarIcon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .mainTitle {
+    font-size: 1.75rem !important;
+  }
+  
+  .timeDisplay {
+    font-size: 2.5rem;
+    padding: 0.75rem 1.5rem;
+    min-width: 180px;
+  }
+  
+  .timeActions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .timeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 1rem 0.75rem;
+  }
+  
+  .dateTimeCard {
+    padding: 1rem;
+  }
+  
+  .iconSection {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .calendarIcon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .mainTitle {
+    font-size: 1.5rem !important;
+  }
+  
+  .previewCard {
+    padding: 1rem;
+  }
+  
+  .timeDisplay {
+    font-size: 2rem;
+    padding: 0.5rem 1rem;
+    min-width: 150px;
+  }
+  
+  .timeSliderSection {
+    max-width: 250px;
+  }
+  
+  .timeGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .timeButton {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}
