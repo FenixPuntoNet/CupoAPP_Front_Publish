@@ -31,15 +31,34 @@ function AsientosPrecioView() {
 
   // Carga inicial y cálculo de precio sugerido
   useEffect(() => {
-    const storedData = tripStore.getStoredData();
-    setTripData(storedData);
-    
-    if (!storedData.selectedRoute || !storedData.origin || !storedData.destination) {
-      navigate({ to: '/publicarviaje/Origen' });
-      return;
-    }
-    
-    calculateSuggestedPrice();
+    // 🔄 Pequeño delay para asegurar que el tripStore esté actualizado
+    const timeoutId = setTimeout(() => {
+      const storedData = tripStore.getStoredData();
+      setTripData(storedData);
+      
+      // 🔍 DEBUG: Mostrar qué datos están disponibles
+      console.log('🔍 [ASIENTOS-PRECIO] Datos del tripStore:', storedData);
+      console.log('🔍 [ASIENTOS-PRECIO] selectedRoute:', storedData.selectedRoute);
+      console.log('🔍 [ASIENTOS-PRECIO] origin:', storedData.origin);
+      console.log('🔍 [ASIENTOS-PRECIO] destination:', storedData.destination);
+      console.log('🔍 [ASIENTOS-PRECIO] dateTime:', storedData.dateTime);
+      
+      // ✅ VALIDACIÓN MÁS RELAJADA: Solo verificar que tengamos los datos esenciales para calcular el precio
+      if (!storedData.selectedRoute?.distance) {
+        console.log('❌ [ASIENTOS-PRECIO] No hay ruta seleccionada o distancia, redirigiendo a rutas');
+        console.log('❌ [ASIENTOS-PRECIO] selectedRoute disponible:', !!storedData.selectedRoute);
+        console.log('❌ [ASIENTOS-PRECIO] distance disponible:', storedData.selectedRoute?.distance);
+        
+        // 🔍 CAMBIO: Redirigir a rutas en lugar de Origen para mantener el flujo
+        navigate({ to: '/publicarviaje/rutas' });
+        return;
+      }
+      
+      console.log('✅ [ASIENTOS-PRECIO] Validación pasada, continuando con cálculo de precio...');
+      calculateSuggestedPrice();
+    }, 100); // 100ms delay para asegurar que el localStorage esté actualizado
+
+    return () => clearTimeout(timeoutId);
   }, [navigate]);
 
   // useEffect para cargar porcentajes de configuración
@@ -171,13 +190,30 @@ function AsientosPrecioView() {
       return;
     }
 
+    // 🔍 DEBUG: Verificar datos antes de guardar en asientos-precio
+    console.log('🔍 [ASIENTOS-PRECIO] Datos actuales del tripStore ANTES de guardar:', tripData);
+    console.log('🔍 [ASIENTOS-PRECIO] ¿Tiene origin antes de continuar?:', !!tripData.origin);
+    console.log('🔍 [ASIENTOS-PRECIO] ¿Tiene destination antes de continuar?:', !!tripData.destination);
+
     // Guardar en tripStore para siguiente página
     const updatedData = {
+      ...tripData, // 🔧 Preservar todos los datos anteriores
       seats,
       pricePerSeat,
       suggestedPrice
     };
+    
+    console.log('🔍 [ASIENTOS-PRECIO] Datos a guardar:', updatedData);
+    console.log('🔍 [ASIENTOS-PRECIO] Origin en datos a guardar:', !!updatedData.origin);
+    console.log('🔍 [ASIENTOS-PRECIO] Destination en datos a guardar:', !!updatedData.destination);
+    
     tripStore.updateData(updatedData);
+
+    // 🔍 DEBUG: Verificar datos después de guardar
+    const finalData = tripStore.getStoredData();
+    console.log('🔍 [ASIENTOS-PRECIO] Datos del tripStore DESPUÉS de guardar:', finalData);
+    console.log('🔍 [ASIENTOS-PRECIO] Origin preservado:', !!finalData.origin);
+    console.log('🔍 [ASIENTOS-PRECIO] Destination preservado:', !!finalData.destination);
 
     notifications.show({
       title: '¡Configuración guardada!',
@@ -186,6 +222,7 @@ function AsientosPrecioView() {
     });
 
     // Navegar al módulo de vehículo y preferencias
+    console.log('🚀 [ASIENTOS-PRECIO] Navegando a vehiculo-preferencias...');
     navigate({
       to: '/publicarviaje/vehiculo-preferencias',
     });

@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect, useMemo } from 'react';
-import { Button, Text, Modal, Stack, Badge, Group } from '@mantine/core';
+import { Button, Text, Modal, Stack, Group } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { ChevronLeft, CheckCircle, AlertCircle, Users, DollarSign, Car, MapPin, Calendar, Settings, Shield } from 'lucide-react';
+import { ChevronLeft, CheckCircle, AlertCircle, Users, DollarSign, Car, MapPin, Calendar } from 'lucide-react';
 import dayjs from 'dayjs';
 
 // Importar servicios y tipos completos
@@ -11,6 +11,8 @@ import { publishTrip, PublishTripRequest } from '@/services/viajes';
 import { checkBalanceForTripPublish } from '@/services/wallet';
 import { getCurrentUser } from '@/services/auth';
 import { getAssumptions, type Assumptions } from '@/services/config';
+import { createTripPreferences } from '@/services/tripPreferences';
+import { getMyVehicle, Vehicle } from '@/services/vehicles';
 
 import styles from './index.module.css';
 
@@ -25,6 +27,7 @@ function ResumenConfirmacionView() {
   const [requiredAmount, setRequiredAmount] = useState<number>(0);
   const [currentBalance, setCurrentBalance] = useState<number>(0);
   const [assumptions, setAssumptions] = useState<Assumptions | null>(null);
+  const [vehicleData, setVehicleData] = useState<Vehicle | null>(null);
 
   // Cálculo de garantía requerida
   const requiredGuarantee = useMemo(() => {
@@ -55,11 +58,14 @@ function ResumenConfirmacionView() {
   // Verificar datos al cargar y obtener assumptions
   useEffect(() => {
     const storedData = tripStore.getStoredData();
+    console.log('📋 [RESUMEN] Datos cargados del store:', storedData);
+    console.log('📅 [RESUMEN] DateTime específico:', storedData.dateTime, 'Tipo:', typeof storedData.dateTime);
     setTripData(storedData);
     
     // Verificar que tenemos todos los datos necesarios
     const extendedData = storedData as any;
     if (!storedData.selectedRoute || !storedData.seats || !storedData.pricePerSeat || !extendedData.vehicle) {
+      console.warn('⚠️ [RESUMEN] Datos incompletos, redirigiendo a vehiculo-preferencias');
       navigate({ to: '/publicarviaje/vehiculo-preferencias' });
       return;
     }
@@ -74,6 +80,19 @@ function ResumenConfirmacionView() {
       }
     };
     loadAssumptions();
+
+    // Cargar datos del vehículo para mostrar la placa
+    const loadVehicleData = async () => {
+      try {
+        const vehicleResponse = await getMyVehicle();
+        if (vehicleResponse.success && vehicleResponse.vehicle) {
+          setVehicleData(vehicleResponse.vehicle);
+        }
+      } catch (error) {
+        console.error('Error loading vehicle data:', error);
+      }
+    };
+    loadVehicleData();
   }, [navigate]);
 
   const handlePublishTrip = async () => {
@@ -230,6 +249,34 @@ function ResumenConfirmacionView() {
 
       console.log('✅ Viaje publicado exitosamente:', result.data);
 
+      // 🎯 NUEVO: Enviar preferencias del viaje al backend
+      const preferences = extendedData.preferences || [];
+      const tripId = result.data?.trip_id;
+      
+      if (preferences.length > 0 && tripId) {
+        console.log('🎯 [PREFERENCES] Enviando preferencias al backend...');
+        console.log('🎯 [PREFERENCES] Trip ID:', tripId);
+        console.log('🎯 [PREFERENCES] Preferencias:', preferences);
+        
+        try {
+          const preferencesResult = await createTripPreferences(tripId, preferences);
+          
+          if (preferencesResult.success) {
+            console.log('✅ [PREFERENCES] Preferencias guardadas exitosamente:', preferencesResult.data);
+          } else {
+            console.warn('⚠️ [PREFERENCES] Error guardando preferencias:', preferencesResult.error);
+            // No fallar la publicación por las preferencias, solo advertir
+          }
+        } catch (preferencesError) {
+          console.warn('⚠️ [PREFERENCES] Exception guardando preferencias:', preferencesError);
+          // No fallar la publicación por las preferencias
+        }
+      } else {
+        console.log('🎯 [PREFERENCES] No hay preferencias para enviar o falta trip_id');
+        console.log('🎯 [PREFERENCES] Preferences count:', preferences.length);
+        console.log('🎯 [PREFERENCES] Trip ID available:', !!tripId);
+      }
+
       // Mostrar notificación de éxito
       notifications.show({
         title: '✅ Viaje publicado exitosamente',
@@ -240,11 +287,7 @@ function ResumenConfirmacionView() {
 
       setShowSuccessModal(true);
 
-      // Limpiar store y navegar después de un momento
-      setTimeout(() => {
-        tripStore.clearData();
-        navigate({ to: '/Actividades' });
-      }, 3000);
+      // NO limpiar automáticamente - el usuario debe cerrar el modal manualmente
 
     } catch (error) {
       console.error('❌ Error publishing trip:', error);
@@ -274,7 +317,12 @@ function ResumenConfirmacionView() {
     }
   };
 
-  const extendedData = tripData as any;
+  // Función para manejar el cierre del modal de éxito
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    tripStore.clearData();
+    navigate({ to: '/Actividades' }); // Navegar a actividades
+  };
 
   // Formatear fecha y hora
   const formatDateTime = (dateTime: string | null | undefined) => {
@@ -380,42 +428,15 @@ function ResumenConfirmacionView() {
             <Car className={styles.compactIcon} size={18} />
             <div>
               <Text className={styles.compactLabel}>Vehículo</Text>
-              <Text className={styles.compactValue}>ID {extendedData.vehicle}</Text>
-              <Text className={styles.compactSubvalue}>registrado</Text>
+              <Text className={styles.compactValue}>
+                {vehicleData?.plate || 'Cargando...'}
+              </Text>
+              <Text className={styles.compactSubvalue}>
+                {vehicleData ? `${vehicleData.brand} ${vehicleData.model}` : 'registrado'}
+              </Text>
             </div>
           </div>
         </div>
-
-        {/* Información Adicional y Preferencias en una sola fila */}
-        {(extendedData.additionalInfo || (extendedData.preferences && extendedData.preferences.length > 0)) && (
-          <div className={styles.extraInfoRow}>
-            {extendedData.additionalInfo && (
-              <div className={styles.infoCardCompact}>
-                <Settings className={styles.infoIcon} size={16} />
-                <div>
-                  <Text className={styles.infoTitle}>Info adicional</Text>
-                  <Text className={styles.infoText}>{extendedData.additionalInfo}</Text>
-                </div>
-              </div>
-            )}
-            
-            {extendedData.preferences && extendedData.preferences.length > 0 && (
-              <div className={styles.preferencesCardCompact}>
-                <Shield className={styles.preferencesIcon} size={16} />
-                <div>
-                  <Text className={styles.preferencesTitle}>Preferencias</Text>
-                  <div className={styles.preferencesListCompact}>
-                    {extendedData.preferences.map((preference: string) => (
-                      <Badge key={preference} className={styles.preferenceBadgeCompact}>
-                        {preference.replace('_', ' ')}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Resumen Financiero Mejorado */}
         <div className={styles.financialSummary}>
@@ -470,30 +491,50 @@ function ResumenConfirmacionView() {
       <Modal
         opened={showInsufficientBalanceModal}
         onClose={() => setShowInsufficientBalanceModal(false)}
-        title="Saldo insuficiente"
+        title=""
         centered
         size="md"
-        classNames={{
-          header: styles.modalHeader,
-          title: styles.modalTitle,
-          body: styles.modalBody
+        styles={{
+          header: {
+            background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)',
+            borderRadius: '16px 16px 0 0',
+            padding: '1.5rem',
+            border: 'none'
+          },
+          body: {
+            background: 'var(--card-bg)',
+            borderRadius: '0 0 16px 16px',
+            padding: '2rem'
+          },
+          content: {
+            borderRadius: '16px',
+            overflow: 'hidden'
+          }
         }}
       >
         <Stack align="center" gap="md">
-          <div style={{ 
-            background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
-            borderRadius: '50%',
-            padding: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <AlertCircle size={32} color="white" />
+          {/* Título e icono personalizados */}
+          <div style={{ textAlign: 'center', marginTop: '-1rem' }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+              borderRadius: '50%',
+              padding: '1rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}>
+              <AlertCircle size={32} color="white" />
+            </div>
+            
+            <Text size="xl" fw={700} mb="xs" style={{ color: '#ffffff' }}>
+              Saldo insuficiente
+            </Text>
+            
+            <Text size="lg" fw={500} mb="lg" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+              No tienes saldo suficiente para publicar este viaje
+            </Text>
           </div>
-          
-          <Text style={{ textAlign: 'center', fontSize: '1.1rem', fontWeight: 600 }}>
-            No tienes saldo suficiente para publicar este viaje
-          </Text>
           
           <div style={{ 
             background: 'rgba(255, 255, 255, 0.05)',
@@ -529,44 +570,187 @@ function ResumenConfirmacionView() {
             La garantía se congela al publicar el viaje y se libera al completarlo exitosamente
           </Text>
           
-          <Button
-            style={{
-              background: 'linear-gradient(135deg, #00ff9d 0%, #00e88d 100%)',
-              border: 'none',
-              color: '#0a0a0a',
-              fontWeight: 700,
-              width: '100%'
-            }}
-            onClick={() => window.location.href = 'https://www.cupo.lat/login'}
-          >
-            Recargar billetera
-          </Button>
+          {/* Botones lado a lado */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '0.75rem', 
+            width: '100%',
+            marginTop: '1rem'
+          }}>
+            <Button
+              flex={1}
+              size="md"
+              variant="outline"
+              style={{
+                borderColor: '#00ff9d',
+                color: '#00ff9d',
+                fontWeight: 600,
+                height: '48px'
+              }}
+              onClick={() => {
+                setShowInsufficientBalanceModal(false);
+                navigate({ to: '/Cupones' });
+              }}
+            >
+              🎁 Cupón
+            </Button>
+            
+            <Button
+              flex={1}
+              size="md"
+              style={{
+                background: 'linear-gradient(135deg, #00ff9d 0%, #00e88d 100%)',
+                color: '#0a0a0a',
+                fontWeight: 700,
+                height: '48px'
+              }}
+              onClick={() => {
+                setShowInsufficientBalanceModal(false);
+                window.open('https://www.cupo.lat/login', '_blank');
+              }}
+            >
+              💳 Recargar
+            </Button>
+          </div>
         </Stack>
       </Modal>
 
-      {/* Modal de éxito */}
+      {/* Modal de éxito mejorado */}
       <Modal
         opened={showSuccessModal}
-        onClose={() => {}}
-        title="¡Viaje publicado exitosamente!"
+        onClose={handleSuccessModalClose}
+        title="🎉 ¡Viaje publicado exitosamente!"
         centered
-        withCloseButton={false}
-        classNames={{
-          header: styles.modalHeader,
-          title: styles.modalTitle,
-          body: styles.modalBody
+        size="md"
+        styles={{
+          header: {
+            background: 'linear-gradient(135deg, #00ff9d 0%, #00e88d 100%)',
+            borderRadius: '16px 16px 0 0',
+            padding: '1rem',
+            border: 'none'
+          },
+          title: {
+            color: '#0a0a0a',
+            fontWeight: 800,
+            fontSize: '1.1rem',
+            margin: 0
+          },
+          body: {
+            background: 'var(--card-bg)',
+            borderRadius: '0 0 16px 16px',
+            padding: '1.5rem'
+          },
+          content: {
+            borderRadius: '16px',
+            overflow: 'hidden'
+          }
         }}
       >
         <Stack align="center" gap="md">
-          <div className={styles.successIcon}>
-            <CheckCircle size={48} />
+          {/* Icono de éxito */}
+          <div style={{
+            background: 'linear-gradient(135deg, #00ff9d 0%, #00e88d 100%)',
+            borderRadius: '50%',
+            padding: '1rem',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <CheckCircle size={32} color="#0a0a0a" />
           </div>
-          <Text className={styles.modalText}>
-            Tu viaje ya está disponible para reservas
+
+          {/* Mensaje principal */}
+          <Text size="lg" fw={700} style={{ color: '#ffffff', textAlign: 'center' }}>
+            Tu viaje está activo y disponible
           </Text>
-          <Text size="sm" className={styles.modalSubtext}>
-            Serás redirigido a la página principal en unos segundos
-          </Text>
+
+          {/* Información de cobro - clara sobre los dos tipos */}
+          <div style={{
+            background: 'rgba(0, 255, 157, 0.1)',
+            border: '1px solid rgba(0, 255, 157, 0.3)',
+            borderRadius: '8px',
+            padding: '1rem',
+            width: '100%'
+          }}>
+            <Text size="sm" fw={700} mb="sm" style={{ color: '#00ff9d', textAlign: 'center' }}>
+              💰 ¿Qué dinero se maneja?
+            </Text>
+            
+            <Stack gap="sm">
+              {/* Lo que congelamos nosotros */}
+              <div style={{
+                background: 'rgba(255, 107, 107, 0.1)',
+                borderRadius: '6px',
+                padding: '0.5rem'
+              }}>
+                <Text size="xs" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                  🏦 <strong style={{ color: '#ff6b6b' }}>CUPO congela de tu saldo:</strong> ${requiredGuarantee.toLocaleString()} (garantía)
+                </Text>
+              </div>
+              
+              {/* Lo que cobra el conductor */}
+              <div style={{
+                background: 'rgba(0, 255, 157, 0.1)',
+                borderRadius: '6px',
+                padding: '0.5rem'
+              }}>
+                <Text size="xs" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                  💵 <strong style={{ color: '#00ff9d' }}>TÚ cobras a pasajeros:</strong> ${tripData.pricePerSeat?.toLocaleString()} c/u (directo)
+                </Text>
+              </div>
+              
+              <Text size="xs" style={{ color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center' }}>
+                💡 La garantía se libera al completar el viaje
+              </Text>
+            </Stack>
+          </div>
+
+          {/* Resumen compacto */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '8px',
+            padding: '0.75rem',
+            width: '100%'
+          }}>
+            <Group justify="space-between" mb="xs">
+              <Text size="xs" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Ruta:</Text>
+              <Text size="xs" fw={500} style={{ color: '#ffffff' }}>
+                {tripData.origin?.mainText} → {tripData.destination?.mainText}
+              </Text>
+            </Group>
+            
+            <Group justify="space-between" mb="xs">
+              <Text size="xs" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Fecha:</Text>
+              <Text size="xs" fw={500} style={{ color: '#ffffff' }}>
+                {date} - {time}
+              </Text>
+            </Group>
+            
+            <Group justify="space-between">
+              <Text size="xs" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                {tripData.seats} cupos × ${tripData.pricePerSeat?.toLocaleString()}:
+              </Text>
+              <Text size="xs" fw={600} style={{ color: '#00ff9d' }}>
+                ${totalEarnings.toLocaleString()}
+              </Text>
+            </Group>
+          </div>
+
+          {/* Botón para cerrar */}
+          <Button
+            size="sm"
+            style={{
+              background: 'linear-gradient(135deg, #00ff9d 0%, #00e88d 100%)',
+              color: '#0a0a0a',
+              fontWeight: 700,
+              width: '100%',
+              height: '40px'
+            }}
+            onClick={handleSuccessModalClose}
+          >
+            Entendido, ir al inicio
+          </Button>
         </Stack>
       </Modal>
     </div>

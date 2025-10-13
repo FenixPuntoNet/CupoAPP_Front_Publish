@@ -8,6 +8,7 @@ import { notifications } from '@mantine/notifications';
 import {
   type TripRoute,
   tripStore,
+  type TripLocation,
 } from '@/types/PublicarViaje/TripDataManagement';
 import styles from './index.module.css';
 
@@ -190,6 +191,48 @@ function RutasView() {
     }
   }, [isLoaded]);
 
+  // 🔧 NUEVO: Guardar origen y destino en tripStore cuando llegamos con search params
+  useEffect(() => {
+    if (selectedAddress && selectedDestination) {
+      console.log('🔍 [RUTAS] Guardando origen y destino en tripStore...');
+      console.log('🔍 [RUTAS] Origen:', selectedAddress);
+      console.log('🔍 [RUTAS] Destino:', selectedDestination);
+      
+      // Crear objetos TripLocation para origen y destino
+      const originLocation: TripLocation = {
+        location_id: 0,
+        placeId: `origin-${Date.now()}`, // ID temporal
+        address: selectedAddress,
+        coords: { lat: 0, lng: 0 }, // Coordenadas temporales
+        mainText: selectedAddress.split(',')[0] || selectedAddress,
+        secondaryText: selectedAddress.substring(selectedAddress.indexOf(',') + 1).trim() || '',
+        postalCode: undefined
+      };
+
+      const destinationLocation: TripLocation = {
+        location_id: 0,
+        placeId: `destination-${Date.now()}`, // ID temporal
+        address: selectedDestination,
+        coords: { lat: 0, lng: 0 }, // Coordenadas temporales
+        mainText: selectedDestination.split(',')[0] || selectedDestination,
+        secondaryText: selectedDestination.substring(selectedDestination.indexOf(',') + 1).trim() || '',
+        postalCode: undefined
+      };
+
+      // Guardar en tripStore usando las funciones existentes
+      tripStore.setOrigin(originLocation);
+      tripStore.setDestination(destinationLocation);
+      
+      console.log('✅ [RUTAS] Origen y destino guardados en tripStore');
+      
+      // Verificar que se guardaron correctamente
+      const updatedData = tripStore.getStoredData();
+      console.log('🔍 [RUTAS] Datos después de guardar origen/destino:', updatedData);
+      console.log('🔍 [RUTAS] Origin guardado:', !!updatedData.origin);
+      console.log('🔍 [RUTAS] Destination guardado:', !!updatedData.destination);
+    }
+  }, [selectedAddress, selectedDestination]);
+
   // Calcular rutas al cargar la página
   useEffect(() => {
     if (directionsService && selectedAddress && selectedDestination) {
@@ -256,8 +299,18 @@ function RutasView() {
     const selectedRoute = routes[selectedRouteIndex];
     
     try {
+      // 🔍 DEBUG: Verificar datos antes de guardar
+      const currentData = tripStore.getStoredData();
+      console.log('🔍 [RUTAS] Datos actuales del tripStore ANTES de guardar ruta:', currentData);
+      console.log('🔍 [RUTAS] Ruta seleccionada para guardar:', selectedRoute);
+      
       // Guardar la ruta seleccionada en el store
       tripStore.setRoutes([selectedRoute], selectedRoute);
+      
+      // 🔍 DEBUG: Verificar datos después de guardar
+      const updatedData = tripStore.getStoredData();
+      console.log('🔍 [RUTAS] Datos del tripStore DESPUÉS de guardar ruta:', updatedData);
+      console.log('🔍 [RUTAS] selectedRoute guardada:', updatedData.selectedRoute);
       
       notifications.show({
         title: '¡Ruta confirmada!',
@@ -266,6 +319,7 @@ function RutasView() {
       });
 
       // Navegar a la página de fecha y hora
+      console.log('🚀 [RUTAS] Navegando a fecha-hora...');
       navigate({
         to: '/publicarviaje/fecha-hora',
       });

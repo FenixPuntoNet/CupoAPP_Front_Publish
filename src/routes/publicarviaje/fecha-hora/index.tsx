@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { DatePicker } from '@mantine/dates';
 import { Text, Stack } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { tripStore } from '../../../types/PublicarViaje/TripDataManagement';
 import styles from './index.module.css';
 
 function FechaHoraView() {
@@ -41,6 +42,29 @@ function FechaHoraView() {
       return;
     }
 
+    // ✅ GUARDAR EN TRIPSTORE ANTES DE NAVEGAR - PRESERVANDO DATOS EXISTENTES
+    console.log('💾 [FECHA-HORA] Guardando fecha y hora:', selectedDateTime.toISOString());
+    
+    // 🔍 DEBUG: Verificar datos actuales antes de guardar
+    const currentData = tripStore.getStoredData();
+    console.log('🔍 [FECHA-HORA] Datos actuales del tripStore ANTES de guardar:', currentData);
+    console.log('🔍 [FECHA-HORA] ¿Tiene selectedRoute?:', !!currentData.selectedRoute);
+    console.log('🔍 [FECHA-HORA] ¿Tiene origin?:', !!currentData.origin);
+    console.log('🔍 [FECHA-HORA] ¿Tiene destination?:', !!currentData.destination);
+    
+    // 🔧 IMPORTANTE: Solo actualizar dateTime, preservar el resto de datos
+    const updatedData = {
+      ...currentData,
+      dateTime: selectedDateTime.toISOString()
+    };
+    
+    tripStore.updateData(updatedData);
+
+    // 🔍 DEBUG: Verificar datos después de guardar
+    const finalData = tripStore.getStoredData();
+    console.log('🔍 [FECHA-HORA] Datos actuales del tripStore DESPUÉS de guardar:', finalData);
+    console.log('🔍 [FECHA-HORA] selectedRoute preservada:', !!finalData.selectedRoute);
+
     notifications.show({
       title: 'Éxito',
       message: 'Fecha y hora guardadas correctamente',
@@ -48,6 +72,7 @@ function FechaHoraView() {
     });
 
     // Navigate automatically
+    console.log('🚀 [FECHA-HORA] Navegando a asientos-precio...');
     navigate({
       to: '/publicarviaje/asientos-precio',
     });

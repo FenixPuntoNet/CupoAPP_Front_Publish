@@ -1559,6 +1559,103 @@ export async function getDriverStatsNew(): Promise<{
   }
 }
 
+// ==================== REGISTRO SIMPLE CON FOTO SEPARADO ====================
+
+export interface SimpleVehicleData {
+  brand: string;
+  model: string;
+  year: number;
+  plate: string;
+  color: string;
+  body_type: string;
+  passenger_capacity: number;
+}
+
+/**
+ * Registra un vehículo simple SIN foto (paso 1)
+ * Usa el endpoint /register-simple-modal del backend
+ */
+export async function registerSimpleVehicleModal(
+  vehicleData: SimpleVehicleData
+): Promise<{ success: boolean; data?: Vehicle; error?: string }> {
+  try {
+    console.log('🚗 [VEHICLES] Registering simple vehicle (step 1)...');
+    
+    const response = await apiRequest('/vehiculos/register-simple-modal', {
+      method: 'POST',
+      body: JSON.stringify(vehicleData),
+    });
+
+    if (response.success) {
+      console.log('✅ [VEHICLES] Vehicle registered successfully:', response.data);
+      return {
+        success: true,
+        data: response.data.vehicle
+      };
+    } else {
+      console.error('❌ [VEHICLES] Error registering vehicle:', response.error);
+      return {
+        success: false,
+        error: response.error || 'Error registrando vehículo'
+      };
+    }
+  } catch (error) {
+    console.error('❌ [VEHICLES] Exception registering vehicle:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+}
+
+/**
+ * Sube foto a vehículo existente (paso 2)
+ * CORREGIDO: Usa el endpoint /upload-vehicle-photo que SÍ guarda en Supabase Storage
+ */
+export async function uploadVehiclePhotoBase64(
+  vehicleId: number,
+  photoFile: File
+): Promise<{ success: boolean; photo_url?: string; error?: string }> {
+  try {
+    console.log('� [VEHICLES] Uploading vehicle photo (step 2)...');
+    
+    // Convertir foto a base64
+    const photo_base64 = await fileToBase64(photoFile);
+    
+    // USAR EL ENDPOINT CORRECTO que sí guarda en Supabase Storage
+    const requestData = {
+      vehicleId,
+      photo_base64,
+      filename: photoFile.name
+    };
+
+    const response = await apiRequest('/vehiculos/upload-vehicle-photo', {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+    });
+
+    if (response.success) {
+      console.log('✅ [VEHICLES] Photo uploaded to Supabase Storage successfully:', response.photo_url);
+      return {
+        success: true,
+        photo_url: response.photo_url
+      };
+    } else {
+      console.error('❌ [VEHICLES] Error uploading photo to Storage:', response.error);
+      return {
+        success: false,
+        error: response.error || 'Error subiendo foto al Storage'
+      };
+    }
+  } catch (error) {
+    console.error('❌ [VEHICLES] Exception uploading photo to Storage:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido subiendo al Storage'
+    };
+  }
+}
+
 // Funciones legacy renombradas para compatibilidad
 export const getUserVehicles = getMyVehicle;
 export const createVehicle = registerVehicle;
