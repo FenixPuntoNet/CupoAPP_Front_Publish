@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { createFileRoute } from '@tanstack/react-router';
-import { ArrowLeft, Search, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Search, Check, ChevronRight } from 'lucide-react';
 import { GoogleMap, Marker } from '@react-google-maps/api';
 import { useMaps } from '@/components/GoogleMapsProvider';
+import { useOptimizedMaps } from '@/hooks/useOptimizedMaps';
 import { searchNearbySafePointsAdvanced, type SafePoint } from '@/services/safepoints';
 import { useNoSafePointOption } from '@/hooks/useNoSafePoint';
+import { useMapNavigation } from '@/hooks/useMapNavigation';
+import { saveSafePointInteraction } from '@/services/safepoint-interactions';
 import styles from './index.module.css';
 
 interface SearchParams {
@@ -16,25 +19,39 @@ interface SearchParams {
 
 function PuntosDescensoView() {
   const navigate = useNavigate();
-    const { selectedAddress = '', selectedDestination = '', pickupSafePointId = '' } = useSearch({ from: '/publicarviaje/puntos-descenso/' }) as SearchParams;
+  const { selectedAddress = '', selectedDestination = '', pickupSafePointId = '' } = useSearch({ from: '/publicarviaje/puntos-descenso/' }) as SearchParams;
   const { isLoaded, loadError } = useMaps();
+  const { searchPlaces } = useOptimizedMaps();
   
   // Estados principales
   const [safePoints, setSafePoints] = useState<SafePoint[]>([]);
   const [filteredSafePoints, setFilteredSafePoints] = useState<SafePoint[]>([]);
+  const [selectedSafePoints, setSelectedSafePoints] = useState<SafePoint[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SafePoint[]>([]);
+  const [placesResults, setPlacesResults] = useState<any[]>([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // Hook de navegación del mapa - usa la dirección del destino para centrar el mapa
+  const { mapCenter, setMapCenter } = useMapNavigation({
+    address: selectedDestination,
+    isLoaded
+  });
+
+  console.log('🗺️ [PUNTOS_DESCENSO] MapCenter actual:', mapCenter);
+  console.log('📍 [PUNTOS_DESCENSO] Dirección destino:', selectedDestination);
+
   // Estados del mapa
-  const [mapCenter, setMapCenter] = useState({ lat: 3.4516, lng: -76.5320 }); // Cali por defecto
+  const [customLocation, setCustomLocation] = useState<{lat: number, lng: number} | null>(null);
   const [lastLoadCenter, setLastLoadCenter] = useState({ lat: 3.4516, lng: -76.5320 });
   const [showCustomMarker, setShowCustomMarker] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [reloadTimeout, setReloadTimeout] = useState<NodeJS.Timeout | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const searchTimeout = useRef<NodeJS.Timeout>();
 
   // Opción "Sin SafePoint"
   const noSafePointOption = useNoSafePointOption();
@@ -151,19 +168,19 @@ function PuntosDescensoView() {
     const shouldReload = isInitialLoad || (distance > 5); // 5km threshold - mucho más conservador
     
     if (!shouldReload) {
-      console.log(`🚫 NO recargando SafePoints descenso - distancia: ${distance.toFixed(2)}km (umbral: 5km)`);
+      console.log(`🚫 NO recargando SafePoints - distancia: ${distance.toFixed(2)}km (umbral: 5km)`);
       return;
     }
 
     // Implementar debounce de 1.5 segundos para evitar recargas excesivas
     const timeoutId = setTimeout(async () => {
-      console.log(`🔄 Recargando SafePoints descenso - distancia: ${distance.toFixed(2)}km`);
+      console.log(`🔄 Recargando SafePoints - distancia: ${distance.toFixed(2)}km`);
       
       try {
         setIsLoading(true);
         setError(null);
 
-        console.log('🔍 Cargando SafePoints para punto de descenso en:', mapCenter);
+        console.log('🔍 Cargando SafePoints para punto de recogida en:', mapCenter);
 
         // Usar el endpoint search-advanced del backend para obtener SafePoints cerca del centro del mapa
         const result = await searchNearbySafePointsAdvanced({
@@ -177,14 +194,14 @@ function PuntosDescensoView() {
         });
 
         if (result.success && result.safepoints.length > 0) {
-          console.log('✅ SafePoints descenso cargados exitosamente:', {
+          console.log('✅ SafePoints cargados exitosamente:', {
             count: result.safepoints.length,
             total_found: result.total_found,
             has_more: result.has_more
           });
 
-          // Filtrar solo categorías relevantes para punto de descenso
-          const relevantSafePoints = result.safepoints.filter((sp: SafePoint) => 
+          // Filtrar solo categorías relevantes para punto de recogida
+          const relevantSafePoints = result.safepoints.filter(sp => 
             ['metro_station', 'mall', 'university', 'bank', 'park', 'hospital', 'government', 'gas_station'].includes(sp.category)
           );
 
@@ -193,16 +210,16 @@ function PuntosDescensoView() {
           setIsInitialLoad(false); // Ya no es carga inicial
           
           if (relevantSafePoints.length === 0) {
-            setError('No se encontraron puntos de descenso cercanos en esta área');
+            setError('No se encontraron puntos de recogida cercanos en esta área');
           }
         } else {
-          console.warn('⚠️ No se encontraron SafePoints descenso:', result.error);
-          setError(result.error || 'No se encontraron puntos de descenso cercanos');
+          console.warn('⚠️ No se encontraron SafePoints:', result.error);
+          setError(result.error || 'No se encontraron puntos de recogida cercanos');
           setSafePoints([]);
         }
       } catch (err) {
-        console.error('❌ Error loading SafePoints descenso:', err);
-        setError('Error cargando puntos de descenso. Verifica tu conexión.');
+        console.error('❌ Error loading SafePoints:', err);
+        setError('Error cargando puntos de recogida. Verifica tu conexión.');
         setSafePoints([]);
       } finally {
         setIsLoading(false);
@@ -219,78 +236,127 @@ function PuntosDescensoView() {
     };
   }, [mapCenter]); // Solo depender de mapCenter para evitar loops
 
-  // Filtrar SafePoints basado en el término de búsqueda - MEJORADO
+  // Búsqueda combinada: SafePoints + Google Places con debounce
   useEffect(() => {
+    // Limpiar timeout anterior
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
     if (!searchTerm.trim()) {
       setFilteredSafePoints(safePoints);
       setSearchResults([]);
+      setPlacesResults([]);
       setShowSearchDropdown(false);
-    } else {
-      // Búsqueda más inteligente con scoring mejorado
-      const searchLower = searchTerm.toLowerCase().trim();
-      const searchWords = searchLower.split(' ').filter(word => word.length > 0);
-      
-      const scored = safePoints.map(safePoint => {
-        let score = 0;
-        const name = safePoint.name.toLowerCase();
-        const address = safePoint.address.toLowerCase();
-        const city = safePoint.city?.toLowerCase() || '';
-        const fullText = `${name} ${address} ${city}`;
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    setError(null);
+
+    // Debounce de 500ms para búsqueda
+    searchTimeout.current = setTimeout(async () => {
+      try {
+        // 1. Búsqueda en SafePoints locales (más inteligente)
+        const searchLower = searchTerm.toLowerCase().trim();
+        const searchWords = searchLower.split(' ').filter(word => word.length > 0);
         
-        // Coincidencia exacta del término completo (máxima prioridad)
-        if (fullText.includes(searchLower)) {
-          score += 150;
-        }
-        
-        // Puntuación por coincidencia exacta en nombre
-        if (name.includes(searchLower)) {
-          score += name.startsWith(searchLower) ? 120 : 80;
-        }
-        
-        // Puntuación por coincidencia en dirección
-        if (address.includes(searchLower)) {
-          score += address.startsWith(searchLower) ? 100 : 60;
-        }
-        
-        // Puntuación por coincidencia en ciudad
-        if (city.includes(searchLower)) {
-          score += city.startsWith(searchLower) ? 80 : 40;
-        }
-        
-        // Coincidencias por palabras individuales
-        searchWords.forEach(word => {
-          if (word.length < 2) return; // Ignorar palabras muy cortas
+        const scoredSafePoints = safePoints.map(safePoint => {
+          let score = 0;
+          const name = safePoint.name.toLowerCase();
+          const address = safePoint.address.toLowerCase();
+          const city = safePoint.city?.toLowerCase() || '';
+          const fullText = `${name} ${address} ${city}`;
           
-          if (name.includes(word)) {
-            score += name.startsWith(word) ? 50 : 30;
+          // Coincidencia exacta del término completo (máxima prioridad)
+          if (fullText.includes(searchLower)) {
+            score += 150;
           }
-          if (address.includes(word)) {
-            score += address.startsWith(word) ? 40 : 25;
+          
+          // Puntuación por coincidencia exacta en nombre
+          if (name.includes(searchLower)) {
+            score += name.startsWith(searchLower) ? 120 : 80;
           }
-          if (city.includes(word)) {
-            score += city.startsWith(word) ? 35 : 20;
+          
+          // Puntuación por coincidencia en dirección
+          if (address.includes(searchLower)) {
+            score += address.startsWith(searchLower) ? 100 : 60;
           }
+          
+          // Puntuación por coincidencia en ciudad
+          if (city.includes(searchLower)) {
+            score += city.startsWith(searchLower) ? 80 : 40;
+          }
+          
+          // Coincidencias por palabras individuales
+          searchWords.forEach(word => {
+            if (word.length < 2) return;
+            
+            if (name.includes(word)) {
+              score += name.startsWith(word) ? 50 : 30;
+            }
+            if (address.includes(word)) {
+              score += address.startsWith(word) ? 40 : 25;
+            }
+            if (city.includes(word)) {
+              score += city.startsWith(word) ? 35 : 20;
+            }
+          });
+          
+          // Bonus por categorías populares
+          if (['metro_station', 'mall', 'university'].includes(safePoint.category)) {
+            score += 10;
+          }
+          
+          return { ...safePoint, score };
+        }).filter(sp => sp.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5); // Máximo 5 SafePoints
+
+        // 2. Búsqueda en Google Places (lugares generales)
+        let placesResults: any[] = [];
+        if (searchPlaces) {
+          try {
+            const suggestions = await searchPlaces(searchTerm);
+            placesResults = suggestions.slice(0, 3); // Máximo 3 lugares de Google
+          } catch (error) {
+            console.warn('Error en búsqueda de Google Places:', error);
+          }
+        }
+
+        // 3. Combinar resultados
+        setSearchResults(scoredSafePoints);
+        setPlacesResults(placesResults);
+        setFilteredSafePoints(scoredSafePoints);
+        setShowSearchDropdown(true); // SIEMPRE MOSTRAR SI HAY BÚSQUEDA
+        
+        console.log(`🔍 Búsqueda "${searchTerm}":`, {
+          safePointsFound: scoredSafePoints.length,
+          placesFound: placesResults.length,
+          showDropdown: true,
+          totalSafePoints: safePoints.length
         });
         
-        // Bonus por categorías populares para descenso
-        if (['metro_station', 'mall', 'university'].includes(safePoint.category)) {
-          score += 10;
-        }
-        
-        return { ...safePoint, score };
-      }).filter(sp => sp.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 8); // Máximo 8 resultados en dropdown
+      } catch (err) {
+        console.error('Error en búsqueda:', err);
+        setError('Error al buscar ubicaciones');
+        setSearchResults([]);
+        setPlacesResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
 
-      setSearchResults(scored);
-      setFilteredSafePoints(scored);
-      setShowSearchDropdown(scored.length > 0);
-      
-      console.log(`🔍 Búsqueda inteligente descenso "${searchTerm}": ${scored.length} resultados ordenados por relevancia`);
-    }
-  }, [searchTerm, safePoints]);
+    // Cleanup function
+    return () => {
+      if (searchTimeout.current) {
+        clearTimeout(searchTimeout.current);
+      }
+    };
+  }, [searchTerm, safePoints, searchPlaces]);
 
-  // Manejar click en el mapa para ubicaciones personalizadas con navegación directa
+  // Manejar click en el mapa para ubicaciones personalizadas
   const handleMapClick = (event: google.maps.MapMouseEvent) => {
     // Solo permitir click personalizado si el modo está activado
     if (!showCustomMarker || !event.latLng) {
@@ -300,20 +366,17 @@ function PuntosDescensoView() {
     const lat = event.latLng.lat();
     const lng = event.latLng.lng();
     
-    console.log('🎯 Usuario seleccionó ubicación personalizada de descenso:', { lat, lng });
+    console.log('🎯 Usuario seleccionó ubicación personalizada:', { lat, lng });
     
-    // Navegar automáticamente con ubicación personalizada
-    navigate({
-      to: '/publicarviaje/rutas',
-      search: { 
-        selectedAddress, 
-        selectedDestination,
-        pickupSafePointId,
-        dropoffSafePointId: '0', // 0 indica ubicación personalizada
-        customDropoffLat: lat.toString(),
-        customDropoffLng: lng.toString()
-      }
-    });
+    // Establecer ubicación personalizada y limpiar selección de SafePoints
+    setCustomLocation({ lat, lng });
+    setSelectedSafePoints([]);
+    setShowCustomMarker(false); // Desactivar modo después de seleccionar
+    
+    // Centrar el mapa en la nueva ubicación
+    if (mapRef.current) {
+      mapRef.current.panTo({ lat, lng });
+    }
   };
 
   // Manejar cuando el mapa se mueve - MUCHO MAS CONSERVADOR
@@ -335,33 +398,69 @@ function PuntosDescensoView() {
         );
         
         if (distance > 3000) { // 3000 metros (3km) - umbral mucho mayor
-          console.log(`🗺️ Mapa descenso se movió SIGNIFICATIVAMENTE (${(distance/1000).toFixed(1)}km), actualizando centro`);
+          console.log(`🗺️ Mapa se movió SIGNIFICATIVAMENTE (${(distance/1000).toFixed(1)}km), actualizando centro`);
           setMapCenter(newCenter);
         } else {
-          console.log(`🔒 Movimiento menor descenso (${(distance/1000).toFixed(1)}km) - NO actualizando centro`);
+          console.log(`🔒 Movimiento menor (${(distance/1000).toFixed(1)}km) - NO actualizando centro`);
         }
       }
     }
   }, [mapCenter]);
 
-  // Manejar selección desde el mapa con navegación directa
+  // Manejar selección desde el mapa - permitir selección múltiple
   const handleSafePointSelect = (safePoint: SafePoint) => {
-    console.log('✅ SafePoint de descenso seleccionado:', safePoint.name);
+    console.log('✅ SafePoint seleccionado:', safePoint.name);
     
-    // Navegar automáticamente con el SafePoint seleccionado
-    navigate({
-      to: '/publicarviaje/rutas',
-      search: { 
-        selectedAddress, 
-        selectedDestination,
-        pickupSafePointId,
-        dropoffSafePointId: safePoint.id.toString()
-      }
-    });
+    // Verificar si ya está seleccionado
+    const isAlreadySelected = selectedSafePoints.find(sp => sp.id === safePoint.id);
+    
+    if (isAlreadySelected) {
+      // Quitar de la selección
+      setSelectedSafePoints(prev => prev.filter(sp => sp.id !== safePoint.id));
+      console.log('❌ SafePoint deseleccionado:', safePoint.name);
+    } else {
+      // Agregar a la selección
+      setSelectedSafePoints(prev => [...prev, safePoint]);
+      console.log('✅ SafePoint agregado a selección. Total:', selectedSafePoints.length + 1);
+    }
+    
+    setCustomLocation(null); // Limpiar ubicación personalizada
+    
+    // Centrar el mapa en el SafePoint seleccionado
+    if (mapRef.current) {
+      const center = { lat: safePoint.latitude, lng: safePoint.longitude };
+      mapRef.current.panTo(center);
+      mapRef.current.setZoom(16);
+    }
   };
 
   // Manejar selección de "Sin SafePoint" con navegación directa
-  const handleNoSafePointSelect = () => {
+  const handleNoSafePointSelect = async () => {
+    setSelectedSafePoints([]);
+    setCustomLocation(null);
+    
+    // Guardar interacción de "Sin SafePoint"
+    console.log('💾 [DROPOFF] Guardando interacción "Sin SafePoint"');
+    const interactionResult = await saveSafePointInteraction({
+      safepoint_id: 0, // 0 para "Sin SafePoint"
+      interaction_type: 'dropoff_selection',
+      trip_id: null,
+      interaction_data: {
+        no_safepoint_selection: true,
+        selected_destination: selectedDestination,
+        pickup_safepoint_id: pickupSafePointId,
+        selection_timestamp: new Date().toISOString(),
+        map_center: mapCenter,
+        selection_method: 'no_safepoint_option'
+      }
+    });
+    
+    if (interactionResult.success) {
+      console.log('✅ [DROPOFF] Interacción "Sin SafePoint" guardada exitosamente');
+    } else {
+      console.error('❌ [DROPOFF] Error guardando interacción "Sin SafePoint":', interactionResult.error);
+    }
+    
     // Navegar automáticamente
     navigate({
       to: '/publicarviaje/rutas',
@@ -374,25 +473,153 @@ function PuntosDescensoView() {
     });
   };
 
-  // Manejar selección desde el dropdown de búsqueda con navegación directa
-  const handleSearchSelect = (safePoint: SafePoint) => {
-    console.log('📍 SafePoint de descenso seleccionado desde búsqueda:', safePoint.name);
-    
-    // Navegar automáticamente con el SafePoint seleccionado
-    navigate({
-      to: '/publicarviaje/rutas',
-      search: { 
-        selectedAddress, 
-        selectedDestination,
-        pickupSafePointId,
-        dropoffSafePointId: safePoint.id.toString()
+  // Navegación directa para SafePoints seleccionados
+  const handleNavigateWithSelection = async () => {
+    if (selectedSafePoints.length > 0) {
+      const primarySafePoint = selectedSafePoints[0];
+      
+      // Guardar TODOS los SafePoints seleccionados, no solo el primero
+      console.log(`💾 [DROPOFF] Guardando ${selectedSafePoints.length} SafePoint(s) seleccionado(s)`);
+      
+      const interactionPromises = selectedSafePoints.map((safePoint, index) => {
+        console.log(`💾 [DROPOFF] Guardando SafePoint ${index + 1}/${selectedSafePoints.length}:`, safePoint.name);
+        
+        return saveSafePointInteraction({
+          safepoint_id: safePoint.id,
+          interaction_type: 'dropoff_selection',
+          trip_id: null, // Se actualizará cuando se cree el trip
+          interaction_data: {
+            safepoint_name: safePoint.name,
+            safepoint_address: safePoint.address,
+            selected_destination: selectedDestination,
+            pickup_safepoint_id: pickupSafePointId,
+            selection_timestamp: new Date().toISOString(),
+            map_center: mapCenter,
+            selection_method: 'map_selection',
+            selection_order: index + 1, // Agregar orden de selección
+            total_selected: selectedSafePoints.length, // Agregar total seleccionado
+            is_primary: index === 0 // Marcar el primero como principal
+          }
+        });
+      });
+      
+      // Esperar a que se guarden todos los SafePoints
+      try {
+        const results = await Promise.all(interactionPromises);
+        const successCount = results.filter(r => r.success).length;
+        const errorCount = results.length - successCount;
+        
+        console.log(`✅ [DROPOFF] ${successCount} SafePoint(s) guardado(s) exitosamente`);
+        if (errorCount > 0) {
+          console.error(`❌ [DROPOFF] ${errorCount} error(es) guardando SafePoints`);
+        }
+        
+        // Mostrar detalles de cada resultado
+        results.forEach((result, index) => {
+          const safePoint = selectedSafePoints[index];
+          if (result.success) {
+            console.log(`✅ [DROPOFF] SafePoint "${safePoint.name}" guardado con ID:`, result.interaction?.id);
+          } else {
+            console.error(`❌ [DROPOFF] Error guardando "${safePoint.name}":`, result.error);
+          }
+        });
+        
+      } catch (error) {
+        console.error('❌ [DROPOFF] Error guardando múltiples SafePoints:', error);
       }
+      
+      navigate({
+        to: '/publicarviaje/rutas',
+        search: { 
+          selectedAddress, 
+          selectedDestination,
+          pickupSafePointId,
+          dropoffSafePointId: primarySafePoint.id.toString()
+        }
+      });
+    } else if (customLocation) {
+      // Guardar interacción de ubicación personalizada
+      console.log('💾 [PICKUP] Guardando interacción de ubicación personalizada');
+      const interactionResult = await saveSafePointInteraction({
+        safepoint_id: 0, // 0 para ubicación personalizada
+        interaction_type: 'pickup_selection',
+        trip_id: null,
+        interaction_data: {
+          custom_location: customLocation,
+          selected_address: selectedAddress,
+          selection_timestamp: new Date().toISOString(),
+          map_center: mapCenter,
+          selection_method: 'custom_location'
+        }
+      });
+      
+      if (interactionResult.success) {
+        console.log('✅ [PICKUP] Interacción de ubicación personalizada guardada');
+      } else {
+        console.error('❌ [PICKUP] Error guardando interacción personalizada:', interactionResult.error);
+      }
+      
+      navigate({ 
+        to: '/publicarviaje/Destino', 
+        search: { 
+          originAddress: selectedAddress,
+          pickupSafePointId: '0' // 0 indica ubicación personalizada
+        } 
+      });
+    }
+  };
+
+  // Manejar selección de lugares de Google Places
+  const handlePlaceSelect = (place: any) => {
+    console.log('🌍 Lugar de Google seleccionado:', place.mainText);
+    
+    // Crear ubicación personalizada a partir del lugar de Google
+    // Nota: Aquí podrías hacer geocoding para obtener lat/lng exactas
+    setCustomLocation({ lat: mapCenter.lat, lng: mapCenter.lng }); // Usar centro del mapa temporalmente
+    setSelectedSafePoints([]);
+    
+    // Limpiar búsqueda y cerrar dropdown
+    setSearchTerm('');
+    setShowSearchDropdown(false);
+    setPlacesResults([]);
+    
+    // Navegar automáticamente
+    navigate({ 
+      to: '/publicarviaje/Destino', 
+      search: { 
+        originAddress: selectedAddress,
+        pickupSafePointId: '0' // 0 indica ubicación personalizada
+      } 
     });
+  };
+
+  // Manejar selección desde el dropdown de búsqueda
+  const handleSearchSelect = (safePoint: SafePoint) => {
+    console.log('📍 SafePoint seleccionado desde búsqueda:', safePoint.name);
+    
+    // Agregar a la selección si no está ya seleccionado
+    const isAlreadySelected = selectedSafePoints.find(sp => sp.id === safePoint.id);
+    if (!isAlreadySelected) {
+      setSelectedSafePoints(prev => [...prev, safePoint]);
+    }
+    
+    // Limpiar búsqueda y cerrar dropdown
+    setSearchTerm('');
+    setShowSearchDropdown(false);
+    setCustomLocation(null);
+    
+    // Centrar el mapa en el SafePoint seleccionado
+    if (mapRef.current) {
+      const center = { lat: safePoint.latitude, lng: safePoint.longitude };
+      mapRef.current.panTo(center);
+      mapRef.current.setZoom(16);
+    }
   };
 
   // Manejar foco y pérdida de foco en el input de búsqueda
   const handleSearchFocus = () => {
-    if (searchResults.length > 0) {
+    // Mostrar dropdown si hay término de búsqueda
+    if (searchTerm.trim()) {
       setShowSearchDropdown(true);
     }
   };
@@ -401,7 +628,7 @@ function PuntosDescensoView() {
     // Retrasar el cierre para permitir clicks en el dropdown
     setTimeout(() => {
       setShowSearchDropdown(false);
-    }, 200);
+    }, 300); // Aumentar tiempo para mejor UX
   };
 
   // Renderizar error de carga de Google Maps
@@ -417,23 +644,27 @@ function PuntosDescensoView() {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
+      {/* Header - Solo botón de volver */}
       <header className={styles.header}>
         <button 
           className={styles.backButton}
           onClick={() => navigate({ 
-            to: '/publicarviaje/Destino', 
-            search: { originAddress: selectedAddress, pickupSafePointId } 
+            to: '/publicarviaje/punto-recogida', 
+            search: { selectedAddress } 
           })}
         >
           <ArrowLeft size={20} />
         </button>
       </header>
 
-      {/* Title Section */}
+      {/* Sección del título separada */}
       <div className={styles.titleSection}>
-        <h1 className={styles.mainTitle}>¿Dónde te gustaría dejar a los pasajeros?</h1>
-        <p className={styles.subtitle}>Selecciona un SafePoint cercano o deja que usen la ubicación exacta</p>
+        <h1 className={styles.mainTitle}>
+          ¿Dónde van a descender los pasajeros?
+        </h1>
+        <p className={styles.subtitle}>
+          Selecciona un SafePoint cerca de tu destino
+        </p>
       </div>
 
       {/* Search Section */}
@@ -449,46 +680,108 @@ function PuntosDescensoView() {
             onBlur={handleSearchBlur}
             className={styles.searchInput}
           />
+          {/* Spinner de carga */}
+          {isSearching && (
+            <div className={styles.searchLoader}>
+              <div className={styles.spinner} />
+            </div>
+          )}
         </div>
         
-        {/* Dropdown de resultados de búsqueda */}
-        {showSearchDropdown && searchResults.length > 0 && (
+        {/* Dropdown de resultados de búsqueda COMBINADO */}
+        {showSearchDropdown && (
           <div className={styles.searchDropdown}>
-            {searchResults.map((safePoint) => (
+            {/* SafePoints encontrados */}
+            {searchResults.length > 0 && (
+              <>
+                {searchResults.map((safePoint) => (
+                  <div
+                    key={`safepoint-${safePoint.id}`}
+                    className={styles.searchResultItem}
+                    onClick={() => handleSearchSelect(safePoint)}
+                  >
+                    <div className={styles.searchResultIcon}>
+                      {safePoint.category === 'metro_station' && '🚇'}
+                      {safePoint.category === 'mall' && '🏬'}
+                      {safePoint.category === 'university' && '🎓'}
+                      {safePoint.category === 'hospital' && '🏥'}
+                      {safePoint.category === 'bank' && '🏦'}
+                      {safePoint.category === 'park' && '🌳'}
+                      {safePoint.category === 'government' && '🏛️'}
+                      {safePoint.category === 'gas_station' && '⛽'}
+                      {!['metro_station', 'mall', 'university', 'hospital', 'bank', 'park', 'government', 'gas_station'].includes(safePoint.category) && '📍'}
+                    </div>
+                    <div className={styles.searchResultContent}>
+                      <div className={styles.searchResultName}>
+                        {safePoint.name} <span style={{color: '#10b981', fontSize: '12px'}}>SafePoint</span>
+                      </div>
+                      <div className={styles.searchResultAddress}>
+                        {safePoint.address}
+                        {safePoint.city && `, ${safePoint.city}`}
+                      </div>
+                    </div>
+                    <div className={styles.searchResultDistance}>
+                      {Math.round(calculateDistance(
+                        { lat: safePoint.latitude, lng: safePoint.longitude },
+                        mapCenter
+                      ) * 1000)}m
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Separador si hay ambos tipos */}
+                {placesResults.length > 0 && (
+                  <div style={{
+                    borderTop: '1px solid rgba(255,255,255,0.1)',
+                    margin: '8px 0',
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    color: 'rgba(255,255,255,0.6)',
+                    textAlign: 'center'
+                  }}>
+                    Otros lugares
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* Lugares de Google Places */}
+            {placesResults.map((place, index) => (
               <div
-                key={safePoint.id}
+                key={`place-${index}`}
                 className={styles.searchResultItem}
-                onClick={() => handleSearchSelect(safePoint)}
+                onClick={() => handlePlaceSelect(place)}
               >
                 <div className={styles.searchResultIcon}>
-                  {safePoint.category === 'metro_station' && '🚇'}
-                  {safePoint.category === 'mall' && '🏬'}
-                  {safePoint.category === 'university' && '🎓'}
-                  {safePoint.category === 'hospital' && '🏥'}
-                  {safePoint.category === 'bank' && '🏦'}
-                  {safePoint.category === 'park' && '🌳'}
-                  {safePoint.category === 'government' && '🏛️'}
-                  {safePoint.category === 'gas_station' && '⛽'}
-                  {!['metro_station', 'mall', 'university', 'hospital', 'bank', 'park', 'government', 'gas_station'].includes(safePoint.category) && '📍'}
+                  🌍
                 </div>
                 <div className={styles.searchResultContent}>
                   <div className={styles.searchResultName}>
-                    {safePoint.name}
+                    {place.mainText} <span style={{color: '#4A90E2', fontSize: '12px'}}>Google</span>
                   </div>
                   <div className={styles.searchResultAddress}>
-                    {safePoint.address}
-                    {safePoint.city && `, ${safePoint.city}`}
+                    {place.secondaryText}
                   </div>
-                </div>
-                <div className={styles.searchResultDistance}>
-                  {/* Calcular distancia desde el centro del mapa */}
-                  {Math.round(calculateDistance(
-                    { lat: safePoint.latitude, lng: safePoint.longitude },
-                    mapCenter
-                  ) * 1000)}m
                 </div>
               </div>
             ))}
+            
+            {/* Mensaje cuando no hay resultados */}
+            {searchResults.length === 0 && placesResults.length === 0 && searchTerm.trim() && !isSearching && (
+              <div className={styles.searchResultItem} style={{ cursor: 'default', opacity: 0.7 }}>
+                <div className={styles.searchResultIcon}>
+                  🔍
+                </div>
+                <div className={styles.searchResultContent}>
+                  <div className={styles.searchResultName}>
+                    No se encontraron resultados
+                  </div>
+                  <div className={styles.searchResultAddress}>
+                    Intenta con otro término de búsqueda
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
         
@@ -518,7 +811,7 @@ function PuntosDescensoView() {
       {isLoading && (
         <div className={styles.loadingContainer}>
           <div className={styles.loadingSpinner} />
-          <span className={styles.loadingText}>Cargando puntos de descenso...</span>
+          <span className={styles.loadingText}>Cargando puntos de recogida...</span>
         </div>
       )}
 
@@ -530,6 +823,14 @@ function PuntosDescensoView() {
             className={`${styles.customMarkerButton} ${showCustomMarker ? styles.active : ''}`}
             onClick={() => {
               setShowCustomMarker(!showCustomMarker);
+              if (!showCustomMarker) {
+                // Activar modo marcador personalizado
+                setSelectedSafePoints([]);
+                setCustomLocation(null);
+              } else {
+                // Desactivar modo marcador personalizado
+                setCustomLocation(null);
+              }
             }}
             title={showCustomMarker ? "Desactivar marcador personalizado" : "Activar marcador personalizado"}
           >
@@ -556,7 +857,7 @@ function PuntosDescensoView() {
                   icon={{
                     url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
                       <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="16" cy="16" r="14" fill="#4A90E2" stroke="white" stroke-width="2"/>
+                        <circle cx="16" cy="16" r="14" fill="${selectedSafePoints.find(sp => sp.id === safePoint.id) ? '#00ff9d' : '#4A90E2'}" stroke="white" stroke-width="2"/>
                         <g transform="translate(8, 8)" fill="white">
                           <path d="M8 2L8 14M2 8L14 8M3.5 3.5L12.5 12.5M12.5 3.5L3.5 12.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
                           <circle cx="8" cy="8" r="2" fill="white"/>
@@ -569,28 +870,102 @@ function PuntosDescensoView() {
                   onClick={() => handleSafePointSelect(safePoint)}
                 />
               ))}
+              
+              {/* Marcador de ubicación personalizada - ARRASTRABLE */}
+              {customLocation && (
+                <Marker
+                  position={customLocation}
+                  draggable={true}
+                  onDragEnd={(event) => {
+                    if (event.latLng) {
+                      const newLat = event.latLng.lat();
+                      const newLng = event.latLng.lng();
+                      console.log('🎯 Usuario arrastró marcador personalizado a:', { lat: newLat, lng: newLng });
+                      setCustomLocation({ lat: newLat, lng: newLng });
+                    }
+                  }}
+                  icon={{
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="18" cy="18" r="16" fill="#ff6b6b" stroke="white" stroke-width="3"/>
+                        <g transform="translate(13, 13)" fill="white">
+                          <path d="M5 0L5 10M0 5L10 5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                        </g>
+                        <text x="18" y="32" text-anchor="middle" fill="#333" font-size="8" font-family="Arial">📍</text>
+                      </svg>
+                    `),
+                    scaledSize: new google.maps.Size(36, 36),
+                    anchor: new google.maps.Point(18, 18),
+                  }}
+                  title="Ubicación personalizada - Arrastra para ajustar"
+                />
+              )}
             </GoogleMap>
           )}
         </div>
       )}
 
-      {/* No SafePoint Option */}
+            {/* Selected SafePoints Info - CLICKEABLE PARA NAVEGAR */}
+      {selectedSafePoints.length > 0 && (
+        <div className={styles.selectedInfo}>
+          <div className={styles.selectedCard} onClick={handleNavigateWithSelection}>
+            <div className={styles.selectedIcon}>
+              <Check size={20} />
+            </div>
+            <div className={styles.selectedDetails}>
+              <h3 className={styles.selectedName}>
+                {selectedSafePoints.length} punto{selectedSafePoints.length !== 1 ? 's' : ''} seleccionado{selectedSafePoints.length !== 1 ? 's' : ''}
+              </h3>
+              <p className={styles.selectedAddress}>
+                {selectedSafePoints.length === 1 
+                  ? selectedSafePoints[0].address 
+                  : selectedSafePoints.map(sp => sp.name).join(', ')
+                }
+              </p>
+            </div>
+            <div className={styles.navigationArrow}>
+              <ChevronRight size={20} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ubicación personalizada seleccionada - CLICKEABLE PARA NAVEGAR */}
+      {customLocation && selectedSafePoints.length === 0 && (
+        <div className={styles.selectedInfo}>
+          <div className={styles.selectedCard} onClick={handleNavigateWithSelection}>
+            <div className={styles.selectedIcon}>
+              <Check size={20} />
+            </div>
+            <div className={styles.selectedDetails}>
+              <h3 className={styles.selectedName}>Ubicación personalizada</h3>
+              <p className={styles.selectedAddress}>
+                Lat: {customLocation.lat.toFixed(6)}, Lng: {customLocation.lng.toFixed(6)}
+              </p>
+            </div>
+            <div className={styles.navigationArrow}>
+              <ChevronRight size={20} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* No SafePoint Option - CON NAVEGACIÓN DIRECTA */}
       <div className={styles.noSafePointSection}>
         <button 
-          className={styles.noSafePointButton}
+          className={`${styles.noSafePointButton} ${selectedSafePoints.length === 0 && !customLocation ? styles.selected : ''}`}
           onClick={handleNoSafePointSelect}
         >
           <span className={styles.noSafePointIcon}>🚫</span>
           <div className={styles.noSafePointText}>
             <h3>{noSafePointOption.name}</h3>
-            <p>Usar ubicación exacta del destino</p>
+            <p>Usar ubicación exacta del origen</p>
           </div>
           <div className={styles.navigationArrow}>
-            <ArrowRight size={20} />
+            <ChevronRight size={20} />
           </div>
         </button>
       </div>
-
     </div>
   );
 }

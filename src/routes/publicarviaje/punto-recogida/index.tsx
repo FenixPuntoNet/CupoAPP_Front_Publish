@@ -7,6 +7,8 @@ import { useMaps } from '@/components/GoogleMapsProvider';
 import { useOptimizedMaps } from '@/hooks/useOptimizedMaps';
 import { searchNearbySafePointsAdvanced, type SafePoint } from '@/services/safepoints';
 import { useNoSafePointOption } from '@/hooks/useNoSafePoint';
+import { useMapNavigation } from '@/hooks/useMapNavigation';
+import { saveSafePointInteraction } from '@/services/safepoint-interactions';
 import styles from './index.module.css';
 
 interface SearchParams {
@@ -31,8 +33,16 @@ function PuntoRecogidaView() {
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // Hook de navegación del mapa - usa la dirección del origen para centrar el mapa
+  const { mapCenter, setMapCenter } = useMapNavigation({
+    address: selectedAddress,
+    isLoaded
+  });
+
+  console.log('🗺️ [PUNTO_RECOGIDA] MapCenter actual:', mapCenter);
+  console.log('📍 [PUNTO_RECOGIDA] Dirección origen:', selectedAddress);
+
   // Estados del mapa
-  const [mapCenter, setMapCenter] = useState({ lat: 3.4516, lng: -76.5320 }); // Cali por defecto
   const [customLocation, setCustomLocation] = useState<{lat: number, lng: number} | null>(null);
   const [lastLoadCenter, setLastLoadCenter] = useState({ lat: 3.4516, lng: -76.5320 });
   const [showCustomMarker, setShowCustomMarker] = useState(false);
@@ -423,9 +433,30 @@ function PuntoRecogidaView() {
   };
 
   // Manejar selección de "Sin SafePoint" con navegación directa
-  const handleNoSafePointSelect = () => {
+  const handleNoSafePointSelect = async () => {
     setSelectedSafePoints([]);
     setCustomLocation(null);
+    
+    // Guardar interacción de "Sin SafePoint"
+    console.log('💾 [PICKUP] Guardando interacción "Sin SafePoint"');
+    const interactionResult = await saveSafePointInteraction({
+      safepoint_id: 0, // 0 para "Sin SafePoint"
+      interaction_type: 'pickup_selection',
+      trip_id: null,
+      interaction_data: {
+        no_safepoint_selection: true,
+        selected_address: selectedAddress,
+        selection_timestamp: new Date().toISOString(),
+        map_center: mapCenter,
+        selection_method: 'no_safepoint_option'
+      }
+    });
+    
+    if (interactionResult.success) {
+      console.log('✅ [PICKUP] Interacción "Sin SafePoint" guardada exitosamente');
+    } else {
+      console.error('❌ [PICKUP] Error guardando interacción "Sin SafePoint":', interactionResult.error);
+    }
     
     // Navegar automáticamente
     navigate({ 
@@ -438,9 +469,59 @@ function PuntoRecogidaView() {
   };
 
   // Navegación directa para SafePoints seleccionados
-  const handleNavigateWithSelection = () => {
+  const handleNavigateWithSelection = async () => {
     if (selectedSafePoints.length > 0) {
       const primarySafePoint = selectedSafePoints[0];
+      
+      // Guardar TODOS los SafePoints seleccionados, no solo el primero
+      console.log(`💾 [PICKUP] Guardando ${selectedSafePoints.length} SafePoint(s) seleccionado(s)`);
+      
+      const interactionPromises = selectedSafePoints.map((safePoint, index) => {
+        console.log(`💾 [PICKUP] Guardando SafePoint ${index + 1}/${selectedSafePoints.length}:`, safePoint.name);
+        
+        return saveSafePointInteraction({
+          safepoint_id: safePoint.id,
+          interaction_type: 'pickup_selection',
+          trip_id: null, // Se actualizará cuando se cree el trip
+          interaction_data: {
+            safepoint_name: safePoint.name,
+            safepoint_address: safePoint.address,
+            selected_address: selectedAddress,
+            selection_timestamp: new Date().toISOString(),
+            map_center: mapCenter,
+            selection_method: 'map_selection',
+            selection_order: index + 1, // Agregar orden de selección
+            total_selected: selectedSafePoints.length, // Agregar total seleccionado
+            is_primary: index === 0 // Marcar el primero como principal
+          }
+        });
+      });
+      
+      // Esperar a que se guarden todos los SafePoints
+      try {
+        const results = await Promise.all(interactionPromises);
+        const successCount = results.filter(r => r.success).length;
+        const errorCount = results.length - successCount;
+        
+        console.log(`✅ [PICKUP] ${successCount} SafePoint(s) guardado(s) exitosamente`);
+        if (errorCount > 0) {
+          console.error(`❌ [PICKUP] ${errorCount} error(es) guardando SafePoints`);
+        }
+        
+        // Mostrar detalles de cada resultado
+        results.forEach((result, index) => {
+          const safePoint = selectedSafePoints[index];
+          if (result.success) {
+            console.log(`✅ [PICKUP] SafePoint "${safePoint.name}" guardado con ID:`, result.interaction?.id);
+          } else {
+            console.error(`❌ [PICKUP] Error guardando "${safePoint.name}":`, result.error);
+          }
+        });
+        
+      } catch (error) {
+        console.error('❌ [PICKUP] Error guardando múltiples SafePoints:', error);
+      }
+      
       navigate({ 
         to: '/publicarviaje/Destino', 
         search: { 
@@ -449,6 +530,27 @@ function PuntoRecogidaView() {
         } 
       });
     } else if (customLocation) {
+      // Guardar interacción de ubicación personalizada
+      console.log('💾 [PICKUP] Guardando interacción de ubicación personalizada');
+      const interactionResult = await saveSafePointInteraction({
+        safepoint_id: 0, // 0 para ubicación personalizada
+        interaction_type: 'pickup_selection',
+        trip_id: null,
+        interaction_data: {
+          custom_location: customLocation,
+          selected_address: selectedAddress,
+          selection_timestamp: new Date().toISOString(),
+          map_center: mapCenter,
+          selection_method: 'custom_location'
+        }
+      });
+      
+      if (interactionResult.success) {
+        console.log('✅ [PICKUP] Interacción de ubicación personalizada guardada');
+      } else {
+        console.error('❌ [PICKUP] Error guardando interacción personalizada:', interactionResult.error);
+      }
+      
       navigate({ 
         to: '/publicarviaje/Destino', 
         search: { 
