@@ -195,11 +195,33 @@
   padding: 8px;
   text-align: center;
   margin-top: 12px;
+  transition: all 0.3s ease;
 }
 
 :global(.light) .verificationFooter {
   background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(21, 128, 61, 0.08) 100%);
   border-color: rgba(22, 163, 74, 0.2);
+}
+
+/* Estados específicos del footer de verificación */
+.verificationFooter.partial {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+:global(.light) .verificationFooter.partial {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(217, 119, 6, 0.08) 100%);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.verificationFooter.pending {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+:global(.light) .verificationFooter.pending {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.08) 100%);
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 /* Avatar Styles */

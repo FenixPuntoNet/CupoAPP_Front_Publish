@@ -13,7 +13,7 @@ export interface TripPreferences {
   allow_smoking: boolean;
   allow_food: boolean;
   allow_music: boolean;
-  allow_calls: boolean;
+  allow_baggage: boolean;
   air_conditioning: boolean;
   created_at?: string;
   updated_at?: string;
@@ -25,7 +25,7 @@ export interface TripPreferencesRequest {
   allow_smoking?: boolean;
   allow_food?: boolean;
   allow_music?: boolean;
-  allow_calls?: boolean;
+  allow_baggage?: boolean;
   air_conditioning?: boolean;
 }
 
@@ -42,65 +42,76 @@ export interface BulkPreferencesRequest {
  * Mapea las preferencias del frontend al formato del backend
  */
 export const mapPreferencesToBackend = (preferences: string[]): Partial<TripPreferencesRequest> => {
+  console.log('🎯 [MAPPING] Frontend preferences received:', preferences);
+  
   const backendPreferences: Partial<TripPreferencesRequest> = {
-    // Valores por defecto
-    allow_pets: false,
-    allow_smoking: false,
-    allow_food: true,
-    allow_music: true,
-    allow_calls: true,
-    air_conditioning: true
+    // ✅ VALORES POR DEFECTO CORREGIDOS - Solo activar lo que el usuario seleccione
+    allow_pets: preferences.includes('mascotas'),
+    allow_smoking: !preferences.includes('no_fumar'), // Si selecciona "no_fumar", allow_smoking=false
+    allow_food: preferences.includes('wifi'), // WiFi se mapea a allow_food temporalmente
+    allow_music: preferences.includes('musica'),
+    allow_baggage: preferences.includes('equipaje_extra'),
+    air_conditioning: preferences.includes('aire_acondicionado')
   };
 
-  // Mapear preferencias del frontend
-  preferences.forEach(pref => {
-    switch (pref) {
-      case 'mascotas':
-        backendPreferences.allow_pets = true;
-        break;
-      case 'fumar':
-        backendPreferences.allow_smoking = true;
-        break;
-      case 'no_fumar':
-        backendPreferences.allow_smoking = false;
-        break;
-      case 'musica':
-        backendPreferences.allow_music = true;
-        break;
-      case 'aire_acondicionado':
-        backendPreferences.air_conditioning = true;
-        break;
-      case 'wifi':
-        // WiFi no está en el backend, se puede manejar en allow_food o crear nuevo campo
-        backendPreferences.allow_food = true;
-        break;
-      case 'equipaje_extra':
-        // Equipaje extra no está en el backend, se puede manejar en allow_calls o crear nuevo campo
-        backendPreferences.allow_calls = true;
-        break;
-    }
-  });
-
+  console.log('🎯 [MAPPING] Backend preferences mapped:', backendPreferences);
   return backendPreferences;
 };
 
 /**
- * Mapea las preferencias del backend al formato del frontend
+ * Mapea las preferencias del backend al formato del frontend para mostrar en la UI
  */
 export const mapPreferencesFromBackend = (backendPrefs: TripPreferences): string[] => {
   const frontendPreferences: string[] = [];
 
+  console.log('🎯 [MAPPING-BACK] Backend preferences received:', backendPrefs);
+
+  // ✅ MAPEO CORREGIDO - Solo agregar las preferencias que están activas
   if (backendPrefs.allow_pets) frontendPreferences.push('mascotas');
-  if (backendPrefs.allow_smoking) frontendPreferences.push('fumar');
-  if (!backendPrefs.allow_smoking) frontendPreferences.push('no_fumar');
+  if (!backendPrefs.allow_smoking) frontendPreferences.push('no_fumar'); // Solo si NO permite fumar
   if (backendPrefs.allow_music) frontendPreferences.push('musica');
   if (backendPrefs.air_conditioning) frontendPreferences.push('aire_acondicionado');
-  
-  // Mapeos temporales para campos que no existen en backend
-  if (backendPrefs.allow_food) frontendPreferences.push('wifi');
-  if (backendPrefs.allow_calls) frontendPreferences.push('equipaje_extra');
+  if (backendPrefs.allow_food) frontendPreferences.push('wifi'); // allow_food se mapea a wifi
+  if (backendPrefs.allow_baggage) frontendPreferences.push('equipaje_extra');
+
+  console.log('🎯 [MAPPING-BACK] Frontend preferences mapped:', frontendPreferences);
 
   return frontendPreferences;
+};
+
+/**
+ * Mapea las preferencias del backend al formato del modal para mostrar en la UI
+ */
+export const mapPreferencesForDisplay = (backendPrefs: TripPreferences): Array<{
+  name: string;
+  enabled: boolean;
+}> => {
+  return [
+    {
+      name: 'Mascotas',
+      enabled: backendPrefs.allow_pets
+    },
+    {
+      name: 'Fumar',
+      enabled: backendPrefs.allow_smoking
+    },
+    {
+      name: 'Comida durante el viaje',
+      enabled: backendPrefs.allow_food
+    },
+    {
+      name: 'Música',
+      enabled: backendPrefs.allow_music
+    },
+    {
+      name: 'Equipaje extra',
+      enabled: backendPrefs.allow_baggage
+    },
+    {
+      name: 'Aire acondicionado',
+      enabled: backendPrefs.air_conditioning
+    }
+  ];
 };
 
 // =====================================================
@@ -154,7 +165,7 @@ export const createTripPreferences = async (
 };
 
 /**
- * Obtener preferencias de un viaje
+ * Obtener preferencias de un viaje (para propietarios)
  */
 export const getTripPreferences = async (
   tripId: number
@@ -181,6 +192,41 @@ export const getTripPreferences = async (
     }
   } catch (error) {
     console.error('❌ [TRIP-PREFERENCES] Exception getting preferences:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error desconocido' 
+    };
+  }
+};
+
+/**
+ * Obtener preferencias de un viaje (público - para pasajeros)
+ */
+export const getTripPreferencesPublic = async (
+  tripId: number
+): Promise<{ success: boolean; data?: TripPreferences; error?: string }> => {
+  try {
+    console.log('🎯 [TRIP-PREFERENCES] Getting public preferences for trip:', tripId);
+
+    const response = await apiRequest(`/trip-preferences/public/trip/${tripId}`, {
+      method: 'GET',
+    });
+
+    if (response.success) {
+      console.log('✅ [TRIP-PREFERENCES] Public preferences retrieved successfully:', response.data);
+      return { 
+        success: true, 
+        data: response.data 
+      };
+    } else {
+      console.error('❌ [TRIP-PREFERENCES] Error getting public preferences:', response.error);
+      return { 
+        success: false, 
+        error: response.error || 'Error obteniendo preferencias del viaje' 
+      };
+    }
+  } catch (error) {
+    console.error('❌ [TRIP-PREFERENCES] Exception getting public preferences:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Error desconocido' 

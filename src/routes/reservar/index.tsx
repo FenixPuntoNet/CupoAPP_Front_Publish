@@ -12,6 +12,7 @@ import {
   Badge,
   Group,
   ActionIcon,
+  Modal,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { Calendar, User, Car, MapPin, Navigation } from "lucide-react";
@@ -40,6 +41,15 @@ import {
   IconFlag,
   IconExternalLink,
   IconUsers,
+  IconSettings,
+  IconMusic,
+  IconSnowflake,
+  IconHeart,
+  IconSmokingNo,
+  IconPackage,
+  IconShieldCheck,
+  IconShieldX,
+  IconCar,
 } from "@tabler/icons-react";
 import InteractiveMap from "@/components/InteractiveMap";
 // Servicios del backend
@@ -49,6 +59,11 @@ import { searchTrips, type TripSearchResult } from "@/services/trips";
 import { getAssumptions, ensureAssumptionsExist } from "@/services/config";
 import type { PlaceSuggestion } from "@/services/googleMaps";
 import { useReserveClick } from "@/hooks/useSingleClick";
+import {
+  getTripPreferencesPublic,
+  mapPreferencesForDisplay,
+  type TripPreferences,
+} from "@/services/tripPreferences";
 
 import { DriverModal } from "@/components/DriverModal";
 import { SafePointsIcon } from "@/components/TripSafePointsInfo/SafePointsIcon";
@@ -83,6 +98,13 @@ const ReservarView = () => {
   const [selectedDriver, setSelectedDriver] = useState<TripSearchResult | null>(
     null
   );
+  const [showPreferencesModal, setShowPreferencesModal] = useState(false);
+  const [selectedTripForPreferences, setSelectedTripForPreferences] =
+    useState<TripSearchResult | null>(null);
+  const [tripPreferences, setTripPreferences] =
+    useState<TripPreferences | null>(null);
+  const [loadingPreferences, setLoadingPreferences] = useState(false);
+  const [preferencesError, setPreferencesError] = useState<string | null>(null);
   const { searchPlaces, getDetails } = useMaps();
 
   const [formData, setFormData] = useState<SearchFormData>(() => {
@@ -435,13 +457,58 @@ const ReservarView = () => {
     setSelectedTrip(tripData);
     saveToLocalStorage("currentTrip", tripData);
     setReservationModalOpen(true);
-    
+
     // No navegamos automáticamente, permanecemos en la página con los resultados
   };
 
   // Función actualizada que usa el hook de protección
   const handleReservation = async (trip: TripSearchResult) => {
     await reserveClick.execute(trip);
+  };
+
+  // Función para cargar las preferencias del viaje desde el backend
+  const loadTripPreferences = async (tripId: number) => {
+    setLoadingPreferences(true);
+    setPreferencesError(null);
+    setTripPreferences(null); // Reset previas preferencias
+
+    try {
+      console.log("🎯 [PREFERENCES] Loading preferences for trip:", tripId);
+      const response = await getTripPreferencesPublic(tripId);
+
+      if (response.success && response.data) {
+        setTripPreferences(response.data);
+        console.log(
+          "✅ [PREFERENCES] Preferences loaded successfully:",
+          response.data
+        );
+        console.log(
+          "📝 [PREFERENCES] Are default preferences?",
+          !response.data.id
+        );
+      } else {
+        // Si hay un error específico, mostrarlo
+        if (response.error) {
+          setPreferencesError(response.error);
+          console.error(
+            "❌ [PREFERENCES] Error loading preferences:",
+            response.error
+          );
+        } else {
+          // Si no hay error pero tampoco datos, es que no hay preferencias
+          setTripPreferences(null);
+          console.log(
+            "ℹ️ [PREFERENCES] No preferences found for trip:",
+            tripId
+          );
+        }
+      }
+    } catch (error) {
+      setPreferencesError("Error inesperado cargando preferencias del viaje");
+      console.error("❌ [PREFERENCES] Exception loading preferences:", error);
+    } finally {
+      setLoadingPreferences(false);
+    }
   };
 
   const handleCloseModal = () => {
@@ -861,73 +928,88 @@ const ReservarView = () => {
           {searchResults.length > 0 && (
             <Box
               style={{
-                background: 'rgba(34, 197, 94, 0.08)',
-                border: '1px solid rgba(34, 197, 94, 0.2)',
-                borderRadius: '8px',
-                padding: '3px 10px',
-                margin: '0 auto 3px auto',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
+                background: "rgba(34, 197, 94, 0.08)",
+                border: "1px solid rgba(34, 197, 94, 0.2)",
+                borderRadius: "8px",
+                padding: "3px 10px",
+                margin: "0 auto 3px auto",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
               }}
             >
-              <IconList size={12} style={{ color: '#22c55e' }} />
-              <Text size="xs" fw={500} style={{ color: '#22c55e', margin: 0 }}>
-                {searchResults.length} {searchResults.length === 1 ? 'viaje encontrado' : 'viajes encontrados'}
+              <IconList size={12} style={{ color: "#22c55e" }} />
+              <Text size="xs" fw={500} style={{ color: "#22c55e", margin: 0 }}>
+                {searchResults.length}{" "}
+                {searchResults.length === 1
+                  ? "viaje encontrado"
+                  : "viajes encontrados"}
               </Text>
             </Box>
           )}
-          
+
           {/* Search Message */}
           {searchMessage && (
             <Box
               style={{
-                background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%)',
-                border: '1px solid rgba(59, 130, 246, 0.2)',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                margin: '0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px'
+                background:
+                  "linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%)",
+                border: "1px solid rgba(59, 130, 246, 0.2)",
+                borderRadius: "8px",
+                padding: "6px 12px",
+                margin: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
               }}
             >
               {/* Icono pequeño */}
               {searchStatus === "exact" && (
-                <IconCircleCheck size={16} style={{ color: '#22c55e' }} />
+                <IconCircleCheck size={16} style={{ color: "#22c55e" }} />
               )}
               {searchStatus === "close" && (
-                <MapPin size={16} style={{ color: '#3b82f6' }} />
+                <MapPin size={16} style={{ color: "#3b82f6" }} />
               )}
               {searchStatus === "date" && (
-                <IconCalendar size={16} style={{ color: '#f59e0b' }} />
+                <IconCalendar size={16} style={{ color: "#f59e0b" }} />
               )}
               {searchStatus === "all" && (
-                <IconList size={16} style={{ color: '#6366f1' }} />
+                <IconList size={16} style={{ color: "#6366f1" }} />
               )}
               {searchStatus === "none" && (
-                <IconX size={16} style={{ color: '#ef4444' }} />
+                <IconX size={16} style={{ color: "#ef4444" }} />
               )}
-              
+
               {/* Texto compacto pero informativo */}
               <Text
                 size="xs"
                 fw={500}
-                style={{ 
-                  color: searchStatus === 'exact' ? '#22c55e' : 
-                         searchStatus === 'close' ? '#3b82f6' :
-                         searchStatus === 'date' ? '#f59e0b' :
-                         searchStatus === 'all' ? '#6366f1' : '#ef4444',
+                style={{
+                  color:
+                    searchStatus === "exact"
+                      ? "#22c55e"
+                      : searchStatus === "close"
+                        ? "#3b82f6"
+                        : searchStatus === "date"
+                          ? "#f59e0b"
+                          : searchStatus === "all"
+                            ? "#6366f1"
+                            : "#ef4444",
                   margin: 0,
-                  textAlign: 'center'
+                  textAlign: "center",
                 }}
               >
-                {searchStatus === "exact" && "🎯 ¡Encontramos viajes exactos para tu ruta y fecha!"}
-                {searchStatus === "close" && "📍 Viajes similares encontrados (origen o destino coinciden)"}
-                {searchStatus === "date" && "📅 Viajes disponibles para la fecha seleccionada"}
-                {searchStatus === "all" && "🗂️ Todos los viajes disponibles - Ajusta tu búsqueda para mayor precisión"}
-                {searchStatus === "none" && "❌ No encontramos viajes para tu búsqueda específica. Estos son todos los viajes disponibles."}
+                {searchStatus === "exact" &&
+                  "🎯 ¡Encontramos viajes exactos para tu ruta y fecha!"}
+                {searchStatus === "close" &&
+                  "📍 Viajes similares encontrados (origen o destino coinciden)"}
+                {searchStatus === "date" &&
+                  "📅 Viajes disponibles para la fecha seleccionada"}
+                {searchStatus === "all" &&
+                  "🗂️ Todos los viajes disponibles - Ajusta tu búsqueda para mayor precisión"}
+                {searchStatus === "none" &&
+                  "❌ No encontramos viajes para tu búsqueda específica. Estos son todos los viajes disponibles."}
               </Text>
             </Box>
           )}
@@ -936,19 +1018,19 @@ const ReservarView = () => {
           {formError && (
             <Box
               style={{
-                background: 'rgba(239, 68, 68, 0.05)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                borderRadius: '12px',
-                padding: '8px 16px',
-                margin: '0 0 6px 0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
+                background: "rgba(239, 68, 68, 0.05)",
+                border: "1px solid rgba(239, 68, 68, 0.2)",
+                borderRadius: "12px",
+                padding: "8px 16px",
+                margin: "0 0 6px 0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
               }}
             >
-              <IconAlertCircle size={16} style={{ color: '#ef4444' }} />
-              <Text size="xs" fw={500} style={{ color: '#ef4444', margin: 0 }}>
+              <IconAlertCircle size={16} style={{ color: "#ef4444" }} />
+              <Text size="xs" fw={500} style={{ color: "#ef4444", margin: 0 }}>
                 {formError}
               </Text>
             </Box>
@@ -962,7 +1044,6 @@ const ReservarView = () => {
 
                 // Calcular sugerido y estado del precio
                 let priceBadge = null;
-                let priceStatusMsg = null;
                 let badge = null;
                 if (assumptions && trip.selectedRoute?.distance) {
                   const distanceKm = parseDistanceKm(
@@ -1006,28 +1087,6 @@ const ReservarView = () => {
                       })}
                     </Badge>
                   );
-                  // Ícono profesional según estado del precio
-                  let priceIcon = null;
-                  let iconBgColor = "";
-                  if (badge.status === "high") {
-                    priceIcon = <IconArrowUpRight size={14} style={{ color: "#ffffff" }} />;
-                    iconBgColor = "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)";
-                  } else if (badge.status === "low") {
-                    priceIcon = <IconArrowDownLeft size={14} style={{ color: "#ffffff" }} />;
-                    iconBgColor = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
-                  } else {
-                    priceIcon = <IconCheck size={14} style={{ color: "#ffffff" }} />;
-                    iconBgColor = "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)";
-                  }
-                  
-                  priceStatusMsg = (
-                    <div 
-                      className={styles.professionalPriceIcon}
-                      style={{ background: iconBgColor }}
-                    >
-                      {priceIcon}
-                    </div>
-                  );
                 } else {
                   priceBadge = (
                     <Badge
@@ -1047,22 +1106,6 @@ const ReservarView = () => {
                       })}
                     </Badge>
                   );
-                  priceStatusMsg = (
-                    <div 
-                      className={styles.professionalPriceIcon}
-                      style={{ 
-                        background: "linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)"
-                      }}
-                    >
-                      <div style={{ 
-                        width: 8, 
-                        height: 8, 
-                        borderRadius: "50%", 
-                        backgroundColor: "#ffffff",
-                        opacity: 0.8
-                      }} />
-                    </div>
-                  );
                 }
                 return (
                   <Card
@@ -1071,6 +1114,7 @@ const ReservarView = () => {
                     shadow="md"
                     radius="lg"
                     p="sm"
+                    style={{ position: "relative" }}
                   >
                     {/* Badge de coincidencia a la izquierda */}
                     <div className={styles.leftBadgeSection}>
@@ -1078,11 +1122,11 @@ const ReservarView = () => {
                     </div>
 
                     {/* Header: Ruta principal con precio */}
-                    <Group justify="space-between" align="flex-start" mb="xs">
+                    <Group justify="space-between" align="flex-start" mb={4}>
                       <div className={styles.compactRouteHeader}>
-                        <Text 
-                          fw={700} 
-                          size="lg" 
+                        <Text
+                          fw={700}
+                          size="lg"
                           className={styles.compactRouteText}
                           onClick={() => {
                             setSelectedRouteInfo({
@@ -1093,22 +1137,28 @@ const ReservarView = () => {
                           }}
                           style={{ cursor: "pointer" }}
                         >
-                          {trip.origin.split(',')[0]} → {trip.destination.split(',')[0]}
+                          {trip.origin.split(",")[0]} →{" "}
+                          {trip.destination.split(",")[0]}
                         </Text>
-                        <Text size="xs" c="dimmed" className={styles.compactSubroute}>
-                          {trip.origin.split(',').slice(1).join(',').trim()}
+                        <Text
+                          size="xs"
+                          c="dimmed"
+                          className={styles.compactSubroute}
+                        >
+                          {trip.origin.split(",").slice(1).join(",").trim()}
                         </Text>
                       </div>
-                      
-                      <div className={styles.priceSection}>
+
+                      <div
+                        className={styles.priceSection}
+                        style={{ alignSelf: "flex-start" }}
+                      >
                         {priceBadge}
-                        {/* Ícono de precio profesional */}
-                        {priceStatusMsg}
                       </div>
                     </Group>
 
                     {/* Línea 2: Fecha y hora */}
-                    <Group justify="space-between" align="center" mb="xs">
+                    <Group justify="space-between" align="center" mb={4}>
                       <Group align="center" gap="xs">
                         <div className={styles.compactTimeIcon}>
                           <IconCalendar size={14} />
@@ -1125,33 +1175,59 @@ const ReservarView = () => {
                           })}
                         </Text>
                       </Group>
-                      
                     </Group>
 
                     {/* Iconos compactos: SafePoints y Ver Ruta */}
-                    <Group justify="space-between" align="center" mb="xs">
-                      <Group align="center" gap="xs">
-                        <Group align="center" gap={4}>
-                          <IconUsers size={12} style={{ color: trip.seats > 0 ? "#22c55e" : "#ef4444" }} />
-                          <Text size="sm" fw={500} style={{ color: trip.seats > 0 ? "#22c55e" : "#ef4444" }}>
+                    <Group justify="space-between" align="center" mb={2}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flex: 1,
+                          maxWidth: "40%",
+                          gap: "3px",
+                          marginTop: "1px",
+                        }}
+                      >
+                        <IconUsers
+                          size={20}
+                          style={{
+                            color: trip.seats > 0 ? "#22c55e" : "#ef4444",
+                            marginRight: "4px",
+                          }}
+                        />
+                        <div style={{ textAlign: "left" }}>
+                          <Text
+                            size="sm"
+                            fw={500}
+                            style={{
+                              color: trip.seats > 0 ? "#22c55e" : "#ef4444",
+                              marginBottom: "2px",
+                            }}
+                          >
                             {trip.seats} Disponibles
                           </Text>
-                        </Group>
-                        <Text size="xs" c="dimmed">•</Text>
-                        <Text size="xs" c="dimmed">
-                          {4 - trip.seats} Ocupados
-                        </Text>
-                      </Group>
+                          <Text
+                            size="10px"
+                            c="dimmed"
+                            style={{ lineHeight: 1 }}
+                          >
+                            {4 - trip.seats} Ocupados
+                          </Text>
+                        </div>
+                      </div>
                       <Group align="center" gap="xs">
                         {/* SafePoints con el modal original integrado */}
-                        <SafePointsIcon 
-                          tripId={trip.id.toString()} 
+                        <SafePointsIcon
+                          tripId={trip.id.toString()}
                           className={styles.safePointsIconButton}
                           size="lg"
                           showLabel={true}
                         />
                         {/* Botón Ver Ruta */}
-                        <Box style={{ textAlign: 'center' }}>
+                        <Box style={{ textAlign: "center", lineHeight: 1 }}>
                           <ActionIcon
                             size="lg"
                             variant="subtle"
@@ -1168,20 +1244,47 @@ const ReservarView = () => {
                           >
                             <IconRoute size={20} />
                           </ActionIcon>
-                          <Text size="9px" c="dimmed" style={{ marginTop: '2px', lineHeight: 1 }}>
+                          <Text
+                            size="8px"
+                            c="dimmed"
+                            style={{ marginTop: "1px", lineHeight: 0.9 }}
+                          >
                             Ruta
+                          </Text>
+                        </Box>
+                        {/* Botón Ver Preferencias */}
+                        <Box style={{ textAlign: "center", lineHeight: 1 }}>
+                          <ActionIcon
+                            size="lg"
+                            variant="subtle"
+                            className={styles.preferencesViewIconButton}
+                            onClick={async (e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              setSelectedTripForPreferences(trip);
+                              setShowPreferencesModal(true);
+                              // Cargar las preferencias del backend
+                              await loadTripPreferences(Number(trip.id));
+                            }}
+                            title="Ver preferencias del viaje"
+                          >
+                            <IconSettings size={20} />
+                          </ActionIcon>
+                          <Text
+                            size="8px"
+                            c="dimmed"
+                            style={{ marginTop: "1px", lineHeight: 0.9 }}
+                          >
+                            Preferencias
                           </Text>
                         </Box>
                       </Group>
                     </Group>
 
-
-
                     {/* Sección del conductor - compacta con verificación */}
                     <div
                       className={`${styles.enhancedDriverSection} ${
-                        (trip.license && trip.license !== 'Sin verificar' && trip.license !== 'No disponible')
-                          ? styles.verifiedDriver 
+                        trip.isUserVerified
+                          ? styles.verifiedDriver
                           : styles.unverifiedDriver
                       }`}
                       onClick={() => {
@@ -1200,43 +1303,93 @@ const ReservarView = () => {
                         }}
                       />
                       <div className={styles.enhancedDriverInfo}>
-                        <Group align="center" justify="space-between" style={{ width: '100%', marginBottom: '2px' }}>
-                          <Text fw={600} size="md" lineClamp={1} className={styles.driverName}>
+                        <Group
+                          align="center"
+                          justify="space-between"
+                          style={{ width: "100%", marginBottom: "2px" }}
+                        >
+                          <Text
+                            fw={600}
+                            size="md"
+                            lineClamp={1}
+                            className={styles.driverName}
+                          >
                             {trip.driverName || "No disponible"}
                           </Text>
-                          {(trip.license && trip.license !== 'Sin verificar' && trip.license !== 'No disponible') ? (
-                            <Badge 
-                              size="xs" 
+
+                          {/* Estado de verificación del conductor */}
+                          {trip.isUserVerified ? (
+                            <Badge
+                              size="xs"
+                              color="green"
                               className={styles.verifiedBadge}
-                              leftSection={<IconCircleCheck size={10} />}
+                              leftSection={<IconShieldCheck size={10} />}
                             >
                               Verificado
                             </Badge>
                           ) : (
-                            <Badge 
-                              size="xs" 
+                            <Badge
+                              size="xs"
                               variant="outline"
-                              color="yellow"
+                              color="orange"
                               className={styles.unverifiedBadge}
+                              leftSection={<IconShieldX size={10} />}
                             >
-                              Pendiente
+                              Sin verificar
                             </Badge>
                           )}
                         </Group>
-                        <div className={styles.enhancedDriverRating}>
-                          {trip.rating !== undefined ? (
-                            <Group align="center" gap={2}>
-                              <Rating value={trip.rating} readOnly size="xs" />
-                              <Text size="xs" c="dimmed" style={{ marginLeft: '2px' }}>
-                                {trip.rating.toFixed(1)}
+
+                        {/* Línea con rating y verificación de vehículo */}
+                        <Group
+                          align="center"
+                          justify="space-between"
+                          style={{ width: "100%" }}
+                        >
+                          <div className={styles.enhancedDriverRating}>
+                            {trip.rating !== undefined ? (
+                              <Group align="center" gap={2}>
+                                <Rating
+                                  value={trip.rating}
+                                  readOnly
+                                  size="xs"
+                                />
+                                <Text
+                                  size="xs"
+                                  c="dimmed"
+                                  style={{ marginLeft: "2px" }}
+                                >
+                                  {trip.rating.toFixed(1)}
+                                </Text>
+                              </Group>
+                            ) : (
+                              <Text c="gray" size="xs">
+                                Sin calificaciones
                               </Text>
-                            </Group>
+                            )}
+                          </div>
+
+                          {/* Estado de verificación del vehículo */}
+                          {trip.isVehicleVerified ? (
+                            <Badge
+                              size="xs"
+                              color="blue"
+                              variant="light"
+                              leftSection={<IconCar size={10} />}
+                            >
+                              Vehículo ✓
+                            </Badge>
                           ) : (
-                            <Text c="gray" size="xs">
-                              Sin calificaciones
-                            </Text>
+                            <Badge
+                              size="xs"
+                              variant="outline"
+                              color="gray"
+                              leftSection={<IconCar size={10} />}
+                            >
+                              Vehículo
+                            </Badge>
                           )}
-                        </div>
+                        </Group>
                       </div>
                       <div className={styles.driverArrow}>
                         <IconArrowUpRight size={16} />
@@ -1301,6 +1454,165 @@ const ReservarView = () => {
           />
         )}
 
+        {/* Modal de Preferencias del Viaje */}
+        <Modal
+          opened={showPreferencesModal}
+          onClose={() => {
+            setShowPreferencesModal(false);
+            setTripPreferences(null);
+            setPreferencesError(null);
+            setLoadingPreferences(false);
+          }}
+          title="Preferencias del Viaje"
+          size="md"
+          centered
+          classNames={{
+            header: styles.modalHeader,
+            title: styles.modalTitle,
+            body: styles.modalBody,
+          }}
+        >
+          {selectedTripForPreferences && (
+            <div>
+              {/* Header del conductor */}
+              <Group mb="md" align="center">
+                <img
+                  src={selectedTripForPreferences.photo}
+                  alt="Conductor"
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      "https://tddaveymppuhweujhzwz.supabase.co/storage/v1/object/public/resourcers/Home/SinFotoPerfil.png";
+                  }}
+                />
+                <div>
+                  <Text fw={600} size="lg">
+                    {selectedTripForPreferences.driverName || "Conductor"}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    {selectedTripForPreferences.origin} →{" "}
+                    {selectedTripForPreferences.destination}
+                  </Text>
+                </div>
+              </Group>
+
+              {/* Loading state */}
+              {loadingPreferences && (
+                <Text ta="center" py="xl" c="dimmed">
+                  Cargando preferencias del viaje...
+                </Text>
+              )}
+
+              {/* Error state */}
+              {preferencesError && (
+                <Card withBorder p="md" c="red" mb="md">
+                  <Group gap="xs">
+                    <IconAlertCircle size={18} />
+                    <Text size="sm">Error: {preferencesError}</Text>
+                  </Group>
+                </Card>
+              )}
+
+              {/* Grid de Preferencias - Solo preferencias REALES configuradas por el conductor */}
+              {!loadingPreferences &&
+                !preferencesError &&
+                tripPreferences &&
+                tripPreferences.id && (
+                  <>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(2, 1fr)",
+                        gap: "12px",
+                      }}
+                    >
+                      {mapPreferencesForDisplay(tripPreferences).map(
+                        (preference, index) => (
+                          <div
+                            key={index}
+                            className={
+                              preference.enabled
+                                ? styles.preferenceEnabled
+                                : styles.preferenceDisabled
+                            }
+                          >
+                            <Group gap="xs" align="center">
+                              {preference.name === "Mascotas" && (
+                                <IconHeart size={18} />
+                              )}
+                              {preference.name === "Fumar" && (
+                                <IconSmokingNo size={18} />
+                              )}
+                              {preference.name ===
+                                "Comida durante el viaje" && (
+                                <IconPackage size={18} />
+                              )}
+                              {preference.name === "Música" && (
+                                <IconMusic size={18} />
+                              )}
+                              {preference.name === "Equipaje extra" && (
+                                <IconPackage size={18} />
+                              )}
+                              {preference.name === "Aire acondicionado" && (
+                                <IconSnowflake size={18} />
+                              )}
+                              <div>
+                                <Text size="sm" fw={500}>
+                                  {preference.name}
+                                </Text>
+                                <Text size="xs" c="dimmed">
+                                  {preference.enabled
+                                    ? "Permitido"
+                                    : "No permitido"}
+                                </Text>
+                              </div>
+                            </Group>
+                          </div>
+                        )
+                      )}
+                    </div>
+
+                    {/* Solo mostrar si son preferencias configuradas por el conductor */}
+                    {tripPreferences.id && (
+                      <Card mt="sm" p="xs" withBorder variant="light">
+                        <Text size="xs" c="dimmed" ta="center">
+                          Preferencias configuradas por el conductor
+                        </Text>
+                      </Card>
+                    )}
+                  </>
+                )}
+
+              {/* Mensaje cuando no hay preferencias configuradas */}
+              {!loadingPreferences &&
+                !preferencesError &&
+                (!tripPreferences || !tripPreferences.id) && (
+                  <Card withBorder p="md" ta="center">
+                    <Group justify="center" gap="xs" mb="sm">
+                      <IconAlertCircle size={20} color="gray" />
+                      <Text size="sm" fw={500} c="dimmed">
+                        Sin preferencias configuradas
+                      </Text>
+                    </Group>
+                    <Text size="sm" c="dimmed">
+                      El conductor no ha configurado preferencias específicas
+                      para este viaje.
+                    </Text>
+                    <Text size="xs" c="dimmed" mt="xs">
+                      Puedes consultar directamente con el conductor sobre las
+                      reglas del viaje.
+                    </Text>
+                  </Card>
+                )}
+            </div>
+          )}
+        </Modal>
+
         {selectedRouteInfo && (
           <Drawer
             opened={showRouteModal}
@@ -1309,12 +1621,12 @@ const ReservarView = () => {
             size="70vh"
             position="bottom"
             classNames={{
-              content: styles.mapModalContent
+              content: styles.mapModalContent,
             }}
             transitionProps={{
-              transition: 'slide-up',
+              transition: "slide-up",
               duration: 400,
-              timingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+              timingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           >
             <div className={styles.mapModalContainer}>
@@ -1324,15 +1636,23 @@ const ReservarView = () => {
                   <div className={styles.mapModalTitle}>
                     <IconRoute size={24} className={styles.mapModalIcon} />
                     <div>
-                      <Text size="lg" fw={700} className={styles.mapModalTitleText}>
+                      <Text
+                        size="lg"
+                        fw={700}
+                        className={styles.mapModalTitleText}
+                      >
                         Ruta del Viaje
                       </Text>
-                      <Text size="xs" className={styles.mapModalSubtitle} style={{ marginTop: 2 }}>
+                      <Text
+                        size="xs"
+                        className={styles.mapModalSubtitle}
+                        style={{ marginTop: 2 }}
+                      >
                         Toca el mapa para interactuar
                       </Text>
                     </div>
                   </div>
-                  <button 
+                  <button
                     className={styles.mapModalCloseButton}
                     onClick={() => setShowRouteModal(false)}
                     aria-label="Cerrar modal"
@@ -1340,12 +1660,15 @@ const ReservarView = () => {
                     ×
                   </button>
                 </div>
-                
+
                 {/* Información de origen y destino */}
                 <div className={styles.routeInfoSection}>
                   <div className={styles.routeInfoItem}>
                     <div className={styles.routeIconWrapper}>
-                      <IconMapPin size={16} className={styles.routeOriginIcon} />
+                      <IconMapPin
+                        size={16}
+                        className={styles.routeOriginIcon}
+                      />
                     </div>
                     <div className={styles.routeTextWrapper}>
                       <Text size="xs" fw={500} className={styles.routeLabel}>
@@ -1356,10 +1679,13 @@ const ReservarView = () => {
                       </Text>
                     </div>
                   </div>
-                  
+
                   <div className={styles.routeInfoItem}>
                     <div className={styles.routeIconWrapper}>
-                      <IconFlag size={16} className={styles.routeDestinationIcon} />
+                      <IconFlag
+                        size={16}
+                        className={styles.routeDestinationIcon}
+                      />
                     </div>
                     <div className={styles.routeTextWrapper}>
                       <Text size="xs" fw={500} className={styles.routeLabel}>
@@ -1371,14 +1697,14 @@ const ReservarView = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Botón para abrir en Google Maps */}
                 <div className={styles.mapActionsSection}>
-                  <button 
+                  <button
                     className={styles.openInGoogleMapsBtn}
                     onClick={() => {
                       const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(selectedRouteInfo.origin)}/${encodeURIComponent(selectedRouteInfo.destination)}`;
-                      window.open(mapsUrl, '_blank');
+                      window.open(mapsUrl, "_blank");
                     }}
                   >
                     <IconExternalLink size={16} />
@@ -1386,7 +1712,7 @@ const ReservarView = () => {
                   </button>
                 </div>
               </div>
-              
+
               {/* Contenedor del mapa - Ahora ocupa todo el espacio */}
               <div className={styles.mapContentWrapper}>
                 <InteractiveMap
@@ -1409,6 +1735,11 @@ const ReservarView = () => {
             license={selectedDriver.license}
             propertyCard={selectedDriver.propertyCard}
             soat={selectedDriver.soat}
+            // ✅ Pasar los nuevos campos de verificación del backend
+            isUserVerified={selectedDriver.isUserVerified}
+            isVehicleVerified={selectedDriver.isVehicleVerified}
+            userVerificationStatus={selectedDriver.userVerificationStatus}
+            vehicleVerificationStatus={selectedDriver.vehicleVerificationStatus}
           />
         )}
       </Container>

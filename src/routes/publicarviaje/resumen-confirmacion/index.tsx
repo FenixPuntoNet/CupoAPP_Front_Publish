@@ -204,8 +204,9 @@ function ResumenConfirmacionView() {
         seats: Number(tripData.seats),
         price_per_seat: Number(tripData.pricePerSeat),
         description: extendedData.additionalInfo?.trim() || 'Viaje compartido',
+        // ✅ MAPEO CORREGIDO de preferencias para el endpoint /viajes/publish
         allow_pets: (extendedData.preferences || []).includes('mascotas'),
-        allow_smoking: !(extendedData.preferences || []).includes('no_fumar'),
+        allow_smoking: !(extendedData.preferences || []).includes('no_fumar'), // Si selecciona "no_fumar", allow_smoking=false
         vehicle_id: parseInt(extendedData.vehicle),
         route_summary: tripData.selectedRoute!.summary,
         estimated_duration: tripData.selectedRoute!.duration,

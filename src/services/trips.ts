@@ -35,6 +35,11 @@ export interface TripSearchResult {
   soat?: any;
   rating?: number;
   suggestedPrice?: number;
+  // ✅ NUEVOS CAMPOS DE VERIFICACIÓN
+  isUserVerified?: boolean;              // Usuario verificado
+  isVehicleVerified?: boolean;           // Vehículo verificado  
+  userVerificationStatus?: string | null; // Estado raw del usuario
+  vehicleVerificationStatus?: string | null; // Estado raw del vehículo
 }
 
 // Buscar viajes usando el endpoint del backend
@@ -65,6 +70,20 @@ const transformTripResponse = (trip: any): TripSearchResult => {
     rawDistance: trip.distance
   });
   
+  // 🔍 DEBUG VERIFICACIÓN - Log para verificar los campos de verificación
+  console.log('🛡️ [VERIFICATION DEBUG] Trip', trip.id, 'verification data:', {
+    // Campos que vienen del backend
+    backendIsUserVerified: trip.isUserVerified,
+    backendUserVerificationStatus: trip.userVerificationStatus,
+    backendIsVehicleVerified: trip.isVehicleVerified,
+    backendVehicleVerificationStatus: trip.vehicleVerificationStatus,
+    // Valores procesados
+    finalIsUserVerified: trip.isUserVerified || (trip.userVerificationStatus === 'VERIFICADO') || false,
+    finalUserVerificationStatus: trip.userVerificationStatus || null,
+    finalIsVehicleVerified: trip.isVehicleVerified || (trip.vehicleVerificationStatus === 'activo') || (trip.vehicle?.status === 'activo') || false,
+    finalVehicleVerificationStatus: trip.vehicleVerificationStatus || trip.vehicle?.status || null
+  });
+  
   return {
     id: trip.id?.toString() || trip.trip_id?.toString() || '',
     origin: trip.origin || trip.route?.start_address || '',
@@ -87,7 +106,12 @@ const transformTripResponse = (trip: any): TripSearchResult => {
     propertyCard: trip.propertyCard,
     soat: trip.soat,
     rating: trip.rating || 0,
-    suggestedPrice: trip.suggestedPrice
+    suggestedPrice: trip.suggestedPrice,
+    // ✅ MAPEAR CAMPOS DE VERIFICACIÓN DESDE EL BACKEND
+    isUserVerified: trip.isUserVerified || (trip.userVerificationStatus === 'VERIFICADO') || false,
+    isVehicleVerified: trip.isVehicleVerified || (trip.vehicleVerificationStatus === 'activo') || (trip.vehicle?.status === 'activo') || false,
+    userVerificationStatus: trip.userVerificationStatus || null,
+    vehicleVerificationStatus: trip.vehicleVerificationStatus || trip.vehicle?.status || null
   };
 };
 

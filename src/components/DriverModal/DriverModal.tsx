@@ -30,6 +30,11 @@ interface DriverModalProps {
   license?: string;
   propertyCard?: string;
   soat?: string;
+  // ✅ Nuevos campos de verificación del backend
+  isUserVerified?: boolean;
+  isVehicleVerified?: boolean;
+  userVerificationStatus?: string | null;
+  vehicleVerificationStatus?: string | null;
 }
 
 export function DriverModal({ 
@@ -41,8 +46,20 @@ export function DriverModal({
   vehicle,
   license,
   propertyCard,
-  soat
+  soat,
+  isUserVerified = false,
+  isVehicleVerified = false,
+  userVerificationStatus = null,
+  vehicleVerificationStatus = null
 }: DriverModalProps) {
+  
+  // Para debugging: verificar el estado que llega
+  console.log('🔍 [DriverModal] Verification status:', {
+    isUserVerified,
+    isVehicleVerified,
+    userVerificationStatus,
+    vehicleVerificationStatus
+  });
   
   const renderStars = (rating: number) => {
     const stars = [];
@@ -180,9 +197,21 @@ export function DriverModal({
                 </Text>
               </Group>
               
-              <Badge className={styles.verifiedBadge}>
-                Conductor Verificado
-              </Badge>
+              {/* ✅ Badge dinámico basado en verificación real del backend */}
+              {isUserVerified ? (
+                <Badge className={styles.verifiedBadge}>
+                  Conductor Verificado
+                </Badge>
+              ) : (
+                <Badge 
+                  variant="outline" 
+                  color="orange" 
+                  size="sm"
+                  leftSection={<Shield size={12} />}
+                >
+                  Sin Verificar
+                </Badge>
+              )}
             </Box>
           </Group>
         </Box>
@@ -210,11 +239,34 @@ export function DriverModal({
 
             {/* Información del vehículo */}
             <Box className={styles.driverInfoSection}>
-              <Group gap="xs" mb={8} align="center">
-                <Car size={12} className={styles.accentText} />
-                <Text size="xs" fw={600} className={styles.primaryText}>
-                  Información del Vehículo
-                </Text>
+              <Group justify="space-between" align="center" mb={8}>
+                <Group gap="xs" align="center">
+                  <Car size={12} className={styles.accentText} />
+                  <Text size="xs" fw={600} className={styles.primaryText}>
+                    Información del Vehículo
+                  </Text>
+                </Group>
+                
+                {/* ✅ Estado de verificación del vehículo */}
+                {isVehicleVerified ? (
+                  <Badge 
+                    size="xs" 
+                    color="blue" 
+                    variant="light"
+                    leftSection={<CheckCircle size={10} />}
+                  >
+                    Verificado
+                  </Badge>
+                ) : (
+                  <Badge 
+                    size="xs" 
+                    variant="outline" 
+                    color="orange"
+                    leftSection={<AlertCircle size={10} />}
+                  >
+                    Sin verificar
+                  </Badge>
+                )}
               </Group>
               
               <Stack gap={3} mb="sm">
@@ -287,13 +339,37 @@ export function DriverModal({
               </Group>
             </Box>
 
-            {/* Footer de verificación */}
-            <Box className={styles.verificationFooter}>
+            {/* Footer de verificación dinámico */}
+            <Box className={`${styles.verificationFooter} ${
+              isUserVerified && isVehicleVerified 
+                ? '' 
+                : isUserVerified || isVehicleVerified 
+                  ? styles.partial 
+                  : styles.pending
+            }`}>
               <Group justify="center" gap={4}>
-                <Shield size={10} color="#22c55e" />
-                <Text size="xs" fw={500} style={{ color: '#22c55e' }}>
-                  Verificado por CupoApp
-                </Text>
+                {isUserVerified && isVehicleVerified ? (
+                  <>
+                    <Shield size={10} color="#22c55e" />
+                    <Text size="xs" fw={500} style={{ color: '#22c55e' }}>
+                      Completamente Verificado por CupoApp
+                    </Text>
+                  </>
+                ) : isUserVerified || isVehicleVerified ? (
+                  <>
+                    <Shield size={10} color="#f59e0b" />
+                    <Text size="xs" fw={500} style={{ color: '#f59e0b' }}>
+                      Verificación Parcial por CupoApp
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle size={10} color="#ef4444" />
+                    <Text size="xs" fw={500} style={{ color: '#ef4444' }}>
+                      Pendiente de Verificación
+                    </Text>
+                  </>
+                )}
               </Group>
             </Box>
           </Stack>

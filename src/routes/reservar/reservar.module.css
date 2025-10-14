@@ -724,6 +724,30 @@
   box-shadow: 0 4px 15px rgba(34, 139, 34, 0.25) !important;
 }
 
+/* Botón de ver preferencias */
+.preferencesViewIconButton {
+  background: rgba(139, 92, 246, 0.12) !important;
+  color: #8b5cf6 !important;
+  border: 2px solid rgba(139, 92, 246, 0.35) !important;
+  border-radius: 10px !important;
+  transition: all 0.2s ease !important;
+  flex-shrink: 0;
+  min-width: 44px !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15) !important;
+}
+
+.preferencesViewIconButton:hover {
+  background: rgba(139, 92, 246, 0.2) !important;
+  border-color: rgba(139, 92, 246, 0.5) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.25) !important;
+}
+
 /* Sección de precio mejorada */
 .priceSection {
   display: flex;
@@ -2776,4 +2800,269 @@
 :global(body.dark) .mantine-TextInput-input::placeholder,
 :global(body[data-mantine-color-scheme="dark"]) .mantine-TextInput-input::placeholder {
   color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Estilos para el modal de preferencias */
+.preferenceEnabled {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.preferenceEnabled:hover {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  transform: translateY(-1px);
+}
+
+.preferenceDisabled {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.preferenceDisabled:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Estilos para modo claro */
+:global(.light) .preferenceEnabled {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.25);
+  color: #16a34a;
+}
+
+:global(.light) .preferenceEnabled:hover {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+:global(.light) .preferenceDisabled {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+:global(.light) .preferenceDisabled:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+:global(.light) .preferencesViewIconButton {
+  background: rgba(139, 92, 246, 0.08) !important;
+  border-color: rgba(139, 92, 246, 0.25) !important;
+  color: #7c3aed !important;
+}
+
+:global(.light) .preferencesViewIconButton:hover {
+  background: rgba(139, 92, 246, 0.12) !important;
+  border-color: rgba(139, 92, 246, 0.35) !important;
+}
+
+/* ============================================================================= */
+/* SOLUCION ULTRA DEFINITIVA PARA MODO CLARO - CUBRIENDO ABSOLUTAMENTE TODO */
+/* ============================================================================= */
+
+/* 1. HEADER DEL MODAL */
+:global(.light) .modalHeader,
+:global([data-mantine-color-scheme="light"]) .modalHeader,
+:global(html[data-mantine-color-scheme="light"]) .modalHeader,
+:global(body.light) .modalHeader {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 2. TÍTULO DEL MODAL */
+:global(.light) .modalTitle,
+:global([data-mantine-color-scheme="light"]) .modalTitle,
+:global(html[data-mantine-color-scheme="light"]) .modalTitle,
+:global(body.light) .modalTitle {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* 3. BODY DEL MODAL */
+:global(.light) .modalBody,
+:global([data-mantine-color-scheme="light"]) .modalBody,
+:global(html[data-mantine-color-scheme="light"]) .modalBody,
+:global(body.light) .modalBody {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* 4. TODOS LOS ELEMENTOS GENERALES */
+:global(.light) .modalBody *,
+:global([data-mantine-color-scheme="light"]) .modalBody *,
+:global(html[data-mantine-color-scheme="light"]) .modalBody *,
+:global(body.light) .modalBody * {
+  color: #000000 !important;
+}
+
+/* 5. TEXTOS DE MANTINE ESPECÍFICOS */
+:global(.light) .modalBody .mantine-Text-root,
+:global([data-mantine-color-scheme="light"]) .modalBody .mantine-Text-root,
+:global(html[data-mantine-color-scheme="light"]) .modalBody .mantine-Text-root,
+:global(body.light) .modalBody .mantine-Text-root {
+  color: #000000 !important;
+}
+
+/* 6. ELEMENTOS HTML BÁSICOS */
+:global(.light) .modalBody div,
+:global(.light) .modalBody span,
+:global(.light) .modalBody p,
+:global(.light) .modalBody h1,
+:global(.light) .modalBody h2,
+:global(.light) .modalBody h3,
+:global(.light) .modalBody h4,
+:global(.light) .modalBody h5,
+:global(.light) .modalBody h6,
+:global(.light) .modalBody strong,
+:global(.light) .modalBody b,
+:global(.light) .modalBody em,
+:global(.light) .modalBody i,
+:global(.light) .modalBody small {
+  color: #000000 !important;
+}
+
+/* 7. PREFERENCIAS - CAJAS ESPECÍFICAS */
+:global(.light) .preferenceEnabled,
+:global(.light) .preferenceDisabled,
+:global([data-mantine-color-scheme="light"]) .preferenceEnabled,
+:global([data-mantine-color-scheme="light"]) .preferenceDisabled {
+  color: #000000 !important;
+}
+
+:global(.light) .preferenceEnabled *,
+:global(.light) .preferenceDisabled *,
+:global([data-mantine-color-scheme="light"]) .preferenceEnabled *,
+:global([data-mantine-color-scheme="light"]) .preferenceDisabled * {
+  color: #000000 !important;
+}
+
+:global(.light) .preferenceEnabled div,
+:global(.light) .preferenceEnabled span,
+:global(.light) .preferenceEnabled p,
+:global(.light) .preferenceDisabled div,
+:global(.light) .preferenceDisabled span,
+:global(.light) .preferenceDisabled p {
+  color: #000000 !important;
+}
+
+/* 8. CARDS Y GRUPOS DE MANTINE */
+:global(.light) .modalBody .mantine-Card-root,
+:global([data-mantine-color-scheme="light"]) .modalBody .mantine-Card-root {
+  background: #f8f9fa !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #000000 !important;
+}
+
+:global(.light) .modalBody .mantine-Card-root *,
+:global([data-mantine-color-scheme="light"]) .modalBody .mantine-Card-root *,
+:global(.light) .modalBody .mantine-Group-root *,
+:global([data-mantine-color-scheme="light"]) .modalBody .mantine-Group-root * {
+  color: #000000 !important;
+}
+
+/* 9. ÍCONOS SVG */
+:global(.light) .modalBody svg,
+:global([data-mantine-color-scheme="light"]) .modalBody svg,
+:global(.light) .preferenceEnabled svg,
+:global(.light) .preferenceDisabled svg {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* 10. TEXTOS CON ATRIBUTOS DATA ESPECÍFICOS */
+:global(.light) .modalBody [data-size="sm"],
+:global(.light) .modalBody [data-size="xs"],
+:global(.light) .modalBody [data-size="lg"],
+:global(.light) .modalBody [data-size="xl"],
+:global(.light) .modalBody [data-c="dimmed"],
+:global(.light) .modalBody [data-fw="500"],
+:global(.light) .modalBody [data-fw="600"] {
+  color: #000000 !important;
+}
+
+/* 11. LOADING Y MENSAJES DE ERROR */
+:global(.light) .modalBody .mantine-Loader-root,
+:global(.light) .modalBody .mantine-Alert-root,
+:global(.light) .modalBody .mantine-Notification-root {
+  color: #000000 !important;
+}
+
+/* 12. TEXTO CENTRADO Y ESPECIAL */
+:global(.light) .modalBody [style*="text-align: center"],
+:global(.light) .modalBody [data-ta="center"] {
+  color: #000000 !important;
+}
+
+/* 13. FUERZA BRUTA FINAL - SOBRESCRIBIR TODO */
+:global(.light) .modalBody * * {
+  color: #000000 !important;
+}
+
+:global(.light) .modalBody * * * {
+  color: #000000 !important;
+}
+
+/* ========================================
+   ESTILOS PARA BADGES DE VERIFICACIÓN
+======================================== */
+
+/* Badges base - modo oscuro */
+.verifiedBadge {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 600 !important;
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3) !important;
+  animation: verifiedGlow 3s ease-in-out infinite !important;
+}
+
+.unverifiedBadge {
+  background: rgba(251, 146, 60, 0.15) !important;
+  color: #fb923c !important;
+  border: 1px solid rgba(251, 146, 60, 0.4) !important;
+  font-weight: 500 !important;
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+}
+
+/* Badges para modo claro */
+:global(.light) .verifiedBadge {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  color: white !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3) !important;
+}
+
+:global(.light) .unverifiedBadge {
+  background: rgba(251, 146, 60, 0.1) !important;
+  color: #ea580c !important;
+  border: 1px solid rgba(251, 146, 60, 0.3) !important;
+}
+
+/* Animación para badges verificados */
+@keyframes verifiedGlow {
+  0%, 100% { 
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+  }
+  50% { 
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.5), 0 0 12px rgba(16, 185, 129, 0.2);
+  }
+}
+
+/* Estilos para badges de vehículo */
+.vehicleBadge {
+  font-size: 9px !important;
+  padding: 1px 4px !important;
+  font-weight: 500 !important;
 }
