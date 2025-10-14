@@ -519,7 +519,7 @@ function SafePointsView() {
             });
 
             // Navegar directamente a detalles del viaje (omitiendo paradas)
-            navigate({ to: '/DetallesViaje' });
+            navigate({ to: '/publicarviaje/DetallesViaje' });
 
         } catch (err) {
             console.error('Error confirmando SafePoints:', err);
@@ -535,7 +535,7 @@ function SafePointsView() {
             <LoadingOverlay visible={isLoading} />
 
             <div className='top p-4 flex items-center gap-4'>
-                <BackButton to="/publicarviaje" />
+                <BackButton to="/publicarviaje/Origen" />
                 <p className='text-3xl tracking-tighter font-onest font-bold'>SafePoints</p>
             </div>
 

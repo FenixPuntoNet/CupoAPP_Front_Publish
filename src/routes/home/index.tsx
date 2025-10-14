@@ -131,7 +131,7 @@ const HomeView = () => {
               variant="outline"
               className={styles.secondaryButton}
               component={Link}
-              to="/publicarviaje"
+              to="/publicarviaje/Origen"
               rightSection={<ArrowRight size={18} />}
             >
               Publicar viaje

@@ -38,8 +38,8 @@ export const LazyRoutes = {
   CuposReservados: createLazyRoute(() => import('../routes/CuposReservados'), 'Cargando reservas...'),
   
   // Gestión de viajes (media prioridad)
-  DetallesViaje: createLazyRoute(() => import('../routes/DetallesViaje'), 'Cargando detalles...'),
-  Paradas: createLazyRoute(() => import('../routes/Paradas'), 'Cargando paradas...'),
+  DetallesViaje: createLazyRoute(() => import('../routes/publicarviaje/DetallesViaje'), 'Cargando detalles...'),
+  Paradas: createLazyRoute(() => import('../routes/publicarviaje/Paradas'), 'Cargando paradas...'),
   SafePoints: createLazyRoute(() => import('../routes/SafePoints'), 'Cargando puntos seguros...'),
   
   // Perfil y configuración (baja prioridad)
@@ -58,8 +58,8 @@ export const LazyRoutes = {
   CompletarRegistro: createLazyRoute(() => import('../routes/CompletarRegistro'), 'Completando registro...'),
   
   // Selección de ubicaciones (lazy loading agresivo)
-  Origen: createLazyRoute(() => import('../routes/Origen'), 'Cargando mapa...'),
-  Destino: createLazyRoute(() => import('../routes/Destino'), 'Cargando mapa...'),
+  Origen: createLazyRoute(() => import('../routes/publicarviaje/Origen'), 'Cargando mapa...'),
+  Destino: createLazyRoute(() => import('../routes/publicarviaje/Destino'), 'Cargando mapa...'),
   DateSelected: createLazyRoute(() => import('../routes/DateSelected'), 'Configurando fecha...'),
   
   // Recuperación de contraseña (lazy loading)

@@ -1,0 +1,501 @@
+/* Rutas - Diseño VERDE ELEGANTE COMO PUNTO-RECOGIDA Y PUNTOS-DESCENSO */
+
+.container {
+  height: 100vh;
+  height: 100dvh; /* Usar dynamic viewport height para móviles */
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%); /* MISMO VERDE QUE LAS OTRAS PÁGINAS */
+  color: white; /* TEXTO BLANCO */
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top); /* Respetar notch */
+}
+
+[data-mantine-color-scheme="dark"] .container {
+  background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+  color: #ecfdf5;
+}
+
+/* Header ELEGANTE COMO LAS OTRAS PÁGINAS */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.1); /* GLASSMORPHISM COMO LAS OTRAS PÁGINAS */
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  min-height: 60px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+[data-mantine-color-scheme="dark"] .header {
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2); /* GLASSMORPHISM COMO LAS OTRAS PÁGINAS */
+  border: none;
+  text-decoration: none;
+  color: white;
+  margin-right: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-2px);
+}
+
+[data-mantine-color-scheme="dark"] .backButton {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Sección del título SEPARADA COMO LAS OTRAS PÁGINAS */
+.titleSection {
+  padding: 2rem 1rem 1.5rem 1rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+/* FORZAR TODOS LOS TEXTOS EN BLANCO EN MODO CLARO */
+:not([data-mantine-color-scheme="dark"]) .titleSection * {
+  color: white !important;
+}
+
+[data-mantine-color-scheme="dark"] .titleSection {
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.mainTitle {
+  font-size: 2rem !important; /* MÁS GRANDE */
+  font-weight: 700 !important;
+  color: #ffffff !important; /* FORZAR BLANCO ABSOLUTO */
+  margin: 0 0 0.5rem 0 !important;
+  line-height: 1.1 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* FORZAR BLANCO EN MODO CLARO */
+:not([data-mantine-color-scheme="dark"]) .mainTitle {
+  color: #ffffff !important; /* BLANCO ABSOLUTO PARA MODO CLARO */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-mantine-color-scheme="dark"] .mainTitle {
+  color: white !important; /* Blanco para modo oscuro */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.subtitle {
+  font-size: 1rem !important;
+  color: rgba(255, 255, 255, 0.9) !important; /* BLANCO SEMI-TRANSPARENTE PARA CONTRASTE */
+  font-weight: 400 !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* FORZAR BLANCO EN MODO CLARO */
+:not([data-mantine-color-scheme="dark"]) .subtitle {
+  color: rgba(255, 255, 255, 0.9) !important; /* BLANCO SEMI-TRANSPARENTE PARA MODO CLARO */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-mantine-color-scheme="dark"] .subtitle {
+  color: rgba(236, 253, 245, 0.85) !important; /* Verde claro para modo oscuro */
+}
+
+.headerTitle {
+  font-weight: 600;
+  color: white !important; /* BLANCO COMO LAS OTRAS PÁGINAS */
+  margin: 0;
+  font-size: 1.25rem;
+  flex: 1;
+  line-height: 1.3;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-mantine-color-scheme="dark"] .headerTitle {
+  color: white !important;
+}
+
+/* Contenido COMPACTO */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px);
+  height: calc(100dvh - 60px);
+  max-height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+/* Lista de rutas ELEGANTE COMO LAS OTRAS PÁGINAS */
+.routesList {
+  height: 30%;
+  min-height: 180px;
+  max-height: 220px;
+  padding: 1rem;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.05); /* GLASSMORPHISM SUTIL */
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+[data-mantine-color-scheme="dark"] .routesList {
+  background: rgba(0, 0, 0, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  padding: 2rem;
+  color: white; /* TEXTO BLANCO */
+}
+
+.errorAlert,
+.noRoutesAlert {
+  margin: 1rem;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Items de ruta ELEGANTES CON MEJOR CONTRASTE */
+.routeItem {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%); /* FONDO BLANCO CON TRANSPARENCIA */
+  border: 2px solid rgba(16, 185, 129, 0.3);
+  border-radius: 16px;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 60px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+[data-mantine-color-scheme="dark"] .routeItem {
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(40, 40, 40, 0.85) 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.routeItem:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.25) 100%); /* VERDE ELEGANTE EN HOVER */
+  border-color: #10b981;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+[data-mantine-color-scheme="dark"] .routeItem:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.3) 100%);
+  border-color: #34d399;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.routeItem.selected {
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%); /* DEGRADADO VERDE COMPLETO PARA SELECCIONADO */
+  border-color: #34d399;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.5), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+[data-mantine-color-scheme="dark"] .routeItem.selected {
+  background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+  border-color: #10b981;
+  box-shadow: 0 8px 32px rgba(6, 78, 59, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.routeRadio {
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: #10b981; /* VERDE COMO LAS OTRAS PÁGINAS */
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* Mejores estilos para el radio en estado seleccionado */
+.routeItem.selected .routeRadio {
+  accent-color: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.routeDetails {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.routeTitle {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937 !important; /* GRIS OSCURO PARA CONTRASTE EN FONDO BLANCO */
+  margin: 0 0 2px 0;
+  line-height: 1.2;
+  text-shadow: none;
+  transition: color 0.2s ease;
+}
+
+/* Cuando el item está seleccionado (fondo verde), texto blanco */
+.routeItem.selected .routeTitle {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-mantine-color-scheme="dark"] .routeTitle {
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.routeDistance {
+  font-size: 0.85rem;
+  line-height: 1;
+  margin: 0;
+  color: #6b7280 !important; /* GRIS MEDIO PARA CONTRASTE EN FONDO BLANCO */
+  font-weight: 500;
+  text-shadow: none;
+  transition: color 0.2s ease;
+}
+
+/* Cuando el item está seleccionado (fondo verde), texto blanco semi-transparente */
+.routeItem.selected .routeDistance {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+[data-mantine-color-scheme="dark"] .routeDistance {
+  color: rgba(255, 255, 255, 0.85) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.routeWarning {
+  font-size: 0.75rem;
+  line-height: 1;
+  margin: 0;
+  margin-top: 0.25rem;
+  color: #fdcb6e !important;
+  font-weight: 500;
+}
+
+[data-mantine-color-scheme="dark"] .routeWarning {
+  color: #fdcb6e !important;
+}
+
+/* Flecha de navegación ELEGANTE */
+.continueArrow {
+  background: linear-gradient(135deg, #10b981 0%, #065f46 100%); /* VERDE COMO LAS OTRAS PÁGINAS */
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 0.75rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* En items no seleccionados, flecha más sutil */
+.routeItem:not(.selected) .continueArrow {
+  background: rgba(16, 185, 129, 0.8);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* En item seleccionado, flecha más prominente */
+.routeItem.selected .continueArrow {
+  background: linear-gradient(135deg, white 0%, rgba(255, 255, 255, 0.9) 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.continueArrow:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.routeItem.selected .continueArrow:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.arrowIcon {
+  color: white;
+  transform: rotate(180deg);
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  transition: all 0.2s ease;
+}
+
+/* En item seleccionado, flecha verde oscura */
+.routeItem.selected .arrowIcon {
+  color: #064e3b;
+  filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.3));
+}
+
+/* Mapa OPTIMIZADO */
+.mapContainer {
+  height: 70%;
+  min-height: 350px;
+  width: 100%;
+  position: relative;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.1);
+  flex: 1;
+}
+
+/* Responsive OPTIMIZADO VERDE */
+@media (max-width: 768px) {
+  .header {
+    padding: 0.75rem 1rem;
+    min-height: 55px;
+  }
+  
+  .content {
+    height: calc(100vh - 55px);
+    height: calc(100dvh - 55px);
+  }
+  
+  .routesList {
+    height: 32%;
+    min-height: 160px;
+    max-height: 200px;
+    padding: 0.75rem;
+  }
+  
+  .mapContainer {
+    height: 68%;
+    min-height: 300px;
+  }
+  
+  .routeItem {
+    padding: 0.6rem 0.8rem;
+    margin-bottom: 0.4rem;
+    min-height: 48px;
+  }
+  
+  .continueArrow {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .arrowIcon {
+    width: 15px;
+    height: 15px;
+  }
+  
+  .routeTitle {
+    font-size: 0.85rem;
+  }
+  
+  .routeDistance {
+    font-size: 0.75rem;
+  }
+  
+  .backButton {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .headerTitle {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0.5rem 0.75rem;
+    min-height: 50px;
+  }
+  
+  .content {
+    height: calc(100vh - 50px);
+    height: calc(100dvh - 50px);
+  }
+  
+  .routesList {
+    height: 30%;
+    min-height: 140px;
+    max-height: 180px;
+    padding: 0.5rem;
+  }
+  
+  .mapContainer {
+    height: 70%;
+    min-height: 280px;
+  }
+  
+  .routeItem {
+    padding: 0.5rem 0.6rem;
+    margin-bottom: 0.3rem;
+    min-height: 44px;
+  }
+  
+  .continueArrow {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .arrowIcon {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .routeTitle {
+    font-size: 0.8rem;
+  }
+  
+  .routeDistance {
+    font-size: 0.7rem;
+  }
+  
+  .backButton {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .headerTitle {
+    font-size: 1rem;
+  }
+  
+  .loadingContainer {
+    padding: 1.5rem;
+    gap: 0.75rem;
+  }
+  
+  .errorAlert,
+  .noRoutesAlert {
+    margin: 0.75rem;
+  }
+}

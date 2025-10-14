@@ -48,7 +48,7 @@ const theme = createTheme({
 // Navigation items configuration
 const navItems = [
   { icon: Search, label: "Buscar", to: "/reservar" },
-  { icon: PlusCircle, label: "Publicar", to: "/publicarviaje" },
+  { icon: PlusCircle, label: "Publicar", to: "/publicarviaje/Origen" },
   { icon: "logo", label: "", to: "/home" },
   { icon: History, label: "Actividades", to: "/Actividades" },
   { icon: User, label: "Menú", to: "/perfil" },

@@ -82,6 +82,11 @@ function ReservarView() {
   });
   const { isLoaded, loadError } = useMaps();
 
+  // Redireccionar automáticamente a Origen para optimizar UX
+  useEffect(() => {
+    navigate({ to: '/publicarviaje/Origen', replace: true });
+  }, [navigate]);
+
   const mapRef = useRef<google.maps.Map | null>(null);
 
   // 🚀 Hook optimizado para reducir costos de Google Maps
@@ -694,7 +699,7 @@ function ReservarView() {
             <>
               <div className={styles.searchBox}>
                 <MapPin className={styles.searchIcon} size={20} />
-                <Link to="/Origen" className={styles.searchLink}>
+                <Link to="/publicarviaje/Origen" className={styles.searchLink}>
                   <TextInput
                     placeholder="Escribe la dirección completa"
                     className={styles.input}
@@ -713,8 +718,8 @@ function ReservarView() {
               <div className={styles.searchBox}>
                 <MapPin className={styles.searchIcon} size={20} />
                 <Link
-                  to="/Destino"
-                  search={{ originAddress: selectedAddress }}
+                  to="/publicarviaje/Destino"
+                  search={{ originAddress: selectedAddress, pickupSafePointId: '' }}
                   className={styles.searchLink}
                 >
                   <TextInput
