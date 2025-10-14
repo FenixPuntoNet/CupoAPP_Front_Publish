@@ -1087,7 +1087,7 @@ export type Database = {
           updated_at: string | null
           photo_user: string | null
           user_id: string
-          Verification: string | null
+          verification: string | null
         }
         Insert: {
           created_at?: string | null

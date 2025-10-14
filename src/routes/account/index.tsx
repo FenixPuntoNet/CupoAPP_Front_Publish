@@ -153,7 +153,7 @@ function AccountView() {
           identification_number: profileData.identification_number || '',
           phone_number: profileData.phone_number || '',
           status: profileData.status || 'PASSENGER',
-          Verification: profileData.verification || 'PENDIENTE',
+          verification: profileData.verification || 'PENDIENTE',
           photo_user: profileData.profile_picture || '',
           created_at: profileData.created_at || new Date().toISOString(),
           updated_at: profileData.updated_at || new Date().toISOString()

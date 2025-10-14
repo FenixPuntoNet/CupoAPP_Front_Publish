@@ -48,7 +48,6 @@ interface UserProfile {
   identification_number?: string | null;
   status?: string;
   user_type?: string;
-  Verification?: string | null;
   verification?: string;
   photo_user?: string;
   profile_picture?: string;
@@ -343,10 +342,7 @@ const ProfileView: React.FC = () => {
             identification_number: profile.identification_number || null,
             status: profile.status || 'ACTIVE',
             user_type: profile.status || 'PASSENGER',
-            // 🔧 PRESERVAR el valor original de verification sin sobrescribir
-            Verification: profile.verification, // NO sobrescribir con 'SIN VERIFICAR'
             verification: profile.verification, // Mantener ambos campos para compatibilidad
-            // Usar tanto photo_user como profile_picture para compatibilidad
             photo_user: profile.photo_user || profile.profile_picture || '', 
             profile_picture: profile.photo_user || profile.profile_picture || ''
           });
@@ -354,8 +350,7 @@ const ProfileView: React.FC = () => {
           console.log('👤 Final user profile set:', {
             photo_user: profile.photo_user || profile.profile_picture || '',
             profile_picture: profile.photo_user || profile.profile_picture || '',
-            verification: profile.verification,
-            Verification: profile.verification
+            verification: profile.verification
           });
           
           // Set email from auth context - this ensures we display the email, not UUID
@@ -583,7 +578,7 @@ const ProfileView: React.FC = () => {
       )}
       {userProfile?.user_type === 'DRIVER' && (
         <div className={styles.vehicleRegistrationComplete}>
-          {userProfile.Verification === 'VERIFICADO' || userProfile.verification === 'VERIFICADO' ? (
+          {userProfile.verification === 'VERIFICADO' || userProfile.verification === 'VERIFICADO' ? (
             <>
               <Text className={styles.vehicleRegistrationText}>
                 ¡Eres conductor verificado!
@@ -595,12 +590,12 @@ const ProfileView: React.FC = () => {
           ) : (
             <div className={styles.verificationPendingBox}>
               <Text className={styles.verificationPendingText}>
-                {userProfile.Verification || userProfile.verification || 'En proceso de verificación'}
+                {userProfile.verification || userProfile.verification || 'En proceso de verificación'}
               </Text>
               <Text className={styles.verificationPendingSubtitle}>
-                {(userProfile.Verification || userProfile.verification) === 'PENDIENTE' || 
-                 (userProfile.Verification || userProfile.verification) === 'SIN VERIFICAR' || 
-                 !userProfile.Verification && !userProfile.verification
+                {(userProfile.verification || userProfile.verification) === 'PENDIENTE' || 
+                 (userProfile.verification || userProfile.verification) === 'SIN VERIFICAR' || 
+                 !userProfile.verification && !userProfile.verification
                   ? 'Aún no puedes publicar viajes'
                   : 'Revisa el estado de tu verificación'
                 }

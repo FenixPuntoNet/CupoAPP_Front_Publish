@@ -161,7 +161,7 @@ function ReservarView() {
 
         // Validar verificación del conductor
         const verificationStatus = profile.data.verification ||
-          (profile.data as any).Verification || "PENDIENTE";
+          (profile.data as any).verification || "PENDIENTE";
         if (
           verificationStatus !== "VERIFICADO" &&
           verificationStatus !== "APPROVED"
