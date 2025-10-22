@@ -246,27 +246,7 @@ export function DriverModal({
                     Información del Vehículo
                   </Text>
                 </Group>
-                
-                {/* ✅ Estado de verificación del vehículo */}
-                {isVehicleVerified ? (
-                  <Badge 
-                    size="xs" 
-                    color="blue" 
-                    variant="light"
-                    leftSection={<CheckCircle size={10} />}
-                  >
-                    Verificado
-                  </Badge>
-                ) : (
-                  <Badge 
-                    size="xs" 
-                    variant="outline" 
-                    color="orange"
-                    leftSection={<AlertCircle size={10} />}
-                  >
-                    Sin verificar
-                  </Badge>
-                )}
+               
               </Group>
               
               <Stack gap={3} mb="sm">
