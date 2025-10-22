@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { loginUser, logoutUser, type AuthResponse } from '@/services/auth';
 import { apiRequest } from '@/config/api';
+// ✅ Importar sistemas de cache para limpieza completa
+import { globalCache, apiCache } from '@/lib/cache';
+import { googleMapsCache } from '@/lib/googleMapsCache';
 
 interface BackendUser {
   id: string;
@@ -192,13 +195,51 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const signOut = async () => {
     try {
       setLoading(true);
+      
+      console.log('🚪 [CONTEXT-LOGOUT] Iniciando proceso de cierre de sesión desde contexto...')
+      
+      // ✅ LIMPIAR TODOS LOS CACHES ANTES DEL LOGOUT
+      console.log('🧹 [CONTEXT-LOGOUT] Limpiando cache global...')
+      globalCache.clear()
+      
+      console.log('🧹 [CONTEXT-LOGOUT] Limpiando cache de API...')
+      apiCache.clear()
+      
+      console.log('🧹 [CONTEXT-LOGOUT] Limpiando cache de Google Maps...')
+      googleMapsCache.clear()
+      
+      console.log('🧹 [CONTEXT-LOGOUT] Limpiando cache de requests activos...')
+      const { clearApiCache } = await import('@/config/api');
+      clearApiCache();
+      
+      // ✅ LIMPIAR SOLO DATOS RELACIONADOS AL USUARIO, MANTENER CONFIGURACIONES GLOBALES
+      console.log('🧹 [CONTEXT-LOGOUT] Limpiando datos de usuario del localStorage...')
+      const keysToKeep = ['theme'] // Mantener solo el tema
+      const allKeys = Object.keys(localStorage)
+      
+      allKeys.forEach(key => {
+        if (!keysToKeep.includes(key)) {
+          localStorage.removeItem(key)
+          console.log(`🗑️ [CONTEXT-LOGOUT] Removed from localStorage: ${key}`)
+        }
+      })
+      
+      // ✅ LIMPIAR SESSION STORAGE
+      console.log('🧹 [CONTEXT-LOGOUT] Limpiando sessionStorage...')
+      sessionStorage.clear()
+      
+      console.log('✅ [CONTEXT-LOGOUT] Cache limpio, ejecutando logout en backend...')
       await logoutUser();
+      
+      // Limpiar estado del contexto
       setUser(null);
       setHasProfile(false);
       setIsNewUser(false);
       setIsInitialized(false); // Resetear inicialización
+      
+      console.log('✅ [CONTEXT-LOGOUT] Cierre de sesión completado exitosamente')
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error('❌ [CONTEXT-LOGOUT] Sign out error:', error);
       // Limpiar usuario local aunque falle la request
       setUser(null);
       setHasProfile(false);
@@ -220,12 +261,22 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Función para limpiar completamente el cache y refrescar contexto
   const clearCacheAndRefresh = async () => {
     try {
-      console.log('🧹 Clearing all cache and forcing context refresh...');
+      console.log('🧹 [CLEAR-CACHE] Clearing all cache and forcing context refresh...');
       
-      // Limpiar cache de API
+      // ✅ LIMPIAR TODOS LOS CACHES
+      console.log('🧹 [CLEAR-CACHE] Limpiando cache global...')
+      globalCache.clear()
+      
+      console.log('🧹 [CLEAR-CACHE] Limpiando cache de API...')
+      apiCache.clear()
+      
+      console.log('🧹 [CLEAR-CACHE] Limpiando cache de Google Maps...')
+      googleMapsCache.clear()
+      
+      console.log('🧹 [CLEAR-CACHE] Limpiando cache de requests activos...')
       const { clearApiCache } = await import('@/config/api');
       clearApiCache();
-      console.log('✅ API cache cleared');
+      console.log('✅ [CLEAR-CACHE] API cache cleared');
       
       // Resetear estado local
       setIsInitialized(false);
@@ -235,10 +286,10 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // Force refresh completo con bypass de cache
       await refreshUser(true);
       
-      console.log('✅ Cache cleared and context refreshed');
+      console.log('✅ [CLEAR-CACHE] Cache cleared and context refreshed');
       return true;
     } catch (error) {
-      console.error('❌ Error clearing cache:', error);
+      console.error('❌ [CLEAR-CACHE] Error clearing cache:', error);
       return false;
     }
   };

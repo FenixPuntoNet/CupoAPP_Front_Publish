@@ -29,6 +29,10 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { Rating } from '@mantine/core'
 import { DeactivateAccountModal } from '@/components/DeactivateAccountModal'
+// ✅ Importar sistemas de cache para limpieza en logout
+import { globalCache, apiCache } from '@/lib/cache'
+import { googleMapsCache } from '@/lib/googleMapsCache'
+import { clearApiCache } from '@/config/api'
 import { getCurrentUserProfile } from '@/services/profile'
 import { 
   getUserVehicles, 
@@ -498,10 +502,55 @@ const ProfileView: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      console.log('🚪 [LOGOUT] Iniciando proceso de cierre de sesión...')
+      
+      // ✅ LIMPIAR TODOS LOS CACHES ANTES DEL LOGOUT
+      console.log('🧹 [LOGOUT] Limpiando cache global...')
+      globalCache.clear()
+      
+      console.log('🧹 [LOGOUT] Limpiando cache de API...')
+      apiCache.clear()
+      
+      console.log('🧹 [LOGOUT] Limpiando cache de Google Maps...')
+      googleMapsCache.clear()
+      
+      console.log('🧹 [LOGOUT] Limpiando cache de requests activos...')
+      clearApiCache()
+      
+      // ✅ LIMPIAR CACHE DEL NAVEGADOR RELACIONADO AL USUARIO
+      console.log('🧹 [LOGOUT] Limpiando localStorage de datos de usuario...')
+      // Mantener solo el tema, limpiar todo lo demás
+      const currentTheme = localStorage.getItem('theme')
+      const keysToKeep = ['theme'] // Solo mantener el tema
+      
+      // Obtener todas las claves del localStorage
+      const allKeys = Object.keys(localStorage)
+      
+      // Eliminar todas las claves excepto las que queremos mantener
+      allKeys.forEach(key => {
+        if (!keysToKeep.includes(key)) {
+          localStorage.removeItem(key)
+          console.log(`🗑️ [LOGOUT] Removed from localStorage: ${key}`)
+        }
+      })
+      
+      // Restaurar el tema si existía
+      if (currentTheme) {
+        localStorage.setItem('theme', currentTheme)
+      }
+      
+      // ✅ LIMPIAR SESSION STORAGE TAMBIÉN
+      console.log('🧹 [LOGOUT] Limpiando sessionStorage...')
+      sessionStorage.clear()
+      
+      console.log('✅ [LOGOUT] Cache completamente limpio, ejecutando signOut...')
+      
+      await signOut()
+      
+      console.log('✅ [LOGOUT] Cierre de sesión completado exitosamente')
       // El AuthGuard se encargará de la navegación
     } catch (error) {
-      console.error('Error al cerrar sesión:', error)
+      console.error('❌ [LOGOUT] Error al cerrar sesión:', error)
     }
   }
 
