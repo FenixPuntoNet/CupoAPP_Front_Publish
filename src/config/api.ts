@@ -37,8 +37,8 @@ export const setAuthToken = async (token: string): Promise<void> => {
       console.log('🔍 [AUTO-EXCHANGE] Detected provider:', provider);
       
       try {
-        // Intentar intercambio con el endpoint principal
-        const exchangeResponse = await fetch(`${API_BASE_URL}/auth/exchange-token`, {
+        // ✅ OPTIMIZADO: Usar endpoint correcto del backend fijo
+        const exchangeResponse = await fetch(`${API_BASE_URL}/auth/exchange-supabase-token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ export const setAuthToken = async (token: string): Promise<void> => {
           body: JSON.stringify({
             supabase_token: token,
             provider: provider,
-            exchange_type: 'oauth'
+            force_bootstrap: true
           }),
         });
 
@@ -55,11 +55,11 @@ export const setAuthToken = async (token: string): Promise<void> => {
           console.log('✅ [AUTO-EXCHANGE] Token exchange successful');
           console.log('🔍 [AUTO-EXCHANGE] Exchange response:', exchangeResult);
           
-          // Guardar el token del backend
-          const backendToken = exchangeResult.backend_token || exchangeResult.token;
+          // ✅ OPTIMIZADO: Después del fix del backend, el token devuelto es Supabase original
+          const backendToken = exchangeResult.backend_token || exchangeResult.access_token;
           if (backendToken) {
             localStorage.setItem(AUTH_TOKEN_KEY, backendToken);
-            console.log('🔑 Backend token saved to localStorage (auto-exchanged)');
+            console.log('🔑 Backend token saved to localStorage (exchanged - returns original Supabase token)');
             
             // Verificar que se guardó
             const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);

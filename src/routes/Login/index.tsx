@@ -381,28 +381,28 @@ const LoginView: React.FC = () => {
                   );
 
                   try {
+                    // ✅ OPTIMIZADO: Usar endpoint correcto para intercambio
                     const exchangeResponse = await apiRequest(
-                      "/auth/exchange-token",
+                      "/auth/exchange-supabase-token",
                       {
                         method: "POST",
                         body: JSON.stringify({
                           supabase_token: authToken,
                           provider: "google", // Asumir Google por defecto
-                          exchange_type: "deep_link_callback",
+                          force_bootstrap: true,
                         }),
                       }
                     );
 
                     if (
                       exchangeResponse.success &&
-                      exchangeResponse.backend_token
+                      (exchangeResponse.backend_token || exchangeResponse.access_token)
                     ) {
-                      localStorage.setItem(
-                        "auth_token",
-                        exchangeResponse.backend_token
-                      );
+                      // ✅ OPTIMIZADO: El backend ahora devuelve el token original de Supabase
+                      const finalToken = exchangeResponse.backend_token || exchangeResponse.access_token;
+                      localStorage.setItem("auth_token", finalToken);
                       console.log(
-                        "✅ [DEEP-LINK-EXCHANGE] Token exchanged successfully"
+                        "✅ [DEEP-LINK-EXCHANGE] Token exchanged successfully (original Supabase token returned)"
                       );
                     } else {
                       throw new Error("Exchange failed");

@@ -361,7 +361,7 @@ export class DeepLinkHandler {
       logOAuthEvent('user_verification_start', {});
       let userResponse;
       let retryCount = 0;
-      const maxRetries = 3;
+      const maxRetries = 2; // Reducir retries ya que ahora el token es compatible
       
       while (retryCount < maxRetries) {
         try {
@@ -373,11 +373,36 @@ export class DeepLinkHandler {
           console.log(`⚠️ [DEEP LINK] User verification failed, retry ${retryCount}/${maxRetries}`);
           
           if (retryCount >= maxRetries) {
+            // ✅ OPTIMIZADO: Intentar intercambio automático antes de fallar
+            console.log('🔄 [DEEP LINK] Attempting token exchange as fallback...');
+            try {
+              const exchangeResponse = await apiRequest('/auth/exchange-supabase-token', {
+                method: 'POST',
+                body: JSON.stringify({
+                  supabase_token: accessToken,
+                  provider: 'oauth',
+                  force_bootstrap: true
+                })
+              });
+              
+              if (exchangeResponse.success && (exchangeResponse.backend_token || exchangeResponse.access_token)) {
+                const newToken = exchangeResponse.backend_token || exchangeResponse.access_token;
+                setAuthToken(newToken);
+                
+                // Intentar verificar usuario con el nuevo token
+                userResponse = await apiRequest('/auth/me', { method: 'GET' });
+                console.log('✅ [DEEP LINK] Exchange fallback successful');
+                break;
+              }
+            } catch (exchangeError) {
+              console.log('❌ [DEEP LINK] Exchange fallback failed:', exchangeError);
+            }
+            
             throw verifyError;
           }
           
           // Esperar un poco antes del retry
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
         }
       }
 
