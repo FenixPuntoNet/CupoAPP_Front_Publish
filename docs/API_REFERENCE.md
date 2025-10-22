@@ -13,7 +13,7 @@ Este documento describe todas las interacciones de API utilizadas en el frontend
 
 ```typescript
 // config/api.ts
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo-backend.fly.dev';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo.site';
 
 export const apiRequest = async (endpoint: string, options: RequestOptions = {}) => {
   const token = getToken();
@@ -53,7 +53,7 @@ export const apiRequest = async (endpoint: string, options: RequestOptions = {})
 
 ```typescript
 // Telefunc se configura automáticamente con:
-const TELEFUNC_URL = import.meta.env.VITE_TELEFUNC_URL || 'https://cupo-backend.fly.dev/_telefunc';
+const TELEFUNC_URL = import.meta.env.VITE_TELEFUNC_URL || 'https://cupo.site/_telefunc';
 ```
 
 ## 🔐 Autenticación

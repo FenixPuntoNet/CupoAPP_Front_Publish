@@ -44,7 +44,7 @@ export async function getTripPassengerSafePoints(tripId: number): Promise<{
   try {
     console.log(`🔍 Obteniendo SafePoints de pasajeros para trip: ${tripId}`);
     
-    const response = await fetch(`https://cupo-backend.fly.dev/api/trip/${tripId}/passenger-safepoints`, {
+    const response = await fetch(`https://cupo.site/api/trip/${tripId}/passenger-safepoints`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

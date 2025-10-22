@@ -54,7 +54,7 @@ const isMobileApp = (): boolean => {
  * Obtiene la URL de Apple OAuth para móvil
  */
 const getMobileAppleOAuthUrl = (): string => {
-  const baseUrl = 'https://cupo-backend.fly.dev/auth/login/apple';
+  const baseUrl = 'https://cupo.site/auth/login/apple';
   const userAgent = navigator.userAgent;
   const isIOS = /iPad|iPhone|iPod/.test(userAgent);
   
@@ -250,7 +250,7 @@ export const signInWithApple = async (isRegistration = false): Promise<AppleAuth
       }));
       
       // Obtener URL del backend para web con redirect correcto
-      const baseUrl = 'https://cupo-backend.fly.dev/auth/login/apple';
+      const baseUrl = 'https://cupo.site/auth/login/apple';
       const redirectUri = `${window.location.origin}${isRegistration ? '/Registro' : '/Login'}`;
       
       const webAuthUrl = `${baseUrl}?redirect=${encodeURIComponent(redirectUri)}&platform=web`;

@@ -599,7 +599,7 @@ const RegisterView: React.FC = () => {
         
         // Redirigir directamente en la misma página con el redirect_uri correcto para web
         const webRedirectUri = `${window.location.origin}/Registro`;
-        const googleAuthUrl = `https://cupo-backend.fly.dev/auth/login/google?redirect=${encodeURIComponent(webRedirectUri)}`;
+        const googleAuthUrl = `https://cupo.site/auth/login/google?redirect=${encodeURIComponent(webRedirectUri)}`;
         console.log('🔗 Redirecting to:', googleAuthUrl);
         window.location.href = googleAuthUrl;
       }

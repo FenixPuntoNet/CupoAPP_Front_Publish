@@ -1,5 +1,5 @@
 // Configuración de la API Backend
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo-backend.fly.dev';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo.site';
 
 import { apiCache } from '../lib/cache';
 

@@ -732,7 +732,7 @@ export const debugTripSafePoints = async (tripId: number): Promise<{
   console.log(`🔧 [DEBUG] Verificando SafePoints para trip: ${tripId}`);
   
   try {
-    const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://cupo-backend.fly.dev'}/reservas/debug/trip/${tripId}/safepoints/noauth`);
+    const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://cupo.site'}/reservas/debug/trip/${tripId}/safepoints/noauth`);
     const data = await response.json();
     
     const interactionCount = data.debug_info?.safepoint_interactions?.all_interactions?.count || 0;

@@ -33,8 +33,8 @@ cp .env.example .env
 
 ```bash
 # API Configuration
-VITE_API_URL=https://cupo-backend.fly.dev
-VITE_TELEFUNC_URL=https://cupo-backend.fly.dev/_telefunc
+VITE_API_URL=https://cupo.site
+VITE_TELEFUNC_URL=https://cupo.site/_telefunc
 
 # Google Maps API
 VITE_GOOGLE_MAPS_API_KEY=tu_google_maps_api_key

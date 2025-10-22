@@ -26,7 +26,7 @@ CupoApp es una aplicación móvil/web desarrollada con React que permite compart
 ### Backend Integration
 - **Telefunc 0.1.83** - RPC framework para comunicación backend
 - **Custom API Client** - Cliente HTTP personalizado con autenticación
-- **Backend URL**: https://cupo-backend.fly.dev
+- **Backend URL**: https://cupo.site
 
 ### Maps & Location
 - **Google Maps API** - Mapas y geocodificación

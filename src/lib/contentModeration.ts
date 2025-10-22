@@ -6,7 +6,7 @@ export interface ContentModerationResult {
   filteredContent?: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo-backend.fly.dev';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo.site';
 
 // Función para obtener el token de autenticación del localStorage
 const getAuthToken = (): string | null => {

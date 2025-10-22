@@ -5,7 +5,7 @@ interface UserModerationStatus {
   error: string | null;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo-backend.fly.dev';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo.site';
 
 export function useUserModerationStatus(userId: string | null): UserModerationStatus {
   const [status, setStatus] = useState<UserModerationStatus>({

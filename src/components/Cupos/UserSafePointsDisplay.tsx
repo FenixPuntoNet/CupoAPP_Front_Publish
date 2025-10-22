@@ -62,7 +62,7 @@ const UserSafePointsDisplay: React.FC<UserSafePointsDisplayProps> = ({
     setError(null);
 
     try {
-      const response = await fetch(`https://cupo-backend.fly.dev/api/booking/${bookingId}/my-selections`, {
+      const response = await fetch(`https://cupo.site/api/booking/${bookingId}/my-selections`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

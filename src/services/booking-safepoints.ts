@@ -44,7 +44,7 @@ export async function getTripSafePoints(tripId: number) {
     console.log(`🔍 [ENFOQUE CORRECTO] Cargando SafePoints del TRIP: ${tripId} (sin booking)`);
     
     // ✅ ENDPOINT CORRECTO - SafePoints del trip, NO del booking
-    const endpoint = `https://cupo-backend.fly.dev/api/trip/${tripId}/available-safepoints`;
+    const endpoint = `https://cupo.site/api/trip/${tripId}/available-safepoints`;
     
     try {
       console.log(`🔍 Llamando endpoint correcto: ${endpoint}`);
@@ -75,7 +75,7 @@ export async function getTripSafePoints(tripId: number) {
 
     // FALLBACK: Endpoints debug para el trip (no booking)
     const debugEndpoints = [
-      `https://cupo-backend.fly.dev/api/debug/trip/${tripId}/safepoints`, // Con auth - CORRECTO según backend
+      `https://cupo.site/api/debug/trip/${tripId}/safepoints`, // Con auth - CORRECTO según backend
     ];
 
     for (const endpoint of debugEndpoints) {

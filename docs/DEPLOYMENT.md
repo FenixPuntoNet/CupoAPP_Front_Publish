@@ -32,8 +32,8 @@ Esta guía cubre el proceso completo de despliegue de CupoApp frontend tanto par
 #### Archivo .env.production
 ```bash
 # API Configuration
-VITE_API_URL=https://cupo-backend.fly.dev
-VITE_TELEFUNC_URL=https://cupo-backend.fly.dev/_telefunc
+VITE_API_URL=https://cupo.site
+VITE_TELEFUNC_URL=https://cupo.site/_telefunc
 
 # Google Maps
 VITE_GOOGLE_MAPS_API_KEY=your_production_maps_key

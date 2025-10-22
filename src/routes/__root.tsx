@@ -22,7 +22,7 @@ import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { ThemeToggle as _ThemeToggle } from '@/components/ThemeToggle';
 
 // Configure telefunc to use external backend
-config.telefuncUrl = "https://cupo-backend.fly.dev/_telefunc";
+config.telefuncUrl = "https://cupo.site/_telefunc";
 
 // Theme configuration
 const theme = createTheme({

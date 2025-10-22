@@ -377,7 +377,7 @@ const RecoverPasswordView = () => {
               Search: {window.location.search || 'No search params'}
             </Text>
             <Text size="xs" style={{ fontFamily: 'monospace' }}>
-              API URL: {import.meta.env.VITE_API_URL || 'https://cupo-backend.fly.dev'}
+              API URL: {import.meta.env.VITE_API_URL || 'https://cupo.site'}
             </Text>
           </Stack>
         </Alert>

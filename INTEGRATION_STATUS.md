@@ -99,7 +99,7 @@
 
 #### Variables de Entorno
 ```bash
-VITE_API_URL=https://cupo-backend.fly.dev
+VITE_API_URL=https://cupo.site
 ```
 
 #### Estructura de Datos Verificada

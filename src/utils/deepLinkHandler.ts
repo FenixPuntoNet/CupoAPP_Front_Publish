@@ -556,7 +556,7 @@ export const isMobileApp = (): boolean => {
  * ✅ ACTUALIZADO: FORZANDO deep link directo - NUNCA cupo.dev
  */
 export const getMobileOAuthUrl = (): string => {
-  const baseUrl = 'https://cupo-backend.fly.dev/auth/login/google';
+  const baseUrl = 'https://cupo.site/auth/login/google';
   
   // ✅ CRÍTICO: SIEMPRE usar deep link directo - NUNCA permitir cupo.dev
   const userAgent = navigator.userAgent;

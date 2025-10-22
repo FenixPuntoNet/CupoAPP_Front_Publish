@@ -239,7 +239,7 @@ interface ServiceResponse<T> {
 ## Integración Backend
 
 ### Endpoints Base
-- **Desarrollo**: https://cupo-backend.fly.dev
+- **Desarrollo**: https://cupo.site
 - **Producción**: Configurado vía variables de entorno
 
 ### Autenticación
