@@ -81,9 +81,17 @@ const VEHICLE_BRANDS = [
     'Daihatsu', 'DFSK', 'Dodge', 'FAW', 'Ferrari', 'Fiat', 'Ford', 'Foton', 'GAC', 
     'Geely', 'Great Wall', 'Haval', 'Honda', 'Hyundai', 'Infiniti', 'Isuzu', 'JAC', 
     'Jaguar', 'Jeep', 'KIA', 'Land Rover', 'Lexus', 'Lifan', 'Mahindra', 'Mazda', 
-    'Mercedes-Benz', 'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche', 
+    'Mercedes', 'Mercedes-Benz', 'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche', 
     'RAM', 'Renault', 'Seat', 'Skoda', 'SsangYong', 'Subaru', 'Suzuki', 'Tata', 
-    'Toyota', 'Volkswagen', 'Volvo', 'Zotye', 'Otra'
+    'Toyota', 'Volkswagen', 'Volvo', 'Zotye', 'Lada', 'Brilliance', 'Chang An', 'Dongfeng',
+    'JAC Motors', 'King Long', 'Yutong', 'Karry', 'Chevrolet Sail', 'Spark', 'Aveo',
+    'Kia Rio', 'Picanto', 'Cerato', 'Hyundai Accent', 'i10', 'i20', 'Elantra', 'Tucson',
+    'Toyota Yaris', 'Corolla', 'Hilux', 'Fortuner', 'Prado', 'Nissan Sentra', 'Versa', 'March',
+    'Frontier', 'X-Trail', 'Renault Logan', 'Sandero', 'Duster', 'Stepway', 'Kwid',
+    'Volkswagen Gol', 'Polo', 'Jetta', 'Tiguan', 'Amarok', 'Ford Ka', 'Fiesta', 'Focus',
+    'EcoSport', 'Ranger', 'Chevrolet Onix', 'Prisma', 'Cruze', 'Tracker', 'S10',
+    'Fiat Uno', 'Palio', 'Siena', 'Strada', 'Toro', 'Argo', 'Cronos', 'Mobi',
+    'Peugeot 208', '2008', '3008', '5008', 'Partner', 'Boxer', 'Otra'
 ];
 
 const BODY_TYPES = [

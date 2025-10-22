@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { Button, Select, Textarea, Text, Modal, Stack, TextInput, NumberInput, Group, FileInput, ActionIcon } from '@mantine/core';
+import { Button, Textarea, Text, Modal, Stack, TextInput, Group, FileInput, ActionIcon } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { ChevronLeft, Car, Settings, CheckCircle, AlertCircle, Music, Snowflake, Wifi, Heart, Cigarette, ShoppingBag, Plus, X, Camera } from 'lucide-react';
 import { tripStore, type TripData } from '../../../types/PublicarViaje/TripDataManagement';
@@ -49,21 +49,127 @@ const SimpleVehicleModal = ({
   const [photoPreview, setPhotoPreview] = useState<Record<string, string>>({});
 
   const BRANDS = [
-    'Toyota', 'Chevrolet', 'Nissan', 'Hyundai', 'Kia', 'Mazda', 'Ford', 'Honda',
-    'Volkswagen', 'Renault', 'Suzuki', 'Mitsubishi', 'Fiat', 'Peugeot', 'Citroën', 'Otro'
+    'Audi', 'BMW', 'BYD', 'Changan', 'Chery', 'Chevrolet', 'Citroën', 'Dacia', 'Daewoo', 
+    'Daihatsu', 'DFSK', 'Dodge', 'FAW', 'Ferrari', 'Fiat', 'Ford', 'Foton', 'GAC', 
+    'Geely', 'Great Wall', 'Haval', 'Honda', 'Hyundai', 'Infiniti', 'Isuzu', 'JAC', 
+    'Jaguar', 'Jeep', 'KIA', 'Land Rover', 'Lexus', 'Lifan', 'Mahindra', 'Mazda', 
+    'Mercedes', 'Mercedes-Benz', 'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche', 
+    'RAM', 'Renault', 'Seat', 'Skoda', 'SsangYong', 'Subaru', 'Suzuki', 'Tata', 
+    'Toyota', 'Volkswagen', 'Volvo', 'Zotye', 'Lada', 'Brilliance', 'Chang An', 'Dongfeng',
+    'JAC Motors', 'King Long', 'Yutong', 'Karry', 'Chevrolet Sail', 'Spark', 'Aveo',
+    'Kia Rio', 'Picanto', 'Cerato', 'Hyundai Accent', 'i10', 'i20', 'Elantra', 'Tucson',
+    'Toyota Yaris', 'Corolla', 'Hilux', 'Fortuner', 'Prado', 'Nissan Sentra', 'Versa', 'March',
+    'Frontier', 'X-Trail', 'Renault Logan', 'Sandero', 'Duster', 'Stepway', 'Kwid',
+    'Volkswagen Gol', 'Polo', 'Jetta', 'Tiguan', 'Amarok', 'Ford Ka', 'Fiesta', 'Focus',
+    'EcoSport', 'Ranger', 'Chevrolet Onix', 'Prisma', 'Cruze', 'Tracker', 'S10',
+    'Fiat Uno', 'Palio', 'Siena', 'Strada', 'Toro', 'Argo', 'Cronos', 'Mobi',
+    'Peugeot 208', '2008', '3008', '5008', 'Partner', 'Boxer', 'Otra'
   ];
 
   const BODY_TYPES = [
-    'Sedán', 'Hatchback', 'SUV', 'Crossover', 'Camioneta', 'Pick-up', 'Van', 'Otro'
+    'Sedán', 'Hatchback', 'SUV', 'Crossover', 'Camioneta', 'Pick-up', 'Van', 'Minivan', 
+    'Coupé', 'Convertible', 'Station Wagon', 'Compacto', 'Subcompacto', 'Familiar', 
+    'Todo Terreno', 'Deportivo', 'Furgón', 'Panel', 'Otro'
   ];
 
   const COLORS = [
-    'Blanco', 'Negro', 'Gris', 'Rojo', 'Azul', 'Verde', 'Amarillo', 'Plata', 'Otro'
+    'Blanco', 'Negro', 'Gris', 'Rojo', 'Azul', 'Verde', 'Amarillo', 'Naranja', 'Plata', 'Otro'
   ];
+
+  // Generar años desde 1990 hasta año siguiente
+  const YEARS = Array.from(
+    { length: new Date().getFullYear() - 1989 }, 
+    (_, i) => new Date().getFullYear() + 1 - i
+  );
+
+  // Opciones de capacidad de pasajeros
+  const PASSENGER_CAPACITIES = [1, 2, 3, 4, 5, 6, 7, 8];
 
   // Tipos de archivo permitidos (COPIADO DE REGISTRARVEHICULO)
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
   const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+
+  // 🍎 Componente Select Nativo para iOS/Android - Diseño elegante y funcional
+  const NativeSelect = ({ 
+    label, 
+    value, 
+    onChange, 
+    options, 
+    placeholder, 
+    required = false 
+  }: {
+    label: string;
+    value: string | number;
+    onChange: (value: string) => void;
+    options: Array<{ value: string; label: string }> | (string | number)[];
+    placeholder: string;
+    required?: boolean;
+  }) => (
+    <div style={{ marginBottom: '0.75rem' }}>
+      {label && (
+        <label 
+          style={{ 
+            display: 'block', 
+            fontWeight: 600, 
+            color: 'white', 
+            marginBottom: '6px',
+            fontSize: '0.9rem',
+            textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          {label} {required && <span style={{ color: '#fbbf24' }}>*</span>}
+        </label>
+      )}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          width: '100%',
+          padding: '10px 12px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          fontSize: '0.95rem',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          color: 'white',
+          appearance: 'menulist',
+          WebkitAppearance: 'menulist',
+          MozAppearance: 'menulist',
+          minHeight: '44px',
+          outline: 'none',
+          transition: 'all 0.2s ease',
+          backdropFilter: 'blur(10px)',
+          cursor: 'pointer'
+        }}
+        onFocus={(e) => {
+          e.target.style.borderColor = '#22c55e';
+          e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+          e.target.style.boxShadow = '0 0 0 2px rgba(34, 197, 94, 0.2)';
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+          e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+          e.target.style.boxShadow = 'none';
+        }}
+      >
+        <option value="" style={{ backgroundColor: '#374151', color: 'white' }}>
+          {placeholder}
+        </option>
+        {options.map((option, index) => {
+          const optionValue = typeof option === 'object' ? option.value : option.toString();
+          const optionLabel = typeof option === 'object' ? option.label : option.toString();
+          return (
+            <option 
+              key={index} 
+              value={optionValue} 
+              style={{ backgroundColor: '#374151', color: 'white' }}
+            >
+              {optionLabel}
+            </option>
+          );
+        })}
+      </select>
+    </div>
+  );
 
   // Función para validar tipo de archivo (COPIADO DE REGISTRARVEHICULO)
   const validateImageFile = (file: File): boolean => {
@@ -328,15 +434,16 @@ const SimpleVehicleModal = ({
     >
       <Stack gap="md">
         <Group grow>
-          <Select
-            label="Marca *"
-            placeholder="Selecciona marca"
-            data={BRANDS}
-            value={vehicleData.brand}
-            onChange={(value) => setVehicleData(prev => ({ ...prev, brand: value || '' }))}
-            searchable
-            required
-          />
+          <div>
+            <NativeSelect
+              label="Marca"
+              value={vehicleData.brand}
+              onChange={(value) => setVehicleData(prev => ({ ...prev, brand: value }))}
+              options={BRANDS}
+              placeholder="Selecciona marca"
+              required
+            />
+          </div>
           <TextInput
             label="Modelo *"
             placeholder="Ej: Corolla"
@@ -347,15 +454,16 @@ const SimpleVehicleModal = ({
         </Group>
 
         <Group grow>
-          <NumberInput
-            label="Año *"
-            placeholder="2020"
-            value={vehicleData.year}
-            onChange={(value) => setVehicleData(prev => ({ ...prev, year: Number(value) || new Date().getFullYear() }))}
-            min={1990}
-            max={new Date().getFullYear() + 1}
-            required
-          />
+          <div>
+            <NativeSelect
+              label="Año"
+              value={vehicleData.year}
+              onChange={(value) => setVehicleData(prev => ({ ...prev, year: Number(value) }))}
+              options={YEARS}
+              placeholder="Selecciona año"
+              required
+            />
+          </div>
           <TextInput
             label="Placa *"
             placeholder="ABC123"
@@ -367,32 +475,37 @@ const SimpleVehicleModal = ({
         </Group>
 
         <Group grow>
-          <Select
-            label="Color *"
-            placeholder="Selecciona color"
-            data={COLORS}
-            value={vehicleData.color}
-            onChange={(value) => setVehicleData(prev => ({ ...prev, color: value || '' }))}
-            required
-          />
-          <Select
-            label="Tipo de carrocería *"
-            placeholder="Selecciona tipo"
-            data={BODY_TYPES}
-            value={vehicleData.body_type}
-            onChange={(value) => setVehicleData(prev => ({ ...prev, body_type: value || '' }))}
-            required
-          />
+          <div>
+            <NativeSelect
+              label="Color"
+              value={vehicleData.color}
+              onChange={(value) => setVehicleData(prev => ({ ...prev, color: value }))}
+              options={COLORS}
+              placeholder="Selecciona color"
+              required
+            />
+          </div>
+          <div>
+            <NativeSelect
+              label="Tipo de carrocería"
+              value={vehicleData.body_type}
+              onChange={(value) => setVehicleData(prev => ({ ...prev, body_type: value }))}
+              options={BODY_TYPES}
+              placeholder="Selecciona tipo"
+              required
+            />
+          </div>
         </Group>
 
-        <NumberInput
-          label="Capacidad de pasajeros"
-          placeholder="4"
-          value={vehicleData.passenger_capacity}
-          onChange={(value) => setVehicleData(prev => ({ ...prev, passenger_capacity: Number(value) || 4 }))}
-          min={1}
-          max={8}
-        />
+        <div>
+          <NativeSelect
+            label="Capacidad de pasajeros"
+            value={vehicleData.passenger_capacity}
+            onChange={(value) => setVehicleData(prev => ({ ...prev, passenger_capacity: Number(value) }))}
+            options={PASSENGER_CAPACITIES}
+            placeholder="Selecciona capacidad"
+          />
+        </div>
 
         {/* Sección de foto del vehículo - COPIADO DEL SISTEMA REGISTRARVEHICULO */}
         <Stack gap="sm">
@@ -708,16 +821,52 @@ function VehiculoPreferenciasView() {
             <Text>Cargando vehículos...</Text>
           ) : hasVehicle ? (
             <div className={styles.vehicleSelectContainer}>
-              <Select
-                placeholder="Selecciona tu vehículo"
-                data={userVehicles.map(vehicle => ({
-                  value: vehicle.id.toString(),
-                  label: `${vehicle.brand} ${vehicle.model} (${vehicle.plate})`
-                }))}
+              <select
                 value={selectedVehicle}
-                onChange={(value) => setSelectedVehicle(value || '')}
-                className={styles.vehicleSelect}
-              />
+                onChange={(e) => setSelectedVehicle(e.target.value || '')}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  fontSize: '0.95rem',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  appearance: 'menulist',
+                  WebkitAppearance: 'menulist',
+                  MozAppearance: 'menulist',
+                  minHeight: '44px',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(10px)',
+                  marginRight: '8px',
+                  flex: 1,
+                  cursor: 'pointer'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#22c55e';
+                  e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+                  e.target.style.boxShadow = '0 0 0 2px rgba(34, 197, 94, 0.2)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                  e.target.style.boxShadow = 'none';
+                }}
+              >
+                <option value="" style={{ backgroundColor: '#374151', color: 'white' }}>
+                  Selecciona tu vehículo
+                </option>
+                {userVehicles.map(vehicle => (
+                  <option 
+                    key={vehicle.id} 
+                    value={vehicle.id.toString()}
+                    style={{ backgroundColor: '#374151', color: 'white' }}
+                  >
+                    {`${vehicle.brand} ${vehicle.model} (${vehicle.plate})`}
+                  </option>
+                ))}
+              </select>
               <Button 
                 variant="light" 
                 size="sm" 
