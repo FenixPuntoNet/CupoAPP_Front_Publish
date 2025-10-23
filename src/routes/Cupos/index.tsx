@@ -16,7 +16,6 @@ import styles from './index.module.css';
 import { createFileRoute } from '@tanstack/react-router';
 import { getMisCupos } from '@/services/cupos';
 import { cancelBooking } from '@/services/reservas';
-import { clearApiCache } from '@/config/api';
 import { TripRating } from '@/components/Actividades/UI/TripRating';
 import { useBackendAuth } from '@/context/BackendAuthContext';
 import UserSafePointsDisplay from '@/components/Cupos/UserSafePointsDisplay';
@@ -321,9 +320,6 @@ const Cupos: React.FC<CuposProps> = () => {
 
         // 🔄 Refrescar los datos para mostrar el estado actualizado
         console.log(`🔄 [Cupos] Refreshing bookings after successful cancellation`);
-        
-        // 🧹 Limpiar cache adicional para asegurar datos frescos
-        clearApiCache();
         
         await fetchBookings();
         

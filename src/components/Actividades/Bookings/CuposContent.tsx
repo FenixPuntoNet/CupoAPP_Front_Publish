@@ -9,7 +9,6 @@ import {
 } from '@mantine/core';
 import { getMisCupos } from '@/services/cupos';
 import { cancelBooking } from '@/services/reservas';
-import { clearApiCache } from '@/config/api';
 import { TripRating } from '../UI/TripRating';
 import { useBackendAuth } from '@/context/BackendAuthContext';
 import { TicketModal, BookingDetailsModal, ChatModal } from '@/components/Cupos/Modals';
@@ -200,9 +199,6 @@ const CuposContent: React.FC = () => {
 
         // 🔄 Refrescar los datos para mostrar el estado actualizado
         console.log(`🔄 [CuposContent] Refreshing bookings after successful cancellation`);
-        
-        // 🧹 Limpiar cache adicional para asegurar datos frescos
-        clearApiCache();
         
         await fetchBookings();
         

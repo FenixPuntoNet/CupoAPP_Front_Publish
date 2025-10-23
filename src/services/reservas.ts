@@ -1,4 +1,5 @@
-import { apiRequest, clearApiCache } from '@/config/api';
+import { apiRequest } from '@/config/api';
+import { apiCache } from '@/lib/cache';
 
 // Interfaces para reservas
 export interface BookingPassenger {
@@ -419,7 +420,7 @@ export const cancelBooking = async (bookingId: number, cancellationReason?: stri
     console.log(`✅ [cancelBooking] Booking ${bookingId} cancelled successfully:`, response);
     
     // 🧹 Limpiar cache después de cancelación exitosa para refrescar los datos
-    clearApiCache();
+    apiCache.clear();
     console.log(`🔄 [cancelBooking] Cache cleared after successful cancellation`);
     
     return {

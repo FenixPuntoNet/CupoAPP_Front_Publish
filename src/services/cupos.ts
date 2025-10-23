@@ -1,4 +1,4 @@
-import { apiRequest, clearApiCache } from '@/config/api';
+import { apiRequest } from '@/config/api';
 
 interface Passenger {
   id: number;
