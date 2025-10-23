@@ -1,4 +1,5 @@
 import { apiRequest } from '@/config/api';
+import { apiCache } from '@/lib/cache';
 
 export interface TripSearchParams {
   origin?: string;
@@ -121,6 +122,10 @@ export const searchTrips = async (params: TripSearchParams): Promise<{
   status: 'exact' | 'close' | 'date' | 'all' | 'none';
 }> => {
   try {
+    // 🧹 Limpiar cache antes de buscar para asegurar datos frescos
+    console.log('🧹 Clearing cache before search to ensure fresh data...');
+    apiCache.clear();
+    
     const queryParams = new URLSearchParams();
     
     if (params.origin) queryParams.append('origin', params.origin);

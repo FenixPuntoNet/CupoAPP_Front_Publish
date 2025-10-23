@@ -56,16 +56,6 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
     }
   };
 
-  const handleGoToActivities = () => {
-    onClose();
-    navigate({ to: '/Cupos' });
-  };
-
-  const handleGoToHome = () => {
-    onClose();
-    navigate({ to: '/' });
-  };
-
   return (
     <Modal
       opened={isOpen}
@@ -293,61 +283,34 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
           </Group>
         </Card>
 
-        {/* Botones inferiores - Actividades e Ir a Inicio */}
+        {/* Botón de cerrar - Simple y limpio */}
         {bookingResult ? (
-          <Group gap="xs" mt="sm">
-            <Button
-              onClick={handleGoToActivities}
-              size="sm"
-              flex={1}
-              style={{
-                background: 'linear-gradient(135deg, #00FF9D 0%, #00D4AA 100%)',
-                border: 'none',
-                borderRadius: '8px',
-                color: 'white',
-                fontWeight: 600,
-                height: '36px',
-                boxShadow: '0 3px 8px rgba(0, 255, 157, 0.3)',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 5px 12px rgba(0, 255, 157, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 3px 8px rgba(0, 255, 157, 0.3)';
-              }}
-            >
-              📋 Actividades
-            </Button>
-            
-            <Button
-              onClick={handleGoToHome}
-              size="sm"
-              flex={1}
-              style={{
-                background: 'linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%)',
-                border: 'none',
-                borderRadius: '8px',
-                color: 'white',
-                fontWeight: 600,
-                height: '36px',
-                boxShadow: '0 3px 8px rgba(78, 205, 196, 0.3)',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 5px 12px rgba(78, 205, 196, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 3px 8px rgba(78, 205, 196, 0.3)';
-              }}
-            >
-              🏠 Ir al Inicio
-            </Button>
-          </Group>
+          <Button
+            onClick={onClose}
+            size="sm"
+            fullWidth
+            mt="sm"
+            style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none',
+              borderRadius: '8px',
+              color: 'white',
+              fontWeight: 600,
+              height: '36px',
+              boxShadow: '0 3px 8px rgba(102, 126, 234, 0.3)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 5px 12px rgba(102, 126, 234, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 3px 8px rgba(102, 126, 234, 0.3)';
+            }}
+          >
+            Cerrar
+          </Button>
         ) : (
           <Group gap="xs" mt="sm">
             <Button

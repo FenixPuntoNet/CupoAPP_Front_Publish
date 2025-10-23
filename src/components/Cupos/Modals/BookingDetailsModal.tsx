@@ -63,25 +63,50 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ opened, onClo
         const bookingData = result.data;
         console.log(`🔍 [BookingDetailsModal] Processing booking data:`, bookingData);
 
-        // Extraer información del conductor
+        // Extraer información del conductor - Aplicando la misma lógica que en CupoCard
         const driverData = bookingData.driver;
+        const tripData = bookingData.trip || {};
+        const tripDriverData = (tripData as any).driver || {};
+        
         let driverName: string;
         let driverRating: number;
         let driverPhone: string;
         
-        if (driverData && driverData.names && driverData.names.trim() !== '' && driverData.names !== 'Conductor no disponible') {
-          driverName = driverData.names;
-          driverRating = driverData.average_rating || 0;
-          driverPhone = driverData.phone || (driverData as any)?.phone_number || '';
-        } else if (driverData && (driverData as any).first_name) {
-          driverName = `${(driverData as any).first_name} ${(driverData as any).last_name || ''}`.trim();
-          driverRating = driverData.average_rating || 0;
-          driverPhone = driverData.phone || (driverData as any)?.phone_number || '';
+        // Priorizar datos del driver a nivel de trip, luego a nivel de booking
+        const finalDriverData = tripDriverData.first_name ? tripDriverData : driverData;
+        
+        if (finalDriverData && (finalDriverData as any).first_name) {
+          driverName = `${(finalDriverData as any).first_name} ${(finalDriverData as any).last_name || ''}`.trim();
+          driverRating = (finalDriverData as any).average_rating || 0;
+          driverPhone = (finalDriverData as any).phone || (finalDriverData as any).phone_number || '';
+        } else if (finalDriverData && finalDriverData.names && finalDriverData.names.trim() !== '' && finalDriverData.names !== 'Conductor no disponible') {
+          driverName = finalDriverData.names;
+          driverRating = finalDriverData.average_rating || 0;
+          driverPhone = finalDriverData.phone || (finalDriverData as any).phone_number || '';
         } else {
-          driverName = 'Conductor';
+          // Fallback: buscar en cualquier estructura disponible
+          driverName = 'Conductor no disponible';
           driverRating = 0;
           driverPhone = '';
+          
+          // Intentar extraer de otros campos posibles
+          if (driverData) {
+            if ((driverData as any).first_name) {
+              driverName = `${(driverData as any).first_name} ${(driverData as any).last_name || ''}`.trim();
+            } else if (driverData.names && driverData.names !== 'Conductor no disponible') {
+              driverName = driverData.names;
+            }
+            driverRating = driverData.average_rating || 0;
+            driverPhone = driverData.phone || (driverData as any).phone_number || '';
+          }
         }
+        
+        console.log(`🚗 [BookingDetailsModal] Driver extraction result:`, {
+          finalDriverData,
+          extractedName: driverName,
+          extractedRating: driverRating,
+          extractedPhone: driverPhone
+        });
 
         const details: BookingDetailsData = {
           main_text_origen: bookingData.trip?.origin?.main_text || (bookingData.trip?.route as any)?.start_address || 'Origen no disponible',
