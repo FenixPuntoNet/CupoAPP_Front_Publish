@@ -283,10 +283,13 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
           </Group>
         </Card>
 
-        {/* Botón de cerrar - Simple y limpio */}
+        {/* Botón de ir a Home - reemplaza al 'Cerrar' */}
         {bookingResult ? (
           <Button
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              navigate({ to: '/home' });
+            }}
             size="sm"
             fullWidth
             mt="sm"
@@ -309,7 +312,7 @@ const ReservationSuccessModal: React.FC<ReservationSuccessModalProps> = ({
               e.currentTarget.style.boxShadow = '0 3px 8px rgba(102, 126, 234, 0.3)';
             }}
           >
-            Cerrar
+            Ir a Home
           </Button>
         ) : (
           <Group gap="xs" mt="sm">
