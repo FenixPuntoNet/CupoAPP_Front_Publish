@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Group,
@@ -8,18 +8,22 @@ import {
   Avatar,
   Stack,
   Box,
+  Loader,
 } from '@mantine/core';
 import {
   IconCalendar,
   IconUsers,
   IconStar,
+  IconStarFilled,
   IconQrcode,
   IconMessage,
   IconEye,
+  IconX,
 } from '@tabler/icons-react';
 import { useNavigate } from '@tanstack/react-router';
 import { showNotification } from '@mantine/notifications';
 import dayjs from 'dayjs';
+import { getTripRating } from '@/services/ratings';
 import styles from './CupoCard.module.css';
 
 type PassengerLite = {
@@ -48,10 +52,51 @@ interface CupoCardProps {
   onViewTicket?: (bookingId: number) => void;
   onViewDetails?: (bookingId: number) => void;
   onChat?: (tripId: number) => void;
+  onCancel?: (bookingId: number) => void;
 }
 
-const CupoCard: React.FC<CupoCardProps> = ({ booking, onRating, onViewTicket, onViewDetails, onChat }) => {
+const CupoCard: React.FC<CupoCardProps> = ({ booking, onRating, onViewTicket, onViewDetails, onChat, onCancel }) => {
   const navigate = useNavigate();
+  const [ratingStatus, setRatingStatus] = useState<{
+    hasRating: boolean;
+    rating?: number;
+    isLoading: boolean;
+  }>({ hasRating: false, isLoading: false });
+
+  // Verificar si el viaje ya tiene calificación cuando está completado
+  useEffect(() => {
+    const checkExistingRating = async () => {
+      if (booking.booking_status === 'completed' && booking.trip_id && booking.trip_id > 0) {
+        setRatingStatus(prev => ({ ...prev, isLoading: true }));
+        try {
+          console.log(`🌟 [CupoCard] Checking rating for trip ${booking.trip_id}`);
+          const response = await getTripRating(booking.trip_id);
+          if (response.success && response.data && response.data.rating) {
+            console.log(`✅ [CupoCard] Found existing rating:`, response.data);
+            setRatingStatus({
+              hasRating: true,
+              rating: response.data.rating.value,
+              isLoading: false
+            });
+          } else {
+            console.log(`ℹ️ [CupoCard] No existing rating found for trip ${booking.trip_id}`);
+            setRatingStatus({
+              hasRating: false,
+              isLoading: false
+            });
+          }
+        } catch (error) {
+          console.error(`❌ [CupoCard] Error checking rating for trip ${booking.trip_id}:`, error);
+          setRatingStatus({
+            hasRating: false,
+            isLoading: false
+          });
+        }
+      }
+    };
+
+    checkExistingRating();
+  }, [booking.trip_id, booking.booking_status]);
 
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -87,13 +132,25 @@ const CupoCard: React.FC<CupoCardProps> = ({ booking, onRating, onViewTicket, on
           <Text size="sm" c="dimmed" mb={2}>
             Reserva #{booking.booking_id}
           </Text>
-          <Badge
-            color={getStatusColor(booking.booking_status)}
-            variant="light"
-            size="sm"
-          >
-            {getStatusText(booking.booking_status)}
-          </Badge>
+          <Group gap="xs">
+            <Badge
+              color={getStatusColor(booking.booking_status)}
+              variant="light"
+              size="sm"
+            >
+              {getStatusText(booking.booking_status)}
+            </Badge>
+            {booking.booking_status === 'completed' && ratingStatus.hasRating && ratingStatus.rating && (
+              <Badge
+                color="green"
+                variant="light"
+                size="sm"
+                leftSection={<IconStarFilled size={10} />}
+              >
+                Calificado ★{Math.round(ratingStatus.rating)}
+              </Badge>
+            )}
+          </Group>
         </div>
         <div className={styles.priceSection}>
           <Text size="lg" fw={700} className={styles.priceText}>
@@ -238,8 +295,16 @@ const CupoCard: React.FC<CupoCardProps> = ({ booking, onRating, onViewTicket, on
           <Button
             size="xs"
             variant="light"
-            color="yellow"
-            leftSection={<IconStar size={14} />}
+            color={ratingStatus.hasRating && ratingStatus.rating ? "green" : "yellow"}
+            leftSection={
+              ratingStatus.isLoading ? (
+                <Loader size={14} />
+              ) : (ratingStatus.hasRating && ratingStatus.rating) ? (
+                <IconStarFilled size={14} />
+              ) : (
+                <IconStar size={14} />
+              )
+            }
             onClick={() => {
               if (booking.trip_id && booking.trip_id !== 0 && booking.driver_id && booking.driver_id !== 'unknown') {
                 onRating(booking.trip_id, booking.driver_id);
@@ -251,10 +316,31 @@ const CupoCard: React.FC<CupoCardProps> = ({ booking, onRating, onViewTicket, on
                 });
               }
             }}
-            disabled={booking.driver_id === 'unknown'}
+            disabled={booking.driver_id === 'unknown' || ratingStatus.isLoading}
             className={styles.actionButton}
           >
-            Calificar
+            {ratingStatus.isLoading 
+              ? 'Verificando...' 
+              : (ratingStatus.hasRating && ratingStatus.rating)
+                ? `Calificado (${Math.round(ratingStatus.rating)}★)`
+                : 'Calificar'
+            }
+          </Button>
+        )}
+
+        {/* Botón de cancelar - solo para reservas que se pueden cancelar */}
+        {(booking.booking_status === 'pending' || booking.booking_status === 'confirmed') && onCancel && (
+          <Button
+            size="xs"
+            variant="light"
+            color="red"
+            leftSection={<IconX size={14} />}
+            onClick={() => {
+              onCancel(booking.booking_id);
+            }}
+            className={styles.actionButton}
+          >
+            Cancelar
           </Button>
         )}
       </Group>

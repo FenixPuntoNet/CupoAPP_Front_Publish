@@ -161,14 +161,18 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}): P
   // Obtener token de autenticación para todos los endpoints excepto login y registro
   const token = getAuthToken();
   
-  // 🚀 Headers optimizados
-  const headers = {
-    'Content-Type': 'application/json',
+  // 🚀 Headers optimizados - solo incluir Content-Type si hay body
+  const headers: any = {
     'Accept': 'application/json',
     'Connection': 'keep-alive',
     ...(token && !isPublicEndpoint ? { 'Authorization': `Bearer ${token}` } : {}),
     ...options.headers
   };
+  
+  // Solo agregar Content-Type si realmente hay un body
+  if (options.body) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   // Log simplificado en producción
   if (import.meta.env.DEV) {

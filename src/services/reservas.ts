@@ -1,4 +1,4 @@
-import { apiRequest } from '@/config/api';
+import { apiRequest, clearApiCache } from '@/config/api';
 
 // Interfaces para reservas
 export interface BookingPassenger {
@@ -405,19 +405,53 @@ export const getBookingDetails = async (bookingId: number): Promise<{ success: b
 };
 
 // Cancelar una reserva
-export const cancelBooking = async (bookingId: number): Promise<{ success: boolean; error?: string }> => {
+export const cancelBooking = async (bookingId: number, cancellationReason?: string): Promise<{ success: boolean; error?: string; message?: string }> => {
   try {
-    await apiRequest(`/reservas/booking/${bookingId}`, {
-      method: 'DELETE'
+    console.log(`🚫 [cancelBooking] Attempting to cancel booking ${bookingId} with reason:`, cancellationReason);
+    
+    const response = await apiRequest(`/reservas/cancel/${bookingId}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        cancellation_reason: cancellationReason || 'Usuario canceló la reserva'
+      })
     });
+    
+    console.log(`✅ [cancelBooking] Booking ${bookingId} cancelled successfully:`, response);
+    
+    // 🧹 Limpiar cache después de cancelación exitosa para refrescar los datos
+    clearApiCache();
+    console.log(`🔄 [cancelBooking] Cache cleared after successful cancellation`);
+    
     return {
-      success: true
+      success: true,
+      message: response.message || 'Reserva cancelada exitosamente'
     };
   } catch (error) {
-    console.error('Error canceling booking:', error);
+    console.error(`❌ [cancelBooking] Error canceling booking ${bookingId}:`, error);
+    
+    // Extraer el mensaje de error adecuado
+    let errorMessage = 'Error cancelando reserva';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      // Mensajes específicos para diferentes errores comunes
+      if (errorMessage.includes('No puedes cancelar la reserva con menos de 2 horas')) {
+        errorMessage = 'No puedes cancelar la reserva con menos de 2 horas de anticipación. Para cancelaciones urgentes, contacta al conductor directamente.';
+      } else if (errorMessage.includes('Error al cancelar la reserva')) {
+        errorMessage = 'Ocurrió un error interno al procesar la cancelación. Por favor intenta nuevamente o contacta al soporte.';
+      } else if (errorMessage.includes('unauthorized') || errorMessage.includes('401')) {
+        errorMessage = 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.';
+      } else if (errorMessage.includes('forbidden') || errorMessage.includes('403')) {
+        errorMessage = 'No tienes permisos para cancelar esta reserva.';
+      } else if (errorMessage.includes('not found') || errorMessage.includes('404')) {
+        errorMessage = 'La reserva no fue encontrada o ya fue cancelada.';
+      }
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Error cancelando reserva'
+      error: errorMessage
     };
   }
 };

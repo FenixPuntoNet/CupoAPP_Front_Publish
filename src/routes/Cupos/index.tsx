@@ -8,12 +8,15 @@ import {
   Group,
   Stack,
   Button,
+  Modal,
 } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 import { createFileRoute } from '@tanstack/react-router';
 import { getMisCupos } from '@/services/cupos';
+import { cancelBooking } from '@/services/reservas';
+import { clearApiCache } from '@/config/api';
 import { TripRating } from '@/components/Actividades/UI/TripRating';
 import { useBackendAuth } from '@/context/BackendAuthContext';
 import UserSafePointsDisplay from '@/components/Cupos/UserSafePointsDisplay';
@@ -59,27 +62,31 @@ const Cupos: React.FC<CuposProps> = () => {
   const [selectedBookingId, setSelectedBookingId] = useState<string>('');
   const [selectedChatTripId, setSelectedChatTripId] = useState<number | null>(null);
 
+  // Estados para el modal de cancelación
+  const [cancelModalOpened, setCancelModalOpened] = useState(false);
+  const [selectedCancelBookingId, setSelectedCancelBookingId] = useState<number | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+
   // Obtener userId del contexto de autenticación
   const userId = user?.id || '';
 
-
-  useEffect(() => {
-    const fetchBookings = async () => {
-      setLoading(true);
-      
-      // Timeout de seguridad para evitar carga infinita
-      const timeoutId = setTimeout(() => {
-        console.warn(`⏰ [Cupos] Fetch timeout reached, using empty state`);
-        setLoading(false);
-        setBookings([]);
-        showNotification({
-          title: 'Tiempo de carga agotado',
-          message: 'No se pudieron cargar los cupos en este momento. Intenta refrescar la página.',
-          color: 'yellow',
-        });
-      }, 15000); // 15 segundos máximo
-      
-      try {
+  // Función para cargar las reservas (extraída para reutilizar)
+  const fetchBookings = async () => {
+    setLoading(true);
+    
+    // Timeout de seguridad para evitar carga infinita
+    const timeoutId = setTimeout(() => {
+      console.warn(`⏰ [Cupos] Fetch timeout reached, using empty state`);
+      setLoading(false);
+      setBookings([]);
+      showNotification({
+        title: 'Tiempo de carga agotado',
+        message: 'No se pudieron cargar los cupos en este momento. Intenta refrescar la página.',
+        color: 'yellow',
+      });
+    }, 15000); // 15 segundos máximo
+    
+    try {
         console.log(`🎫 [Cupos] Fetching user cupos for userId: ${userId}`);
         
         const result = await getMisCupos();
@@ -261,15 +268,16 @@ const Cupos: React.FC<CuposProps> = () => {
         setLoading(false);
       }
     };
-    
-    if (userId) {
-      fetchBookings();
-    } else {
-      console.warn(`⚠️ [Cupos] No userId provided`);
-      setLoading(false);
-      setBookings([]);
-    }
-  }, [userId]);
+  
+    useEffect(() => {
+      if (userId) {
+        fetchBookings();
+      } else {
+        console.warn(`⚠️ [Cupos] No userId provided`);
+        setLoading(false);
+        setBookings([]);
+      }
+    }, [userId]);
 
   if (loading) {
     return (
@@ -286,6 +294,54 @@ const Cupos: React.FC<CuposProps> = () => {
     setSelectedTripId(tripId);
     setSelectedDriverId(driverId);
     setRatingModal(true);
+  };
+
+  // Función para abrir el modal de cancelación
+  const handleCancelBooking = (bookingId: number) => {
+    setSelectedCancelBookingId(bookingId);
+    setCancelModalOpened(true);
+  };
+
+  // Función para confirmar la cancelación
+  const confirmCancelBooking = async () => {
+    if (!selectedCancelBookingId) return;
+
+    setIsCancelling(true);
+    try {
+      console.log('🚫 [Cupos] Cancelando reserva:', selectedCancelBookingId);
+      
+      const response = await cancelBooking(selectedCancelBookingId);
+
+      if (response.success) {
+        showNotification({
+          title: '¡Reserva cancelada!',
+          message: response.message || 'Tu reserva ha sido cancelada exitosamente.',
+          color: 'green',
+        });
+
+        // 🔄 Refrescar los datos para mostrar el estado actualizado
+        console.log(`🔄 [Cupos] Refreshing bookings after successful cancellation`);
+        
+        // 🧹 Limpiar cache adicional para asegurar datos frescos
+        clearApiCache();
+        
+        await fetchBookings();
+        
+      } else {
+        throw new Error(response.error || 'Error al cancelar la reserva');
+      }
+    } catch (error) {
+      console.error('❌ [Cupos] Error cancelando reserva:', error);
+      showNotification({
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'No se pudo cancelar la reserva. Intenta nuevamente.',
+        color: 'red',
+      });
+    } finally {
+      setIsCancelling(false);
+      setCancelModalOpened(false);
+      setSelectedCancelBookingId(null);
+    }
   };
 
 
@@ -323,6 +379,40 @@ const Cupos: React.FC<CuposProps> = () => {
         tripId={selectedChatTripId || 0}
         bookingId={selectedBookingId}
       />
+
+      {/* Modal de Cancelación */}
+      <Modal
+        opened={cancelModalOpened}
+        onClose={() => setCancelModalOpened(false)}
+        title="Cancelar Reserva"
+        centered
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text>
+            ¿Estás seguro de que deseas cancelar esta reserva?
+          </Text>
+          <Text size="sm" c="dimmed">
+            Esta acción no se puede deshacer. Se te reembolsará el dinero según las políticas de cancelación.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button
+              variant="light"
+              onClick={() => setCancelModalOpened(false)}
+              disabled={isCancelling}
+            >
+              No, mantener reserva
+            </Button>
+            <Button
+              color="red"
+              onClick={confirmCancelBooking}
+              loading={isCancelling}
+            >
+              Sí, cancelar reserva
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
 
       {bookings.length === 0 ? (
         <Text className={styles.noTripsText}>Aún no has comprado ningún cupo.</Text>
@@ -441,6 +531,27 @@ const Cupos: React.FC<CuposProps> = () => {
                   >
                     Chat del Viaje
                   </Button>
+                  
+                  {/* Botón de cancelar - solo para reservas que se pueden cancelar */}
+                  {(booking.booking_status === 'pending' || booking.booking_status === 'confirmed') && (
+                    <Button
+                      size="xs"
+                      onClick={() => {
+                        console.log('🚫 [Cupos] Cancel button clicked for booking:', booking.booking_id);
+                        handleCancelBooking(booking.booking_id);
+                      }}
+                      style={{
+                        backgroundColor: 'transparent',
+                        color: '#EF4444',
+                        borderRadius: '6px',
+                        border: '1px solid #EF4444',
+                        padding: '5px 10px',
+                      }}
+                    >
+                      Cancelar Reserva
+                    </Button>
+                  )}
+                  
                   {booking.booking_status === 'completed' && (
                     <Button
                       size="xs"

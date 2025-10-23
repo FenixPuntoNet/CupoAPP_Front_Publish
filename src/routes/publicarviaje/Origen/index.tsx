@@ -26,6 +26,7 @@ function OrigenView() {
   const [selectedAddress, setSelectedAddress] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   
   // Destinos populares según las imágenes
   const popularDestinations = [
@@ -112,36 +113,79 @@ function OrigenView() {
   };
 
   const handleCurrentLocation = async () => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          if (getAddressFromCoords) {
-            try {
-              const address = await getAddressFromCoords(latitude, longitude);
-              if (address) {
-                setSelectedAddress(address);
-                setSelectedLocation({ lat: latitude, lng: longitude });
-                
-                // Navegar automáticamente al obtener ubicación actual
-                navigate({
-                  to: '/publicarviaje/punto-recogida',
-                  search: { selectedAddress: address }
-                });
-              }
-            } catch (error) {
-              setError('Error al obtener la dirección actual');
-            }
-          }
-        },
-        () => {
-          setError('Error al obtener la ubicación actual');
-        }
-      );
-    } else {
-      setError('Geolocalización no disponible');
+    // Limpiar errores previos
+    setError(null);
+    setIsGettingLocation(true);
+    
+    if (!('geolocation' in navigator)) {
+      setError('Geolocalización no disponible en este navegador');
+      setIsGettingLocation(false);
+      return;
     }
+
+    // Verificar que getAddressFromCoords esté disponible
+    if (!getAddressFromCoords) {
+      setError('Servicio de geocodificación no disponible');
+      setIsGettingLocation(false);
+      return;
+    }
+
+    // Configurar opciones de geolocalización
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000, // 10 segundos
+      maximumAge: 60000 // 1 minuto
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          console.log('🗺️ Ubicación obtenida:', { latitude, longitude });
+          
+          const address = await getAddressFromCoords(latitude, longitude);
+          
+          if (address) {
+            console.log('📍 Dirección obtenida:', address);
+            setSelectedAddress(address);
+            setSelectedLocation({ lat: latitude, lng: longitude });
+            
+            // Navegar automáticamente al obtener ubicación actual
+            navigate({
+              to: '/publicarviaje/punto-recogida',
+              search: { selectedAddress: address }
+            });
+          } else {
+            setError('No se pudo obtener la dirección de tu ubicación');
+          }
+        } catch (error) {
+          console.error('❌ Error al convertir coordenadas:', error);
+          setError('Error al obtener la dirección actual');
+        } finally {
+          setIsGettingLocation(false);
+        }
+      },
+      (error) => {
+        console.error('❌ Error de geolocalización:', error);
+        let errorMessage = 'Error al obtener la ubicación actual';
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Permisos de ubicación denegados. Por favor, permite el acceso a tu ubicación.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Ubicación no disponible. Verifica tu conexión GPS.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Tiempo agotado al obtener ubicación. Intenta nuevamente.';
+            break;
+        }
+        
+        setError(errorMessage);
+        setIsGettingLocation(false);
+      },
+      options
+    );
   };
 
   return (
@@ -219,11 +263,16 @@ function OrigenView() {
             <button 
               className={styles.currentLocationButton}
               onClick={handleCurrentLocation}
+              disabled={isGettingLocation}
             >
               <Locate className={styles.currentLocationIcon} size={20} />
               <div className={styles.currentLocationContent}>
-                <div className={styles.currentLocationText}>Utilizar ubicación actual</div>
-                <div className={styles.currentLocationSubtext}>Obtener tu ubicación automáticamente</div>
+                <div className={styles.currentLocationText}>
+                  {isGettingLocation ? 'Obteniendo ubicación...' : 'Utilizar ubicación actual'}
+                </div>
+                <div className={styles.currentLocationSubtext}>
+                  {isGettingLocation ? 'Por favor espera...' : 'Obtener tu ubicación automáticamente'}
+                </div>
               </div>
             </button>
 

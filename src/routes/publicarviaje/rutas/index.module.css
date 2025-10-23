@@ -145,17 +145,39 @@
   overflow: hidden;
 }
 
-/* Lista de rutas ELEGANTE COMO LAS OTRAS PÁGINAS */
+/* Lista de rutas ELEGANTE COMO LAS OTRAS PÁGINAS - MEJORADA PARA MÚLTIPLES RUTAS */
 .routesList {
-  height: 30%;
-  min-height: 180px;
-  max-height: 220px;
+  height: 35%;
+  min-height: 200px;
+  max-height: 280px;
   padding: 1rem;
   overflow-y: auto;
   background: rgba(255, 255, 255, 0.05); /* GLASSMORPHISM SUTIL */
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
+  /* Mejorar scrollbar para profesionalidad */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.5) rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar personalizada para WebKit */
+.routesList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.routesList::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.routesList::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.5);
+  border-radius: 3px;
+}
+
+.routesList::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.7);
 }
 
 [data-mantine-color-scheme="dark"] .routesList {
@@ -183,20 +205,20 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Items de ruta ELEGANTES CON MEJOR CONTRASTE */
+/* Items de ruta ELEGANTES CON MEJOR CONTRASTE - OPTIMIZADOS PARA LISTA */
 .routeItem {
   display: flex;
   align-items: center;
-  padding: 1rem 1.25rem;
+  padding: 0.875rem 1rem;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%); /* FONDO BLANCO CON TRANSPARENCIA */
   border: 2px solid rgba(16, 185, 129, 0.3);
-  border-radius: 16px;
-  margin-bottom: 0.75rem;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-height: 60px;
+  min-height: 52px;
   backdrop-filter: blur(20px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(16, 185, 129, 0.12);
 }
 
 [data-mantine-color-scheme="dark"] .routeItem {
@@ -310,21 +332,21 @@
   color: #fdcb6e !important;
 }
 
-/* Flecha de navegación ELEGANTE */
+/* Flecha de navegación ELEGANTE - COMPACTA */
 .continueArrow {
   background: linear-gradient(135deg, #10b981 0%, #065f46 100%); /* VERDE COMO LAS OTRAS PÁGINAS */
   border: none;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-left: 0.75rem;
+  margin-left: 0.5rem;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
 }
 
 /* En items no seleccionados, flecha más sutil */
@@ -351,8 +373,8 @@
 .arrowIcon {
   color: white;
   transform: rotate(180deg);
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
   transition: all 0.2s ease;
 }
@@ -363,10 +385,10 @@
   filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.3));
 }
 
-/* Mapa OPTIMIZADO */
+/* Mapa OPTIMIZADO - AJUSTADO PARA MEJOR BALANCE */
 .mapContainer {
-  height: 70%;
-  min-height: 350px;
+  height: 65%;
+  min-height: 320px;
   width: 100%;
   position: relative;
   border-radius: 16px 16px 0 0;
@@ -375,7 +397,7 @@
   flex: 1;
 }
 
-/* Responsive OPTIMIZADO VERDE */
+/* Responsive OPTIMIZADO VERDE - MEJORADO PARA MÚLTIPLES RUTAS */
 @media (max-width: 768px) {
   .header {
     padding: 0.75rem 1rem;
@@ -388,35 +410,35 @@
   }
   
   .routesList {
-    height: 32%;
-    min-height: 160px;
-    max-height: 200px;
+    height: 38%;
+    min-height: 180px;
+    max-height: 240px;
     padding: 0.75rem;
   }
   
   .mapContainer {
-    height: 68%;
-    min-height: 300px;
+    height: 62%;
+    min-height: 280px;
   }
   
   .routeItem {
-    padding: 0.6rem 0.8rem;
+    padding: 0.75rem 0.875rem;
     margin-bottom: 0.4rem;
     min-height: 48px;
   }
   
   .continueArrow {
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
   }
   
   .arrowIcon {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
   }
   
   .routeTitle {
-    font-size: 0.85rem;
+    font-size: 0.875rem;
   }
   
   .routeDistance {
@@ -445,31 +467,31 @@
   }
   
   .routesList {
-    height: 30%;
-    min-height: 140px;
-    max-height: 180px;
+    height: 36%;
+    min-height: 160px;
+    max-height: 200px;
     padding: 0.5rem;
   }
   
   .mapContainer {
-    height: 70%;
-    min-height: 280px;
+    height: 64%;
+    min-height: 260px;
   }
   
   .routeItem {
-    padding: 0.5rem 0.6rem;
-    margin-bottom: 0.3rem;
+    padding: 0.625rem 0.75rem;
+    margin-bottom: 0.35rem;
     min-height: 44px;
   }
   
   .continueArrow {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   
   .arrowIcon {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
   }
   
   .routeTitle {

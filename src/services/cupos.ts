@@ -1,4 +1,4 @@
-import { apiRequest } from '@/config/api';
+import { apiRequest, clearApiCache } from '@/config/api';
 
 interface Passenger {
   id: number;
@@ -422,11 +422,11 @@ export const getCuposStats = async (): Promise<{ success: boolean; data?: CupoSt
 // Obtener mis cupos comprados (como pasajero) - ENDPOINT CORREGIDO SEGÚN GUÍA DEL BACKEND
 export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos: CupoWithDetails[] }; error?: string }> => {
   try {
-    console.log(`🎫 [getMisCupos] Fetching user's purchased cupos using CORRECTED ENDPOINT /reservas/user-bookings`);
+    console.log(`🎫 [getMisCupos] Fetching user's purchased cupos using BACKEND DEPLOYED ENDPOINT /cupos/mis-cupos`);
     
-    // ✅ USAR ENDPOINT CORREGIDO SEGÚN LA GUÍA DEL BACKEND
-    const response = await apiRequest('/reservas/user-bookings');
-    console.log(`✅ [getMisCupos] /reservas/user-bookings response:`, response);
+    // ✅ USAR ENDPOINT CORRECTO DEL BACKEND DESPLEGADO: /cupos/mis-cupos
+    const response = await apiRequest('/cupos/mis-cupos');
+    console.log(`✅ [getMisCupos] /cupos/mis-cupos response:`, response);
     
     // Validar que la respuesta tenga la estructura esperada
     if (!response || typeof response !== 'object') {
@@ -434,46 +434,34 @@ export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos:
       throw new Error('Respuesta inválida del servidor');
     }
 
-    // El endpoint /reservas/user-bookings retorna { bookings: [...] } - CORREGIDO
+    // El endpoint /cupos/mis-cupos retorna { cupos: [...] } directamente según el backend
     let cupos = [];
-    if (Array.isArray(response.bookings)) {
-      // Mapear bookings a formato cupos, asegurando que tenemos driver_id correcto
-      cupos = response.bookings.map((booking: any) => {
-        console.log(`🔍 [getMisCupos] Processing booking:`, booking.id, {
-          trip: booking.trip,
-          tripUserId: booking.trip?.user_id,
-          driverInfo: booking.trip?.driver,
-          driverUserId: booking.trip?.driver?.user_id
+    if (Array.isArray(response.cupos)) {
+      // Los cupos ya vienen con la estructura correcta del backend
+      cupos = response.cupos.map((cupo: any) => {
+        console.log(`🔍 [getMisCupos] Processing cupo:`, cupo.id, {
+          trip: cupo.trip,
+          tripUserId: cupo.trip?.user_id,
+          driverInfo: cupo.trip?.driver,
+          passengers: cupo.passengers?.length || 0
         });
         
-        // Verificar que tenemos un driver_id válido según las instrucciones del backend
-        const driverIdFromTrip = booking.trip?.user_id;
-        const driverIdFromDriver = booking.trip?.driver?.user_id;
-        
-        if (!driverIdFromTrip && !driverIdFromDriver) {
-          console.error(`❌ [getMisCupos] CRITICAL: No driver user_id found for booking ${booking.id}`);
-          console.error(`❌ [getMisCupos] Trip data:`, booking.trip);
-        }
-        
         return {
-          ...booking,
-          id: booking.id || booking.booking_id,
-          trip_id: booking.trip_id,
-          // Asegurar que tenemos la estructura completa del trip con driver info
-          trip: {
-            ...booking.trip,
-            user_id: driverIdFromTrip, // ID del conductor desde la tabla trips (PRINCIPAL)
-            driver: {
-              ...booking.trip?.driver,
-              user_id: driverIdFromDriver || driverIdFromTrip // ID del conductor desde user_profiles o trips (BACKUP)
-            }
-          }
+          id: cupo.id,
+          booking_date: cupo.booking_date,
+          booking_status: cupo.booking_status,
+          total_price: cupo.total_price,
+          trip_id: cupo.trip_id,
+          seats_booked: cupo.seats_booked,
+          booking_qr: cupo.booking_qr,
+          trip: cupo.trip, // Trip ya viene completo con driver info desde el backend
+          passengers: cupo.passengers || []
         };
       });
-      console.log(`🔄 [getMisCupos] Mapped ${cupos.length} bookings to cupos format`);
+      console.log(`✅ [getMisCupos] Processed ${cupos.length} cupos from backend`);
     } else {
-      console.warn(`⚠️ [getMisCupos] No bookings array found in response`);
-      console.warn(`⚠️ [getMisCupos] Response structure:`, response);
+      console.warn(`⚠️ [getMisCupos] No cupos array found in response`);
+      console.warn(`⚠️ [getMisCupos] Response keys:`, Object.keys(response));
       cupos = [];
     }
     
@@ -498,20 +486,26 @@ export const getMisCupos = async (): Promise<{ success: boolean; data?: { cupos:
     }
     
     if (errorMessage.includes('403') || errorMessage.includes('permisos')) {
-      console.warn(`🚫 [getMisCupos] Permission error`);
+      console.warn(`� [getMisCupos] Permission error`);
       return {
         success: false,
-        error: 'No tienes permisos para ver tus cupos'
+        error: 'No tienes permisos para acceder a esta información'
       };
     }
 
-    // Para otros errores, usar fallback seguro inmediatamente
-    console.warn(`🔧 [getMisCupos] Main endpoint failed, using safe fallback`);
-    
+    if (errorMessage.includes('404')) {
+      console.warn(`� [getMisCupos] No cupos found`);
+      return {
+        success: true,
+        data: { cupos: [] },
+        error: 'Aún no tienes cupos comprados'
+      };
+    }
+
+    // Para otros errores, devolver error real sin fallback
     return {
-      success: true,
-      data: { cupos: [] },
-      error: 'No se pudieron cargar los cupos desde el servidor - mostrando vista sin datos'
+      success: false,
+      error: errorMessage || 'Error al obtener cupos'
     };
   }
 };

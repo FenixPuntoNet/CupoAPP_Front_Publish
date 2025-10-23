@@ -201,6 +201,17 @@
   border-color: rgba(16, 185, 129, 0.4);
 }
 
+.currentLocationButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.currentLocationButton:disabled:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
 [data-mantine-color-scheme="dark"] .currentLocationButton {
   background: rgba(16, 185, 129, 0.15);
   border-color: rgba(16, 185, 129, 0.3);
