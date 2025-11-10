@@ -1,11 +1,10 @@
+// import { hello } from "$/hello.telefunc.ts";
 import { useState, useEffect } from "react";
 import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "../components/ui/button";
 import { ThemeProvider } from "../context/ThemeContext";
 import { ThemeToggle } from "../components/ThemeToggle";
 import styles from "./indexlazy.module.css";
-// import { hello } from "$/hello.telefunc.ts";
-
 import AppLogo from '../assets/app_logo_asset_rdap.png';
 
 export const Route = createLazyFileRoute("/")({
@@ -56,16 +55,6 @@ function Index() {
 
   return (
     <div className={`${styles.container}`}>
-      {/* <header className={styles.header}>
-        <div className={styles.logo}>
-          <span className={styles.logoIcon} />
-        </div>
-        <div className={styles.headerButtons}>
-          <div style={{height: '30px'}} />
-          <ThemeToggle />
-        </div>
-      </header> */}
-
       <div className="top p-4 w-full flex items-center justify-end mt-[4dvh]">
         <ThemeToggle />
       </div>

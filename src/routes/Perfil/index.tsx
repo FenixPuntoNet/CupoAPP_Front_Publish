@@ -22,6 +22,7 @@ import {
   Gift,
   Trash2,
 } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import type { LucideProps } from 'lucide-react'
 import styles from './index.module.css'
 import { useBackendAuth } from '@/context/BackendAuthContext'
@@ -194,6 +195,14 @@ const ProfileView: React.FC = () => {
       title: 'Chats',
       subtitle: 'Salas de Comunicación',
       path: '/Chat',
+    }
+    ,
+    {
+      id: 'notifications',
+      icon: Bell,
+      title: 'Notificaciones',
+      subtitle: 'Centro de notificaciones y historial',
+      path: '/Notifications/',
     }
   ]
 

@@ -88,6 +88,9 @@ export function ChatBox({ chatId, currentUserId }: Props) {
       if (result.success) {
         console.log('✅ [ChatBox] MENSAJE ENVIADO AL BACKEND');
         
+        // ✅ Las notificaciones se crean automáticamente en el backend
+        // No necesitamos crear notificaciones manualmente desde el frontend
+        
         // Limpiar input
         setInput('');
         

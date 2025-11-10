@@ -1,0 +1,559 @@
+/* 🎨 Contenedor principal - siguiendo el patrón de perfil con colores CupoApp */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  padding: 0;
+  margin: 0;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Mejorar la transición del tema en toda la página */
+.container * {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light mode con colores CupoApp */
+:global(.light) .container {
+  background: linear-gradient(135deg, #f8fffe 0%, #e6fffa 100%);
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: inherit;
+  z-index: -1;
+}
+
+.profileTopSpacer {
+  height: 60px;
+  position: relative;
+  z-index: 10;
+}
+
+/* 👤 Sección del usuario/header */
+.userSection {
+  padding: 0 20px 20px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 5;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.avatarSection {
+  position: relative;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 255, 157, 0.3);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(0, 255, 157, 0.4);
+}
+
+:global(.light) .avatar {
+  background: linear-gradient(135deg, #00cc7d 0%, #009b63 100%);
+  box-shadow: 0 8px 32px rgba(0, 204, 125, 0.2);
+  border-color: rgba(0, 204, 125, 0.3);
+}
+
+.userDetails {
+  flex: 1;
+}
+
+.userName {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.userSubtitle {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 4px 0 0;
+}
+
+.actionsSection {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.actionButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 255, 157, 0.15);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  color: #00ff9d;
+}
+
+.actionButton:hover {
+  background: rgba(0, 255, 157, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 255, 157, 0.3);
+  border-color: rgba(0, 255, 157, 0.5);
+}
+
+:global(.light) .actionButton {
+  background: rgba(0, 204, 125, 0.1);
+  border-color: rgba(0, 204, 125, 0.3);
+  color: #00cc7d;
+}
+
+:global(.light) .actionButton:hover {
+  background: rgba(0, 204, 125, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 204, 125, 0.2);
+  border-color: rgba(0, 204, 125, 0.5);
+}
+
+/* 🔍 Filtros */
+.filtersContainer {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.filtersContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.filterButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 255, 157, 0.2);
+  background: rgba(0, 255, 157, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
+.filterButton:hover {
+  background: rgba(0, 255, 157, 0.2);
+  color: #00ff9d;
+  border-color: rgba(0, 255, 157, 0.3);
+}
+
+.filterButtonActive {
+  background: linear-gradient(135deg, #00ff9d 0%, #00cc7d 100%);
+  color: #0a0a0a;
+  border-color: rgba(0, 255, 157, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 255, 157, 0.3);
+}
+
+:global(.light) .filterButton {
+  background: rgba(0, 204, 125, 0.1);
+  border-color: rgba(0, 204, 125, 0.2);
+  color: rgba(26, 26, 26, 0.8);
+}
+
+:global(.light) .filterButton:hover {
+  background: rgba(0, 204, 125, 0.2);
+  color: #00cc7d;
+  border-color: rgba(0, 204, 125, 0.4);
+}
+
+:global(.light) .filterButtonActive {
+  background: linear-gradient(135deg, #00cc7d 0%, #009b63 100%);
+  color: white;
+  border-color: rgba(0, 204, 125, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 204, 125, 0.3);
+}
+
+.filterCount {
+  background: #00ff9d;
+  color: #0a0a0a;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.filterButtonActive .filterCount {
+  background: rgba(10, 10, 10, 0.8);
+  color: #00ff9d;
+}
+
+:global(.light) .filterCount {
+  background: #00cc7d;
+  color: white;
+}
+
+:global(.light) .filterButtonActive .filterCount {
+  background: rgba(255, 255, 255, 0.9);
+  color: #00cc7d;
+}
+
+/* 📋 Lista de notificaciones */
+.notificationsList {
+  background: #1a1a1a;
+  border-radius: 24px 24px 0 0;
+  min-height: calc(100vh - 300px);
+  padding: 24px 20px 100px;
+  margin: 0;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(0, 255, 157, 0.1);
+  color: white;
+}
+
+:global(.light) .notificationsList {
+  background: white;
+  color: #1a1a1a;
+  box-shadow: 0 -4px 20px rgba(0, 204, 125, 0.1);
+  border-top: 1px solid rgba(0, 204, 125, 0.2);
+}
+
+/* 📭 Estado vacío */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.emptyText {
+  font-size: 18px;
+  font-weight: 600;
+  color: #495057;
+  margin: 16px 0 8px;
+}
+
+:global(.dark) .emptyText {
+  color: #c1c2c5;
+}
+
+.emptySubtext {
+  font-size: 14px;
+  color: #868e96;
+  margin: 0;
+}
+
+:global(.dark) .emptySubtext {
+  color: #909296;
+}
+
+/* 📱 Item de notificación */
+.notificationItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0, 255, 157, 0.1);
+  margin-bottom: 8px;
+  background: rgba(26, 26, 26, 0.8);
+}
+
+:global(.light) .notificationItem {
+  background: white;
+  border-color: rgba(0, 204, 125, 0.1);
+}
+
+.notificationItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 255, 157, 0.2);
+  border-color: rgba(0, 255, 157, 0.3);
+  background: rgba(26, 26, 26, 0.9);
+}
+
+:global(.light) .notificationItem:hover {
+  border-color: rgba(0, 204, 125, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 204, 125, 0.1);
+  background: rgba(248, 255, 254, 0.8);
+}
+
+.notificationItemUnread {
+  border-left: 4px solid #00ff9d;
+  background: rgba(0, 255, 157, 0.05);
+}
+
+:global(.light) .notificationItemUnread {
+  background: rgba(0, 204, 125, 0.05);
+  border-left-color: #00cc7d;
+}
+
+.notificationIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notificationContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.notificationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.notificationTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #343a40;
+  margin: 0;
+  line-height: 1.4;
+}
+
+:global(.dark) .notificationTitle {
+  color: #f8f9fa;
+}
+
+.notificationTime {
+  font-size: 12px;
+  color: #868e96;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.notificationMessage {
+  font-size: 14px;
+  color: #495057;
+  margin: 0 0 8px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+:global(.dark) .notificationMessage {
+  color: #c1c2c5;
+}
+
+.notificationMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notificationBadge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-message {
+  background: rgba(0, 204, 125, 0.1);
+  color: #00cc7d;
+  border: 1px solid rgba(0, 204, 125, 0.2);
+}
+
+.badge-booking {
+  background: rgba(255, 146, 43, 0.1);
+  color: #ff922b;
+  border: 1px solid rgba(255, 146, 43, 0.2);
+}
+
+.badge-confirmation {
+  background: rgba(0, 255, 157, 0.1);
+  color: #00ff9d;
+  border: 1px solid rgba(0, 255, 157, 0.2);
+}
+
+.badge-trip {
+  background: rgba(151, 117, 250, 0.1);
+  color: #9775fa;
+  border: 1px solid rgba(151, 117, 250, 0.2);
+}
+
+.badge-warning {
+  background: rgba(255, 212, 59, 0.1);
+  color: #ffd43b;
+  border: 1px solid rgba(255, 212, 59, 0.2);
+}
+
+:global(.light) .badge-message {
+  background: rgba(0, 204, 125, 0.1);
+  color: #00a86b;
+}
+
+:global(.light) .badge-booking {
+  background: rgba(255, 146, 43, 0.1);
+  color: #e67e22;
+}
+
+:global(.light) .badge-confirmation {
+  background: rgba(0, 204, 125, 0.1);
+  color: #00cc7d;
+}
+
+:global(.light) .badge-trip {
+  background: rgba(151, 117, 250, 0.1);
+  color: #7c3aed;
+}
+
+:global(.light) .badge-warning {
+  background: rgba(255, 193, 7, 0.1);
+  color: #f59e0b;
+}
+
+.unreadDot {
+  width: 8px;
+  height: 8px;
+  background: #00ff9d;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px rgba(0, 255, 157, 0.6);
+}
+
+:global(.light) .unreadDot {
+  background: #00cc7d;
+  box-shadow: 0 0 8px rgba(0, 204, 125, 0.6);
+}
+
+/* 🔍 Modal de detalles */
+.notificationModal {
+  padding: 4px;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 255, 157, 0.2);
+}
+
+:global(.light) .modalHeader {
+  border-bottom-color: rgba(0, 204, 125, 0.2);
+}
+
+.modalIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 255, 157, 0.1);
+  border: 1px solid rgba(0, 255, 157, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+:global(.light) .modalIcon {
+  background: rgba(0, 204, 125, 0.1);
+  border-color: rgba(0, 204, 125, 0.2);
+}
+
+.modalMessage {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  color: #495057;
+  padding: 12px 0;
+}
+
+:global(.dark) .modalMessage {
+  color: #c1c2c5;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 255, 157, 0.1);
+}
+
+:global(.light) .modalActions {
+  border-top-color: rgba(0, 204, 125, 0.1);
+}
+
+/* 🧪 Modal de testing */
+.testingModal {
+  padding: 4px;
+}
+
+.testingButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 📱 Responsive */
+@media (max-width: 600px) {
+  .userInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+  
+  .avatar {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .userName {
+    font-size: 20px;
+  }
+  
+  .notificationItem {
+    padding: 12px;
+  }
+  
+  .notificationHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .modalActions {
+    flex-direction: column;
+  }
+}

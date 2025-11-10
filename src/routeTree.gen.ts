@@ -24,6 +24,7 @@ import { Route as RegistroIndexRouteImport } from './routes/Registro/index'
 import { Route as RegistrarVehiculoIndexRouteImport } from './routes/RegistrarVehiculo/index'
 import { Route as RecuperarPaswordIndexRouteImport } from './routes/RecuperarPasword/index'
 import { Route as PerfilIndexRouteImport } from './routes/Perfil/index'
+import { Route as NotificationsIndexRouteImport } from './routes/Notifications/index'
 import { Route as LoginIndexRouteImport } from './routes/Login/index'
 import { Route as DateSelectedIndexRouteImport } from './routes/DateSelected/index'
 import { Route as CuposReservadosIndexRouteImport } from './routes/CuposReservados/index'
@@ -120,6 +121,11 @@ const RecuperarPaswordIndexRoute = RecuperarPaswordIndexRouteImport.update({
 const PerfilIndexRoute = PerfilIndexRouteImport.update({
   id: '/Perfil/',
   path: '/Perfil/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsIndexRoute = NotificationsIndexRouteImport.update({
+  id: '/Notifications/',
+  path: '/Notifications/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/CuposReservados': typeof CuposReservadosIndexRoute
   '/DateSelected': typeof DateSelectedIndexRoute
   '/Login': typeof LoginIndexRoute
+  '/Notifications': typeof NotificationsIndexRoute
   '/Perfil': typeof PerfilIndexRoute
   '/RecuperarPasword': typeof RecuperarPaswordIndexRoute
   '/RegistrarVehiculo': typeof RegistrarVehiculoIndexRoute
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/CuposReservados': typeof CuposReservadosIndexRoute
   '/DateSelected': typeof DateSelectedIndexRoute
   '/Login': typeof LoginIndexRoute
+  '/Notifications': typeof NotificationsIndexRoute
   '/Perfil': typeof PerfilIndexRoute
   '/RecuperarPasword': typeof RecuperarPaswordIndexRoute
   '/RegistrarVehiculo': typeof RegistrarVehiculoIndexRoute
@@ -359,6 +367,7 @@ export interface FileRoutesById {
   '/CuposReservados/': typeof CuposReservadosIndexRoute
   '/DateSelected/': typeof DateSelectedIndexRoute
   '/Login/': typeof LoginIndexRoute
+  '/Notifications/': typeof NotificationsIndexRoute
   '/Perfil/': typeof PerfilIndexRoute
   '/RecuperarPasword/': typeof RecuperarPaswordIndexRoute
   '/RegistrarVehiculo/': typeof RegistrarVehiculoIndexRoute
@@ -402,6 +411,7 @@ export interface FileRouteTypes {
     | '/CuposReservados'
     | '/DateSelected'
     | '/Login'
+    | '/Notifications'
     | '/Perfil'
     | '/RecuperarPasword'
     | '/RegistrarVehiculo'
@@ -443,6 +453,7 @@ export interface FileRouteTypes {
     | '/CuposReservados'
     | '/DateSelected'
     | '/Login'
+    | '/Notifications'
     | '/Perfil'
     | '/RecuperarPasword'
     | '/RegistrarVehiculo'
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | '/CuposReservados/'
     | '/DateSelected/'
     | '/Login/'
+    | '/Notifications/'
     | '/Perfil/'
     | '/RecuperarPasword/'
     | '/RegistrarVehiculo/'
@@ -526,6 +538,7 @@ export interface RootRouteChildren {
   CuposReservadosIndexRoute: typeof CuposReservadosIndexRoute
   DateSelectedIndexRoute: typeof DateSelectedIndexRoute
   LoginIndexRoute: typeof LoginIndexRoute
+  NotificationsIndexRoute: typeof NotificationsIndexRoute
   PerfilIndexRoute: typeof PerfilIndexRoute
   RecuperarPaswordIndexRoute: typeof RecuperarPaswordIndexRoute
   RegistrarVehiculoIndexRoute: typeof RegistrarVehiculoIndexRoute
@@ -651,6 +664,13 @@ declare module '@tanstack/react-router' {
       path: '/Perfil'
       fullPath: '/Perfil'
       preLoaderRoute: typeof PerfilIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/Notifications/': {
+      id: '/Notifications/'
+      path: '/Notifications'
+      fullPath: '/Notifications'
+      preLoaderRoute: typeof NotificationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/Login/': {
@@ -846,6 +866,7 @@ const rootRouteChildren: RootRouteChildren = {
   CuposReservadosIndexRoute: CuposReservadosIndexRoute,
   DateSelectedIndexRoute: DateSelectedIndexRoute,
   LoginIndexRoute: LoginIndexRoute,
+  NotificationsIndexRoute: NotificationsIndexRoute,
   PerfilIndexRoute: PerfilIndexRoute,
   RecuperarPaswordIndexRoute: RecuperarPaswordIndexRoute,
   RegistrarVehiculoIndexRoute: RegistrarVehiculoIndexRoute,

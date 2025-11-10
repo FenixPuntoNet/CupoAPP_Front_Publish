@@ -1,4 +1,4 @@
-import { createRootRoute, Outlet, Link, useLocation } from "@tanstack/react-router";
+import { createRootRoute, Outlet, Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   AppShell,
   Group,
@@ -15,11 +15,14 @@ import '@mantine/dates/styles.css';
 import { Search, PlusCircle, History, User } from "lucide-react";
 import { config } from "telefunc/client";
 import styles from "./root.module.css";
-import { BackendAuthProvider } from '@/context/BackendAuthContext';
+import { BackendAuthProvider, useBackendAuth } from '@/context/BackendAuthContext';
 import { AuthGuard } from '@/components/AuthGuard';
 import { GoogleMapsProvider } from '@/components/GoogleMapsProvider';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { useEffect } from 'react';
 import { ThemeToggle as _ThemeToggle } from '@/components/ThemeToggle';
+import { useNotifications } from '@/hooks/useNotifications';
+import { setGlobalNavigate } from '@/services/notificationDisplay';
 
 // Configure telefunc to use external backend
 config.telefuncUrl = "https://cupo.site/_telefunc";
@@ -82,6 +85,56 @@ const RootComponent = () => {
       <AppContent showNavigation={showNavigation} />
     </ThemeProvider>
   );
+};
+
+// 🔔 Componente para inicializar notificaciones globales SIN bloquear eventos
+const GlobalNotificationManager = () => {
+  const { isAuthenticated, loading } = useBackendAuth();
+  const navigate = useNavigate();
+  
+  // 🎯 Configurar navegación global para las notificaciones
+  useEffect(() => {
+    setGlobalNavigate((to: string) => navigate({ to }));
+    console.log('🎯 [ROOT] Global navigation configured for notifications');
+  }, [navigate]);
+  
+  // 🚀 Solo inicializar notificaciones SI el usuario está autenticado
+  const notificationsHook = useNotifications({
+    autoRefresh: isAuthenticated && !loading,
+    enableRealTime: isAuthenticated && !loading,
+    maxNotifications: 50
+  });
+  
+  // ✅ Debug para verificar que se está ejecutando correctamente
+  useEffect(() => {
+    if (!loading) {
+      console.log('🔔 [GLOBAL-NOTIFICATIONS] Manager state:', {
+        isAuthenticated,
+        loading,
+        notificationsCount: notificationsHook.notifications.length,
+        unreadCount: notificationsHook.unreadCount,
+        hasNotifications: notificationsHook.hasNotifications,
+        notifications: notificationsHook.notifications.slice(0, 3) // Solo las primeras 3 para debug
+      });
+      
+      // 🔔 Mostrar información del sistema de notificaciones
+      if (notificationsHook.hasUnread) {
+        console.log('🚨 [GLOBAL-NOTIFICATIONS] Found unread notifications! They will show automatically...');
+      } else if (notificationsHook.hasNotifications && notificationsHook.notifications.length > 0) {
+        console.log('📋 [GLOBAL-NOTIFICATIONS] All notifications are read. Polling every 5s for new ones...');
+        // Opcional: mostrar una pequeña notificación de bienvenida una sola vez
+        const hasShownWelcome = sessionStorage.getItem('cupo-notification-welcome');
+        if (!hasShownWelcome) {
+          setTimeout(() => {
+            notificationsHook.showSuccess('✅ Sistema de Notificaciones', 'Sistema activo. Polling cada 5 segundos para nuevas notificaciones (cache deshabilitado).');
+            sessionStorage.setItem('cupo-notification-welcome', 'true');
+          }, 2000);
+        }
+      }
+    }
+  }, [isAuthenticated, loading, notificationsHook.notifications.length, notificationsHook.unreadCount]);
+  
+  return null; // No renderiza nada, solo gestiona las notificaciones
 };
 
 const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
@@ -147,6 +200,8 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
                 WebkitOverflowScrolling: 'touch'
               }}
             >
+              {/* 🔔 Gestor global de notificaciones - AQUÍ ES SEGURO */}
+              <GlobalNotificationManager />
               <Outlet />
             </AppShell.Main>
 
@@ -185,7 +240,17 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
               </AppShell.Footer>
             )}
           </AppShell>
-          <Notifications />
+          <Notifications 
+            position="bottom-right" 
+            zIndex={1000}
+            limit={4}
+            containerWidth={320}
+            style={{
+              bottom: showNavigation ? '100px' : '20px',
+              right: '16px',
+              pointerEvents: 'none' // ¡CRÍTICO! Permite que los eventos pasen por debajo
+            }}
+          />
         </AuthGuard>
         </GoogleMapsProvider>
       </MantineProvider>

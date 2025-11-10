@@ -1,6 +1,95 @@
 /* Import modal styles */
 @import './styles/modals.css';
 
+/* 🔔 Estilos profesionales para notificaciones + Fix de eventos táctiles */
+.mantine-Notifications-root {
+  pointer-events: none !important;
+}
+
+.mantine-Notifications-notification {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  background: rgba(26, 27, 30, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  border-radius: 16px !important;
+  border: 2px solid rgba(0, 255, 157, 0.4) !important;
+  box-shadow: 0 16px 48px rgba(0, 255, 157, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+  min-height: 80px !important;
+  padding: 16px !important;
+  margin-bottom: 12px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  animation: slideInRight 0.5s ease-out !important;
+}
+
+.mantine-Notifications-notification:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 24px 64px rgba(0, 255, 157, 0.3), 0 12px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.mantine-Notifications-notification .mantine-Notification-title {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+.mantine-Notifications-notification .mantine-Notification-description {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: 14px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ✨ Hacer clickeable solo el contenido, no el botón X */
+.cupo-notification-clickable {
+  cursor: default !important; /* No cursor por defecto */
+}
+
+.cupo-notification-clickable .mantine-Notification-body {
+  cursor: pointer !important;
+  border-radius: 12px !important;
+  padding: 8px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.cupo-notification-clickable .mantine-Notification-body:hover {
+  background-color: rgba(0, 255, 157, 0.1) !important;
+}
+
+.cupo-notification-clickable .mantine-Notification-closeButton {
+  cursor: pointer !important;
+  z-index: 1001 !important; /* Asegurar que esté por encima */
+  position: relative !important;
+}
+
+/* Animación de entrada */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Modo claro */
+:global(.light) .mantine-Notifications-notification {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(0, 204, 125, 0.4) !important;
+  box-shadow: 0 16px 48px rgba(0, 204, 125, 0.2), 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+}
+
+:global(.light) .mantine-Notifications-notification .mantine-Notification-title {
+  color: #1a1b1e !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5) !important;
+}
+
+:global(.light) .mantine-Notifications-notification .mantine-Notification-description {
+  color: rgba(26, 27, 30, 0.8) !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Alan+Sans:wght@300..900&family=Onest:wght@100..900&family=TASA+Orbiter:wght@400..800&display=swap');
 
 @tailwind base;
