@@ -106,7 +106,7 @@ const GlobalNotificationManager = () => {
   // 🎯 Configurar navegación global para las notificaciones
   useEffect(() => {
     setGlobalNavigate((to: string) => navigate({ to }));
-    console.log('🎯 [ROOT] Global navigation configured for notifications');
+    // 🔇 PRODUCCIÓN: Navegación configurada silenciosamente
   }, [navigate]);
   
   // 🚀 Inicializar sistema completo de notificaciones cuando el usuario se autentica
@@ -122,18 +122,7 @@ const GlobalNotificationManager = () => {
     console.log(`📊 [NOTIFICATIONS] Internal: ${notificationsHook.notifications.length} total, ${notificationsHook.unreadCount} unread`);
     console.log(`� [NOTIFICATIONS] Push: ${mobilePushHook.isSupported ? 'Available' : 'Not available'}, ${mobilePushHook.isRegistered ? 'Registered' : 'Not registered'}`);
 
-    // 🎉 Mostrar notificación de bienvenida del sistema (una sola vez)
-    const hasShownSystemWelcome = sessionStorage.getItem('cupo-system-welcome');
-    if (!hasShownSystemWelcome && notificationsHook.notifications.length === 0) {
-      setTimeout(() => {
-        const welcomeMessage = mobilePushHook.isSupported 
-          ? '🔔 Sistema de notificaciones activado (incluye push móviles)'
-          : '🔔 Sistema de notificaciones activado';
-          
-        notificationsHook.showSuccess('CupoApp', welcomeMessage);
-        sessionStorage.setItem('cupo-system-welcome', 'true');
-      }, 2000);
-    }
+    // 🔇 PRODUCCIÓN: Sistema de notificaciones funciona silenciosamente
 
   }, [
     isAuthenticated, 
