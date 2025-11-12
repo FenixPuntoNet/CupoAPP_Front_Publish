@@ -13,6 +13,9 @@ const config: CapacitorConfig = {
         supported: true,
         customSchemes: ['cupo']
       }
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"]
     }
   }
 };

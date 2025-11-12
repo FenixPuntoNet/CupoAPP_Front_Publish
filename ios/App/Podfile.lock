@@ -16,6 +16,8 @@ PODS:
   - CapacitorCordova (6.2.1)
   - CapacitorFilesystem (6.0.3):
     - Capacitor
+  - CapacitorPushNotifications (6.0.4):
+    - Capacitor
   - Clarity (3.1.1)
 
 DEPENDENCIES:
@@ -28,6 +30,7 @@ DEPENDENCIES:
   - "CapacitorCommunityFileOpener (from `../../node_modules/@capacitor-community/file-opener`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
+  - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
   - Clarity
 
 SPEC REPOS:
@@ -53,6 +56,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorFilesystem:
     :path: "../../node_modules/@capacitor/filesystem"
+  CapacitorPushNotifications:
+    :path: "../../node_modules/@capacitor/push-notifications"
 
 SPEC CHECKSUMS:
   Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
@@ -64,8 +69,9 @@ SPEC CHECKSUMS:
   CapacitorCommunityFileOpener: 6373ac7cf5b48ef7086927608aaba524f1e676e4
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
   CapacitorFilesystem: 59270a63c60836248812671aa3b15df673fbaf74
+  CapacitorPushNotifications: b3f20973cb167cb8fee622e309ec521134798241
   Clarity: f93812572440374868b54556236f18129806e699
 
-PODFILE CHECKSUM: db9ebb1ab0c055384cf226ea1224df20f05a92ca
+PODFILE CHECKSUM: 5acce59364cd394d76b3e7ff8479bdeb7add0ee8
 
 COCOAPODS: 1.16.2

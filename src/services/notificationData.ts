@@ -11,6 +11,7 @@ import {
 } from '../types/notifications';
 import { apiRequest } from '../config/api';
 import { NOTIFICATION_CONFIG } from '../config/notifications';
+import { triggerPushFromInternalNotification } from './notificationIntegration';
 
 // 📡 Subscriptores para tiempo real
 type SubscriptionCallback = (notification: DatabaseNotification) => void;
@@ -297,6 +298,15 @@ class NotificationDataService {
         console.error('❌ [NOTIFICATIONS] Subscriber callback failed:', error);
       }
     });
+
+    // 🚀 NUEVO: Automáticamente enviar push notification para cada notificación interna
+    try {
+      console.log(`📱 [NOTIFICATIONS] Triggering push for notification: ${notification.id}`);
+      triggerPushFromInternalNotification(notification);
+    } catch (error) {
+      console.error('❌ [NOTIFICATIONS] Error triggering push:', error);
+      // No hacer throw para no romper el flujo normal
+    }
   }
 }
 

@@ -28,6 +28,7 @@
     "@capacitor/core": "^6.2.1",
     "@capacitor/filesystem": "^6.0.3",
     "@capacitor/ios": "^6.2.0",
+    "@capacitor/push-notifications": "^6.0.4",
     "@emotion/react": "^11.14.0",
     "@formkit/auto-animate": "^0.8.2",
     "@mantine/carousel": "^7.16.1",

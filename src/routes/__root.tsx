@@ -22,6 +22,7 @@ import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { useEffect } from 'react';
 import { ThemeToggle as _ThemeToggle } from '@/components/ThemeToggle';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useMobilePushNotifications } from '@/hooks/useMobilePushNotifications';
 import { setGlobalNavigate } from '@/services/notificationDisplay';
 
 // Configure telefunc to use external backend
@@ -92,47 +93,57 @@ const GlobalNotificationManager = () => {
   const { isAuthenticated, loading } = useBackendAuth();
   const navigate = useNavigate();
   
-  // 🎯 Configurar navegación global para las notificaciones
-  useEffect(() => {
-    setGlobalNavigate((to: string) => navigate({ to }));
-    console.log('🎯 [ROOT] Global navigation configured for notifications');
-  }, [navigate]);
-  
-  // 🚀 Solo inicializar notificaciones SI el usuario está autenticado
+  // ✅ EXISTENTE - Sistema de notificaciones internas (ya funciona)
   const notificationsHook = useNotifications({
     autoRefresh: isAuthenticated && !loading,
     enableRealTime: isAuthenticated && !loading,
     maxNotifications: 50
   });
   
-  // ✅ Debug para verificar que se está ejecutando correctamente
+  // 📱 NUEVO - Sistema de notificaciones push móviles
+  const mobilePushHook = useMobilePushNotifications();
+  
+  // 🎯 Configurar navegación global para las notificaciones
   useEffect(() => {
-    if (!loading) {
-      console.log('🔔 [GLOBAL-NOTIFICATIONS] Manager state:', {
-        isAuthenticated,
-        loading,
-        notificationsCount: notificationsHook.notifications.length,
-        unreadCount: notificationsHook.unreadCount,
-        hasNotifications: notificationsHook.hasNotifications,
-        notifications: notificationsHook.notifications.slice(0, 3) // Solo las primeras 3 para debug
-      });
-      
-      // 🔔 Mostrar información del sistema de notificaciones
-      if (notificationsHook.hasUnread) {
-        console.log('🚨 [GLOBAL-NOTIFICATIONS] Found unread notifications! They will show automatically...');
-      } else if (notificationsHook.hasNotifications && notificationsHook.notifications.length > 0) {
-        console.log('📋 [GLOBAL-NOTIFICATIONS] All notifications are read. Polling every 5s for new ones...');
-        // Opcional: mostrar una pequeña notificación de bienvenida una sola vez
-        const hasShownWelcome = sessionStorage.getItem('cupo-notification-welcome');
-        if (!hasShownWelcome) {
-          setTimeout(() => {
-            notificationsHook.showSuccess('✅ Sistema de Notificaciones', 'Sistema activo. Polling cada 5 segundos para nuevas notificaciones (cache deshabilitado).');
-            sessionStorage.setItem('cupo-notification-welcome', 'true');
-          }, 2000);
-        }
-      }
+    setGlobalNavigate((to: string) => navigate({ to }));
+    console.log('🎯 [ROOT] Global navigation configured for notifications');
+  }, [navigate]);
+  
+  // 🚀 Inicializar sistema completo de notificaciones cuando el usuario se autentica
+  useEffect(() => {
+    if (!isAuthenticated || loading) {
+      console.log('🔔 [GLOBAL-NOTIFICATIONS] Waiting for authentication...');
+      return;
     }
-  }, [isAuthenticated, loading, notificationsHook.notifications.length, notificationsHook.unreadCount]);
+
+    console.log('🔔 [NOTIFICATIONS] Initializing notification system...');
+    
+    // 📊 Log simple del estado
+    console.log(`📊 [NOTIFICATIONS] Internal: ${notificationsHook.notifications.length} total, ${notificationsHook.unreadCount} unread`);
+    console.log(`� [NOTIFICATIONS] Push: ${mobilePushHook.isSupported ? 'Available' : 'Not available'}, ${mobilePushHook.isRegistered ? 'Registered' : 'Not registered'}`);
+
+    // 🎉 Mostrar notificación de bienvenida del sistema (una sola vez)
+    const hasShownSystemWelcome = sessionStorage.getItem('cupo-system-welcome');
+    if (!hasShownSystemWelcome && notificationsHook.notifications.length === 0) {
+      setTimeout(() => {
+        const welcomeMessage = mobilePushHook.isSupported 
+          ? '🔔 Sistema de notificaciones activado (incluye push móviles)'
+          : '🔔 Sistema de notificaciones activado';
+          
+        notificationsHook.showSuccess('CupoApp', welcomeMessage);
+        sessionStorage.setItem('cupo-system-welcome', 'true');
+      }, 2000);
+    }
+
+  }, [
+    isAuthenticated, 
+    loading, 
+    notificationsHook.notifications.length, 
+    notificationsHook.unreadCount,
+    mobilePushHook.isSupported,
+    mobilePushHook.isRegistered,
+    mobilePushHook.isLoading
+  ]);
   
   return null; // No renderiza nada, solo gestiona las notificaciones
 };
