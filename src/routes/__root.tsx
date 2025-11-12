@@ -178,7 +178,7 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
               <AppShell.Header className={styles.header}>
                 <Group justify="space-between" className={styles.headerContent}>
                   <Image
-                    src="https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/Logo.png"
+                    src="https://tddaveymppuhweujhzwz.supabase.co/storage/v1/object/public/resourcers/Home/Logo.png"
                     alt="Logo"
                     className={styles.logoImage}
                   />
@@ -229,7 +229,7 @@ const AppContent = ({ showNavigation }: { showNavigation: boolean }) => {
                       {index === 2 ? (
                         <Box className={styles.logoWrapper}>
                           <Image
-                            src="https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/Logo.png"
+                            src="https://tddaveymppuhweujhzwz.supabase.co/storage/v1/object/public/resourcers/Home/Logo.png"
                             alt="Logo"
                             style={{ width: 60, height: 60 }}
                           />

@@ -112,7 +112,7 @@ const CompleteProfileView: React.FC = () => {
           form.setValues({
             ...form.values,
             email: userEmail,
-            first_name: userName || '',
+            first_name: '', // Dejar vacío para forzar al usuario a ingresar su nombre real
           });
           setInitialLoading(false);
           return;
@@ -132,9 +132,9 @@ const CompleteProfileView: React.FC = () => {
           id: Number(profile.id),
           email: userEmail, // Siempre usar el email del usuario autenticado
           phone_number: profile.phone_number || '',
-          // Preferir first_name del perfil si existe, de lo contrario usar el nombre del usuario autenticado
-          first_name: profile.first_name && profile.first_name !== profile.user_id ? 
-                      profile.first_name : userName,
+          // Solo usar first_name del perfil si existe y no es genérico, de lo contrario dejar vacío
+          first_name: (profile.first_name && profile.first_name !== profile.user_id && profile.first_name !== 'usuario nuevo') ? 
+                      profile.first_name : '',
           last_name: profile.last_name || '',
           identification_type: profile.identification_type || 'CC',
           identification_number: profile.identification_number || '',

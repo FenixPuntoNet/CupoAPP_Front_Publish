@@ -303,7 +303,7 @@ const ViewTicket = () => {
           className={`${styles.ticketCard} downloadableTicket`}
         >
         <div className={styles.logoWrapper}>
-          <img src="https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/Logo.png" alt="Cupo" className={styles.logo} />
+          <img src="https://tddaveymppuhweujhzwz.supabase.co/storage/v1/object/public/resourcers/Home/Logo.png" alt="Cupo" className={styles.logo} />
           <span className={styles.brandName}>Cupo</span>
         </div>
 

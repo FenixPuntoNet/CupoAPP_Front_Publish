@@ -993,7 +993,7 @@ const RegisterView: React.FC = () => {
       <Box className={styles.logoSection}>
         <Box className={styles.logo}>
           <img
-            src="https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/Logo.png"
+            src="https://tddaveymppuhweujhzwz.supabase.co/storage/v1/object/public/resourcers/Home/Logo.png"
             alt="Cupo Logo"
           />
         </Box>

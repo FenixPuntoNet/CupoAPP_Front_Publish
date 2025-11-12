@@ -1,6 +1,6 @@
 # CupoApp Frontend - Documentación Completa
 
-![CupoApp Logo](https://mqwvbnktcokcccidfgcu.supabase.co/storage/v1/object/public/Resources/Home/Logo.png)
+![CupoApp Logo](https://tddaveymppuhweujhzwz.supabase.co/storage/v1/object/public/resourcers/Home/Logo.png)
 
 ## 📋 Resumen Ejecutivo
 
