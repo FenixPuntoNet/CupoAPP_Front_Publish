@@ -333,8 +333,14 @@ export const validateCupo = async (bookingId: number, qrCode: string): Promise<{
     status: string; 
     booking_id: number; 
     booking_price?: number;
+    total_processed?: number; // ✅ Campo que SÍ envía el backend
     commission_charged?: number; 
     commission_percentage?: number; 
+    commission_breakdown?: { // ✅ Campo que SÍ envía el backend
+      percentage_fee?: number;
+      fixed_rate?: number;
+      total?: number;
+    };
     fixed_rate?: number;
     percentage_commission?: number;
     refund_amount?: number;

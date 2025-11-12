@@ -346,11 +346,21 @@ function ResumenConfirmacionView() {
   const { date, time } = formatDateTime(tripData.dateTime);
   const totalEarnings = (tripData.seats || 0) * (tripData.pricePerSeat || 0);
   
-  // Costos de publicación usando assumptions del backend
-  const publishingFee = assumptions ? Math.ceil(totalEarnings * ((assumptions.fee_percentage || 0) / 100)) : Math.ceil(totalEarnings * 0.05);
-  const systemFee = assumptions ? (assumptions.fixed_rate || 0) * (tripData.seats || 0) : 2000;
+  // 🔥 CRÍTICO: Usar SOLO assumptions del backend (nunca valores hardcodeados)
+  const publishingFee = assumptions ? Math.ceil(totalEarnings * ((assumptions.fee_percentage || 0) / 100)) : 0;
+  const systemFee = assumptions ? (assumptions.fixed_rate || 0) * (tripData.seats || 0) : 0;
   const totalCost = publishingFee + systemFee;
   const netEarnings = totalEarnings - totalCost;
+
+  // 🔍 VERIFICACIÓN: Los dos cálculos deben dar el mismo resultado
+  console.log('🔍 [PRICING-VERIFICATION]', {
+    method1_requiredGuarantee: requiredGuarantee,
+    method2_totalCost: totalCost,
+    match: requiredGuarantee === totalCost,
+    assumptions: assumptions ? 'BACKEND' : 'MISSING',
+    fee_percentage: assumptions?.fee_percentage,
+    fixed_rate: assumptions?.fixed_rate
+  });
 
   return (
     <div className={styles.container}>

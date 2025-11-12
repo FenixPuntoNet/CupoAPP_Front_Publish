@@ -99,9 +99,31 @@ const ValidarCupoComponent = () => {
           setScanResult(qrData)
           
           // Guardar información de comisión para mostrar el desglose
-          if (result.data.booking_price && result.data.commission_charged) {
+          if (result.data.commission_charged && (result.data.booking_price || result.data.total_processed)) {
+            console.log('💰 [VALIDATION-COMMISSION] Backend commission data:', {
+              booking_price: result.data.booking_price,
+              total_processed: result.data.total_processed,
+              commission_charged: result.data.commission_charged,
+              commission_percentage: result.data.commission_percentage,
+              commission_breakdown: result.data.commission_breakdown,
+              fixed_rate: result.data.fixed_rate,
+              percentage_commission: result.data.percentage_commission,
+              refund_amount: result.data.refund_amount
+            });
+            
+            // ✅ Usar booking_price si está disponible, sino usar total_processed
+            const bookingPrice = result.data.booking_price || result.data.total_processed || 0;
+            
+            console.log('🔍 [COMMISSION-VERIFICATION] Final values to display:', {
+              bookingPrice,
+              commissionCharged: result.data.commission_charged,
+              commissionPercentage: result.data.commission_percentage,
+              willRecalculate: false,
+              sourceData: 'BACKEND_ONLY'
+            });
+            
             setCommissionInfo({
-              bookingPrice: result.data.booking_price,
+              bookingPrice: bookingPrice,
               commissionCharged: result.data.commission_charged,
               commissionPercentage: result.data.commission_percentage || 0
             });
@@ -577,11 +599,12 @@ const ValidarCupoComponent = () => {
                 <ValidateTicketInfo
                   commission={{
                     bookingPrice: commissionInfo.bookingPrice,
-                    percentageCommission: Math.ceil(commissionInfo.bookingPrice * ((assumptions.fee_percentage || 0) / 100)),
-                    fixedRate: assumptions.fixed_rate || 0,
-                    totalCommission: commissionInfo.commissionCharged,
+                    // 🔥 CORRECCIÓN: NO recalcular, usar SOLO datos del backend
+                    percentageCommission: 0, // No calculamos - solo mostramos total
+                    fixedRate: 0, // No calculamos - solo mostramos total
+                    totalCommission: commissionInfo.commissionCharged, // ✅ Del backend
                     refund: commissionInfo.bookingPrice - commissionInfo.commissionCharged,
-                    breakdown: `${assumptions.fee_percentage || 0}% ($${Math.ceil(commissionInfo.bookingPrice * ((assumptions.fee_percentage || 0) / 100)).toLocaleString()}) + Tarifa fija ($${(assumptions.fixed_rate || 0).toLocaleString()}) = $${commissionInfo.commissionCharged.toLocaleString()}`
+                    breakdown: `Comisión total procesada por el sistema: $${commissionInfo.commissionCharged.toLocaleString()} (${commissionInfo.commissionPercentage}%)`
                   }}
                   assumptions={assumptions}
                 />
