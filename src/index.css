@@ -51,7 +51,6 @@
   border-radius: 12px !important;
   padding: 8px !important;
   transition: background-color 0.2s ease !important;
-}
 
 .cupo-notification-clickable .mantine-Notification-body:hover {
   background-color: rgba(0, 255, 157, 0.1) !important;
