@@ -43,7 +43,8 @@
 
 /* ✨ Hacer clickeable solo el contenido, no el botón X */
 .cupo-notification-clickable {
-  cursor: default !important; /* No cursor por defecto */
+  cursor: default !important;
+  /* No cursor por defecto */
 }
 
 .cupo-notification-clickable .mantine-Notification-body {
@@ -51,6 +52,7 @@
   border-radius: 12px !important;
   padding: 8px !important;
   transition: background-color 0.2s ease !important;
+}
 
 .cupo-notification-clickable .mantine-Notification-body:hover {
   background-color: rgba(0, 255, 157, 0.1) !important;
@@ -58,7 +60,8 @@
 
 .cupo-notification-clickable .mantine-Notification-closeButton {
   cursor: pointer !important;
-  z-index: 1001 !important; /* Asegurar que esté por encima */
+  z-index: 1001 !important;
+  /* Asegurar que esté por encima */
   position: relative !important;
 }
 
@@ -68,6 +71,7 @@
     opacity: 0;
     transform: translateX(100%) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateX(0) scale(1);
@@ -123,6 +127,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -150,10 +155,12 @@
     --chart-5: 340 75% 55%
   }
 }
+
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -163,15 +170,19 @@
 body {
   font-family: "Onest", sans-serif;
 }
+
 .font-onest {
   font-family: "Onest", sans-serif;
 }
+
 .font-alan {
   font-family: "Alan Sans", sans-serif;
 }
+
 button {
   font-family: "Onest", sans-serif !important;
 }
+
 .debug {
   border: 1px solid #af4;
 }
@@ -257,7 +268,10 @@ button,
 
 /* Prevenir zoom y movimiento del viewport */
 @media screen and (max-width: 768px) {
-  input, textarea, select {
+
+  input,
+  textarea,
+  select {
     font-size: 16px !important;
     zoom: 1 !important;
   }
@@ -270,7 +284,7 @@ button,
     height: 100%;
     overflow: hidden;
   }
-  
+
   body {
     position: fixed;
     overflow: hidden;
@@ -278,7 +292,7 @@ button,
     height: 100%;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   #root {
     overflow: auto;
     height: 100%;
@@ -286,7 +300,7 @@ button,
     -webkit-overflow-scrolling: touch;
     position: relative;
   }
-  
+
   /* Prevenir el bounce scroll en iOS */
   body {
     overscroll-behavior: none;
@@ -296,11 +310,22 @@ button,
 
 /* Prevenir zoom en focus de inputs específicamente en iOS */
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
-  select, textarea, input[type="text"], input[type="password"], 
-  input[type="datetime"], input[type="datetime-local"], 
-  input[type="date"], input[type="month"], input[type="time"], 
-  input[type="week"], input[type="number"], input[type="email"], 
-  input[type="url"], input[type="search"], input[type="tel"], 
+
+  select,
+  textarea,
+  input[type="text"],
+  input[type="password"],
+  input[type="datetime"],
+  input[type="datetime-local"],
+  input[type="date"],
+  input[type="month"],
+  input[type="time"],
+  input[type="week"],
+  input[type="number"],
+  input[type="email"],
+  input[type="url"],
+  input[type="search"],
+  input[type="tel"],
   input[type="color"] {
     font-size: 16px !important;
     transform: translateZ(0);
