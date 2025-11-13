@@ -18,17 +18,17 @@ import {
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
-import { 
-    Car, 
-    Shield, 
-    CheckCircle, 
-    Camera, 
+import {
+    Car,
+    Shield,
+    CheckCircle,
+    Camera,
     ArrowLeft,
     X,
     IdCard,
     Sparkles
 } from 'lucide-react';
-import { 
+import {
     registerCompleteVehicleWithPromotion,
     getMyVehicle,
     getDriverLicense,
@@ -77,12 +77,12 @@ interface VehiclePhotos {
 
 // Datos para los selects
 const VEHICLE_BRANDS = [
-    'Audi', 'BMW', 'BYD', 'Changan', 'Chery', 'Chevrolet', 'Citroën', 'Dacia', 'Daewoo', 
-    'Daihatsu', 'DFSK', 'Dodge', 'FAW', 'Ferrari', 'Fiat', 'Ford', 'Foton', 'GAC', 
-    'Geely', 'Great Wall', 'Haval', 'Honda', 'Hyundai', 'Infiniti', 'Isuzu', 'JAC', 
-    'Jaguar', 'Jeep', 'KIA', 'Land Rover', 'Lexus', 'Lifan', 'Mahindra', 'Mazda', 
-    'Mercedes', 'Mercedes-Benz', 'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche', 
-    'RAM', 'Renault', 'Seat', 'Skoda', 'SsangYong', 'Subaru', 'Suzuki', 'Tata', 
+    'Audi', 'BMW', 'BYD', 'Changan', 'Chery', 'Chevrolet', 'Citroën', 'Dacia', 'Daewoo',
+    'Daihatsu', 'DFSK', 'Dodge', 'FAW', 'Ferrari', 'Fiat', 'Ford', 'Foton', 'GAC',
+    'Geely', 'Great Wall', 'Haval', 'Honda', 'Hyundai', 'Infiniti', 'Isuzu', 'JAC',
+    'Jaguar', 'Jeep', 'KIA', 'Land Rover', 'Lexus', 'Lifan', 'Mahindra', 'Mazda',
+    'Mercedes', 'Mercedes-Benz', 'MG', 'Mini', 'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche',
+    'RAM', 'Renault', 'Seat', 'Skoda', 'SsangYong', 'Subaru', 'Suzuki', 'Tata',
     'Toyota', 'Volkswagen', 'Volvo', 'Zotye', 'Lada', 'Brilliance', 'Chang An', 'Dongfeng',
     'JAC Motors', 'King Long', 'Yutong', 'Karry', 'Chevrolet Sail', 'Spark', 'Aveo',
     'Kia Rio', 'Picanto', 'Cerato', 'Hyundai Accent', 'i10', 'i20', 'Elantra', 'Tucson',
@@ -95,8 +95,8 @@ const VEHICLE_BRANDS = [
 ];
 
 const BODY_TYPES = [
-    'Sedán', 'Hatchback', 'SUV', 'Crossover', 'Camioneta', 'Pick-up', 'Van', 'Minivan', 
-    'Coupé', 'Convertible', 'Station Wagon', 'Compacto', 'Subcompacto', 'Familiar', 
+    'Sedán', 'Hatchback', 'SUV', 'Crossover', 'Camioneta', 'Pick-up', 'Van', 'Minivan',
+    'Coupé', 'Convertible', 'Station Wagon', 'Compacto', 'Subcompacto', 'Familiar',
     'Todo Terreno', 'Deportivo', 'Furgón', 'Panel', 'Otro'
 ];
 
@@ -107,14 +107,14 @@ const COLORS = [
 const LICENSE_CATEGORIES = ['B1', 'B2', 'B3', 'C1', 'C2', 'C3'];
 const BLOOD_TYPES = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 const INSURANCE_COMPANIES = [
-    'Seguros del Estado S.A.', 'Seguros Bolívar S.A.', 'Liberty Seguros S.A.', 
-    'AXA Colpatria Seguros S.A.', 'Seguros Sura S.A.', 'Previsora Seguros S.A.', 
-    'Mapfre Seguros Generales de Colombia S.A.', 'Allianz Seguros S.A.', 
-    'HDI Seguros S.A.', 'SBS Seguros Colombia S.A.', 'Equidad Seguros S.A.', 
-    'Zurich Seguros S.A.', 'QBE Seguros S.A.', 'Ace Seguros S.A.', 
-    'La Previsora Compañía de Seguros S.A.', 'Aseguradora Solidaria de Colombia', 
-    'Mundial de Seguros S.A.', 'Seguros Comerciales Bolívar S.A.', 
-    'Cardif Colombia Seguros Generales S.A.', 'RCN Seguros S.A.', 
+    'Seguros del Estado S.A.', 'Seguros Bolívar S.A.', 'Liberty Seguros S.A.',
+    'AXA Colpatria Seguros S.A.', 'Seguros Sura S.A.', 'Previsora Seguros S.A.',
+    'Mapfre Seguros Generales de Colombia S.A.', 'Allianz Seguros S.A.',
+    'HDI Seguros S.A.', 'SBS Seguros Colombia S.A.', 'Equidad Seguros S.A.',
+    'Zurich Seguros S.A.', 'QBE Seguros S.A.', 'Ace Seguros S.A.',
+    'La Previsora Compañía de Seguros S.A.', 'Aseguradora Solidaria de Colombia',
+    'Mundial de Seguros S.A.', 'Seguros Comerciales Bolívar S.A.',
+    'Cardif Colombia Seguros Generales S.A.', 'RCN Seguros S.A.',
     'Seguros Alfa S.A.', 'Cooseguros', 'Otra'
 ];
 
@@ -125,7 +125,7 @@ const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
 // Función para validar tipo de archivo
 const validateImageFile = (file: File): boolean => {
     const isValidType = ALLOWED_IMAGE_TYPES.includes(file.type.toLowerCase());
-    const hasValidExtension = ALLOWED_EXTENSIONS.some(ext => 
+    const hasValidExtension = ALLOWED_EXTENSIONS.some(ext =>
         file.name.toLowerCase().endsWith(ext)
     );
     return isValidType && hasValidExtension;
@@ -134,10 +134,10 @@ const validateImageFile = (file: File): boolean => {
 // ✅ NUEVO: Funciones para manejo de fechas en español
 const parseDateFromES = (dateString: string): Date | null => {
     if (!dateString) return null;
-    
+
     // Detectar formato: DD-MM-YYYY, DD/MM/YYYY, o YYYY-MM-DD
     let day: string, month: string, year: string;
-    
+
     if (dateString.includes('-')) {
         const parts = dateString.split('-');
         if (parts.length === 3) {
@@ -161,14 +161,14 @@ const parseDateFromES = (dateString: string): Date | null => {
     } else {
         return null;
     }
-    
+
     const parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    
+
     // Validar que la fecha sea válida
     if (isNaN(parsedDate.getTime())) {
         return null;
     }
-    
+
     return parsedDate;
 };
 
@@ -181,13 +181,13 @@ const formatDateForAPI = (date: Date): string => {
 };
 
 // ✅ MEJORADO: Componente de entrada de fecha con calendario profesional
-const DateInputES = ({ 
-    label, 
-    placeholder = "DD-MM-YYYY", 
-    value, 
-    onChange, 
-    error, 
-    required = false 
+const DateInputES = ({
+    label,
+    placeholder = "DD-MM-YYYY",
+    value,
+    onChange,
+    error,
+    required = false
 }: {
     label: string;
     placeholder?: string;
@@ -197,7 +197,7 @@ const DateInputES = ({
     required?: boolean;
 }) => {
     const [dateValue, setDateValue] = useState<Date | null>(null);
-    
+
     // Convertir valor del estado a Date para el calendario
     useEffect(() => {
         if (value) {
@@ -214,7 +214,7 @@ const DateInputES = ({
             setDateValue(null);
         }
     }, [value]);
-    
+
     const handleDateChange = (date: Date | null) => {
         setDateValue(date);
         if (date) {
@@ -224,7 +224,7 @@ const DateInputES = ({
             onChange('');
         }
     };
-    
+
     return (
         <DateInput
             label={label}
@@ -283,17 +283,17 @@ const STEPS_CONFIG = [
 
 function VehicleRegistrationComplete() {
     const navigate = useNavigate();
-    
+
     // Estados del stepper (solo 4 pasos)
     const [activeStep, setActiveStep] = useState(0);
     const [highestStepVisited, setHighestStepVisited] = useState(0);
-    
+
     // Estados de carga y errores
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [registrationProgress, setRegistrationProgress] = useState(0);
     const [errors, setErrors] = useState<Record<string, string>>({});
-    
+
     // Estado de datos del formulario (SIN property_card)
     const [formData, setFormData] = useState<CompleteVehicleData>({
         vehicle: {
@@ -319,17 +319,17 @@ function VehicleRegistrationComplete() {
             validity_to: ''
         }
     });
-    
+
     // Estado de fotos (SIN propertyPhotos)
     const [photos, setPhotos] = useState<VehiclePhotos>({});
     const [photoPreview, setPhotoPreview] = useState<Record<string, string>>({});
-    
+
     // Estados de éxito
     const [isCompleted, setIsCompleted] = useState(false);
-    
+
     // Estado para modo edición
     const [isEditMode, setIsEditMode] = useState(false);
-    
+
     // Estados para campos "Otra"
     const [showOtherBrand, setShowOtherBrand] = useState(false);
     const [showOtherBodyType, setShowOtherBodyType] = useState(false);
@@ -343,13 +343,13 @@ function VehicleRegistrationComplete() {
         const loadExistingData = async () => {
             try {
                 setLoading(true);
-                
+
                 // Verificar si ya existe un vehículo
                 const vehicleResponse = await getMyVehicle();
                 if (vehicleResponse.success && vehicleResponse.vehicle) {
                     console.log('🚗 Vehículo existente encontrado:', vehicleResponse.vehicle);
                     setIsEditMode(true);
-                    
+
                     const vehicle = vehicleResponse.vehicle;
                     // Cargar datos del vehículo en el formulario
                     setFormData(prevData => ({
@@ -364,17 +364,17 @@ function VehicleRegistrationComplete() {
                             passenger_capacity: (vehicle as any).passenger_capacity || 4
                         }
                     }));
-                    
+
                     // También cargar licencia y SOAT si existen
                     let loadedLicense = null;
                     let loadedSoat = null;
-                    
+
                     try {
                         const [licenseResponse, soatResponse] = await Promise.all([
                             getDriverLicense(),
                             getSoat()
                         ]);
-                        
+
                         if (licenseResponse.success && licenseResponse.license) {
                             console.log('🪪 Licencia existente encontrada:', licenseResponse.license);
                             const license = licenseResponse.license;
@@ -390,7 +390,7 @@ function VehicleRegistrationComplete() {
                                 }
                             }));
                         }
-                        
+
                         if (soatResponse.success && soatResponse.soat) {
                             console.log('🛡️ SOAT existente encontrado:', soatResponse.soat);
                             const soat = soatResponse.soat;
@@ -429,7 +429,7 @@ function VehicleRegistrationComplete() {
     const loadExistingImages = async (vehicle?: any, license?: any, soat?: any) => {
         try {
             console.log('🖼️ Cargando imágenes existentes...');
-            
+
             // Cargar foto del vehículo
             if (vehicle?.photo_url) {
                 try {
@@ -520,7 +520,7 @@ function VehicleRegistrationComplete() {
     // Validaciones (solo 3 pasos: 0=Vehículo, 1=Licencia, 2=SOAT)
     const validateStep = (step: number): boolean => {
         const newErrors: Record<string, string> = {};
-        
+
         switch (step) {
             case 0: // Datos del vehículo
                 if (!formData.vehicle.brand) newErrors.brand = 'Marca es requerida';
@@ -538,32 +538,32 @@ function VehicleRegistrationComplete() {
                 if (!formData.vehicle.passenger_capacity || formData.vehicle.passenger_capacity < 1) {
                     newErrors.passenger_capacity = 'Capacidad de pasajeros es requerida';
                 }
-                
+
                 // Validar foto del vehículo (obligatoria)
                 if (!photos.vehiclePhoto && !photoPreview.vehiclePhoto) {
                     newErrors.vehiclePhoto = 'La foto del vehículo es obligatoria';
                 }
-                
+
                 // Validar formato de placa
                 const plateRegex = /^[A-Z]{3}\d{3}$/;
                 if (formData.vehicle.plate && !plateRegex.test(formData.vehicle.plate.toUpperCase())) {
                     newErrors.plate = 'Formato de placa inválido (ej: ABC123)';
                 }
-                
+
                 // Validar año
                 const currentYear = new Date().getFullYear();
                 if (formData.vehicle.year < 1990 || formData.vehicle.year > currentYear + 1) {
                     newErrors.year = 'Año del vehículo inválido';
                 }
                 break;
-                
+
             case 1: // Licencia de conducir
                 if (!formData.license.license_number) newErrors.license_number = 'Número de licencia es requerido';
                 if (!formData.license.license_category) newErrors.license_category = 'Categoría es requerida';
                 if (!formData.license.blood_type) newErrors.blood_type = 'Tipo de sangre es requerido';
                 if (!formData.license.expedition_date) newErrors.license_expedition = 'Fecha de expedición es requerida';
                 if (!formData.license.expiration_date) newErrors.license_expiration = 'Fecha de vencimiento es requerida';
-                
+
                 // Validar fotos de licencia (obligatorias)
                 if (!photos.licensePhotos?.front && !photoPreview['licensePhotos_front']) {
                     newErrors.license_front = 'La foto frontal de la licencia es obligatoria';
@@ -571,7 +571,7 @@ function VehicleRegistrationComplete() {
                 if (!photos.licensePhotos?.back && !photoPreview['licensePhotos_back']) {
                     newErrors.license_back = 'La foto posterior de la licencia es obligatoria';
                 }
-                
+
                 // Validar que la licencia no esté vencida
                 if (formData.license.expiration_date) {
                     const expirationDate = new Date(formData.license.expiration_date);
@@ -580,7 +580,7 @@ function VehicleRegistrationComplete() {
                     }
                 }
                 break;
-                
+
             case 2: // SOAT
                 if (!formData.soat.policy_number) newErrors.policy_number = 'Número de póliza es requerido';
                 if (!formData.soat.insurance_company) newErrors.insurance_company = 'Aseguradora es requerida';
@@ -589,9 +589,9 @@ function VehicleRegistrationComplete() {
                 }
                 if (!formData.soat.validity_from) newErrors.validity_from = 'Fecha de inicio es requerida';
                 if (!formData.soat.validity_to) newErrors.validity_to = 'Fecha de vencimiento es requerida';
-                
+
                 // Las fotos del SOAT son opcionales (no se validan)
-                
+
                 // Validar que el SOAT no esté vencido
                 if (formData.soat.validity_to) {
                     const expirationDate = new Date(formData.soat.validity_to);
@@ -601,7 +601,7 @@ function VehicleRegistrationComplete() {
                 }
                 break;
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -616,7 +616,7 @@ function VehicleRegistrationComplete() {
     };
 
     const prevStep = () => setActiveStep(Math.max(0, activeStep - 1));
-    
+
     const goToStep = (step: number) => {
         if (step <= highestStepVisited) {
             setActiveStep(step);
@@ -634,20 +634,68 @@ function VehicleRegistrationComplete() {
     };
 
     // Función para subir foto del vehículo
+    // Intenta primero enviar como multipart/form-data (archivo binario). Si el endpoint
+    // no acepta multipart, hace un fallback a la versión base64/JSON.
     const uploadVehiclePhoto = async (vehicleId: number, photoFile: File) => {
-        try {
+        // Helper para intentar multipart upload usando fetch (permite FormData)
+        const tryMultipart = async () => {
+            try {
+                const form = new FormData();
+                form.append('vehicleId', String(vehicleId));
+                form.append('photo', photoFile, photoFile.name);
+
+                const resp = await fetch('/vehiculos/upload-vehicle-photo', {
+                    method: 'POST',
+                    body: form,
+                    credentials: 'include'
+                });
+
+                // Intentar parsear JSON de respuesta
+                let json: any = null;
+                try { json = await resp.json(); } catch (e) { /* ignore */ }
+
+                if (resp.ok && json && (json.success === true || json.status === 'ok' || json.data)) {
+                    return json;
+                }
+
+                // Si status ok pero formato distinto, devolver lo que haya o lanzar
+                if (resp.ok && json) return json;
+
+                // No funcionó multipart
+                console.warn('Multipart upload failed or returned non-OK:', { status: resp.status, json });
+                throw new Error(`Multipart upload failed, status ${resp.status}`);
+            } catch (err) {
+                console.warn('Multipart upload error:', err);
+                throw err;
+            }
+        };
+
+        // Fallback: enviar base64 vía apiRequest (JSON)
+        const tryBase64 = async () => {
             const photo_base64 = (await fileToBase64(photoFile)).split(',')[1];
             return await apiRequest('/vehiculos/upload-vehicle-photo', {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     vehicleId,
                     photo_base64,
                     filename: photoFile.name
                 }),
             });
-        } catch (error) {
-            console.error('❌ Error uploading vehicle photo:', error);
-            throw error;
+        };
+
+        // Primero intentar multipart, si falla usar base64
+        try {
+            return await tryMultipart();
+        } catch (multipartError) {
+            console.info('Falling back to base64 upload for vehicle photo');
+            try {
+                return await tryBase64();
+            } catch (base64Error) {
+                console.error('❌ Error uploading vehicle photo (base64 fallback):', base64Error);
+                // Re-throw para que el llamador maneje el error
+                throw base64Error;
+            }
         }
     };
 
@@ -674,14 +722,14 @@ function VehicleRegistrationComplete() {
             console.log('📸 Uploading SOAT photos for soatId:', soatId);
             console.log('📸 Front photo available:', !!photos.photo_front_base64);
             console.log('📸 Back photo available:', !!photos.photo_back_base64);
-            
+
             if (photos.photo_front_base64) {
                 console.log('📸 Front photo size (base64):', photos.photo_front_base64.length, 'chars');
             }
             if (photos.photo_back_base64) {
                 console.log('📸 Back photo size (base64):', photos.photo_back_base64.length, 'chars');
             }
-            
+
             const response = await apiRequest('/vehiculos/upload-soat-photos', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -692,7 +740,7 @@ function VehicleRegistrationComplete() {
                     filename_back: 'soat_back'
                 }),
             });
-            
+
             console.log('✅ SOAT photos uploaded successfully:', response);
             return response;
         } catch (error) {
@@ -756,23 +804,23 @@ function VehicleRegistrationComplete() {
     };
 
     // Componente mejorado para subir fotos
-    const PhotoUpload = ({ 
-        label, 
-        photoType, 
-        isRequired = false 
-    }: { 
-        label: string; 
-        photoType: string; 
-        isRequired?: boolean; 
+    const PhotoUpload = ({
+        label,
+        photoType,
+        isRequired = false
+    }: {
+        label: string;
+        photoType: string;
+        isRequired?: boolean;
     }) => {
         const preview = photoPreview[photoType];
-        
+
         return (
             <div className={styles.imageCard}>
                 <div className={styles.imageCardLabel}>
                     {label} {isRequired && <span style={{ color: '#fa5252' }}>*</span>}
                 </div>
-                
+
                 {preview ? (
                     <div className={styles.photoPreview}>
                         <img src={preview} alt={`Preview ${label}`} />
@@ -856,7 +904,7 @@ function VehicleRegistrationComplete() {
 
         try {
             console.log('🚀 Iniciando registro completo...');
-            
+
             // Preparar datos con valores "Otra" resueltos
             const finalFormData = {
                 vehicle: {
@@ -870,13 +918,13 @@ function VehicleRegistrationComplete() {
                     insurance_company: formData.soat.insurance_company === 'Otra' ? otherInsurance.trim() : formData.soat.insurance_company
                 }
             };
-            
+
             console.log('📝 Datos finales para registro:', finalFormData);
-            
+
             // Paso 1: Registrar vehículo y documentos
             setRegistrationProgress(30);
             const registrationResponse = await registerCompleteVehicleWithPromotion(finalFormData);
-            
+
             if (!registrationResponse.success) {
                 throw new Error(registrationResponse.error || 'Error en el registro');
             }
@@ -886,13 +934,13 @@ function VehicleRegistrationComplete() {
             if (!data) {
                 throw new Error('No se recibieron datos del registro');
             }
-            
+
             setRegistrationProgress(50);
 
             // Paso 2: Subir fotos usando los endpoints implementados
             console.log('� Iniciando subida de fotos...');
             const uploadPromises = [];
-            
+
             // Foto del vehículo
             if (photos.vehiclePhoto) {
                 console.log('📸 Uploading vehicle photo...');
@@ -908,10 +956,10 @@ function VehicleRegistrationComplete() {
                 setRegistrationProgress(70);
                 uploadPromises.push(
                     uploadDriverLicensePhotos(data.license.id, {
-                        photo_front_base64: photos.licensePhotos?.front 
+                        photo_front_base64: photos.licensePhotos?.front
                             ? (await fileToBase64(photos.licensePhotos.front)).split(',')[1]
                             : undefined,
-                        photo_back_base64: photos.licensePhotos?.back 
+                        photo_back_base64: photos.licensePhotos?.back
                             ? (await fileToBase64(photos.licensePhotos.back)).split(',')[1]
                             : undefined
                     })
@@ -924,26 +972,26 @@ function VehicleRegistrationComplete() {
                 console.log('📸 SOAT ID:', data.soat.id);
                 console.log('📸 Front photo exists:', !!photos.soatPhotos?.front);
                 console.log('📸 Back photo exists:', !!photos.soatPhotos?.back);
-                
+
                 setRegistrationProgress(90);
-                
+
                 try {
                     const soatPhotoData: { photo_front_base64?: string; photo_back_base64?: string } = {};
-                    
+
                     if (photos.soatPhotos?.front) {
                         console.log('📸 Converting front SOAT photo to base64...');
                         const frontBase64 = await fileToBase64(photos.soatPhotos.front);
                         soatPhotoData.photo_front_base64 = frontBase64.split(',')[1];
                         console.log('📸 Front SOAT photo converted, size:', soatPhotoData.photo_front_base64.length);
                     }
-                    
+
                     if (photos.soatPhotos?.back) {
                         console.log('📸 Converting back SOAT photo to base64...');
                         const backBase64 = await fileToBase64(photos.soatPhotos.back);
                         soatPhotoData.photo_back_base64 = backBase64.split(',')[1];
                         console.log('📸 Back SOAT photo converted, size:', soatPhotoData.photo_back_base64.length);
                     }
-                    
+
                     uploadPromises.push(uploadSoatPhotos(data.soat.id, soatPhotoData));
                 } catch (conversionError) {
                     console.error('❌ Error converting SOAT photos to base64:', conversionError);
@@ -967,7 +1015,7 @@ function VehicleRegistrationComplete() {
 
             setRegistrationProgress(100);
             setIsCompleted(true);
-            
+
             notifications.show({
                 title: '¡Registro exitoso! 🎉',
                 message: 'Tu vehículo y documentos han sido registrados. ¡Ahora eres conductor!',
@@ -995,15 +1043,15 @@ function VehicleRegistrationComplete() {
             <div className={styles.stepIcon}>
                 <Car size={24} color="#000" />
             </div>
-            
+
             <Title order={3} className={styles.stepTitle}>
                 Información del Vehículo
             </Title>
-            
+
             <Text className={styles.stepDescription}>
                 Ingresa los datos básicos de tu vehículo y su capacidad de pasajeros.
             </Text>
-            
+
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
                 <div>
                     <Select
@@ -1050,7 +1098,7 @@ function VehicleRegistrationComplete() {
                         />
                     )}
                 </div>
-                
+
                 <TextInput
                     label="Modelo"
                     placeholder="Ej: Corolla, Aveo, Logan"
@@ -1071,7 +1119,7 @@ function VehicleRegistrationComplete() {
                         label: { color: 'white', fontWeight: 500 }
                     }}
                 />
-                
+
                 <Select
                     label="Año del vehículo"
                     placeholder="Seleccionar año"
@@ -1093,7 +1141,7 @@ function VehicleRegistrationComplete() {
                         label: { color: 'white', fontWeight: 500 }
                     }}
                 />
-                
+
                 <TextInput
                     label="Placa del vehículo"
                     placeholder="ABC123"
@@ -1114,7 +1162,7 @@ function VehicleRegistrationComplete() {
                         label: { color: 'white', fontWeight: 500 }
                     }}
                 />
-                
+
                 <Select
                     label="Color principal"
                     placeholder="Seleccionar color"
@@ -1136,7 +1184,7 @@ function VehicleRegistrationComplete() {
                         label: { color: 'white', fontWeight: 500 }
                     }}
                 />
-                
+
                 <div>
                     <Select
                         label="Tipo de carrocería"
@@ -1183,7 +1231,7 @@ function VehicleRegistrationComplete() {
                     )}
                 </div>
             </SimpleGrid>
-            
+
             {/* Campo de capacidad destacado */}
             <div className={styles.capacityHighlight}>
                 <Group gap="sm" mb="sm">
@@ -1192,7 +1240,7 @@ function VehicleRegistrationComplete() {
                     </div>
                     <Text size="sm" fw={600} c="#00ff9d">Capacidad de Pasajeros</Text>
                 </Group>
-                
+
                 <NumberInput
                     placeholder="Incluye conductor"
                     value={formData.vehicle.passenger_capacity}
@@ -1222,9 +1270,9 @@ function VehicleRegistrationComplete() {
                     }
                 />
             </div>
-            
+
             <div className={styles.sectionDivider}></div>
-            
+
             <div className={styles.imageGallery}>
                 <PhotoUpload
                     label="Foto del vehículo (obligatoria)"
@@ -1246,15 +1294,15 @@ function VehicleRegistrationComplete() {
             <div className={styles.stepIcon}>
                 <IdCard size={24} color="#000" />
             </div>
-            
+
             <Title order={3} className={styles.stepTitle}>
                 Licencia de Conducir
             </Title>
-            
+
             <Text className={styles.stepDescription}>
                 Registra tu licencia de conducir vigente. Asegúrate de que no esté vencida.
             </Text>
-            
+
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
                 <TextInput
                     label="Número de licencia"
@@ -1276,7 +1324,7 @@ function VehicleRegistrationComplete() {
                         label: { color: 'white', fontWeight: 500 }
                     }}
                 />
-                
+
                 <Select
                     label="Categoría de licencia"
                     placeholder="Seleccionar categoría"
@@ -1298,7 +1346,7 @@ function VehicleRegistrationComplete() {
                         label: { color: 'white', fontWeight: 500 }
                     }}
                 />
-                
+
                 <Select
                     label="Tipo de sangre"
                     placeholder="Seleccionar tipo de sangre"
@@ -1320,7 +1368,7 @@ function VehicleRegistrationComplete() {
                         label: { color: 'white', fontWeight: 500 }
                     }}
                 />
-                
+
                 <DateInputES
                     label="Fecha de expedición"
                     value={formData.license.expedition_date}
@@ -1331,7 +1379,7 @@ function VehicleRegistrationComplete() {
                     error={errors.license_expedition}
                     required
                 />
-                
+
                 <DateInputES
                     label="Fecha de vencimiento"
                     value={formData.license.expiration_date}
@@ -1343,9 +1391,9 @@ function VehicleRegistrationComplete() {
                     required
                 />
             </SimpleGrid>
-            
+
             <div className={styles.sectionDivider}></div>
-            
+
             <Text fw={500} mb="md" c="white" size="sm">
                 📷 Fotos de la licencia (obligatorias)
             </Text>
@@ -1384,15 +1432,15 @@ function VehicleRegistrationComplete() {
             <div className={styles.stepIcon}>
                 <Shield size={24} color="#000" />
             </div>
-            
+
             <Title order={3} className={styles.stepTitle}>
                 SOAT - Seguro Obligatorio
             </Title>
-            
+
             <Text className={styles.stepDescription}>
                 Información del seguro obligatorio vigente para tu vehículo.
             </Text>
-            
+
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
                 <TextInput
                     label="Número de póliza"
@@ -1414,7 +1462,7 @@ function VehicleRegistrationComplete() {
                         label: { color: 'white', fontWeight: 500 }
                     }}
                 />
-                
+
                 <div>
                     <Select
                         label="Compañía aseguradora"
@@ -1460,7 +1508,7 @@ function VehicleRegistrationComplete() {
                         />
                     )}
                 </div>
-                
+
                 <DateInputES
                     label="Fecha de inicio de vigencia"
                     value={formData.soat.validity_from}
@@ -1471,7 +1519,7 @@ function VehicleRegistrationComplete() {
                     error={errors.validity_from}
                     required
                 />
-                
+
                 <DateInputES
                     label="Fecha de vencimiento"
                     value={formData.soat.validity_to}
@@ -1483,9 +1531,9 @@ function VehicleRegistrationComplete() {
                     required
                 />
             </SimpleGrid>
-            
+
             <div className={styles.sectionDivider}></div>
-            
+
             <Text fw={500} mb="md" c="white" size="sm">
                 📷 Fotos del SOAT (opcionales)
             </Text>
@@ -1510,18 +1558,18 @@ function VehicleRegistrationComplete() {
             <div className={styles.stepIcon}>
                 <CheckCircle size={24} color="#000" />
             </div>
-            
+
             <Title order={3} className={styles.stepTitle}>
                 Resumen de Registro
             </Title>
-            
+
             <Text className={styles.stepDescription}>
-                {isEditMode 
+                {isEditMode
                     ? 'Revisa y actualiza la información de tu vehículo registrado.'
                     : 'Revisa toda la información antes de completar el registro.'
                 }
             </Text>
-            
+
             <div className={styles.summaryGrid}>
                 {/* Resumen del vehículo */}
                 <div className={styles.summaryCard}>
@@ -1529,7 +1577,7 @@ function VehicleRegistrationComplete() {
                         <Car size={20} />
                         Vehículo
                     </div>
-                    
+
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryLabel}>Marca y Modelo:</span>
                         <span className={styles.summaryValue}>{formData.vehicle.brand} {formData.vehicle.model}</span>
@@ -1551,14 +1599,14 @@ function VehicleRegistrationComplete() {
                         <span className={styles.summaryValue}>{formData.vehicle.passenger_capacity} pasajeros</span>
                     </div>
                 </div>
-                
+
                 {/* Resumen de la licencia */}
                 <div className={styles.summaryCard}>
                     <div className={styles.summaryCardTitle}>
                         <IdCard size={20} />
                         Licencia
                     </div>
-                    
+
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryLabel}>Número:</span>
                         <span className={styles.summaryValue}>{formData.license.license_number}</span>
@@ -1576,14 +1624,14 @@ function VehicleRegistrationComplete() {
                         <span className={styles.summaryValue}>{formData.license.expiration_date}</span>
                     </div>
                 </div>
-                
+
                 {/* Resumen del SOAT */}
                 <div className={styles.summaryCard}>
                     <div className={styles.summaryCardTitle}>
                         <Shield size={20} />
                         SOAT
                     </div>
-                    
+
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryLabel}>Póliza:</span>
                         <span className={styles.summaryValue}>{formData.soat.policy_number}</span>
@@ -1598,7 +1646,7 @@ function VehicleRegistrationComplete() {
                     </div>
                 </div>
             </div>
-            
+
             {/* Botón de confirmar registro */}
             <Box mt="xl" ta="center">
                 <Button
@@ -1608,8 +1656,8 @@ function VehicleRegistrationComplete() {
                     loading={loading}
                     disabled={loading}
                 >
-                    {loading 
-                        ? (isEditMode ? 'Actualizando...' : 'Registrando...') 
+                    {loading
+                        ? (isEditMode ? 'Actualizando...' : 'Registrando...')
                         : (isEditMode ? '✏️ Actualizar Información' : '🚗 Completar Registro')
                     }
                 </Button>
@@ -1624,16 +1672,16 @@ function VehicleRegistrationComplete() {
                 <div className={styles.successModalIcon}>
                     <CheckCircle size={40} color="#000" />
                 </div>
-                
+
                 <Title className={styles.successModalTitle}>
                     ¡Registro Exitoso! 🎉
                 </Title>
-                
+
                 <Text className={styles.successModalMessage}>
-                    Tu vehículo y documentos han sido registrados correctamente. 
+                    Tu vehículo y documentos han sido registrados correctamente.
                     ¡Ya puedes empezar a ofrecer viajes como conductor!
                 </Text>
-                
+
                 <Button
                     className={styles.successModalButton}
                     onClick={() => navigate({ to: '/Perfil' })}
@@ -1661,16 +1709,16 @@ function VehicleRegistrationComplete() {
 
     return (
         <div className={styles.container}>
-            <LoadingOverlay 
-                visible={loading} 
+            <LoadingOverlay
+                visible={loading}
                 overlayProps={{ radius: "sm", blur: 2 }}
                 className={styles.loadingOverlay}
             />
-            
+
             {/* Header */}
-            <div style={{height: '60px'}} />
+            <div style={{ height: '60px' }} />
             <div className={styles.header}>
-                <ActionIcon 
+                <ActionIcon
                     className={styles.backButton}
                     onClick={() => navigate({ to: '/' })}
                 >
@@ -1686,8 +1734,8 @@ function VehicleRegistrationComplete() {
                 {/* Stepper */}
                 <div className={styles.stepperContainer}>
                     <div className={styles.stepperWrapper}>
-                        <Stepper 
-                            active={activeStep} 
+                        <Stepper
+                            active={activeStep}
                             onStepClick={goToStep}
                             allowNextStepsSelect={false}
                             size="sm"
@@ -1720,7 +1768,7 @@ function VehicleRegistrationComplete() {
                         >
                             Anterior
                         </Button>
-                        
+
                         <Button
                             className={styles.primaryButton}
                             onClick={nextStep}

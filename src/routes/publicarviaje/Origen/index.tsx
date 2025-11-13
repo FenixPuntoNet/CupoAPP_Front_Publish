@@ -27,13 +27,13 @@ function OrigenView() {
   const [error, setError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-  
+
   // Destinos populares según las imágenes
   const popularDestinations = [
     'Jamundi, Valle del Cauca, Colombia',
     'Cali, Valle del Cauca, Colombia',
     'Yumbo, Valle del Cauca, Colombia',
-    'Medellin, Colombia', 
+    'Medellin, Colombia',
     'Bogota, Colombia',
   ];
 
@@ -93,7 +93,7 @@ function OrigenView() {
     setSearchTerm('');
     setResults([]);
     setError(null);
-    
+
     // Navegar automáticamente al seleccionar
     navigate({
       to: '/publicarviaje/punto-recogida',
@@ -104,8 +104,31 @@ function OrigenView() {
   const handleDestinationSelect = (destination: string) => {
     setSelectedAddress(destination);
     setSelectedLocation({ lat: 0, lng: 0 });
-    
-    // Navegar automáticamente al seleccionar
+
+    // Antes de navegar, confirmar si la dirección seleccionada debe usarse
+    // como la misma ubicación personalizada de recogida. Si el usuario acepta,
+    // se salta la vista de `punto-recogida` y se va directamente a `puntos-descenso`.
+    const confirmMessage = '¿Deseas usar esta dirección también como ubicación personalizada de recogida?\n\n' +
+      'Si presionas Sí, se omitirá la selección de punto de recogida y se usará esta dirección como ubicación personalizada.';
+
+    const useAsPickup = window.confirm(confirmMessage);
+
+    if (useAsPickup) {
+      // Navegar a puntos-descenso pasando la dirección seleccionada como pickup
+      navigate({
+        to: '/publicarviaje/puntos-descenso',
+        // Cast search to bypass strict route search typing for this ad-hoc param bundle
+        search: ({
+          originAddress: destination,
+          pickupSafePointId: '0', // 0 indica ubicación personalizada
+          pickupAddress: destination,
+          skipPickupSelection: 'true'
+        } as unknown) as Record<string, unknown>
+      });
+      return;
+    }
+
+    // Si el usuario no confirma, proceder con el flujo normal hacia punto-recogida
     navigate({
       to: '/publicarviaje/punto-recogida',
       search: { selectedAddress: destination }
@@ -113,10 +136,9 @@ function OrigenView() {
   };
 
   const handleCurrentLocation = async () => {
-    // Limpiar errores previos
     setError(null);
     setIsGettingLocation(true);
-    
+
     if (!('geolocation' in navigator)) {
       setError('Geolocalización no disponible en este navegador');
       setIsGettingLocation(false);
@@ -130,11 +152,11 @@ function OrigenView() {
       return;
     }
 
-    // Configurar opciones de geolocalización
+    // Configurar opciones de geolocalización mejoradas
     const options = {
       enableHighAccuracy: true,
-      timeout: 10000, // 10 segundos
-      maximumAge: 60000 // 1 minuto
+      timeout: 15000, // 15 segundos para dar más tiempo a la localización precisa
+      maximumAge: 0 // No usar cache - siempre obtener posición actual
     };
 
     navigator.geolocation.getCurrentPosition(
@@ -142,45 +164,45 @@ function OrigenView() {
         try {
           const { latitude, longitude } = position.coords;
           console.log('🗺️ Ubicación obtenida:', { latitude, longitude });
-          
+
           const address = await getAddressFromCoords(latitude, longitude);
-          
+
           if (address) {
             console.log('📍 Dirección obtenida:', address);
             setSelectedAddress(address);
             setSelectedLocation({ lat: latitude, lng: longitude });
-            
+
             // Navegar automáticamente al obtener ubicación actual
             navigate({
               to: '/publicarviaje/punto-recogida',
               search: { selectedAddress: address }
             });
           } else {
-            setError('No se pudo obtener la dirección de tu ubicación');
+            setError('No se pudo obtener la dirección de tu ubicación. Intenta de nuevo.');
+            setIsGettingLocation(false);
           }
         } catch (error) {
           console.error('❌ Error al convertir coordenadas:', error);
-          setError('Error al obtener la dirección actual');
-        } finally {
+          setError('Error al obtener la dirección actual. Intenta de nuevo.');
           setIsGettingLocation(false);
         }
       },
       (error) => {
         console.error('❌ Error de geolocalización:', error);
         let errorMessage = 'Error al obtener la ubicación actual';
-        
+
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Permisos de ubicación denegados. Por favor, permite el acceso a tu ubicación.';
+            errorMessage = 'Permisos de ubicación denegados. Por favor, permite el acceso a tu ubicación en la configuración del navegador.';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Ubicación no disponible. Verifica tu conexión GPS.';
+            errorMessage = 'Ubicación no disponible. Verifica que tu GPS está activado y tienes conexión a internet.';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Tiempo agotado al obtener ubicación. Intenta nuevamente.';
+            errorMessage = 'Tiempo agotado al obtener ubicación. Asegúrate de estar en un lugar abierto e intenta de nuevo.';
             break;
         }
-        
+
         setError(errorMessage);
         setIsGettingLocation(false);
       },
@@ -202,31 +224,31 @@ function OrigenView() {
 
       {/* Sección de búsqueda */}
       <div className={styles.searchSection}>
-          <div className={styles.searchBox}>
-            <Search className={styles.searchIcon} size={20} />
-            <input
-              type="text"
-              className={styles.input}
-              placeholder="Escribe la dirección completa"
-              value={selectedAddress || searchTerm}
-              onChange={(e) => {
-                if (!selectedAddress) {
-                  setSearchTerm(e.target.value);
-                }
-              }}
-              onFocus={() => {
-                if (selectedAddress) {
-                  setSelectedAddress('');
-                  setSelectedLocation(null);
-                }
-              }}
-            />
-            {isSearching && (
-              <div className={styles.searchLoader}>
-                <div className={styles.spinner} />
-              </div>
-            )}
-          </div>        {error && (
+        <div className={styles.searchBox}>
+          <Search className={styles.searchIcon} size={20} />
+          <input
+            type="text"
+            className={styles.input}
+            placeholder="Escribe la dirección completa"
+            value={selectedAddress || searchTerm}
+            onChange={(e) => {
+              if (!selectedAddress) {
+                setSearchTerm(e.target.value);
+              }
+            }}
+            onFocus={() => {
+              if (selectedAddress) {
+                setSelectedAddress('');
+                setSelectedLocation(null);
+              }
+            }}
+          />
+          {isSearching && (
+            <div className={styles.searchLoader}>
+              <div className={styles.spinner} />
+            </div>
+          )}
+        </div>        {error && (
           <div className={styles.errorMessage}>
             {error}
           </div>
@@ -260,7 +282,7 @@ function OrigenView() {
 
         {!searchTerm && results.length === 0 && !selectedAddress && (
           <div className={styles.suggestionsContainer}>
-            <button 
+            <button
               className={styles.currentLocationButton}
               onClick={handleCurrentLocation}
               disabled={isGettingLocation}

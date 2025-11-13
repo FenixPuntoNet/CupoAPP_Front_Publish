@@ -141,6 +141,7 @@
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
+  margin: 0 auto;
 }
 
 /* Forzar textos oscuros en las tarjetas */

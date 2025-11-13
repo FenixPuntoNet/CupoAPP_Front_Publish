@@ -26,10 +26,10 @@ function FechaHoraView() {
 
   const handleTimeConfirm = () => {
     if (!selectedDate) return;
-    
+
     const selectedDateTime = new Date(selectedDate);
     selectedDateTime.setHours(selectedHour, selectedMinute, 0, 0);
-    
+
     const now = new Date();
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
@@ -44,20 +44,20 @@ function FechaHoraView() {
 
     // ✅ GUARDAR EN TRIPSTORE ANTES DE NAVEGAR - PRESERVANDO DATOS EXISTENTES
     console.log('💾 [FECHA-HORA] Guardando fecha y hora:', selectedDateTime.toISOString());
-    
+
     // 🔍 DEBUG: Verificar datos actuales antes de guardar
     const currentData = tripStore.getStoredData();
     console.log('🔍 [FECHA-HORA] Datos actuales del tripStore ANTES de guardar:', currentData);
     console.log('🔍 [FECHA-HORA] ¿Tiene selectedRoute?:', !!currentData.selectedRoute);
     console.log('🔍 [FECHA-HORA] ¿Tiene origin?:', !!currentData.origin);
     console.log('🔍 [FECHA-HORA] ¿Tiene destination?:', !!currentData.destination);
-    
+
     // 🔧 IMPORTANTE: Solo actualizar dateTime, preservar el resto de datos
     const updatedData = {
       ...currentData,
       dateTime: selectedDateTime.toISOString()
     };
-    
+
     tripStore.updateData(updatedData);
 
     // 🔍 DEBUG: Verificar datos después de guardar
@@ -98,7 +98,7 @@ function FechaHoraView() {
     <div className={styles.container}>
       {/* Header */}
       <header className={styles.header}>
-        <button 
+        <button
           className={styles.backButton}
           onClick={() => navigate({ to: '/publicarviaje/rutas' })}
         >
@@ -122,7 +122,7 @@ function FechaHoraView() {
               <div className={styles.iconSection}>
                 <Calendar className={styles.calendarIcon} size={32} />
               </div>
-              
+
               <div className={styles.pickerSection}>
                 <Stack gap="md" align="center">
                   <Text size="lg" fw={600} c="dark.8" mb="xs" className={styles.sectionTitle}>
@@ -132,7 +132,6 @@ function FechaHoraView() {
                     value={selectedDate}
                     onChange={handleDateChange}
                     minDate={new Date()}
-                    size="lg"
                     className={styles.datePicker}
                   />
                 </Stack>
@@ -144,18 +143,18 @@ function FechaHoraView() {
               <div className={styles.iconSection}>
                 <Clock className={styles.calendarIcon} size={32} />
               </div>
-              
+
               <div className={styles.pickerSection}>
                 <Stack gap="lg" align="center">
                   <Text size="lg" fw={600} c="dark.8" mb="xs" className={styles.sectionTitle}>
                     Selecciona la hora
                   </Text>
-                  
+
                   {/* Current Time Display */}
                   <div className={styles.timeDisplay}>
                     {formatTime(selectedHour, selectedMinute)}
                   </div>
-                  
+
                   {/* Hour Selector */}
                   <div className={styles.timeSliderSection}>
                     <Text size="sm" fw={500} c="dark.6" mb="xs" className={styles.sliderLabel}>Hora</Text>
@@ -173,7 +172,7 @@ function FechaHoraView() {
                       <span>23</span>
                     </div>
                   </div>
-                  
+
                   {/* Minute Selector */}
                   <div className={styles.timeSliderSection}>
                     <Text size="sm" fw={500} c="dark.6" mb="xs" className={styles.sliderLabel}>Minutos</Text>
@@ -192,16 +191,16 @@ function FechaHoraView() {
                       <span>59</span>
                     </div>
                   </div>
-                  
+
                   {/* Action Buttons */}
                   <div className={styles.timeActions}>
-                    <button 
+                    <button
                       onClick={handleBackToDate}
                       className={styles.backToDateButton}
                     >
                       ← Cambiar fecha
                     </button>
-                    <button 
+                    <button
                       onClick={handleTimeConfirm}
                       className={styles.confirmTimeButton}
                     >
