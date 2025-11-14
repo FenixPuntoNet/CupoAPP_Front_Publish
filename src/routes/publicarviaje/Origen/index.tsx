@@ -3,6 +3,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { createFileRoute } from '@tanstack/react-router';
 import { MapPin, Clock, Search, Locate } from 'lucide-react';
 import { useOptimizedMaps } from '@/hooks/useOptimizedMaps';
+import { useBackendAuth } from '@/context/BackendAuthContext';
+import { getCurrentUserProfile } from '@/services/profile';
 import styles from './index.module.css';
 
 interface Suggestion {
@@ -18,8 +20,17 @@ interface Location {
   lng: number;
 }
 
+interface UserProfile {
+  id: number | string;
+  user_id: string;
+  first_name?: string;
+  last_name?: string;
+  [key: string]: any;
+}
+
 function OrigenView() {
   const navigate = useNavigate();
+  const { user } = useBackendAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<Suggestion[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -27,6 +38,27 @@ function OrigenView() {
   const [error, setError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  // Modal state for confirmation
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingDestination, setPendingDestination] = useState<string | null>(null);
+  // User profile state
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  // Load user profile on mount
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const profileResponse = await getCurrentUserProfile();
+        if (profileResponse.success && profileResponse.data) {
+          setUserProfile(profileResponse.data);
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
 
   // Destinos populares según las imágenes
   const popularDestinations = [
@@ -104,35 +136,34 @@ function OrigenView() {
   const handleDestinationSelect = (destination: string) => {
     setSelectedAddress(destination);
     setSelectedLocation({ lat: 0, lng: 0 });
+    setPendingDestination(destination);
+    setShowConfirmModal(true);
+  };
 
-    // Antes de navegar, confirmar si la dirección seleccionada debe usarse
-    // como la misma ubicación personalizada de recogida. Si el usuario acepta,
-    // se salta la vista de `punto-recogida` y se va directamente a `puntos-descenso`.
-    const confirmMessage = '¿Deseas usar esta dirección también como ubicación personalizada de recogida?\n\n' +
-      'Si presionas Sí, se omitirá la selección de punto de recogida y se usará esta dirección como ubicación personalizada.';
-
-    const useAsPickup = window.confirm(confirmMessage);
-
-    if (useAsPickup) {
-      // Navegar a puntos-descenso pasando la dirección seleccionada como pickup
+  // Modal handlers
+  const handleConfirmYes = () => {
+    if (pendingDestination) {
       navigate({
-        to: '/publicarviaje/puntos-descenso',
-        // Cast search to bypass strict route search typing for this ad-hoc param bundle
-        search: ({
-          originAddress: destination,
-          pickupSafePointId: '0', // 0 indica ubicación personalizada
-          pickupAddress: destination,
-          skipPickupSelection: 'true'
-        } as unknown) as Record<string, unknown>
+        to: '/publicarviaje/Destino',
+        search: {
+          originAddress: pendingDestination,
+          pickupSafePointId: '0'
+        }
       });
-      return;
     }
+    setShowConfirmModal(false);
+    setPendingDestination(null);
+  };
 
-    // Si el usuario no confirma, proceder con el flujo normal hacia punto-recogida
-    navigate({
-      to: '/publicarviaje/punto-recogida',
-      search: { selectedAddress: destination }
-    });
+  const handleConfirmNo = () => {
+    if (pendingDestination) {
+      navigate({
+        to: '/publicarviaje/punto-recogida',
+        search: { selectedAddress: pendingDestination }
+      });
+    }
+    setShowConfirmModal(false);
+    setPendingDestination(null);
   };
 
   const handleCurrentLocation = async () => {
@@ -172,11 +203,9 @@ function OrigenView() {
             setSelectedAddress(address);
             setSelectedLocation({ lat: latitude, lng: longitude });
 
-            // Navegar automáticamente al obtener ubicación actual
-            navigate({
-              to: '/publicarviaje/punto-recogida',
-              search: { selectedAddress: address }
-            });
+            // Mostrar confirmación igual que otros destinos
+            setPendingDestination(address);
+            setShowConfirmModal(true);
           } else {
             setError('No se pudo obtener la dirección de tu ubicación. Intenta de nuevo.');
             setIsGettingLocation(false);
@@ -212,6 +241,46 @@ function OrigenView() {
 
   return (
     <div className={styles.container}>
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.7)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#111',
+            padding: 32,
+            width: '100vw',
+            height: '100vh',
+            textAlign: 'left',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'start',
+            justifyContent: 'center',
+            color: '#ddd',
+          }}>
+            <h2 style={{ marginBottom: 16 }} className='text-5xl tracking-tight text-pretty'>
+              <span className='text-green-400'>{userProfile?.first_name ? 
+                userProfile.first_name : 
+                user?.username || ''
+              }</span><br />¿Tu punto de recogida es el mismo de descenso?
+            </h2>
+            <div className='bg-green-400 w-10 h-1 relative'></div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, justifyContent: 'start' }} className='mt-8'>
+              <a onClick={handleConfirmYes} href='#' className='text-left text-3xl text-green-400 tracking-tighter'>Sí,<br />son el mismo punto</a>
+              <a onClick={handleConfirmNo} href='#' className='text-left text-sm mt-2 text-white/20 tracking-tighter'>No,<br />deseo seleccionar manualmente los puntos</a>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Sección del título mejorada */}
       <div className={styles.titleSection}>
         <h1 className={styles.mainTitle}>

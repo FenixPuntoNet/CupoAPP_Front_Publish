@@ -89,8 +89,8 @@ function DestinoView() {
     // Navegar automáticamente al seleccionar
     navigate({
       to: '/publicarviaje/puntos-descenso',
-      search: { 
-        selectedAddress: originAddress, 
+      search: {
+        selectedAddress: originAddress,
         selectedDestination: suggestion.fullText,
         pickupSafePointId: pickupSafePointId 
       }
