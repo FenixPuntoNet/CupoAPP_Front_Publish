@@ -47,15 +47,15 @@ export const useNotifications = (config: UseNotificationsConfig = {}) => {
 
 
       
-      const [notifications, unreadCount] = await Promise.all([
+      const [notifications, /*unreadCount*/] = await Promise.all([
         notificationData.getUserNotifications(maxNotifications),
-        notificationData.getUnreadCount()
+        //notificationData.getUnreadCount()
       ]);
 
       setState(prev => ({
         ...prev,
         notifications,
-        unreadCount,
+        /*unreadCount,*/
         loading: false,
         error: undefined
       }));

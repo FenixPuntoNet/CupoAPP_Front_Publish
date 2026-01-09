@@ -33,6 +33,7 @@ import BackButton from '@/components/Buttons/backButton';
 // Import debug tools for testing
 import "@/utils/appleOAuthTestTools";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PushNotifications } from "@capacitor/push-notifications";
 
 interface LoginFormValues {
   email: string;
@@ -42,7 +43,7 @@ interface LoginFormValues {
 const LoginView: React.FC = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [loading, setLoading] = useState(false);
-  const [recoverModalOpened, setRecoverModalOpened] = useState(false);
+  const [recoverModalOpened, setRecoverModalOpened] = useState(false);  
 
   // Detección temprana del OAuth callback (Google y Apple)
   const [isOAuthCallback, setIsOAuthCallback] = useState(() => {
@@ -1672,74 +1673,155 @@ const LoginView: React.FC = () => {
 
       console.log("🔍 Login button clicked");
 
-      const result = await signIn(values.email, values.password);
-      console.log("🔄 Login result:", result);
+      PushNotifications.requestPermissions().then(result => {
+          if (result.receive === 'granted') {
+            PushNotifications.register();
+          }else{
+            console.log('***Permiso de notificaciones no concedido***');
+          }
+      });
 
-      if (!result.success) {
-        console.log("❌ Login failed:", result.error);
-        handleBackendError(result.error || "Error al iniciar sesión", {
-          id: "login-error",
-          autoClose: 6000,
-        });
-        return;
-      }
+      PushNotifications.addListener('registration', async token => {
 
-      // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para asegurar wallet/profile
-      if (result.token) {
-        console.log("🔑 Login successful with auth token");
+        const result = await signIn(values.email, values.password, token.value);
+        console.log("🔄 Login result:", result);
 
-        // Ejecutar bootstrap para asegurar wallet/profile/terms
-        try {
-          console.log(
-            "🔧 Executing bootstrap for traditional login to ensure wallet/profile..."
-          );
-          await ensureBootstrap();
-          console.log(
-            "✅ Bootstrap completed successfully after traditional login"
-          );
-        } catch (bootstrapError) {
-          console.error(
-            "❌ Bootstrap failed during traditional login:",
-            bootstrapError
-          );
-          handleBackendError(
-            "Error configurando cuenta. Por favor, intenta de nuevo.",
-            {
-              id: "login-bootstrap-error",
-              autoClose: 5000,
-            }
-          );
+        if (!result.success) {
+          console.log("❌ Login failed:", result.error);
+          handleBackendError(result.error || "Error al iniciar sesión", {
+            id: "login-error",
+            autoClose: 6000,
+          });
           return;
         }
 
-        // Refresh del contexto después del bootstrap
-        try {
-          await refreshUser(true);
-          console.log("✅ Auth context refreshed after login and bootstrap");
-        } catch (refreshError) {
-          console.error("⚠️ Error refreshing auth context:", refreshError);
-          // No es crítico - el usuario ya está autenticado
+        // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para asegurar wallet/profile
+        if (result.token) {
+          console.log("🔑 Login successful with auth token");
+
+          // Ejecutar bootstrap para asegurar wallet/profile/terms
+          try {
+            console.log(
+              "🔧 Executing bootstrap for traditional login to ensure wallet/profile..."
+            );
+            await ensureBootstrap();
+            console.log(
+              "✅ Bootstrap completed successfully after traditional login"
+            );
+          } catch (bootstrapError) {
+            console.error(
+              "❌ Bootstrap failed during traditional login:",
+              bootstrapError
+            );
+            handleBackendError(
+              "Error configurando cuenta. Por favor, intenta de nuevo.",
+              {
+                id: "login-bootstrap-error",
+                autoClose: 5000,
+              }
+            );
+            return;
+          }
+
+          // Refresh del contexto después del bootstrap
+          try {
+            await refreshUser(true);
+            console.log("✅ Auth context refreshed after login and bootstrap");
+          } catch (refreshError) {
+            console.error("⚠️ Error refreshing auth context:", refreshError);
+            // No es crítico - el usuario ya está autenticado
+          }
+
+          showSuccess(
+            "Inicio de sesión exitoso",
+            "Bienvenido de vuelta. Serás redirigido automáticamente.",
+            {
+              id: "login-success",
+              autoClose: 2000,
+            }
+          );
+        } else {
+          console.log("⚠️ Login successful but no auth token received");
+          showSuccess(
+            "Inicio de sesión exitoso",
+            "Has iniciado sesión correctamente.",
+            {
+              id: "login-success",
+              autoClose: 2000,
+            }
+          );
         }
 
-        showSuccess(
-          "Inicio de sesión exitoso",
-          "Bienvenido de vuelta. Serás redirigido automáticamente.",
-          {
-            id: "login-success",
-            autoClose: 2000,
-          }
-        );
-      } else {
-        console.log("⚠️ Login successful but no auth token received");
-        showSuccess(
-          "Inicio de sesión exitoso",
-          "Has iniciado sesión correctamente.",
-          {
-            id: "login-success",
-            autoClose: 2000,
-          }
-        );
-      }
+      })
+
+      // const result = await signIn(values.email, values.password);
+      //   console.log("🔄 Login result:", result);
+
+      //   if (!result.success) {
+      //     console.log("❌ Login failed:", result.error);
+      //     handleBackendError(result.error || "Error al iniciar sesión", {
+      //       id: "login-error",
+      //       autoClose: 6000,
+      //     });
+      //     return;
+      //   }
+
+      //   // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para asegurar wallet/profile
+      //   if (result.token) {
+      //     console.log("🔑 Login successful with auth token");
+
+      //     // Ejecutar bootstrap para asegurar wallet/profile/terms
+      //     try {
+      //       console.log(
+      //         "🔧 Executing bootstrap for traditional login to ensure wallet/profile..."
+      //       );
+      //       await ensureBootstrap();
+      //       console.log(
+      //         "✅ Bootstrap completed successfully after traditional login"
+      //       );
+      //     } catch (bootstrapError) {
+      //       console.error(
+      //         "❌ Bootstrap failed during traditional login:",
+      //         bootstrapError
+      //       );
+      //       handleBackendError(
+      //         "Error configurando cuenta. Por favor, intenta de nuevo.",
+      //         {
+      //           id: "login-bootstrap-error",
+      //           autoClose: 5000,
+      //         }
+      //       );
+      //       return;
+      //     }
+
+      //     // Refresh del contexto después del bootstrap
+      //     try {
+      //       await refreshUser(true);
+      //       console.log("✅ Auth context refreshed after login and bootstrap");
+      //     } catch (refreshError) {
+      //       console.error("⚠️ Error refreshing auth context:", refreshError);
+      //       // No es crítico - el usuario ya está autenticado
+      //     }
+
+      //     showSuccess(
+      //       "Inicio de sesión exitoso",
+      //       "Bienvenido de vuelta. Serás redirigido automáticamente.",
+      //       {
+      //         id: "login-success",
+      //         autoClose: 2000,
+      //       }
+      //     );
+      //   } else {
+      //     console.log("⚠️ Login successful but no auth token received");
+      //     showSuccess(
+      //       "Inicio de sesión exitoso",
+      //       "Has iniciado sesión correctamente.",
+      //       {
+      //         id: "login-success",
+      //         autoClose: 2000,
+      //       }
+      //     );
+      //   }
 
       // No navegar manualmente - dejar que el AuthGuard detecte el cambio de estado
     } catch (error) {

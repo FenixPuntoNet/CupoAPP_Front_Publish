@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { loginUser, logoutUser, type AuthResponse } from '@/services/auth';
 import { apiRequest } from '@/config/api';
-// ✅ Importar sistemas de cache para limpieza completa
 import { globalCache, apiCache } from '@/lib/cache';
 import { googleMapsCache } from '@/lib/googleMapsCache';
 
@@ -17,7 +16,8 @@ interface BackendAuthContextType {
   isAuthenticated: boolean;
   hasProfile: boolean;
   isNewUser: boolean;
-  signIn: (email: string, password: string) => Promise<AuthResponse>;
+  signIn: (email: string, password: string, device_token: string) => Promise<AuthResponse>;
+  // signIn: (email: string, password: string) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   refreshUser: (forceRefresh?: boolean) => Promise<void>;
   markUserAsExperienced: () => void;
@@ -143,11 +143,11 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, []);
 
-  const signIn = async (email: string, password: string): Promise<AuthResponse> => {
+  const signIn = async (email: string, password: string, device_token: string): Promise<AuthResponse> => {
     try {
       setLoading(true);
       console.log('🔐 Starting login process...');
-      const response = await loginUser({ email, password });
+      const response = await loginUser({ email, password }/*, device_token*/);
       
       if (response.success) {
         console.log('✅ Login API successful');
@@ -169,7 +169,8 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           try {
             // Forzar refresh para obtener datos completos
             await refreshUser(true);
-            console.log('✅ User data refreshed after login');
+
+            console.log('✅ User data refreshed after loginand token synced');
           } catch (refreshError) {
             // Si falla el refresh, al menos ya tenemos el usuario básico
             console.error('⚠️ Could not get complete user data:', refreshError);

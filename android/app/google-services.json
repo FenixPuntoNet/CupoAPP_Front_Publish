@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "796170167113",
-    "project_id": "cupo-notificaciones",
-    "storage_bucket": "cupo-notificaciones.firebasestorage.app"
+    "project_number": "152986208278",
+    "project_id": "cupo-notificaciones-1d238",
+    "storage_bucket": "cupo-notificaciones-1d238.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:796170167113:android:ba6e81b317679e41453098",
+        "mobilesdk_app_id": "1:152986208278:android:b35e570fb8afc7aea94d37",
         "android_client_info": {
           "package_name": "com.cupo.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDs0CUrbTnliCgCXMKucKSN8dhwSOBHXs8"
+          "current_key": "AIzaSyCRDBWXW-nM2xK-OIOmMWUkFt-LsxtJhIc"
         }
       ],
       "services": {

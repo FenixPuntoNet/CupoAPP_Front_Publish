@@ -93,7 +93,7 @@ function ResumenConfirmacionView() {
       }
     };
     loadVehicleData();
-  }, [navigate]);
+  }, [navigate]);  
 
   const handlePublishTrip = async () => {
     setIsPublishing(true);
@@ -122,7 +122,7 @@ function ResumenConfirmacionView() {
       const user = await getCurrentUser();
       if (!user.success || !user.user) {
         throw new Error("Usuario no autenticado");
-      }
+      }     
 
       // Verificar saldo ANTES de intentar publicar
       console.log('💰 [PUBLISH] Verificando saldo via BACKEND antes de publicar viaje...');
@@ -180,7 +180,7 @@ function ResumenConfirmacionView() {
       } catch (dateError) {
         console.error('❌ [PUBLISH] Error procesando fecha:', dateError);
         throw new Error(`Error en formato de fecha: ${dateError instanceof Error ? dateError.message : 'Fecha inválida'}`);
-      }
+      }      
 
       // Preparar datos para publicar viaje
       const publishData: PublishTripRequest = {
@@ -246,7 +246,12 @@ function ResumenConfirmacionView() {
         }
         
         throw new Error(result.error || 'Error al publicar el viaje');
-      }
+      }         
+
+      // if (user.user.status !== 'DRIVER') {
+      //   notification();
+      //   console.log('SE EJECUTA NOTIFICACION');
+      // }
 
       console.log('✅ Viaje publicado exitosamente:', result.data);
 

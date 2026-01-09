@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import styles from './home.module.css';
 // import { FeatureCarousel } from '../../components/ui/home/FeatureCarousel';
+// import { title } from "process";
 
 const HomeView = () => {
   // Características principales
@@ -101,7 +102,7 @@ const HomeView = () => {
       to: "/change",
       badge: "Canjea",
     },
-  ];
+  ];  
 
   return (
     <Container fluid className={styles.container}>
@@ -122,7 +123,7 @@ const HomeView = () => {
               className={styles.primaryButton}
               component={Link}
               to="/reservar"
-              rightSection={<ArrowRight size={18} />}
+              rightSection={<ArrowRight size={18} />}              
             >
               Buscar viaje
             </Button>
@@ -135,7 +136,7 @@ const HomeView = () => {
               rightSection={<ArrowRight size={18} />}
             >
               Publicar viaje
-            </Button>
+            </Button>            
           </Group>
           <div className={styles.sectionHeader}>
             <Title order={2} className={styles.sectionTitle}>

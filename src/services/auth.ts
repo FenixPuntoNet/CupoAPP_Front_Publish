@@ -2,7 +2,7 @@ import { apiRequest } from '@/config/api';
 
 export interface LoginRequest {
   email: string;
-  password: string;
+  password: string;  
 }
 
 export interface SignupRequest {
@@ -13,6 +13,7 @@ export interface SignupRequest {
   email_subscribed: boolean;
   verification_terms?: string;
   suscriptions?: string;
+  device_token: string
 }
 
 export interface AuthResponse {
@@ -21,6 +22,7 @@ export interface AuthResponse {
     id: string;
     email: string;
     username: string;
+    status: string
   };
   token?: string;
   access_token?: string; // Added to match backend response
@@ -29,11 +31,12 @@ export interface AuthResponse {
 }
 
 // Login usando el backend
-export const loginUser = async (credentials: LoginRequest): Promise<AuthResponse> => {
-  try {
+export const loginUser = async (credentials: LoginRequest/*, device_token: string*/): Promise<AuthResponse> => {
+  try {    
+
     const response = await apiRequest('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(credentials)
+      body: JSON.stringify({ ...credentials/*, device_token*/ } )
     });
 
     if (response.success && response.user) {
@@ -74,6 +77,8 @@ export const loginUser = async (credentials: LoginRequest): Promise<AuthResponse
 export const registerUser = async (userData: SignupRequest): Promise<AuthResponse> => {
   try {
     console.log('🚀 Starting registration process...');
+
+    console.log('DATA DEL USUARIO PARA REGISTRO: ', userData);
     
     const response = await apiRequest('/auth/signup', {
       method: 'POST',
@@ -183,14 +188,17 @@ export const getCurrentUser = async (): Promise<AuthResponse> => {
   try {
     const response = await apiRequest('/auth/me');
 
+    console.log('DATOS USUARIO ACTUAL:', response);
+
     if (response && response.id) {
       // El backend devuelve el usuario directamente
       return {
         success: true,
-        user: {
+        user: {          
           id: response.id,
           email: response.email,
-          username: response.username
+          username: response.username,
+          status: response.profile.status,
         }
       };
     }

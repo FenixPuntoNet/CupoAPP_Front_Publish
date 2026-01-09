@@ -22,7 +22,7 @@ import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { useEffect } from 'react';
 import { ThemeToggle as _ThemeToggle } from '@/components/ThemeToggle';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useMobilePushNotifications } from '@/hooks/useMobilePushNotifications';
+import { usePushNotifications } from '@/modules/push';
 import { setGlobalNavigate } from '@/services/notificationDisplay';
 
 // Configure telefunc to use external backend
@@ -101,7 +101,7 @@ const GlobalNotificationManager = () => {
   });
   
   // 📱 NUEVO - Sistema de notificaciones push móviles
-  const mobilePushHook = useMobilePushNotifications();
+  usePushNotifications();
   
   // 🎯 Configurar navegación global para las notificaciones
   useEffect(() => {
@@ -120,7 +120,6 @@ const GlobalNotificationManager = () => {
     
     // 📊 Log simple del estado
     console.log(`📊 [NOTIFICATIONS] Internal: ${notificationsHook.notifications.length} total, ${notificationsHook.unreadCount} unread`);
-    console.log(`� [NOTIFICATIONS] Push: ${mobilePushHook.isSupported ? 'Available' : 'Not available'}, ${mobilePushHook.isRegistered ? 'Registered' : 'Not registered'}`);
 
     // 🔇 PRODUCCIÓN: Sistema de notificaciones funciona silenciosamente
 
@@ -129,9 +128,6 @@ const GlobalNotificationManager = () => {
     loading, 
     notificationsHook.notifications.length, 
     notificationsHook.unreadCount,
-    mobilePushHook.isSupported,
-    mobilePushHook.isRegistered,
-    mobilePushHook.isLoading
   ]);
   
   return null; // No renderiza nada, solo gestiona las notificaciones

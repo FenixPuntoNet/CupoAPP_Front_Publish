@@ -1,5 +1,6 @@
 export interface Trip {
   id: string;
+  user_id: string;
   origin: {
     address: string;
     secondaryText: string;

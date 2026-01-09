@@ -12,10 +12,12 @@ dependencies {
     implementation project(':capacitor-community-barcode-scanner')
     implementation project(':capacitor-community-camera-preview')
     implementation project(':capacitor-community-file-opener')
+    implementation project(':capacitor-firebase-messaging')
     implementation project(':capacitor-app')
     implementation project(':capacitor-browser')
     implementation project(':capacitor-camera')
     implementation project(':capacitor-filesystem')
+    implementation project(':capacitor-local-notifications')
     implementation project(':capacitor-push-notifications')
 
 }

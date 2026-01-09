@@ -23,6 +23,22 @@ import { apiRequest } from "@/config/api";
 import { signInWithApple, processAppleCallback, isAppleCallback, cleanAppleCallbackUrl } from "@/services/appleAuth";
 
 import { isMobileApp, startMobileOAuth } from '@/utils/deepLinkHandler';
+import { PushNotifications } from "@capacitor/push-notifications";
+// import { getMessaging, getToken } from "firebase/messaging";
+// import { initializeApp } from "firebase/app";
+
+// const firebaseConfig = {
+//   apiKey: "AIzaSyBrlXe9dqwV-EfJ53FMJ5f7oY1FeVc8f5Y",
+//   authDomain: "cupo-notificaciones-1d238.firebaseapp.com",
+//   projectId: "cupo-notificaciones-1d238",
+//   storageBucket: "cupo-notificaciones-1d238.firebasestorage.app",
+//   messagingSenderId: "152986208278",
+//   appId: "1:152986208278:web:237a3e8ba12adf6fa94d37",
+//   measurementId: "G-PDDSS1MW3X"
+// };
+
+// const app = initializeApp(firebaseConfig);
+// const messaging = getMessaging(app);
 
 interface RegisterFormValues {
   nombre: string;
@@ -38,6 +54,7 @@ const RegisterView: React.FC = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [subscribeEmails, setSubscribeEmails] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  // const [deviceToken, setDeviceToken] = useState('');
   const [cookiesAccepted, setCookiesAccepted] = useState(() => {
     return localStorage.getItem("cookiesAccepted") === "true";
   });
@@ -827,92 +844,108 @@ const RegisterView: React.FC = () => {
     try {
       setError(null);
       setLoading(true);
-  
-      // Preparar datos para el backend
-      const userData: SignupRequest = {
-        email: values.email,
-        password: values.password,
-        full_name: values.nombre,
-        terms_accepted: acceptTerms,
-        email_subscribed: subscribeEmails,
-        verification_terms: acceptTerms ? 'aceptado' : 'rechazado',
-        suscriptions: subscribeEmails ? 'aceptado' : 'rechazado'
-      };
 
-      // ✅ AUTO-LOGIN: Registrar usuario (que ahora incluye auto-login)
-      console.log('🚀 Starting registration with auto-login...');
-      const result = await registerUser(userData);
-  
-      if (!result.success) {
-        setError(result.error || 'Error al registrar usuario');
-        return;
-      }
+      PushNotifications.requestPermissions().then(result => {      
+        if (result.receive === 'granted') {
+          PushNotifications.register();
+        }else{
+          console.log('***Permiso de notificaciones no concedido***');
+        }
+      });      
 
-      // ✅ REGISTRO + LOGIN EXITOSO
-      console.log('✅ Registration and auto-login successful:', result);
-      
-      // Verificar si el resultado incluye datos de usuario (auto-login exitoso)
-      const hasUserData = result.user && result.token;
-      
-      if (hasUserData) {
-        console.log('🎯 User data received from auto-login, refreshing context...');
+      PushNotifications.addListener('registration', async token => {
         
-        // Actualizar el contexto de autenticación con los nuevos datos
+        if(token.value){          
+
+          let userData: SignupRequest = {
+            email: values.email,
+            password: values.password,
+            full_name: values.nombre,
+            terms_accepted: acceptTerms,
+            email_subscribed: subscribeEmails,
+            verification_terms: acceptTerms ? 'aceptado' : 'rechazado',
+            suscriptions: subscribeEmails ? 'aceptado' : 'rechazado',
+            device_token: token.value
+          };
+
+          // ✅ AUTO-LOGIN: Registrar usuario (que ahora incluye auto-login)
+          console.log('🚀 Starting registration with auto-login...');
+          const result = await registerUser(userData);
+      
+          if (!result.success) {
+            setError(result.error || 'Error al registrar usuario');
+            return;
+          }
+
+          // ✅ REGISTRO + LOGIN EXITOSO
+          console.log('✅ Registration and auto-login successful:', result);
+          
+          // Verificar si el resultado incluye datos de usuario (auto-login exitoso)
+          const hasUserData = result.user && result.token;
+          
+          if (hasUserData) {
+            console.log('🎯 User data received from auto-login, refreshing context...');
+            
+            // Actualizar el contexto de autenticación con los nuevos datos
+            try {
+              await refreshUser(true); // Forzar refresh después del auto-login
+              console.log('✅ Auth context refreshed after registration');
+            } catch (refreshError) {
+              console.error('⚠️ Error refreshing auth context:', refreshError);
+              // Continuar aunque falle el refresh - el usuario ya está logueado
+            }
+
+            // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para asegurar wallet/profile/terms
+            try {
+              console.log('🔧 Executing bootstrap for traditional registration to ensure wallet/profile creation...');
+              await ensureBootstrap();
+              console.log('✅ Bootstrap completed successfully after traditional registration');
+              
+              // Refresh del contexto después del bootstrap
+              await refreshUser(true);
+              console.log('✅ Auth context refreshed after bootstrap');
+            } catch (bootstrapError) {
+              console.error('❌ Bootstrap failed during traditional registration:', bootstrapError);
+              setError('Error configurando cuenta. Por favor, intenta de nuevo.');
+              return;
+            }
+        }
+  
+        // Guardar términos y condiciones por separado
+        console.log('📝 Saving terms and conditions...');
         try {
-          await refreshUser(true); // Forzar refresh después del auto-login
-          console.log('✅ Auth context refreshed after registration');
-        } catch (refreshError) {
-          console.error('⚠️ Error refreshing auth context:', refreshError);
-          // Continuar aunque falle el refresh - el usuario ya está logueado
+          await saveTermsAndConditions({
+            verification_terms: acceptTerms ? 'aceptado' : 'rechazado',
+            suscriptions: subscribeEmails ? 'aceptado' : 'rechazado'
+          });
+          console.log('✅ Terms and conditions saved successfully');
+        } catch (termsError) {
+          console.error('⚠️ Error saving terms and conditions:', termsError);
+          // No bloquear el registro si falla el guardado de términos
+        }      // Marcar que es un usuario nuevo para activar onboarding
+        localStorage.setItem('is_new_user', 'true');
+        console.log('🎯 User marked as new for onboarding');
+    
+        // ✅ FLUJO MEJORADO: Redirigir según el resultado del auto-login
+        if (hasUserData) {
+          // Usuario logueado automáticamente - ir directo a completar perfil con onboarding
+          console.log('🎯 Auto-login successful, redirecting to complete profile with onboarding');
+          navigate({ 
+            to: "/CompletarRegistro", 
+            search: { from: 'onboarding' } 
+          });
+        } else {
+          // Auto-login falló - ir al login tradicional
+          console.log('⚠️ Auto-login failed, redirecting to login');
+          navigate({ 
+            to: "/Login", 
+            search: { newUser: 'true', message: 'registro-exitoso' } 
+          });
+        } 
+
         }
 
-        // ✅ CRÍTICO: SIEMPRE ejecutar bootstrap para asegurar wallet/profile/terms
-        try {
-          console.log('🔧 Executing bootstrap for traditional registration to ensure wallet/profile creation...');
-          await ensureBootstrap();
-          console.log('✅ Bootstrap completed successfully after traditional registration');
-          
-          // Refresh del contexto después del bootstrap
-          await refreshUser(true);
-          console.log('✅ Auth context refreshed after bootstrap');
-        } catch (bootstrapError) {
-          console.error('❌ Bootstrap failed during traditional registration:', bootstrapError);
-          setError('Error configurando cuenta. Por favor, intenta de nuevo.');
-          return;
-        }
-      }
-  
-      // Guardar términos y condiciones por separado
-      console.log('📝 Saving terms and conditions...');
-      try {
-        await saveTermsAndConditions({
-          verification_terms: acceptTerms ? 'aceptado' : 'rechazado',
-          suscriptions: subscribeEmails ? 'aceptado' : 'rechazado'
-        });
-        console.log('✅ Terms and conditions saved successfully');
-      } catch (termsError) {
-        console.error('⚠️ Error saving terms and conditions:', termsError);
-        // No bloquear el registro si falla el guardado de términos
-      }      // Marcar que es un usuario nuevo para activar onboarding
-      localStorage.setItem('is_new_user', 'true');
-      console.log('🎯 User marked as new for onboarding');
-  
-      // ✅ FLUJO MEJORADO: Redirigir según el resultado del auto-login
-      if (hasUserData) {
-        // Usuario logueado automáticamente - ir directo a completar perfil con onboarding
-        console.log('🎯 Auto-login successful, redirecting to complete profile with onboarding');
-        navigate({ 
-          to: "/CompletarRegistro", 
-          search: { from: 'onboarding' } 
-        });
-      } else {
-        // Auto-login falló - ir al login tradicional
-        console.log('⚠️ Auto-login failed, redirecting to login');
-        navigate({ 
-          to: "/Login", 
-          search: { newUser: 'true', message: 'registro-exitoso' } 
-        });
-      }
+      });      
   
     } catch (error) {
       console.error("❌ Error durante el registro:", error);

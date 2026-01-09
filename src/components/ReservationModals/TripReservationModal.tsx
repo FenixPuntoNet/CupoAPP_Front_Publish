@@ -115,6 +115,7 @@ export const TripReservationModal: React.FC<TripReservationModalProps> = ({ trip
 
     const tripForSuccessModal: TripSearchResult = {
         id: trip.id.toString(),
+        user_id: trip.user_id,
         origin: trip.origin.address,
         destination: trip.destination.address,
         dateTime: trip.dateTime,

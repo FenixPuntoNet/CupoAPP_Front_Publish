@@ -422,6 +422,7 @@ const ReservarView = () => {
     // Convertir TripSearchResult a Trip para compatibilidad
     const tripData: Trip = {
       id: trip.id,
+      user_id: trip.user_id,
       origin: {
         address: trip.origin,
         secondaryText: "",

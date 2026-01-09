@@ -35,7 +35,7 @@ function PuntoRecogidaView() {
   const [error, setError] = useState<string | null>(null);
 
   // Hook de navegación del mapa - usa la dirección del origen para centrar el mapa
-  const { mapCenter, setMapCenter, isGeocodingLocation } = useMapNavigation({
+  const { mapCenter, setMapCenter } = useMapNavigation({
     address: selectedAddress,
     isLoaded
   });

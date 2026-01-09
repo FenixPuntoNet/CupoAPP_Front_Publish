@@ -1,5 +1,7 @@
 // Configuración de la API Backend
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo.site';
+// export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://cupo.site';
+export const API_BASE_URL = 'https://10.0.2.2:3000';
+// export const API_BASE_URL = 'http://127.0.0.1:3000';
 
 import { apiCache } from '../lib/cache';
 
@@ -135,6 +137,9 @@ export const clearApiCache = (): void => {
 
 // 🚀 Función optimizada para hacer requests a la API
 export const apiRequest = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
+
+  console.log('URL API_BASE_URL:', API_BASE_URL);
+
   const url = `${API_BASE_URL}${endpoint}`;
   
   // 🚀 Generar key único para esta request

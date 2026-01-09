@@ -290,10 +290,16 @@ export const bookTrip = async (
     };
     
     console.log('🎫 Booking trip with data:', requestData);
+
+    const tripRaw = localStorage.getItem('selectedTrip');
+    
+    const tripData = tripRaw ? JSON.parse(tripRaw) : null;
+
+    const driver_id = tripData?.user_id;    
     
     const response = await apiRequest('/reservas/create', {
       method: 'POST',
-      body: JSON.stringify(requestData)
+      body: JSON.stringify({...requestData, driver_id})
     });
     
     console.log('✅ Booking response:', response);

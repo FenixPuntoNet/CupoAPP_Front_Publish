@@ -10,6 +10,7 @@ export interface TripSearchParams {
 
 export interface TripSearchResult {
   id: string;
+  user_id: string;
   origin: string;
   destination: string;
   dateTime: string;
@@ -87,6 +88,7 @@ const transformTripResponse = (trip: any): TripSearchResult => {
   
   return {
     id: trip.id?.toString() || trip.trip_id?.toString() || '',
+    user_id: trip.user_id,
     origin: trip.origin || trip.route?.start_address || '',
     destination: trip.destination || trip.route?.end_address || '',
     dateTime: trip.dateTime || trip.date_time || '',

@@ -19,7 +19,7 @@ const subscribers: SubscriptionCallback[] = [];
 
 // 🔄 Polling para tiempo real
 let pollingInterval: NodeJS.Timeout | null = null;
-let lastKnownCount = 0;
+// let lastKnownCount = 0;
 let isPolling = false; // Evitar polling concurrente
 
 /**
@@ -74,23 +74,23 @@ class NotificationDataService {
   }
 
   // 📊 Contar notificaciones no leídas
-  async getUnreadCount(): Promise<number> {
-    try {
-      // ✨ DESHABILITAR CACHE para conteo en tiempo real
-      const cacheBuster = Date.now();
-      const response = await apiRequest(`/notifications/stats?t=${cacheBuster}`);
+  // async getUnreadCount(): Promise<number> {
+  //   try {
+  //     // ✨ DESHABILITAR CACHE para conteo en tiempo real
+  //     const cacheBuster = Date.now();
+  //     const response = await apiRequest(`/notifications/stats?t=${cacheBuster}`);
       
-      if (response && typeof response.unread_count === 'number') {
-        return response.unread_count;
-      }
+  //     if (response && typeof response.unread_count === 'number') {
+  //       return response.unread_count;
+  //     }
       
-      return 0;
+  //     return 0;
       
-    } catch (error) {
-      console.error('❌ [NOTIFICATIONS] Error fetching unread count:', error);
-      return 0;
-    }
-  }
+  //   } catch (error) {
+  //     console.error('❌ [NOTIFICATIONS] Error fetching unread count:', error);
+  //     return 0;
+  //   }
+  // }
 
   // ✅ Marcar notificación como leída
   async markAsRead(notificationId: number): Promise<boolean> {
@@ -208,10 +208,10 @@ class NotificationDataService {
     console.log(`🔄 [NOTIFICATIONS] Starting polling every ${NOTIFICATION_CONFIG.POLLING_INTERVAL}ms`);
     
     // 🚨 INICIALIZAR lastKnownCount
-    this.getUnreadCount().then(count => {
-      lastKnownCount = count;
-      console.log(`🔄 [NOTIFICATIONS] Initial count set to: ${lastKnownCount}`);
-    });
+    // this.getUnreadCount().then(count => {
+    //   lastKnownCount = count;
+    //   console.log(`🔄 [NOTIFICATIONS] Initial count set to: ${lastKnownCount}`);
+    // });
     
     pollingInterval = setInterval(async () => {
       // Evitar polling concurrente
@@ -224,11 +224,11 @@ class NotificationDataService {
       try {
         console.log('🔄 [NOTIFICATIONS] Starting polling check...');
         
-        const currentCount = await this.getUnreadCount();
-        console.log(`🔄 [NOTIFICATIONS] Polling check: current=${currentCount}, lastKnown=${lastKnownCount}`);
+        // const currentCount = await this.getUnreadCount();
+        //console.log(`🔄 [NOTIFICATIONS] Polling check: current=${currentCount}, lastKnown=${lastKnownCount}`);
         
         // ✨ DETECTAR CAMBIOS EN TIEMPO REAL
-        if (currentCount > lastKnownCount) {
+        /*if (currentCount > lastKnownCount) {
           console.log(`🚨 [NOTIFICATIONS] NEW NOTIFICATIONS DETECTED! ${lastKnownCount} -> ${currentCount}`);
           
           // Obtener todas las notificaciones
@@ -259,7 +259,7 @@ class NotificationDataService {
           lastKnownCount = currentCount;
         } else {
           console.log(`✅ [NOTIFICATIONS] No new notifications (count: ${currentCount})`);
-        }
+        }*/
         
       } catch (error) {
         console.error('❌ [NOTIFICATIONS] Polling error:', error);
