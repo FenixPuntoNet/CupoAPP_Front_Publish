@@ -147,7 +147,7 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       setLoading(true);
       console.log('🔐 Starting login process...');
-      const response = await loginUser({ email, password }/*, device_token*/);
+      const response = await loginUser({ email, password }, device_token);
       
       if (response.success) {
         console.log('✅ Login API successful');

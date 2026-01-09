@@ -31,12 +31,12 @@ export interface AuthResponse {
 }
 
 // Login usando el backend
-export const loginUser = async (credentials: LoginRequest/*, device_token: string*/): Promise<AuthResponse> => {
+export const loginUser = async (credentials: LoginRequest, device_token: string): Promise<AuthResponse> => {
   try {    
 
     const response = await apiRequest('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ ...credentials/*, device_token*/ } )
+      body: JSON.stringify({ ...credentials, device_token } )
     });
 
     if (response.success && response.user) {
