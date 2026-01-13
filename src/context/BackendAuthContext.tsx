@@ -143,7 +143,7 @@ export const BackendAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, []);
 
-  const signIn = async (email: string, password: string, /*device_token: string*/): Promise<AuthResponse> => {
+  const signIn = async (email: string, password: string/*, device_token: string*/): Promise<AuthResponse> => {
     try {
       setLoading(true);
       console.log('🔐 Starting login process...');

@@ -34,7 +34,6 @@ import BackButton from '@/components/Buttons/backButton';
 import "@/utils/appleOAuthTestTools";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PushNotifications } from "@capacitor/push-notifications";
-
 interface LoginFormValues {
   email: string;
   password: string;
@@ -1668,7 +1667,8 @@ const LoginView: React.FC = () => {
   });
 
   const handleLogin = async (values: LoginFormValues) => {
-    try {
+    try {      
+
       setLoading(true);
 
       console.log("🔍 Login button clicked");
