@@ -58,42 +58,42 @@
  *   Add: FIREBASE_IOS_KEYSTORE_PASSWORD (if needed)
  */
 
-export const PUSH_NOTIFICATION_CONFIG = {
-  // Android specific settings
-  android: {
-    defaultChannel: 'push_default',
-    smallIcon: 'ic_stat_ic_notification',
-    largeIcon: 'icon',
-    color: '#00ff9d',
-  },
+// export const PUSH_NOTIFICATION_CONFIG = {
+//   // Android specific settings
+//   android: {
+//     defaultChannel: 'push_default',
+//     smallIcon: 'ic_stat_ic_notification',
+//     largeIcon: 'icon',
+//     color: '#00ff9d',
+//   },
 
-  // iOS specific settings
-  ios: {
-    presentationOptions: ['badge', 'sound', 'alert'],
-  },
+//   // iOS specific settings
+//   ios: {
+//     presentationOptions: ['badge', 'sound', 'alert'],
+//   },
 
-  // General settings
-  channels: [
-    {
-      id: 'push_default',
-      name: 'General',
-      importance: 4,
-      sound: 'default',
-      vibration: true,
-    },
-    {
-      id: 'push_chat',
-      name: 'Messages',
-      importance: 4,
-      sound: 'default',
-      vibration: true,
-    },
-    {
-      id: 'push_rides',
-      name: 'Rides',
-      importance: 4,
-      sound: 'default',
-      vibration: true,
-    },
-  ],
-};
+//   // General settings
+//   channels: [
+//     {
+//       id: 'push_default',
+//       name: 'General',
+//       importance: 4,
+//       sound: 'default',
+//       vibration: true,
+//     },
+//     {
+//       id: 'push_chat',
+//       name: 'Messages',
+//       importance: 4,
+//       sound: 'default',
+//       vibration: true,
+//     },
+//     {
+//       id: 'push_rides',
+//       name: 'Rides',
+//       importance: 4,
+//       sound: 'default',
+//       vibration: true,
+//     },
+//   ],
+// };

@@ -9,7 +9,7 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen';
 
-import { usePushNotifications } from "./modules/push/usePushNotifications";
+// import { usePushNotifications } from "./modules/push/usePushNotifications";
 
 // Importar herramientas de debugging para desarrollo
 import './utils/debugTrip';
@@ -23,7 +23,7 @@ declare module '@tanstack/react-router' {
 }
 
 function App() {
-  usePushNotifications();
+  // usePushNotifications();
 
   return (
     <RouterProvider router={router} />

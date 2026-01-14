@@ -22,7 +22,7 @@ import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { useEffect } from 'react';
 import { ThemeToggle as _ThemeToggle } from '@/components/ThemeToggle';
 import { useNotifications } from '@/hooks/useNotifications';
-import { usePushNotifications } from '@/modules/push';
+// import { usePushNotifications } from '@/modules/push';
 import { setGlobalNavigate } from '@/services/notificationDisplay';
 
 // Configure telefunc to use external backend
@@ -101,7 +101,7 @@ const GlobalNotificationManager = () => {
   });
   
   // 📱 NUEVO - Sistema de notificaciones push móviles
-  usePushNotifications();
+  // usePushNotifications();
   
   // 🎯 Configurar navegación global para las notificaciones
   useEffect(() => {
